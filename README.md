@@ -17,7 +17,7 @@
 
 <p align="center">
   Exposes <a href="https://github.com/mxkissnr/gaggiuino-local-profiler">Gaggiuino Local Profiler</a> as native Home Assistant entities —<br/>
-  machine status, shot data and live brewing state, all without cloud.
+  machine status, shot data, live brewing state and machine sensors, all without cloud.
 </p>
 
 ---
@@ -35,10 +35,16 @@
 | | Feature | Description |
 |---|---|---|
 | ☕ | **Brewing Sensor** | Binary sensor updated every 2 seconds — perfect as automation trigger |
-| 📊 | **15 Shot Sensors** | Profile, score, duration, pressure, yield, ratio, dose, coffee, grinder, shots today and more |
+| 📊 | **Shot Sensors** | Profile, rating, duration, pressure, yield, ratio, dose, coffee, grinder, shots today and more |
+| 🌡️ | **Machine Sensors** | Live pressure, temperature, water level, weight, uptime, active profile — updated every 5 s |
+| 🔧 | **Maintenance Sensors** | One sensor per task (descaling, backflush, group head, gaskets, water filter) with progress value |
+| ⏱️ | **Preheat Sensors** | Preheat ready binary sensor + elapsed / remaining time sensors |
+| 🎛️ | **Profile Selector** | `select` entity to switch the active brew profile from any HA dashboard or automation |
 | 🔔 | **Shot Event** | Fires `gaggiuino_profiler_shot_completed` with full shot data after every pull |
 | ⚙️ | **Configurable** | URL and poll interval adjustable any time via *Settings → Integration → Configure* |
 | 🔍 | **Diagnostics** | HA diagnostics export for easy bug reports |
+
+> **Replaces ALERTua/hass-gaggiuino** — as of v1.9.0 this integration provides all machine sensors (temperature, pressure, water level, weight, profile, uptime) natively. You no longer need a second integration.
 
 ---
 
@@ -81,7 +87,7 @@
 
 ## 📋 Entities
 
-### Sensors
+### Shot & Status Sensors *(60 s poll, configurable)*
 
 | Entity | Description | Unit |
 |---|---|---|
@@ -89,7 +95,7 @@
 | Shot Count | Total number of stored shots | shots |
 | Shots Today | Number of shots pulled today | shots |
 | Last Shot Profile | Extraction profile name | — |
-| Last Shot Score | Automatic 0–100 score | — |
+| Last Shot Rating | Star rating (1–5 ★) | — |
 | Last Shot Date | Timestamp of the last shot | — |
 | Last Shot Duration | Shot duration | s |
 | Last Shot Avg Pressure | Average extraction pressure | bar |
@@ -100,12 +106,44 @@
 | Last Shot Grinder | Grinder annotation | — |
 | Last Sync | Timestamp of last sync | — |
 | Machine Hostname | Gaggiuino controller hostname | — |
+| Machine Temperature | Current boiler temperature | °C |
+| Machine Target Temperature | Target boiler temperature | °C |
+| Preheat Elapsed | Time elapsed since machine switched on | s |
+| Preheat Remaining | Estimated time until machine is ready | s |
 
-### Binary Sensor
+### Machine Live Sensors *(5 s poll via machine coordinator)*
+
+| Entity | Description | Unit |
+|---|---|---|
+| Machine Live Pressure | Current extraction pressure | bar |
+| Machine Water Level | Water reservoir fill level | % |
+| Machine Live Weight | Current weight on scale | g |
+| Machine Uptime | Controller uptime | s |
+| Machine Active Profile | Currently active brew profile name | — |
+
+### Maintenance Sensors *(60 s poll)*
+
+| Entity | Description |
+|---|---|
+| Maintenance Descaling | Progress toward next descaling |
+| Maintenance Backflush | Progress toward next backflush |
+| Maintenance Group Head | Progress toward next group head service |
+| Maintenance Gaskets | Progress toward next gasket replacement |
+| Maintenance Water Filter | Progress toward next filter replacement |
+
+### Binary Sensors
 
 | Entity | Description | Update rate |
 |---|---|---|
-| Brewing | `true` during an active pull | every 2 seconds |
+| Brewing | `on` during an active pull; attributes: `datapoints`, `profile_name`, `seq` | every 2 s |
+| Preheat Ready | `on` when machine has reached stable brewing temperature | 60 s |
+| Steam Switch | `on` when steam mode is active | 5 s |
+
+### Select
+
+| Entity | Description |
+|---|---|
+| Profile | Active brew profile — read/write; options list updated every 60 s |
 
 ---
 
@@ -169,11 +207,15 @@ automation:
 ```
 Home Assistant
 ├── GlpDataCoordinator  (60 s, configurable)
-│   ├── GET /api/status    → machine status, shotCount, lastSync
+│   ├── GET /api/status    → machine status, shotCount, lastSync, preheat
 │   └── GET /shots.json    → shot data, annotations, datapoints
 │
 ├── GlpLiveCoordinator  (2 s)
-│   └── GET /api/live/data → isLive (brewing state)
+│   └── GET /api/live/data → isLive (brewing state + live datapoints)
+│
+├── GlpMachineCoordinator  (5 s)
+│   └── GET /api/machine/status → pressure, temperature, water level,
+│                                  weight, uptime, active profile, steam switch
 │
 └── Event Bus
     └── gaggiuino_profiler_shot_completed  (on new shot_id)
@@ -206,10 +248,10 @@ GPL-3.0 © 2024–2026 mxkissnr — free to use, fork and modify; any derivative
 
 Inspired by [BeanConqueror](https://github.com/graphefruit/beanconqueror) by graphefruit — a fantastic open-source coffee tracking app that pioneered many of the ideas around shot logging and coffee library management that influenced this project.
 
-Built on top of the [Gaggiuino](https://gaggiuino.github.io/) project and the original [Gaggiuino Home Assistant Integration](https://github.com/ALERTua/hass-gaggiuino) by ALERTua — without their work this project would not exist.
+Built on top of the [Gaggiuino](https://gaggiuino.github.io/) project. The machine sensor design was inspired by the original [Gaggiuino Home Assistant Integration](https://github.com/ALERTua/hass-gaggiuino) by ALERTua — thank you for pioneering the HA connectivity concepts that made this possible.
 
 ---
 
 <p align="center">
-  <sub>Built with AI assistance — designed and developed together with <a href="https://claude.ai">Claude</a> by Anthropic</sub>
+  <sub>Built with <a href="https://claude.ai/code">Claude Code</a> by Anthropic</sub>
 </p>
