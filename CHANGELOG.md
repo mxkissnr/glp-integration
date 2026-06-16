@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.10.1] – 2026-06-16
+### Added
+- `drink_type` field added to each entry in the `recent_shots` attribute on `sensor.*_machine_status` — sourced from `annotation.drinkType`; `null` when not annotated; allows the GLP Lovelace Card to display the prepared drink type alongside profile and coffee name; closes #27
+
 ## [1.10.0] – 2026-06-16
 ### Fixed
 - Coordinator now sends `Authorization: Bearer {SUPERVISOR_TOKEN}` when fetching the GLP API token from `/api/token` — the add-on verifies this via `http://supervisor/info`, granting access to HA-internal callers regardless of source IP. This fixes persistent 401 errors on `/shots.json` when the HA core's aiohttp session arrives at the add-on from a non-private IP due to Docker NAT. A warning is now logged when `/api/token` returns a non-200 status, making debugging easier.

@@ -248,8 +248,9 @@ class GlpDataCoordinator(DataUpdateCoordinator):
                 "yield_g":  round(s_wt[-1] / 10, 1) if s_wt else None,
                 "ratio":    s_ratio,
                 "pressure": round(sum(s_pres) / len(s_pres) / 10, 2) if s_pres else None,
-                "rating":   int(s_ann["rating"]) if s_ann.get("rating") else None,
-                "dp":       s_dp_small,
+                "rating":     int(s_ann["rating"]) if s_ann.get("rating") else None,
+                "drink_type": s_ann.get("drinkType") or None,
+                "dp":         s_dp_small,
             })
         data["recent_shots"] = recent
 
