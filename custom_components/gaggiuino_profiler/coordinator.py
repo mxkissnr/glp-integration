@@ -110,6 +110,16 @@ class GlpDataCoordinator(DataUpdateCoordinator):
         except Exception:
             profiles_data = {}
 
+        try:
+            async with self._session.get(f"{self._url}/api/menu", headers=self._headers, timeout=aiohttp.ClientTimeout(total=5)) as r:
+                menu_items = await r.json() if r.ok else []
+        except Exception:
+            menu_items = []
+        drink_lookup: dict[str, str] = {
+            m["id"]: f"{m.get('emoji', '')} {m['name']}".strip()
+            for m in menu_items if m.get("id") and m.get("name")
+        }
+
         last = shots[-1] if shots else {}
         ann  = last.get("annotation") or {}
 
@@ -249,7 +259,7 @@ class GlpDataCoordinator(DataUpdateCoordinator):
                 "ratio":    s_ratio,
                 "pressure": round(sum(s_pres) / len(s_pres) / 10, 2) if s_pres else None,
                 "rating":     int(s_ann["rating"]) if s_ann.get("rating") else None,
-                "drink_type": s_ann.get("drinkType") or None,
+                "drink_type": drink_lookup.get(s_ann.get("drinkType", "")) or None,
                 "dp":         s_dp_small,
             })
         data["recent_shots"] = recent

@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.10.2] – 2026-06-16
+### Fixed
+- `drink_type` in `recent_shots` contained the raw internal drink ID (e.g. `m_1779888566035`) — the coordinator now fetches `GET /api/menu` on each update cycle and resolves the ID to a human-readable display name (emoji + name, e.g. `☕ Espresso`); gracefully falls back to `null` when the menu is unavailable or the ID is not found; closes #28
+
 ## [1.10.1] – 2026-06-16
 ### Added
 - `drink_type` field added to each entry in the `recent_shots` attribute on `sensor.*_machine_status` — sourced from `annotation.drinkType`; `null` when not annotated; allows the GLP Lovelace Card to display the prepared drink type alongside profile and coffee name; closes #27
