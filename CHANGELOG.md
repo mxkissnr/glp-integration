@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.9.7] – 2026-06-16
+### Fixed
+- Default setup URL changed from `http://homeassistant.local:8099` to `http://localhost:8099` — mDNS resolution of `homeassistant.local` fails intermittently from within the HA core container on HA OS, causing the coordinator to report `UpdateFailed` and all sensors to go unavailable; `localhost:8099` is always reachable because HA OS runs the core container in host-network mode; existing installs must be reconfigured manually (Settings → Integrations → GLP Integration → Configure); closes #25
+
 ## [1.9.6] – 2026-05-29
 ### Fixed
 - Coordinator no longer reads `apiToken` from `/api/status` (removed in GLP add-on v1.72.0 security fix); now fetches the token once via `/api/token` on first poll — reachable from the HA Supervisor network without prior authentication; closes #23

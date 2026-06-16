@@ -68,10 +68,12 @@
 
 1. **Settings → Devices & Services → Add Integration**
 2. Search for *Gaggiuino Local Profiler*
-3. Enter the URL of your GLP add-on, e.g.:
+3. Enter the URL of your GLP add-on:
    ```
-   http://homeassistant.local:8099
+   http://localhost:8099
    ```
+   > **Use `localhost`, not `homeassistant.local`.** mDNS resolution of `homeassistant.local` can fail intermittently from within the HA core container on HA OS, causing all sensors to go unavailable. `localhost:8099` is always reachable because HA OS runs the core container in host-network mode.
+
    The integration validates the connection immediately.
 
 ### Options
