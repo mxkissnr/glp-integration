@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.9.9] – 2026-06-16
+### Added
+- Supervisor API port discovery: when adding the integration on HA OS / Supervised, the setup flow queries `GET http://supervisor/addons/gaggiuino_local_profiler/info` with the `SUPERVISOR_TOKEN` to read the actual host port from the app's network mapping — so if the user changed the port in the app config, the correct port is used automatically; falls back to `localhost:8099` if Supervisor is unavailable (HA Core / Docker); closes #26
+
 ## [1.9.8] – 2026-06-16
 ### Fixed
 - Options flow saved URL to `entry.options` but `__init__.py` always read from `entry.data["url"]` — URL changes via *Configure* were silently ignored and the old URL kept being used after reload; fixed by reading `entry.options.get("url") or entry.data["url"]` in setup and showing the correct current URL in the options form

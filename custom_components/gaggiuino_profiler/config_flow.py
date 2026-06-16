@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import aiohttp
+import os
 import voluptuous as vol
 from urllib.parse import urlparse
 
@@ -10,6 +11,47 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_SCAN_INTERVAL, DEFAULT_URL, DOMAIN, SCAN_INTERVAL_SECONDS
 
+_SUPERVISOR_URL = "http://supervisor"
+_ADDON_SLUG     = "gaggiuino_local_profiler"
+
+
+async def _supervisor_port(session: aiohttp.ClientSession) -> int | None:
+    """Ask the HA Supervisor which host port the GLP app is mapped to.
+
+    Returns the host port integer, or None if Supervisor is unavailable
+    (non-supervised install) or the app is not installed.
+    """
+    token = os.environ.get("SUPERVISOR_TOKEN")
+    if not token:
+        return None
+    try:
+        async with session.get(
+            f"{_SUPERVISOR_URL}/addons/{_ADDON_SLUG}/info",
+            headers={"Authorization": f"Bearer {token}"},
+            timeout=aiohttp.ClientTimeout(total=5),
+        ) as r:
+            if not r.ok:
+                return None
+            data = (await r.json()).get("data", {})
+            network = data.get("network") or {}
+            # network = {"8099/tcp": <host_port_int_or_null>, ...}
+            return next(
+                (v for v in network.values() if isinstance(v, int)),
+                None,
+            )
+    except Exception:
+        return None
+
+
+async def _auto_discover_url(session: aiohttp.ClientSession) -> str:
+    """Return the GLP URL derived from the Supervisor port mapping.
+
+    Falls back to DEFAULT_URL when Supervisor is not available or the
+    port cannot be read (e.g. non-HA-OS installs).
+    """
+    port = await _supervisor_port(session)
+    return f"http://localhost:{port}" if port else DEFAULT_URL
+
 
 class GlpConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
@@ -17,21 +59,23 @@ class GlpConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_user(
         self, user_input: dict | None = None
     ) -> ConfigFlowResult:
-        # On first entry (no form submitted yet): try auto-discovery at localhost:8099.
-        # If the GLP app is running on this HA instance we can skip the URL form entirely.
+        # On first entry (no form submitted yet): auto-discover the URL from
+        # the Supervisor port mapping and silently probe the app. If reachable,
+        # create the entry without any user input.
         if user_input is None:
+            session     = async_get_clientsession(self.hass)
+            auto_url    = await _auto_discover_url(session)
             try:
-                session = async_get_clientsession(self.hass)
                 async with session.get(
-                    f"{DEFAULT_URL}/api/status",
+                    f"{auto_url}/api/status",
                     timeout=aiohttp.ClientTimeout(total=5),
                 ) as r:
                     r.raise_for_status()
-                await self.async_set_unique_id(DEFAULT_URL)
+                await self.async_set_unique_id(auto_url)
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
-                    title="GLP (localhost:8099)",
-                    data={"url": DEFAULT_URL},
+                    title=f"GLP ({auto_url.removeprefix('http://')})",
+                    data={"url": auto_url},
                 )
             except Exception:
                 pass  # fall through to manual form
@@ -63,7 +107,6 @@ class GlpConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=vol.Schema({vol.Required("url", default=DEFAULT_URL): str}),
             errors=errors,
-            description_placeholders={"default_url": DEFAULT_URL},
         )
 
     @staticmethod
