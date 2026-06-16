@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.9.8] – 2026-06-16
+### Fixed
+- Options flow saved URL to `entry.options` but `__init__.py` always read from `entry.data["url"]` — URL changes via *Configure* were silently ignored and the old URL kept being used after reload; fixed by reading `entry.options.get("url") or entry.data["url"]` in setup and showing the correct current URL in the options form
+### Added
+- Auto-discovery on setup: the integration now silently probes `http://localhost:8099/api/status` when first adding it — if the GLP app is running on the same HA instance the entry is created immediately with no URL input needed; falls back to the manual URL form if auto-discovery fails; closes #26
+
 ## [1.9.7] – 2026-06-16
 ### Fixed
 - Default setup URL changed from `http://homeassistant.local:8099` to `http://localhost:8099` — mDNS resolution of `homeassistant.local` fails intermittently from within the HA core container on HA OS, causing the coordinator to report `UpdateFailed` and all sensors to go unavailable; `localhost:8099` is always reachable because HA OS runs the core container in host-network mode; existing installs must be reconfigured manually (Settings → Integrations → GLP Integration → Configure); closes #25

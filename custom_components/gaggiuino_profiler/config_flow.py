@@ -17,8 +17,26 @@ class GlpConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_user(
         self, user_input: dict | None = None
     ) -> ConfigFlowResult:
-        errors: dict[str, str] = {}
+        # On first entry (no form submitted yet): try auto-discovery at localhost:8099.
+        # If the GLP app is running on this HA instance we can skip the URL form entirely.
+        if user_input is None:
+            try:
+                session = async_get_clientsession(self.hass)
+                async with session.get(
+                    f"{DEFAULT_URL}/api/status",
+                    timeout=aiohttp.ClientTimeout(total=5),
+                ) as r:
+                    r.raise_for_status()
+                await self.async_set_unique_id(DEFAULT_URL)
+                self._abort_if_unique_id_configured()
+                return self.async_create_entry(
+                    title="GLP (localhost:8099)",
+                    data={"url": DEFAULT_URL},
+                )
+            except Exception:
+                pass  # fall through to manual form
 
+        errors: dict[str, str] = {}
         if user_input is not None:
             url = user_input["url"].rstrip("/")
             if urlparse(url).scheme not in ("http", "https"):
@@ -45,6 +63,7 @@ class GlpConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=vol.Schema({vol.Required("url", default=DEFAULT_URL): str}),
             errors=errors,
+            description_placeholders={"default_url": DEFAULT_URL},
         )
 
     @staticmethod
@@ -68,7 +87,7 @@ class GlpOptionsFlow(OptionsFlow):
                 return self.async_create_entry(data=user_input)
 
         current_interval = self._entry.options.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL_SECONDS)
-        current_url      = self._entry.data.get("url", DEFAULT_URL)
+        current_url      = self._entry.options.get("url") or self._entry.data.get("url", DEFAULT_URL)
 
         return self.async_show_form(
             step_id="init",

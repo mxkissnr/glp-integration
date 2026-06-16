@@ -20,7 +20,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[f"{DOMAIN}_views_registered"] = True
 
     session       = async_get_clientsession(hass)
-    url           = entry.data["url"]
+    url           = entry.options.get("url") or entry.data["url"]
     scan_interval = entry.options.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL_SECONDS)
 
     coordinator      = GlpDataCoordinator(hass, session, url, scan_interval)
