@@ -1,4 +1,5 @@
 import logging
+import os
 from datetime import datetime, timedelta, timezone
 
 import aiohttp
@@ -55,16 +56,31 @@ class GlpDataCoordinator(DataUpdateCoordinator):
                 r.raise_for_status()
                 status = await r.json()
 
-            # Fetch token once via /api/token (reachable from Supervisor network without prior auth)
+            # Fetch GLP API token once.  Send the HA Supervisor token in the
+            # Authorization header so the add-on can verify via the Supervisor
+            # API, even when the request does not arrive from a private IP.
             if not self._headers:
                 try:
-                    async with self._session.get(f"{self._url}/api/token", timeout=aiohttp.ClientTimeout(total=5)) as tr:
+                    token_req_headers: dict[str, str] = {}
+                    supervisor_token = os.environ.get("SUPERVISOR_TOKEN")
+                    if supervisor_token:
+                        token_req_headers["Authorization"] = f"Bearer {supervisor_token}"
+                    async with self._session.get(
+                        f"{self._url}/api/token",
+                        headers=token_req_headers,
+                        timeout=aiohttp.ClientTimeout(total=5),
+                    ) as tr:
                         if tr.ok:
                             td = await tr.json()
                             if td.get("apiToken"):
                                 self._headers = {"X-GLP-Token": td["apiToken"]}
-                except Exception:
-                    pass
+                        else:
+                            _LOGGER.warning(
+                                "GLP /api/token returned %s — check add-on logs for denied IP",
+                                tr.status,
+                            )
+                except Exception as token_err:
+                    _LOGGER.warning("GLP token fetch failed: %s", token_err)
 
             async with self._session.get(f"{self._url}/shots.json", headers=self._headers, timeout=aiohttp.ClientTimeout(total=10)) as r:
                 r.raise_for_status()

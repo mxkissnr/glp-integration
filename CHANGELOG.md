@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.10.0] – 2026-06-16
+### Fixed
+- Coordinator now sends `Authorization: Bearer {SUPERVISOR_TOKEN}` when fetching the GLP API token from `/api/token` — the add-on verifies this via `http://supervisor/info`, granting access to HA-internal callers regardless of source IP. This fixes persistent 401 errors on `/shots.json` when the HA core's aiohttp session arrives at the add-on from a non-private IP due to Docker NAT. A warning is now logged when `/api/token` returns a non-200 status, making debugging easier.
+
 ## [1.9.9] – 2026-06-16
 ### Added
 - Supervisor API port discovery: when adding the integration on HA OS / Supervised, the setup flow queries `GET http://supervisor/addons/gaggiuino_local_profiler/info` with the `SUPERVISOR_TOKEN` to read the actual host port from the app's network mapping — so if the user changed the port in the app config, the correct port is used automatically; falls back to `localhost:8099` if Supervisor is unavailable (HA Core / Docker); closes #26
