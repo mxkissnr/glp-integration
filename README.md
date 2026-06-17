@@ -71,7 +71,7 @@
 
 1. **Settings → Devices & Services → Add Integration**
 2. Search for *Gaggiuino Local Profiler*
-3. Enter the URL of your GLP add-on:
+3. Enter the URL of your GLP app:
    ```
    http://localhost:8099
    ```
@@ -85,7 +85,7 @@
 
 | Option | Default | Description |
 |---|---|---|
-| URL | *(entered URL)* | URL of the GLP add-on |
+| URL | *(entered URL)* | URL of the GLP app |
 | Poll interval | `60` | Update interval in seconds (10–300) |
 
 ---
@@ -239,7 +239,7 @@ The diagnostics file contains current coordinator data (no sensitive information
 <p align="center">
   <a href="https://github.com/mxkissnr/gaggiuino-local-profiler/wiki">📖 Documentation (Wiki)</a> ·
   <a href="CHANGELOG.md">📋 Changelog</a> ·
-  <a href="https://github.com/mxkissnr/gaggiuino-local-profiler">🔧 GLP Add-on</a> ·
+  <a href="https://github.com/mxkissnr/gaggiuino-local-profiler">🔧 GLP App</a> ·
   <a href="https://github.com/mxkissnr/glp-integration/issues">🐛 Issues</a>
 </p>
 

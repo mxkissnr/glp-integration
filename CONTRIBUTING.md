@@ -13,7 +13,7 @@ Bug reports, feature ideas and pull requests are welcome!
 
 Include:
 - Integration version (visible in `custom_components/gaggiuino_profiler/manifest.json`)
-- GLP add-on version
+- GLP app version
 - Expected vs. actual behaviour
 - Relevant Home Assistant log output (`Settings → System → Logs`)
 
@@ -24,7 +24,7 @@ Include:
 | Coordinators | `coordinator.py` (60 s), `live_coordinator.py` (2 s), `machine_coordinator.py` (5 s) |
 | Platforms | `sensor.py`, `binary_sensor.py`, `select.py` — one file per HA platform |
 | Style | Follows [Home Assistant integration development](https://developers.home-assistant.io/docs/creating_integration_file_structure) conventions |
-| Tests | Test against a real GLP add-on instance; no mock-based test suite yet |
+| Tests | Test against a real GLP app instance; no mock-based test suite yet |
 
 ## Dev setup
 

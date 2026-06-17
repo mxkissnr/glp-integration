@@ -18,10 +18,10 @@ I will acknowledge your report within **7 days** and aim to release a fix within
 
 ## Scope
 
-This integration runs locally inside Home Assistant and communicates only with the GLP add-on on the same instance. The primary attack surface is:
+This integration runs locally inside Home Assistant and communicates only with the GLP app on the same instance. The primary attack surface is:
 
-- HTTP requests to the GLP add-on API (token-authenticated)
-- Entity attribute data (JSON from the add-on)
-- The HA config entry (stores the add-on URL)
+- HTTP requests to the GLP app API (token-authenticated)
+- Entity attribute data (JSON from the app)
+- The HA config entry (stores the app URL)
 
-Out of scope: vulnerabilities in Home Assistant itself or the GLP add-on (report those in their respective repositories).
+Out of scope: vulnerabilities in Home Assistant itself or the GLP app (report those in their respective repositories).

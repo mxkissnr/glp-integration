@@ -10,7 +10,7 @@
       }
     },
     "error": {
-      "cannot_connect": "Cannot connect to GLP. Check the URL and make sure the add-on is running."
+      "cannot_connect": "Cannot connect to GLP. Check the URL and make sure the app is running."
     },
     "abort": {
       "already_configured": "This GLP instance is already configured."

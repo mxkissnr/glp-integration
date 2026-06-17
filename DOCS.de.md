@@ -4,7 +4,7 @@ Bindet den [Gaggiuino Local Profiler](https://github.com/mxkissnr/gaggiuino-loca
 
 ## Voraussetzungen
 
-- [Gaggiuino Local Profiler Add-on](https://github.com/mxkissnr/gaggiuino-local-profiler) installiert und gestartet
+- [Gaggiuino Local Profiler App](https://github.com/mxkissnr/gaggiuino-local-profiler) installiert und gestartet
 - Home Assistant 2024.1.0 oder neuer
 
 ## Installation
@@ -25,7 +25,7 @@ Bindet den [Gaggiuino Local Profiler](https://github.com/mxkissnr/gaggiuino-loca
 
 1. **Einstellungen → Geräte & Dienste → Integration hinzufügen**
 2. Nach *Gaggiuino Local Profiler* suchen
-3. URL des GLP-Add-ons eingeben: `http://localhost:8099`
+3. URL des GLP-Apps eingeben: `http://localhost:8099`
    > **`localhost` verwenden, nicht `homeassistant.local`** — mDNS-Auflösung schlägt innerhalb von HA OS intermittierend fehl und macht alle Sensoren unavailable. `localhost:8099` funktioniert immer zuverlässig.
 
 Die Integration testet die Verbindung direkt beim Einrichten.
@@ -36,7 +36,7 @@ Die Integration testet die Verbindung direkt beim Einrichten.
 
 | Option | Standard | Beschreibung |
 |---|---|---|
-| URL | *(eingegebene URL)* | URL des GLP-Add-ons |
+| URL | *(eingegebene URL)* | URL des GLP-Apps |
 | Poll-Interval | `60` | Aktualisierungsintervall in Sekunden (10–300) |
 
 ## Entities

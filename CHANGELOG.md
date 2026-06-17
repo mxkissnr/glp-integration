@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.10.7] – 2026-06-17
+### Changed
+- Use Home Assistant "app" terminology instead of "add-on" in the config-flow UI strings (`strings.json` / `translations/en.json`) and user-facing docs; closes #33
+
 ## [1.10.6] – 2026-06-17
 ### Added
 - In-repo brand assets (`custom_components/gaggiuino_profiler/brand/icon.png` + `icon@2x.png`) so the HACS validation brands check passes (8/8) before the integration is listed in the `home-assistant/brands` repository; closes #32
