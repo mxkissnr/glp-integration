@@ -1,5 +1,9 @@
+import logging
+
+import aiohttp
+import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_SCAN_INTERVAL, DOMAIN, SCAN_INTERVAL_SECONDS
@@ -8,7 +12,11 @@ from .live_coordinator import GlpLiveCoordinator
 from .machine_coordinator import GlpMachineCoordinator
 from .orders_api import GlpOrdersSubView, GlpOrdersView, GlpShotsSubView
 
+_LOGGER = logging.getLogger(__name__)
+
 PLATFORMS = ["sensor", "binary_sensor", "select"]
+
+MAINTENANCE_DONE_SCHEMA = vol.Schema({vol.Required("task"): vol.All(str, vol.Length(min=1))})
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -18,6 +26,34 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.http.register_view(GlpOrdersSubView())
         hass.http.register_view(GlpShotsSubView())
         hass.data[f"{DOMAIN}_views_registered"] = True
+
+    # Register the maintenance_done service once (idempotent)
+    if not hass.services.has_service(DOMAIN, "maintenance_done"):
+        async def _handle_maintenance_done(call: ServiceCall) -> None:
+            task = call.data["task"]
+            coord: GlpDataCoordinator | None = next(
+                (d["data"] for d in hass.data.get(DOMAIN, {}).values()
+                 if isinstance(d, dict) and "data" in d),
+                None,
+            )
+            if coord is None:
+                _LOGGER.error("maintenance_done: no GLP coordinator available")
+                return
+            try:
+                async with coord._session.post(
+                    f"{coord._url}/api/maintenance/{task}/done",
+                    headers=coord._headers,
+                    timeout=aiohttp.ClientTimeout(total=10),
+                ) as r:
+                    r.raise_for_status()
+            except Exception as err:
+                _LOGGER.error("maintenance_done(%s) failed: %s", task, err)
+                raise
+            await coord.async_request_refresh()
+
+        hass.services.async_register(
+            DOMAIN, "maintenance_done", _handle_maintenance_done, schema=MAINTENANCE_DONE_SCHEMA
+        )
 
     session       = async_get_clientsession(hass)
     url           = entry.options.get("url") or entry.data["url"]

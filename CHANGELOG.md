@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.11.0] – 2026-06-17
+### Added
+- New service **`gaggiuino_profiler.maintenance_done`** (field `task`) — marks a maintenance task as completed by POSTing to the app's `/api/maintenance/{task}/done` and refreshing; lets the GLP Lovelace card mark maintenance done from the dashboard; closes #34
+- `grinder_maintenance_details` entries now include the `task` id (`grinder_<id>`) so the card can mark per-grinder cleaning done
+
 ## [1.10.7] – 2026-06-17
 ### Changed
 - Use Home Assistant "app" terminology instead of "add-on" in the config-flow UI strings (`strings.json` / `translations/en.json`) and user-facing docs; closes #33

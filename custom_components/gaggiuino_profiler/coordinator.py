@@ -209,6 +209,7 @@ class GlpDataCoordinator(DataUpdateCoordinator):
         )
         data["grinder_maintenance_details"] = {
             v.get("grinderName", k): {
+                "task":          k,  # grinder_<id> — used by the card to mark cleaning done
                 "status":        v.get("status"),
                 "days_since":    v.get("daysSince"),
                 "shots_since":   v.get("shotsSince"),

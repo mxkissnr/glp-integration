@@ -1,0 +1,15 @@
+maintenance_done:
+  name: Mark maintenance task done
+  description: >-
+    Marks a Gaggiuino Local Profiler maintenance task as completed, resetting its
+    timer (sets the last-done date to today). Used by the GLP Lovelace card.
+  fields:
+    task:
+      name: Task
+      description: >-
+        Task id: descaling, backflush, grouphead, gaskets, waterfilter, or
+        grinder_<id> for a grinder cleaning entry.
+      required: true
+      example: descaling
+      selector:
+        text:
