@@ -51,14 +51,15 @@ class GlpProfileSelect(CoordinatorEntity[GlpDataCoordinator], SelectEntity):
         super().__init__(coordinator)
         self._machine_coordinator = machine_coordinator
         self._attr_unique_id = f"{entry.entry_id}_profile"
+        _url = (entry.options.get("url") or entry.data["url"]).rstrip("/")
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},
             name="Gaggiuino Local Profiler",
             manufacturer="Gaggiuino",
             model="Local Profiler",
-            configuration_url=entry.data["url"],
+            configuration_url=_url,
         )
-        self._url = entry.data["url"].rstrip("/")
+        self._url = _url
 
     @property
     def options(self) -> list[str]:

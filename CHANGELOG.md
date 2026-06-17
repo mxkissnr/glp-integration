@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.10.3] – 2026-06-16
+### Fixed
+- `select/select_option` (profile switching from Lovelace card) failed with the old URL (e.g. `homeassistant.local:8099`) even after reconfiguring via Options — `GlpProfileSelect.__init__` read `entry.data["url"]` directly instead of checking `entry.options` first; fixed to use `entry.options.get("url") or entry.data["url"]`; closes #29
+
 ## [1.10.2] – 2026-06-16
 ### Fixed
 - `drink_type` in `recent_shots` contained the raw internal drink ID (e.g. `m_1779888566035`) — the coordinator now fetches `GET /api/menu` on each update cycle and resolves the ID to a human-readable display name (emoji + name, e.g. `☕ Espresso`); gracefully falls back to `null` when the menu is unavailable or the ID is not found; closes #28
