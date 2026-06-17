@@ -20,85 +20,8 @@ def _ds(arr: list, n: int = 40) -> list:
     return [arr[round(i * step)] for i in range(n)]
 
 
-def _stddev(vals: list[float]) -> float:
-    if len(vals) < 2:
-        return 0.0
-    m = sum(vals) / len(vals)
-    return (sum((v - m) ** 2 for v in vals) / len(vals)) ** 0.5
-
-
-def _detect_channeling(times: list[float], pressures: list[float]) -> bool:
-    if not times or len(pressures) < 5:
-        return False
-    for i in range(1, len(pressures)):
-        if pressures[i - 1] < 5:
-            continue
-        dt = times[i] - times[i - 1]
-        if dt <= 0 or dt > 3:
-            continue
-        if pressures[i - 1] - pressures[i] > 1.5:
-            return True
-    return False
-
-
-def _calc_shot_score(pres10, temp10, wt10, dur10, ratio) -> int | None:
-    """Port of the GLP app's calcShotScore (weighted: pressure 25, temp 20,
-    duration 20, ratio 20, channeling 15). Inputs are ×10 integer curves."""
-    p = [v / 10 for v in pres10]
-    pvals = [v for v in p if v >= 5]
-    if len(pvals) <= 3:
-        return None
-    scores: list[float] = []
-    weights: list[int] = []
-
-    avg_p = sum(pvals) / len(pvals)
-    if 7 <= avg_p <= 9.5:
-        s = 100
-    elif avg_p < 7:
-        s = max(20, 100 - (7 - avg_p) * 22)
-    else:
-        s = max(20, 100 - (avg_p - 9.5) * 28)
-    scores.append(round(s)); weights.append(25)
-
-    tvals = [v / 10 for v in temp10]
-    if len(tvals) > 5:
-        sd = _stddev(tvals)
-        s = (100 if sd <= 0.3 else 90 if sd <= 0.7 else 72 if sd <= 1.5
-             else 50 if sd <= 3 else max(15, 50 - (sd - 3) * 12))
-        scores.append(round(s)); weights.append(20)
-
-    secs = (dur10[-1] / 10) if dur10 else 0
-    if secs > 5:
-        if 25 <= secs <= 35:
-            s = 100
-        elif 20 <= secs < 25 or 35 < secs <= 42:
-            s = 82
-        elif 42 < secs <= 55:
-            s = 62
-        elif secs < 20:
-            s = max(15, 70 - (20 - secs) * 5)
-        else:
-            s = max(15, 62 - (secs - 55) * 3)
-        scores.append(round(s)); weights.append(20)
-
-    if ratio:
-        r = ratio
-        if 1.8 <= r <= 2.5:
-            s = 100
-        elif 1.5 <= r < 1.8 or 2.5 < r <= 3.2:
-            s = 75
-        elif r < 1.5:
-            s = max(15, 55 - (1.5 - r) * 40)
-        else:
-            s = max(15, 60 - (r - 3.2) * 22)
-        scores.append(round(s)); weights.append(20)
-
-    times = [v / 10 for v in dur10]
-    scores.append(20 if _detect_channeling(times, p) else 100)
-    weights.append(15)
-
-    tw = sum(weights)
-    return round(sum(sc * w for sc, w in zip(scores, weights)) / tw) if tw else None
+# Shot score is computed by the app (single source of truth) and served per shot;
+# the coordinator just reads it — see lib/score.js in the add-on.
 
 
 def _parse_ts(value: object) -> datetime | None:
@@ -343,7 +266,7 @@ class GlpDataCoordinator(DataUpdateCoordinator):
                 "pressure": round(sum(s_pres) / len(s_pres) / 10, 2) if s_pres else None,
                 "rating":     int(s_ann["rating"]) if s_ann.get("rating") else None,
                 "drink_type": drink_lookup.get(s_ann.get("drinkType", "")) or None,
-                "score":      _calc_shot_score(s_pres, s_temp, s_wt, s_dur, s_ratio),
+                "score":      s.get("score"),
                 "dp":         s_dp_small,
             })
         data["recent_shots"] = recent

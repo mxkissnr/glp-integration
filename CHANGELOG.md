@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.13.1] – 2026-06-17
+### Changed
+- The shot **score** is now read from the app (single source of truth, served per shot by GLP App v1.83.0+) instead of being re-implemented in Python — removes the duplicated scoring logic; `recent_shots[].score` now mirrors the app exactly. Requires GLP App v1.83.0+ for the score (gracefully `null` on older versions)
+
 ## [1.13.0] – 2026-06-17
 ### Added
 - Each `recent_shots` entry now includes a **`score`** (0–100) — a port of the GLP app's shot score (weighted pressure, temperature stability, duration, brew ratio and channeling) computed from the full shot data; lets the Lovelace card show the shot score; closes #36
