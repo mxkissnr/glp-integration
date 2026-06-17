@@ -1,6 +1,11 @@
 # Changelog
 
-## [1.10.3] – 2026-06-16
+## [1.10.4] – 2026-06-17
+### Added
+- HACS validation workflow (`.github/workflows/validate.yml`) running the official `hacs/action` (`category: integration`) and Home Assistant `hassfest` on push, PR, daily schedule and manual dispatch — required for submission to the HACS default repository; closes #30
+- Validation status badge in README
+### Changed
+- `manifest.json` keys reordered to hassfest convention (`domain`/`name` first, rest alphabetical) and `integration_type: "hub"` added
 ### Fixed
 - `select/select_option` (profile switching from Lovelace card) failed with the old URL (e.g. `homeassistant.local:8099`) even after reconfiguring via Options — `GlpProfileSelect.__init__` read `entry.data["url"]` directly instead of checking `entry.options` first; fixed to use `entry.options.get("url") or entry.data["url"]`; closes #29
 

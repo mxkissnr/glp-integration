@@ -6,6 +6,9 @@
   <a href="https://github.com/mxkissnr/glp-integration/releases">
     <img src="https://img.shields.io/github/v/tag/mxkissnr/glp-integration?color=%23f59e0b&label=Version&style=flat-square" alt="Version"/>
   </a>
+  <a href="https://github.com/mxkissnr/glp-integration/actions/workflows/validate.yml">
+    <img src="https://img.shields.io/github/actions/workflow/status/mxkissnr/glp-integration/validate.yml?branch=main&label=Validate&style=flat-square" alt="Validate"/>
+  </a>
   <a href="https://github.com/custom-components/hacs">
     <img src="https://img.shields.io/badge/HACS-Custom-orange?style=flat-square" alt="HACS Custom"/>
   </a>
