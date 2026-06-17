@@ -239,6 +239,7 @@ class GlpDataCoordinator(DataUpdateCoordinator):
             s_temp = s_dp.get("temperature") or []
             s_dur  = s_dp.get("timeInShot") or []
             s_wt   = s_dp.get("shotWeight") or s_dp.get("weight") or []
+            s_flow = s_dp.get("pumpFlow") or s_dp.get("weightFlow") or []
             s_dose = s_ann.get("dose")
             s_ratio = None
             if s_wt and s_dose:
@@ -248,7 +249,7 @@ class GlpDataCoordinator(DataUpdateCoordinator):
                     pass
             # Compact downsampled curves for the Lovelace card chart (max 40 pts each, ×10 ints)
             s_dp_small: dict | None = {
-                k: _ds(v) for k, v in [("p", s_pres), ("t", s_temp), ("w", s_wt)] if v
+                k: _ds(v) for k, v in [("p", s_pres), ("t", s_temp), ("w", s_wt), ("f", s_flow)] if v
             } or None
             recent.append({
                 "id":       s.get("id"),

@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.12.0] – 2026-06-17
+### Added
+- `recent_shots[].dp` now includes a downsampled **flow** curve (`f`, from `pumpFlow`) alongside pressure/temp/weight, so the Lovelace card can render a richer app-style shot chart with a flow line; closes #35
+
 ## [1.11.0] – 2026-06-17
 ### Added
 - New service **`gaggiuino_profiler.maintenance_done`** (field `task`) — marks a maintenance task as completed by POSTing to the app's `/api/maintenance/{task}/done` and refreshing; lets the GLP Lovelace card mark maintenance done from the dashboard; closes #34
