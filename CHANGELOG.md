@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.13.0] – 2026-06-17
+### Added
+- Each `recent_shots` entry now includes a **`score`** (0–100) — a port of the GLP app's shot score (weighted pressure, temperature stability, duration, brew ratio and channeling) computed from the full shot data; lets the Lovelace card show the shot score; closes #36
+
 ## [1.12.0] – 2026-06-17
 ### Added
 - `recent_shots[].dp` now includes a downsampled **flow** curve (`f`, from `pumpFlow`) alongside pressure/temp/weight, so the Lovelace card can render a richer app-style shot chart with a flow line; closes #35
