@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.10.6] – 2026-06-17
+### Added
+- In-repo brand assets (`custom_components/gaggiuino_profiler/brand/icon.png` + `icon@2x.png`) so the HACS validation brands check passes (8/8) before the integration is listed in the `home-assistant/brands` repository; closes #32
+
 ## [1.10.5] – 2026-06-17
 ### Fixed
 - hassfest validation errors that block HACS default submission: `http` was added to `manifest.json` `dependencies` (the integration registers `HomeAssistantView` proxy endpoints), and the example URL was removed from the config-flow user-step description in `strings.json` and `translations/en.json` (hassfest forbids URLs in translation strings); closes #31
