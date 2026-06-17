@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "Connect to Gaggiuino Local Profiler",
-        "description": "Enter the URL of your Gaggiuino Local Profiler instance (e.g. http://homeassistant.local:8099).",
+        "description": "Enter the URL of your Gaggiuino Local Profiler instance, including the port (default port 8099).",
         "data": {
           "url": "GLP URL"
         }

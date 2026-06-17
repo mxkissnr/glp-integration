@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.10.5] – 2026-06-17
+### Fixed
+- hassfest validation errors that block HACS default submission: `http` was added to `manifest.json` `dependencies` (the integration registers `HomeAssistantView` proxy endpoints), and the example URL was removed from the config-flow user-step description in `strings.json` and `translations/en.json` (hassfest forbids URLs in translation strings); closes #31
+
 ## [1.10.4] – 2026-06-17
 ### Added
 - HACS validation workflow (`.github/workflows/validate.yml`) running the official `hacs/action` (`category: integration`) and Home Assistant `hassfest` on push, PR, daily schedule and manual dispatch — required for submission to the HACS default repository; closes #30
