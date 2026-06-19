@@ -50,10 +50,14 @@ async def _proxy(request: Request, method: str, addon_path: str) -> Response:
 
 
 class GlpOrdersView(HomeAssistantView):
-    """Proxy for POST /api/glp/orders → add-on POST /api/orders."""
+    """Proxy for /api/glp/orders → app /api/orders (GET list, POST place)."""
     url = "/api/glp/orders"
     name = "api:glp:orders:root"
     requires_auth = True
+
+    async def get(self, request: Request) -> Response:
+        qs = request.query_string
+        return await _proxy(request, "GET", "api/orders" + (f"?{qs}" if qs else ""))
 
     async def post(self, request: Request) -> Response:
         return await _proxy(request, "POST", "api/orders")

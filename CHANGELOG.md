@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.14.1] – 2026-06-17
+### Added
+- `GET /api/glp/orders` proxy (list orders) — the root orders proxy previously only accepted POST; GET is required so the GLP Lovelace card can list/manage orders (barista actions). Query string is forwarded; closes #38
+
 ## [1.14.0] – 2026-06-17
 ### Added
 - `recent_shots[]` now include the **grinder** and **grind** (grind setting) from the shot annotation, so the GLP Lovelace card can show the last grind setting + grinder at a glance
