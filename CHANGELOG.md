@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.14.0] – 2026-06-17
+### Added
+- `recent_shots[]` now include the **grinder** and **grind** (grind setting) from the shot annotation, so the GLP Lovelace card can show the last grind setting + grinder at a glance
+
 ## [1.13.1] – 2026-06-17
 ### Changed
 - The shot **score** is now read from the app (single source of truth, served per shot by GLP App v1.83.0+) instead of being re-implemented in Python — removes the duplicated scoring logic; `recent_shots[].score` now mirrors the app exactly. Requires GLP App v1.83.0+ for the score (gracefully `null` on older versions)
