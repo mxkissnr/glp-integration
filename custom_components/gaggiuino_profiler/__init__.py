@@ -14,7 +14,7 @@ from .orders_api import GlpOrdersSubView, GlpOrdersView, GlpShotsSubView
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["sensor", "binary_sensor", "select"]
+PLATFORMS = ["sensor", "binary_sensor", "select", "update"]
 
 MAINTENANCE_DONE_SCHEMA = vol.Schema({vol.Required("task"): vol.All(str, vol.Length(min=1))})
 

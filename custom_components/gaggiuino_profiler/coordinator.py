@@ -119,6 +119,12 @@ class GlpDataCoordinator(DataUpdateCoordinator):
                 menu_items = await r.json() if r.ok else []
         except Exception:
             menu_items = []
+
+        try:
+            async with self._session.get(f"{self._url}/api/version", timeout=aiohttp.ClientTimeout(total=10)) as r:
+                version_info = await r.json() if r.ok else {}
+        except Exception:
+            version_info = {}
         drink_lookup: dict[str, str] = {
             m["id"]: f"{m.get('emoji', '')} {m['name']}".strip()
             for m in menu_items if m.get("id") and m.get("name")
@@ -228,6 +234,12 @@ class GlpDataCoordinator(DataUpdateCoordinator):
         data["preheat_remaining"]          = preheat.get("remaining")
         data["machine_temperature"]        = preheat.get("temp")
         data["machine_target_temperature"] = preheat.get("targetTemp")
+
+        # Version / update info
+        data["version_current"]        = version_info.get("current")
+        data["version_latest"]         = version_info.get("latest")
+        data["version_update_available"] = bool(version_info.get("update_available"))
+        data["version_release_url"]    = version_info.get("release_url")
 
         # Profile selector data
         data["profile_options"]  = profiles_data.get("options") or []

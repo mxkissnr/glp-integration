@@ -1,5 +1,8 @@
 # Changelog
 
+## [1.15.0] – 2026-06-24
+- feat: native HA `UpdateEntity` — GLP now appears in HA Settings → Updates alongside HACS and Supervisor updates; shows installed vs. latest version and supports one-click install via `update.install` service; triggers GLP's `/api/update` endpoint which uses the HA Supervisor to restart the add-on; closes #38
+
 ## [1.14.1] – 2026-06-17
 ### Added
 - `GET /api/glp/orders` proxy (list orders) — the root orders proxy previously only accepted POST; GET is required so the GLP Lovelace card can list/manage orders (barista actions). Query string is forwarded; closes #38
