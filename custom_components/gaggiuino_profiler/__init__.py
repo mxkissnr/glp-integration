@@ -10,7 +10,7 @@ from .const import CONF_SCAN_INTERVAL, DOMAIN, SCAN_INTERVAL_SECONDS
 from .coordinator import GlpDataCoordinator
 from .live_coordinator import GlpLiveCoordinator
 from .machine_coordinator import GlpMachineCoordinator
-from .orders_api import GlpOrdersSubView, GlpOrdersView, GlpShotsSubView
+from .orders_api import GlpBeansInfoView, GlpOrdersSubView, GlpOrdersView, GlpShotsSubView
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,6 +25,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.http.register_view(GlpOrdersView())
         hass.http.register_view(GlpOrdersSubView())
         hass.http.register_view(GlpShotsSubView())
+        hass.http.register_view(GlpBeansInfoView())
         hass.data[f"{DOMAIN}_views_registered"] = True
 
     # Register the maintenance_done service once (idempotent)

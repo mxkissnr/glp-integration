@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.16.0] – 2026-07-05
+### Added
+- `GET /api/glp/library/beans-info` proxy — read-only bean metadata (origin, variety, process, roast date, decaf) for the shot card's bean enrichment. Deliberately a fixed path with GET only, no wildcard, to keep the library surface exposed through HA minimal; closes #39
+
 ## [1.15.0] – 2026-06-24
 - feat: native HA `UpdateEntity` — GLP now appears in HA Settings → Updates alongside HACS and Supervisor updates; shows installed vs. latest version and supports one-click install via `update.install` service; triggers GLP's `/api/update` endpoint which uses the HA Supervisor to restart the add-on; closes #38
 

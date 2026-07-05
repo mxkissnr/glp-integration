@@ -1,5 +1,6 @@
-"""GLP Orders REST API proxy — exposes /api/glp/orders/* and /api/glp/shots/*
-so the GLP Order Card can reach the add-on without going through HA ingress."""
+"""GLP REST API proxy — exposes /api/glp/orders/*, /api/glp/shots/* and
+/api/glp/library/beans-info so the GLP cards can reach the add-on without
+going through HA ingress."""
 import aiohttp
 from aiohttp.web import Request, Response
 
@@ -87,3 +88,17 @@ class GlpShotsSubView(HomeAssistantView):
 
     async def get(self, request: Request, rest: str) -> Response:
         return await _proxy(request, "GET", f"api/shots/{rest}")
+
+
+class GlpBeansInfoView(HomeAssistantView):
+    """Read-only proxy for /api/glp/library/beans-info → add-on bean metadata.
+
+    Deliberately a fixed path (no {rest} wildcard) so the library API surface
+    exposed through HA stays limited to this one GET.
+    """
+    url = "/api/glp/library/beans-info"
+    name = "api:glp:library:beans-info"
+    requires_auth = True
+
+    async def get(self, request: Request) -> Response:
+        return await _proxy(request, "GET", "api/library/beans-info")
