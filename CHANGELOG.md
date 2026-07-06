@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.16.1] – 2026-07-06
+### Fixed — Security audit
+- `GlpOrdersSubView` (orders proxy) now requires HA admin for POST/DELETE (menu management, accept/decline, history cleanup) — previously any authenticated HA user, including the customer-facing Order Card, could trigger destructive actions like `DELETE /api/glp/orders/history`. GET stays open for everyone.
+- The Supervisor token is no longer sent to an arbitrary configured GLP URL — `coordinator.py` now only attaches it when the host is recognized as local/LAN (`_is_trusted_host`), since `config_flow` only validates the URL scheme, not the host.
+
 ## [1.16.0] – 2026-07-05
 ### Added
 - `GET /api/glp/library/beans-info` proxy — read-only bean metadata (origin, variety, process, roast date, decaf) for the shot card's bean enrichment. Deliberately a fixed path with GET only, no wildcard, to keep the library surface exposed through HA minimal; closes #39
