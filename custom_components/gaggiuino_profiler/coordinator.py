@@ -1,6 +1,8 @@
+import ipaddress
 import logging
 import os
 from datetime import datetime, timedelta, timezone
+from urllib.parse import urlparse
 
 import aiohttp
 from homeassistant.core import HomeAssistant
@@ -10,6 +12,32 @@ from homeassistant.util import dt as dt_util
 from .const import DOMAIN, SCAN_INTERVAL_SECONDS
 
 _LOGGER = logging.getLogger(__name__)
+
+# Suffixes for LAN hostnames that aren't IP literals and can't be checked via
+# ipaddress (mDNS-style names commonly used for the GLP host on this network).
+_LOCAL_HOST_SUFFIXES = (".local", ".internal", ".intern", ".lan", ".home", ".home.arpa")
+
+
+def _is_trusted_host(url: str) -> bool:
+    """Only send the privileged Supervisor token (see below) to a host that's
+    clearly local/LAN — never to an arbitrary configured URL. `url` is
+    admin-configured (config_flow only validates the scheme), so without this
+    a misconfigured or malicious URL would otherwise get the Supervisor token
+    handed to it directly. Best-effort string/IP-literal check, not a DNS
+    resolution — keeps this synchronous and side-effect-free."""
+    try:
+        host = urlparse(url).hostname or ""
+    except Exception:
+        return False
+    if not host:
+        return False
+    if host == "localhost":
+        return True
+    try:
+        return ipaddress.ip_address(host).is_private
+    except ValueError:
+        pass  # not an IP literal — fall through to the suffix check
+    return host.lower().endswith(_LOCAL_HOST_SUFFIXES)
 
 
 def _ds(arr: list, n: int = 40) -> list:
@@ -62,12 +90,16 @@ class GlpDataCoordinator(DataUpdateCoordinator):
 
             # Fetch GLP API token once.  Send the HA Supervisor token in the
             # Authorization header so the add-on can verify via the Supervisor
-            # API, even when the request does not arrive from a private IP.
+            # API, even when the request does not arrive from a private IP —
+            # but only to a host we recognize as local/LAN (see
+            # _is_trusted_host): self._url is admin-configured and only
+            # scheme-validated by config_flow, so an untrusted host must never
+            # receive this privileged token.
             if not self._headers:
                 try:
                     token_req_headers: dict[str, str] = {}
                     supervisor_token = os.environ.get("SUPERVISOR_TOKEN")
-                    if supervisor_token:
+                    if supervisor_token and _is_trusted_host(self._url):
                         token_req_headers["Authorization"] = f"Bearer {supervisor_token}"
                     async with self._session.get(
                         f"{self._url}/api/token",

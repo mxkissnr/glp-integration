@@ -13,6 +13,14 @@ from .const import DOMAIN
 _TIMEOUT = aiohttp.ClientTimeout(total=10)
 
 
+def _forbidden_unless_admin(request: Request) -> Response | None:
+    """Return a 403 Response if the caller is not an HA admin, else None."""
+    hass_user = request.get("hass_user")
+    if hass_user is None or not hass_user.is_admin:
+        return Response(status=403, text="admin required")
+    return None
+
+
 def _coordinator(hass: HomeAssistant):
     for entry_data in hass.data.get(DOMAIN, {}).values():
         if isinstance(entry_data, dict):
@@ -65,7 +73,12 @@ class GlpOrdersView(HomeAssistantView):
 
 
 class GlpOrdersSubView(HomeAssistantView):
-    """Proxy for /api/glp/orders/{rest} → add-on /api/orders/{rest}."""
+    """Proxy for /api/glp/orders/{rest} → add-on /api/orders/{rest}.
+
+    GET stays open to any authenticated user (menu/stock/queue info needed by
+    the customer-facing Order Card). POST/DELETE cover barista/admin actions
+    (menu management, accept/decline, history cleanup) and require HA admin.
+    """
     url = "/api/glp/orders/{rest:.+}"
     name = "api:glp:orders:sub"
     requires_auth = True
@@ -74,9 +87,15 @@ class GlpOrdersSubView(HomeAssistantView):
         return await _proxy(request, "GET", f"api/orders/{rest}")
 
     async def post(self, request: Request, rest: str) -> Response:
+        forbidden = _forbidden_unless_admin(request)
+        if forbidden:
+            return forbidden
         return await _proxy(request, "POST", f"api/orders/{rest}")
 
     async def delete(self, request: Request, rest: str) -> Response:
+        forbidden = _forbidden_unless_admin(request)
+        if forbidden:
+            return forbidden
         return await _proxy(request, "DELETE", f"api/orders/{rest}")
 
 
