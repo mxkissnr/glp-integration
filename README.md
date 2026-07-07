@@ -23,6 +23,10 @@
   machine status, shot data, live brewing state and machine sensors, all without cloud.
 </p>
 
+<p align="center">
+  Part of the <a href="https://github.com/mxkissnr/gaggiuino-local-profiler">GLP ecosystem</a> — requires a <a href="https://gaggiuino.github.io/">Gaggiuino</a>-modified espresso machine and the GLP App.
+</p>
+
 ---
 
 ## ⚡ Quick Install
@@ -258,5 +262,5 @@ Built on top of the [Gaggiuino](https://gaggiuino.github.io/) project. The machi
 ---
 
 <p align="center">
-  <sub>Built with <a href="https://claude.ai/code">Claude Code</a> by Anthropic</sub>
+  <sub>Built with <a href="https://claude.ai/code">Claude Code</a> by Anthropic — see <a href="https://github.com/mxkissnr/gaggiuino-local-profiler/blob/main/DEVELOPMENT.md">DEVELOPMENT.md</a> for full transparency and model stats.</sub>
 </p>
