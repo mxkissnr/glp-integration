@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+### Added
+- Test suite (`tests/`, `pytest-homeassistant-custom-component`) covering `config_flow.py` URL/host validation, `coordinator.py`'s `_is_trusted_host()` Supervisor-token guard, and the orders proxy admin-check (`GlpOrdersSubView` POST/DELETE reject non-admins, GET stays open) — the integration had zero automated tests before. Wired as a `pytest` job in `.github/workflows/validate.yml` alongside the existing HACS/hassfest validation. Closes #40
+
 ## [1.16.2] – 2026-07-06
 ### Fixed
 - **Update entity always showed "Unknown"** — the coordinator's `/api/version` fetch never sent the `X-GLP-Token` header (unlike every other authenticated call), so the app rejected it with 401 and `installed_version`/`latest_version` stayed empty. Pre-existing since the Update entity was introduced (v1.15.0, #38), not a recent regression. Fixed by passing `headers=self._headers` like the other calls.

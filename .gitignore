@@ -3,3 +3,5 @@ __pycache__/
 .memsearch/
 graphify-out/
 .claude/settings.local.json
+.venv-test/
+.pytest_cache/
