@@ -153,7 +153,7 @@ class GlpDataCoordinator(DataUpdateCoordinator):
             menu_items = []
 
         try:
-            async with self._session.get(f"{self._url}/api/version", timeout=aiohttp.ClientTimeout(total=10)) as r:
+            async with self._session.get(f"{self._url}/api/version", headers=self._headers, timeout=aiohttp.ClientTimeout(total=10)) as r:
                 version_info = await r.json() if r.ok else {}
         except Exception:
             version_info = {}

@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.16.2] – 2026-07-06
+### Fixed
+- **Update entity always showed "Unknown"** — the coordinator's `/api/version` fetch never sent the `X-GLP-Token` header (unlike every other authenticated call), so the app rejected it with 401 and `installed_version`/`latest_version` stayed empty. Pre-existing since the Update entity was introduced (v1.15.0, #38), not a recent regression. Fixed by passing `headers=self._headers` like the other calls.
+
 ## [1.16.1] – 2026-07-06
 ### Fixed — Security audit
 - `GlpOrdersSubView` (orders proxy) now requires HA admin for POST/DELETE (menu management, accept/decline, history cleanup) — previously any authenticated HA user, including the customer-facing Order Card, could trigger destructive actions like `DELETE /api/glp/orders/history`. GET stays open for everyone.
