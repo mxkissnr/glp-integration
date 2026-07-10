@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## [1.17.0] – 2026-07-10
 ### Added
 - Test suite (`tests/`, `pytest-homeassistant-custom-component`) covering `config_flow.py` URL/host validation, `coordinator.py`'s `_is_trusted_host()` Supervisor-token guard, and the orders proxy admin-check (`GlpOrdersSubView` POST/DELETE reject non-admins, GET stays open) — the integration had zero automated tests before. Wired as a `pytest` job in `.github/workflows/validate.yml` alongside the existing HACS/hassfest validation. Closes #40
 - **DE/IT/FR/ES/NL translations for the config flow.** The integration's setup/options dialogs were English-only (`translations/en.json`); added the 5 missing translation files matching its structure, so the config flow now follows Home Assistant's configured language like the rest of the GLP ecosystem. `custom_components/gaggiuino_profiler/translations/{de,it,fr,es,nl}.json` (new). Closes #43
