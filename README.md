@@ -259,6 +259,10 @@ Inspired by [BeanConqueror](https://github.com/graphefruit/beanconqueror) by gra
 
 Built on top of the [Gaggiuino](https://gaggiuino.github.io/) project. The machine sensor design was inspired by the original [Gaggiuino Home Assistant Integration](https://github.com/ALERTua/hass-gaggiuino) by ALERTua — thank you for pioneering the HA connectivity concepts that made this possible.
 
+## Disclaimer
+
+GLP Integration is an independent, community-built Home Assistant custom component. It is not officially affiliated with, endorsed by, or supported by the [Gaggiuino](https://gaggiuino.github.io/) firmware project or its maintainers.
+
 ---
 
 <p align="center">
