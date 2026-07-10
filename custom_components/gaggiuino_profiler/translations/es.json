@@ -1,0 +1,30 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Conectar con Gaggiuino Local Profiler",
+        "description": "Introduce la URL de tu instancia de Gaggiuino Local Profiler, incluyendo el puerto (puerto predeterminado 8099).",
+        "data": {
+          "url": "URL de GLP"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "No se puede conectar con GLP. Comprueba la URL y asegúrate de que la aplicación esté en ejecución."
+    },
+    "abort": {
+      "already_configured": "Esta instancia de GLP ya está configurada."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Opciones de Gaggiuino Local Profiler",
+        "data": {
+          "url": "URL de GLP",
+          "scan_interval": "Intervalo de sondeo (segundos)"
+        }
+      }
+    }
+  }
+}

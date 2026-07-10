@@ -1,0 +1,30 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Verbinden met Gaggiuino Local Profiler",
+        "description": "Voer de URL van je Gaggiuino Local Profiler-instantie in, inclusief poort (standaardpoort 8099).",
+        "data": {
+          "url": "GLP-URL"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Kan geen verbinding maken met GLP. Controleer de URL en zorg dat de app actief is."
+    },
+    "abort": {
+      "already_configured": "Deze GLP-instantie is al geconfigureerd."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Gaggiuino Local Profiler-opties",
+        "data": {
+          "url": "GLP-URL",
+          "scan_interval": "Pollinterval (seconden)"
+        }
+      }
+    }
+  }
+}
