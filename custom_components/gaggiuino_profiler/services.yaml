@@ -1,3 +1,13 @@
+backup:
+  name: Create backup
+  description: >-
+    Exports a full GLP backup (shots, annotations, coffee library, blocklist,
+    trash) via the add-on's /api/backup endpoint and writes it to
+    <config>/glp_backups/. Fires gaggiuino_profiler_backup_created with the
+    resulting file path once done, so automations (e.g. before an update, or
+    on a schedule) can react.
+  fields: {}
+
 maintenance_done:
   name: Mark maintenance task done
   description: >-

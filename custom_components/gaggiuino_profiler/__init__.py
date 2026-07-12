@@ -1,4 +1,7 @@
+import json
 import logging
+import os
+from datetime import datetime
 
 import aiohttp
 import voluptuous as vol
@@ -55,6 +58,50 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.services.async_register(
             DOMAIN, "maintenance_done", _handle_maintenance_done, schema=MAINTENANCE_DONE_SCHEMA
         )
+
+    # Register the backup service once (idempotent)
+    if not hass.services.has_service(DOMAIN, "backup"):
+        async def _handle_backup(call: ServiceCall) -> None:
+            coord: GlpDataCoordinator | None = next(
+                (d["data"] for d in hass.data.get(DOMAIN, {}).values()
+                 if isinstance(d, dict) and "data" in d),
+                None,
+            )
+            if coord is None:
+                _LOGGER.error("backup: no GLP coordinator available")
+                return
+            try:
+                async with coord._session.get(
+                    f"{coord._url}/api/backup",
+                    headers=coord._headers,
+                    timeout=aiohttp.ClientTimeout(total=30),
+                ) as r:
+                    r.raise_for_status()
+                    backup_data = await r.json()
+            except Exception as err:
+                _LOGGER.error("backup failed: %s", err)
+                raise
+
+            backup_dir  = hass.config.path("glp_backups")
+            filename    = f"glp-backup-{datetime.now().strftime('%Y%m%d-%H%M%S')}.json"
+            backup_path = os.path.join(backup_dir, filename)
+
+            def _write_backup() -> None:
+                os.makedirs(backup_dir, exist_ok=True)
+                with open(backup_path, "w", encoding="utf-8") as f:
+                    json.dump(backup_data, f)
+
+            await hass.async_add_executor_job(_write_backup)
+
+            hass.bus.async_fire(
+                f"{DOMAIN}_backup_created",
+                {
+                    "path":  backup_path,
+                    "shots": len(backup_data.get("shots", [])),
+                },
+            )
+
+        hass.services.async_register(DOMAIN, "backup", _handle_backup)
 
     session       = async_get_clientsession(hass)
     url           = entry.options.get("url") or entry.data["url"]

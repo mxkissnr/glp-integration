@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.18.0] – 2026-07-12
+### Added
+- **`gaggiuino_profiler.backup` service.** Calls the add-on's existing `GET /api/backup` endpoint (full JSON bundle: shots, annotations, coffee library, blocklist, trash) and writes the result to `<config>/glp_backups/glp-backup-<timestamp>.json`, so a scheduled automation (or one run before an add-on update) can create a backup without manual intervention. File I/O runs via `hass.async_add_executor_job` to keep it off the event loop. Fires `gaggiuino_profiler_backup_created` with `{path, shots}` on success so other automations (e.g. mobile notify) can react. No `restore` service in this round — restore is destructive and not currently needed; noted as a backlog item on the issue. `custom_components/gaggiuino_profiler/__init__.py`, `services.yaml`, `tests/test_backup_service.py` (new). Closes #46
+
 ## [1.17.1] – 2026-07-12
 ### Fixed
 - **Profile select entity didn't update when the profile was changed directly on the machine.** `GlpProfileSelect` (`select.py`) extends `CoordinatorEntity[GlpDataCoordinator]` (the slow 60s data coordinator), but its `current_option` reads live data from the machine coordinator (5s) — `CoordinatorEntity` only pushes a state update in reaction to the coordinator it's *subscribed* to, so the underlying value was fresh but nothing told Home Assistant to re-read it except the 60s cycle. Other machine-derived sensors (e.g. the preheat countdown) update in real time because `GlpMachineSensor` correctly subscribes to the machine coordinator directly — the select entity didn't. Fixed by also subscribing to the machine coordinator's update signal in `async_added_to_hass`. `custom_components/gaggiuino_profiler/select.py`, `tests/test_select.py` (new). Closes #44
