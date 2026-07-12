@@ -61,6 +61,20 @@ class GlpProfileSelect(CoordinatorEntity[GlpDataCoordinator], SelectEntity):
         )
         self._url = _url
 
+    async def async_added_to_hass(self) -> None:
+        await super().async_added_to_hass()
+        # CoordinatorEntity only pushes a state update when the coordinator it
+        # was constructed with (the 60 s data coordinator) refreshes. This
+        # entity's current_option below reads live data from the machine
+        # coordinator (5 s) instead, so without this extra subscription a
+        # profile switch made directly on the machine's own screen is fetched
+        # correctly but never actually reaches Home Assistant/the card until
+        # the next slow-coordinator cycle — the same reasoning GlpMachineSensor
+        # (sensor.py) already subscribes to the machine coordinator for.
+        self.async_on_remove(
+            self._machine_coordinator.async_add_listener(self.async_write_ha_state)
+        )
+
     @property
     def options(self) -> list[str]:
         # Full profile list from main coordinator (60 s — rarely changes)
