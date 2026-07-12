@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.17.1] – 2026-07-12
+### Fixed
+- **Profile select entity didn't update when the profile was changed directly on the machine.** `GlpProfileSelect` (`select.py`) extends `CoordinatorEntity[GlpDataCoordinator]` (the slow 60s data coordinator), but its `current_option` reads live data from the machine coordinator (5s) — `CoordinatorEntity` only pushes a state update in reaction to the coordinator it's *subscribed* to, so the underlying value was fresh but nothing told Home Assistant to re-read it except the 60s cycle. Other machine-derived sensors (e.g. the preheat countdown) update in real time because `GlpMachineSensor` correctly subscribes to the machine coordinator directly — the select entity didn't. Fixed by also subscribing to the machine coordinator's update signal in `async_added_to_hass`. `custom_components/gaggiuino_profiler/select.py`, `tests/test_select.py` (new). Closes #44
+
 ## [1.17.0] – 2026-07-10
 ### Added
 - Test suite (`tests/`, `pytest-homeassistant-custom-component`) covering `config_flow.py` URL/host validation, `coordinator.py`'s `_is_trusted_host()` Supervisor-token guard, and the orders proxy admin-check (`GlpOrdersSubView` POST/DELETE reject non-admins, GET stays open) — the integration had zero automated tests before. Wired as a `pytest` job in `.github/workflows/validate.yml` alongside the existing HACS/hassfest validation. Closes #40
