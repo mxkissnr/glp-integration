@@ -19,7 +19,21 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = ["sensor", "binary_sensor", "select", "update"]
 
-MAINTENANCE_DONE_SCHEMA = vol.Schema({vol.Required("task"): vol.All(str, vol.Length(min=1))})
+MAINTENANCE_DONE_SCHEMA = vol.Schema({
+    vol.Required("task"): vol.All(str, vol.Length(min=1)),
+    vol.Optional("machine"): vol.Coerce(int),
+})
+BACKUP_SCHEMA = vol.Schema({vol.Optional("machine"): vol.Coerce(int)})
+
+
+def _machine_query_suffix(call: ServiceCall) -> str:
+    """#48/#317: appends ?machine=<id> when the service call specifies one.
+    The app doesn't read this parameter on /api/maintenance/*/done or
+    /api/backup as of app v2.0.0 -- accepted here so the service call is
+    already forward-compatible once that lands, and harmless today (an
+    unrecognized query param on these routes is simply ignored)."""
+    machine = call.data.get("machine")
+    return f"?machine={machine}" if machine else ""
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -45,7 +59,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 return
             try:
                 async with coord._session.post(
-                    f"{coord._url}/api/maintenance/{task}/done",
+                    f"{coord._url}/api/maintenance/{task}/done{_machine_query_suffix(call)}",
                     headers=coord._headers,
                     timeout=aiohttp.ClientTimeout(total=10),
                 ) as r:
@@ -72,7 +86,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 return
             try:
                 async with coord._session.get(
-                    f"{coord._url}/api/backup",
+                    f"{coord._url}/api/backup{_machine_query_suffix(call)}",
                     headers=coord._headers,
                     timeout=aiohttp.ClientTimeout(total=30),
                 ) as r:
@@ -101,7 +115,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 },
             )
 
-        hass.services.async_register(DOMAIN, "backup", _handle_backup)
+        hass.services.async_register(DOMAIN, "backup", _handle_backup, schema=BACKUP_SCHEMA)
 
     session       = async_get_clientsession(hass)
     url           = entry.options.get("url") or entry.data["url"]
