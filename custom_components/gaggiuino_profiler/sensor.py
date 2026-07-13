@@ -296,6 +296,43 @@ async def async_setup_entry(
     entities += [GlpMachineSensor(machine_coordinator, entry, d) for d in MACHINE_SENSORS]
     async_add_entities(entities)
 
+    # Multi-machine (#48): one status sensor per *additional* (non-default)
+    # machine from coordinator.data["machines"] (populated since #47 from
+    # the app's GET /api/status). The default machine's entities above are
+    # untouched -- same unique_ids, same device, zero dashboard breakage.
+    #
+    # Scope note: this is intentionally NOT a full mirror of the default
+    # machine's sensor set (shot_count, last_shot_*, maintenance status,
+    # live temperature/pressure...). Those all come from app endpoints
+    # (/shots.json, /api/maintenance, /api/machine/status) that are not yet
+    # machine-scoped -- they only ever describe the default machine as of
+    # app v2.0.0. Mirroring them onto an additional machine's device would
+    # silently show that machine's data as the OTHER machine's data, which
+    # is actively misleading, not just incomplete. This sensor surfaces
+    # exactly what IS genuinely available per machine today: name, type,
+    # enabled and reachable/on from the machines[] registry array. Full
+    # parity is a follow-up gated on the app adding ?machine=<id> support
+    # to those endpoints.
+    #
+    # New machines added later (via the app's Settings UI, #319) get their
+    # entity added at runtime via this listener -- no HA restart needed.
+    known_machine_ids: set[int] = set()
+
+    def _sync_additional_machines() -> None:
+        machines = coordinator.data.get("machines") or [] if coordinator.data else []
+        new_entities = []
+        for m in machines:
+            mid = m.get("id")
+            if mid is None or m.get("isDefault") or mid in known_machine_ids:
+                continue
+            known_machine_ids.add(mid)
+            new_entities.append(GlpAdditionalMachineSensor(coordinator, entry, mid, m.get("name") or f"Machine {mid}"))
+        if new_entities:
+            async_add_entities(new_entities)
+
+    _sync_additional_machines()
+    entry.async_on_unload(coordinator.async_add_listener(_sync_additional_machines))
+
 
 class GlpSensor(CoordinatorEntity[GlpDataCoordinator], SensorEntity):
     _attr_has_entity_name = True
@@ -328,6 +365,9 @@ class GlpSensor(CoordinatorEntity[GlpDataCoordinator], SensorEntity):
             sw = self.coordinator.data.get("switch_entity")
             if sw:
                 attrs["switch_entity"] = sw
+            machines = self.coordinator.data.get("machines")
+            if machines:
+                attrs["machines"] = machines
             recent = self.coordinator.data.get("recent_shots")
             if recent:
                 attrs["recent_shots"] = recent
@@ -429,3 +469,54 @@ class GlpMachineSensor(CoordinatorEntity[GlpMachineCoordinator], SensorEntity):
         if not self.coordinator.data:
             return None
         return self.coordinator.data.get(self.entity_description.data_key)
+
+
+class GlpAdditionalMachineSensor(CoordinatorEntity[GlpDataCoordinator], SensorEntity):
+    """Status summary sensor for one additional (non-default) machine
+    (#48) — see the scope-note comment in async_setup_entry() above for why
+    this doesn't mirror the default machine's full sensor set."""
+
+    _attr_has_entity_name = True
+    _attr_name = "Status"
+    _attr_icon = "mdi:coffee-maker"
+
+    def __init__(self, coordinator: GlpDataCoordinator, entry: ConfigEntry, machine_id: int, machine_name: str) -> None:
+        super().__init__(coordinator)
+        self._machine_id = machine_id
+        self._attr_unique_id = f"{entry.entry_id}_{machine_id}_status"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, f"{entry.entry_id}_{machine_id}")},
+            name=machine_name,
+            manufacturer="Gaggiuino",
+            model="Local Profiler (additional machine)",
+            configuration_url=entry.data["url"],
+            via_device=(DOMAIN, entry.entry_id),
+        )
+
+    def _machine(self) -> dict | None:
+        machines = (self.coordinator.data or {}).get("machines") or []
+        return next((m for m in machines if m.get("id") == self._machine_id), None)
+
+    @property
+    def available(self) -> bool:
+        return self._machine() is not None
+
+    @property
+    def native_value(self) -> str | None:
+        m = self._machine()
+        if not m:
+            return None
+        if not m.get("enabled"):
+            return "disabled"
+        if m.get("reachable") is False:
+            return "unreachable"
+        if m.get("on"):
+            return "on"
+        return "configured"
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        m = self._machine()
+        if not m:
+            return {}
+        return {"type": m.get("type"), "enabled": m.get("enabled"), "reachable": m.get("reachable")}

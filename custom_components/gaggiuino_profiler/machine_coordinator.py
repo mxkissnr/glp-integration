@@ -20,6 +20,16 @@ class GlpMachineCoordinator(DataUpdateCoordinator):
     machine so no extra machine call is needed from the integration side.
     Returns an empty dict (not an error) when the machine status is unavailable
     so entities show as unavailable rather than triggering HA error states.
+
+    Multi-machine (#48): `machine_id` is accepted for forward-compatibility
+    but has no effect yet -- /api/machine/status isn't machine-scoped as of
+    app v2.0.0 (it always describes the default machine), so a second
+    GlpMachineCoordinator instance for an additional machine would just
+    return the same data mislabeled as that machine's, which would be
+    actively misleading. No additional-machine live sensors are set up in
+    this round for that reason (see the scope note in sensor.py); once the
+    app adds ?machine=<id> support here, per-machine live coordinators/
+    sensors are a straightforward follow-up using this same parameter.
     """
 
     def __init__(
@@ -28,21 +38,24 @@ class GlpMachineCoordinator(DataUpdateCoordinator):
         session: aiohttp.ClientSession,
         url: str,
         data_coordinator,
+        machine_id: int | None = None,
     ) -> None:
         super().__init__(
             hass,
             _LOGGER,
-            name=f"{DOMAIN}_machine",
+            name=f"{DOMAIN}_machine" + (f"_{machine_id}" if machine_id else ""),
             update_interval=timedelta(seconds=MACHINE_INTERVAL_SECONDS),
         )
         self._session          = session
         self._url              = url.rstrip("/")
         self._data_coordinator = data_coordinator
+        self._machine_id       = machine_id
 
     async def _async_update_data(self) -> dict:
+        suffix = f"?machine={self._machine_id}" if self._machine_id else ""
         try:
             async with self._session.get(
-                f"{self._url}/api/machine/status",
+                f"{self._url}/api/machine/status{suffix}",
                 headers=self._data_coordinator._headers,
                 timeout=aiohttp.ClientTimeout(total=5),
             ) as r:

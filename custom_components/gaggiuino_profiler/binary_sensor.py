@@ -32,6 +32,28 @@ async def async_setup_entry(
         SteamSwitchSensor(machine_coordinator, entry),
     ])
 
+    # Multi-machine (#48) — one "Reachable" binary_sensor per additional
+    # machine, same dynamic-add-on-coordinator-update pattern and same
+    # scope note as GlpAdditionalMachineSensor in sensor.py: reachable/on
+    # are the only fields genuinely available per machine from the app's
+    # machines[] registry array today.
+    known_machine_ids: set[int] = set()
+
+    def _sync_additional_machines() -> None:
+        machines = data_coordinator.data.get("machines") or [] if data_coordinator.data else []
+        new_entities = []
+        for m in machines:
+            mid = m.get("id")
+            if mid is None or m.get("isDefault") or mid in known_machine_ids:
+                continue
+            known_machine_ids.add(mid)
+            new_entities.append(GlpAdditionalMachineReachableSensor(data_coordinator, entry, mid, m.get("name") or f"Machine {mid}"))
+        if new_entities:
+            async_add_entities(new_entities)
+
+    _sync_additional_machines()
+    entry.async_on_unload(data_coordinator.async_add_listener(_sync_additional_machines))
+
 
 class IsBrewingSensor(CoordinatorEntity[GlpLiveCoordinator], BinarySensorEntity):
     _attr_has_entity_name = True
@@ -122,3 +144,39 @@ class SteamSwitchSensor(CoordinatorEntity[GlpMachineCoordinator], BinarySensorEn
         if not self.coordinator.data:
             return None
         return bool(self.coordinator.data.get("steamSwitchState"))
+
+
+class GlpAdditionalMachineReachableSensor(CoordinatorEntity[GlpDataCoordinator], BinarySensorEntity):
+    """Reachability of one additional (non-default) machine (#48)."""
+
+    _attr_has_entity_name = True
+    _attr_name = "Reachable"
+    _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
+
+    def __init__(self, coordinator: GlpDataCoordinator, entry: ConfigEntry, machine_id: int, machine_name: str) -> None:
+        super().__init__(coordinator)
+        self._machine_id = machine_id
+        self._attr_unique_id = f"{entry.entry_id}_{machine_id}_reachable"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, f"{entry.entry_id}_{machine_id}")},
+            name=machine_name,
+            manufacturer="Gaggiuino",
+            model="Local Profiler (additional machine)",
+            configuration_url=entry.data["url"],
+            via_device=(DOMAIN, entry.entry_id),
+        )
+
+    def _machine(self) -> dict | None:
+        machines = (self.coordinator.data or {}).get("machines") or []
+        return next((m for m in machines if m.get("id") == self._machine_id), None)
+
+    @property
+    def available(self) -> bool:
+        return self._machine() is not None
+
+    @property
+    def is_on(self) -> bool | None:
+        m = self._machine()
+        if not m:
+            return None
+        return bool(m.get("reachable"))
