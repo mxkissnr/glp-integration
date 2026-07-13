@@ -328,6 +328,9 @@ class GlpSensor(CoordinatorEntity[GlpDataCoordinator], SensorEntity):
             sw = self.coordinator.data.get("switch_entity")
             if sw:
                 attrs["switch_entity"] = sw
+            machines = self.coordinator.data.get("machines")
+            if machines:
+                attrs["machines"] = machines
             recent = self.coordinator.data.get("recent_shots")
             if recent:
                 attrs["recent_shots"] = recent

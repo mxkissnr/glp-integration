@@ -212,6 +212,11 @@ class GlpDataCoordinator(DataUpdateCoordinator):
             "last_shot_dose":      float(dose) if dose else None,
             "last_sync":           _parse_ts(status.get("lastSync")),
             "machine_url":         status.get("machineHostname"),
+            # Multi-machine registry (#47, mirrors the app's additive
+            # GET /api/status "machines" array added in GLP #317). Every
+            # other field in `data` still describes only the default
+            # machine, unchanged — this is purely additive.
+            "machines":            status.get("machines") or [],
         }
 
         if current_shot_id and current_shot_id != self._last_shot_id and self._last_shot_id is not None:

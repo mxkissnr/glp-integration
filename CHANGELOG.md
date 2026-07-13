@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.19.0] – 2026-07-13
+### Added
+- **Multi-machine registry awareness (first step of #47).** GLP app v2.0.0 added an additive `machines[]` array to `GET /api/status` (the multi-machine registry — see the app's own changelog). `GlpDataCoordinator` now parses and exposes it as `coordinator.data["machines"]`, and the existing `machine_status` sensor surfaces it as a `machines` attribute (list of `{id, name, type, isDefault, enabled, reachable, on}`), giving automations/dashboards visibility into configured machines without waiting for a full per-machine device rollout. Defaults to `[]` against an app instance running an older version with no `machines` key at all — fully backward compatible. **Scope note:** this round is coordinator-level exposure only; one HA device per machine (separate entities/devices for additional machines, with the default machine keeping its existing unique_ids) is a follow-up round, not built yet. `custom_components/gaggiuino_profiler/coordinator.py`, `custom_components/gaggiuino_profiler/sensor.py`, `tests/test_multi_machine.py` (new, 4 tests). Closes #47
+
 ## [1.18.0] – 2026-07-12
 ### Added
 - **`gaggiuino_profiler.backup` service.** Calls the add-on's existing `GET /api/backup` endpoint (full JSON bundle: shots, annotations, coffee library, blocklist, trash) and writes the result to `<config>/glp_backups/glp-backup-<timestamp>.json`, so a scheduled automation (or one run before an add-on update) can create a backup without manual intervention. File I/O runs via `hass.async_add_executor_job` to keep it off the event loop. Fires `gaggiuino_profiler_backup_created` with `{path, shots}` on success so other automations (e.g. mobile notify) can react. No `restore` service in this round — restore is destructive and not currently needed; noted as a backlog item on the issue. `custom_components/gaggiuino_profiler/__init__.py`, `services.yaml`, `tests/test_backup_service.py` (new). Closes #46
