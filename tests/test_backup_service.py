@@ -79,7 +79,12 @@ async def test_backup_failure_does_not_fire_event(hass, aioclient_mock) -> None:
     events = []
     hass.bus.async_listen(f"{DOMAIN}_backup_created", lambda e: events.append(e))
 
-    with pytest.raises(Exception):
+    # Blind except is intentional: HA core wraps the underlying aiohttp error in
+    # whatever exception type its service-call machinery uses for the installed
+    # HA version (HomeAssistantError/ServiceValidationError have differed across
+    # versions) -- asserting a specific type here would be an HA-version-coupled
+    # test change, not a lint fix.
+    with pytest.raises(Exception):  # noqa: B017
         await hass.services.async_call(DOMAIN, "backup", {}, blocking=True)
     await hass.async_block_till_done()
 

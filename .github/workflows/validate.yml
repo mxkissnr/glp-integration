@@ -51,5 +51,11 @@ jobs:
       - name: Install test dependencies
         run: pip install -r requirements_test.txt
 
+      - name: Install ruff
+        run: pip install ruff
+
+      - name: Ruff lint
+        run: ruff check .
+
       - name: Run tests
         run: pytest tests/ -q

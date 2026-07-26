@@ -17,10 +17,26 @@ from pytest_homeassistant_custom_component.common import MockConfigEntry
 from custom_components.gaggiuino_profiler.const import DOMAIN
 
 MACHINES_ONE = [
-    {"id": 1, "name": "Gaggiuino", "type": "gaggiuino", "isDefault": True, "enabled": True, "reachable": True, "on": True},
+    {
+        "id": 1,
+        "name": "Gaggiuino",
+        "type": "gaggiuino",
+        "isDefault": True,
+        "enabled": True,
+        "reachable": True,
+        "on": True,
+    },
 ]
 MACHINES_TWO = MACHINES_ONE + [
-    {"id": 2, "name": "Kitchen GaggiMate", "type": "gaggimate", "isDefault": False, "enabled": True, "reachable": True, "on": False},
+    {
+        "id": 2,
+        "name": "Kitchen GaggiMate",
+        "type": "gaggimate",
+        "isDefault": False,
+        "enabled": True,
+        "reachable": True,
+        "on": False,
+    },
 ]
 
 
@@ -73,7 +89,9 @@ async def test_additional_machine_gets_a_status_sensor_and_reachable_binary_sens
     assert binary_state.state == "on"  # reachable: True
 
 
-async def test_additional_machine_device_is_separate_from_and_linked_to_the_default_device(hass, aioclient_mock) -> None:
+async def test_additional_machine_device_is_separate_from_and_linked_to_the_default_device(
+    hass, aioclient_mock
+) -> None:
     entry, _ = await _setup_entry(hass, aioclient_mock, {"machines": MACHINES_TWO})
     from homeassistant.helpers import device_registry as dr
     registry = dr.async_get(hass)

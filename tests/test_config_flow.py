@@ -1,5 +1,4 @@
 """Tests for config_flow.py's URL/host validation logic."""
-import pytest
 
 from custom_components.gaggiuino_profiler.const import DOMAIN
 
