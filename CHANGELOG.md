@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased]
+## [1.21.0] – 2026-07-26
 ### Removed
 - **Removed one-click install (`update.install`) from the `update.gaggiuino_profiler_update` entity — it now shows installed/latest version only, no "Install" button.** This entity's `async_install()` called the app's `POST /api/update`, which (as of gaggiuino-local-profiler#514/#515/#516) required the add-on to hold the Supervisor `manager` role — a substantial permission grant (covers `/backups*`, `/core/*`, `/host/*`, `/os/*`, `/supervisor/*`, not just `/addons/*`) for functionality that duplicated something Home Assistant already provides natively: every Supervisor add-on gets its own update entity (`update.<slug>_glp_update`) that installs through the Supervisor's own path and needs no elevated role at all — that entity is unaffected by this change and keeps working exactly as before (including `auto_update: true`, if configured). Plain-Docker installs (no Supervisor) lose nothing functionally either — `async_install` there always hit the app's `/api/update`, which always returned 503 outside HA, so it never actually worked for them. `custom_components/gaggiuino_profiler/update.py`, `tests/test_update.py` (new, 6 tests). Closes #54, see gaggiuino-local-profiler#516.
 
