@@ -47,7 +47,9 @@ async def async_setup_entry(
             if mid is None or m.get("isDefault") or mid in known_machine_ids:
                 continue
             known_machine_ids.add(mid)
-            new_entities.append(GlpAdditionalMachineReachableSensor(data_coordinator, entry, mid, m.get("name") or f"Machine {mid}"))
+            new_entities.append(
+                GlpAdditionalMachineReachableSensor(data_coordinator, entry, mid, m.get("name") or f"Machine {mid}")
+            )
         if new_entities:
             async_add_entities(new_entities)
 

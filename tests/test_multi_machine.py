@@ -9,8 +9,24 @@ from pytest_homeassistant_custom_component.common import MockConfigEntry
 from custom_components.gaggiuino_profiler.const import DOMAIN
 
 MACHINES_PAYLOAD = [
-    {"id": 1, "name": "Gaggiuino", "type": "gaggiuino", "isDefault": True, "enabled": True, "reachable": True, "on": True},
-    {"id": 2, "name": "Kitchen GaggiMate", "type": "gaggimate", "isDefault": False, "enabled": True, "reachable": None, "on": None},
+    {
+        "id": 1,
+        "name": "Gaggiuino",
+        "type": "gaggiuino",
+        "isDefault": True,
+        "enabled": True,
+        "reachable": True,
+        "on": True,
+    },
+    {
+        "id": 2,
+        "name": "Kitchen GaggiMate",
+        "type": "gaggimate",
+        "isDefault": False,
+        "enabled": True,
+        "reachable": None,
+        "on": None,
+    },
 ]
 
 

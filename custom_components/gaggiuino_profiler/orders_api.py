@@ -3,7 +3,6 @@
 going through HA ingress."""
 import aiohttp
 from aiohttp.web import Request, Response
-
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession

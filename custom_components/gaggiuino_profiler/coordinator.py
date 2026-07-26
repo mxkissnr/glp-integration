@@ -1,7 +1,7 @@
 import ipaddress
 import logging
 import os
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from urllib.parse import urlparse
 
 import aiohttp
@@ -59,18 +59,24 @@ def _parse_ts(value: object) -> datetime | None:
         if isinstance(value, (int, float)):
             # GLP timestamps are Unix seconds; values > 1e10 are ms
             ts = value / 1000 if value > 1e10 else value
-            return datetime.fromtimestamp(ts, tz=timezone.utc)
+            return datetime.fromtimestamp(ts, tz=UTC)
         s = str(value)
         dt = datetime.fromisoformat(s.replace("Z", "+00:00"))
         if dt.tzinfo is None:
-            dt = dt.replace(tzinfo=timezone.utc)
+            dt = dt.replace(tzinfo=UTC)
         return dt
     except Exception:
         return None
 
 
 class GlpDataCoordinator(DataUpdateCoordinator):
-    def __init__(self, hass: HomeAssistant, session: aiohttp.ClientSession, url: str, scan_interval: int = SCAN_INTERVAL_SECONDS):
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        session: aiohttp.ClientSession,
+        url: str,
+        scan_interval: int = SCAN_INTERVAL_SECONDS,
+    ):
         super().__init__(
             hass,
             _LOGGER,
@@ -118,7 +124,9 @@ class GlpDataCoordinator(DataUpdateCoordinator):
                 except Exception as token_err:
                     _LOGGER.warning("GLP token fetch failed: %s", token_err)
 
-            async with self._session.get(f"{self._url}/shots.json", headers=self._headers, timeout=aiohttp.ClientTimeout(total=10)) as r:
+            async with self._session.get(
+                f"{self._url}/shots.json", headers=self._headers, timeout=aiohttp.ClientTimeout(total=10)
+            ) as r:
                 r.raise_for_status()
                 shots = await r.json()
 
@@ -126,34 +134,44 @@ class GlpDataCoordinator(DataUpdateCoordinator):
             raise UpdateFailed(f"GLP unreachable: {err}") from err
 
         try:
-            async with self._session.get(f"{self._url}/api/maintenance", headers=self._headers, timeout=aiohttp.ClientTimeout(total=10)) as r:
+            async with self._session.get(
+                f"{self._url}/api/maintenance", headers=self._headers, timeout=aiohttp.ClientTimeout(total=10)
+            ) as r:
                 r.raise_for_status()
                 maintenance = await r.json()
         except Exception:
             maintenance = {}
 
         try:
-            async with self._session.get(f"{self._url}/api/preheat", headers=self._headers, timeout=aiohttp.ClientTimeout(total=10)) as r:
+            async with self._session.get(
+                f"{self._url}/api/preheat", headers=self._headers, timeout=aiohttp.ClientTimeout(total=10)
+            ) as r:
                 r.raise_for_status()
                 preheat = await r.json()
         except Exception:
             preheat = {}
 
         try:
-            async with self._session.get(f"{self._url}/api/machine/profiles", headers=self._headers, timeout=aiohttp.ClientTimeout(total=10)) as r:
+            async with self._session.get(
+                f"{self._url}/api/machine/profiles", headers=self._headers, timeout=aiohttp.ClientTimeout(total=10)
+            ) as r:
                 r.raise_for_status()
                 profiles_data = await r.json()
         except Exception:
             profiles_data = {}
 
         try:
-            async with self._session.get(f"{self._url}/api/menu", headers=self._headers, timeout=aiohttp.ClientTimeout(total=5)) as r:
+            async with self._session.get(
+                f"{self._url}/api/menu", headers=self._headers, timeout=aiohttp.ClientTimeout(total=5)
+            ) as r:
                 menu_items = await r.json() if r.ok else []
         except Exception:
             menu_items = []
 
         try:
-            async with self._session.get(f"{self._url}/api/version", headers=self._headers, timeout=aiohttp.ClientTimeout(total=10)) as r:
+            async with self._session.get(
+                f"{self._url}/api/version", headers=self._headers, timeout=aiohttp.ClientTimeout(total=10)
+            ) as r:
                 version_info = await r.json() if r.ok else {}
         except Exception:
             version_info = {}
