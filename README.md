@@ -46,6 +46,7 @@
 | 🌡️ | **Machine Sensors** | Live pressure, temperature, water level, weight, uptime, active profile — updated every 5 s |
 | 🔧 | **Maintenance Sensors** | One sensor per task (descaling, backflush, group head, gaskets, water filter) with progress value |
 | ⏱️ | **Preheat Sensors** | Preheat ready binary sensor + elapsed / remaining time sensors |
+| ⏰ | **Ready-By Timer** | `set_ready_by` service to schedule when the machine should be preheated for, plus target/planned-switch-on timestamp sensors |
 | 🎛️ | **Profile Selector** | `select` entity to switch the active brew profile from any HA dashboard or automation |
 | 🔔 | **Shot Event** | Fires `gaggiuino_profiler_shot_completed` with full shot data after every pull |
 | ⚙️ | **Configurable** | URL and poll interval adjustable any time via *Settings → Integration → Configure* |
@@ -119,6 +120,8 @@
 | Machine Target Temperature | Target boiler temperature | °C |
 | Preheat Elapsed | Time elapsed since machine switched on | s |
 | Preheat Remaining | Estimated time until machine is ready | s |
+| Preheat Ready-By Target | Timestamp the machine should be ready by, set via `set_ready_by` | — |
+| Preheat Planned Switch-On | Timestamp the app plans to switch the machine on to hit the ready-by target | — |
 
 ### Machine Live Sensors *(5 s poll via machine coordinator)*
 
