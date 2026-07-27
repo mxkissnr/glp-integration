@@ -189,6 +189,20 @@ SENSORS: tuple[GlpSensorDescription, ...] = (
         native_unit_of_measurement=UnitOfTime.SECONDS,
         suggested_display_precision=0,
     ),
+    GlpSensorDescription(
+        key="preheat_ready_by_target_at",
+        data_key="preheat_ready_by_target_at",
+        name="Preheat Ready By",
+        icon="mdi:clock-alert-outline",
+        device_class=SensorDeviceClass.TIMESTAMP,
+    ),
+    GlpSensorDescription(
+        key="preheat_planned_switch_on_at",
+        data_key="preheat_planned_switch_on_at",
+        name="Preheat Planned Switch On",
+        icon="mdi:clock-start",
+        device_class=SensorDeviceClass.TIMESTAMP,
+    ),
 )
 
 
