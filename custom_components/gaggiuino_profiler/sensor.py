@@ -368,6 +368,14 @@ class GlpSensor(CoordinatorEntity[GlpDataCoordinator], SensorEntity):
         )
 
     @property
+    def suggested_object_id(self) -> str | None:
+        """Pin entity_id assignment on first creation to the stable
+        `key` instead of HA's slugification of the human-readable `name`,
+        which produced an unpredictable, collision-mangled entity_id on a
+        real instance (#62)."""
+        return self.entity_description.key
+
+    @property
     def native_value(self) -> Any:
         return self.coordinator.data.get(self.entity_description.data_key)
 
@@ -405,6 +413,10 @@ class GlpGrinderMaintenanceSensor(CoordinatorEntity[GlpDataCoordinator], SensorE
         )
 
     @property
+    def suggested_object_id(self) -> str | None:
+        return "maint_grinders"
+
+    @property
     def native_value(self) -> str | None:
         return self.coordinator.data.get("grinder_maintenance_status")
 
@@ -432,6 +444,10 @@ class GlpMaintenanceSensor(CoordinatorEntity[GlpDataCoordinator], SensorEntity):
             model="Local Profiler",
             configuration_url=entry.data["url"],
         )
+
+    @property
+    def suggested_object_id(self) -> str | None:
+        return self.entity_description.key
 
     def _task_data(self) -> dict:
         return self.coordinator.data.get(f"maint_{self.entity_description.task_key}") or {}
@@ -474,6 +490,10 @@ class GlpMachineSensor(CoordinatorEntity[GlpMachineCoordinator], SensorEntity):
         )
 
     @property
+    def suggested_object_id(self) -> str | None:
+        return self.entity_description.key
+
+    @property
     def available(self) -> bool:
         return bool(self.coordinator.data)
 
@@ -505,6 +525,10 @@ class GlpAdditionalMachineSensor(CoordinatorEntity[GlpDataCoordinator], SensorEn
             configuration_url=entry.data["url"],
             via_device=(DOMAIN, entry.entry_id),
         )
+
+    @property
+    def suggested_object_id(self) -> str | None:
+        return f"machine_{self._machine_id}_status"
 
     def _machine(self) -> dict | None:
         machines = (self.coordinator.data or {}).get("machines") or []
