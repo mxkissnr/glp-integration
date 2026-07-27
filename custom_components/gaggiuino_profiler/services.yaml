@@ -53,3 +53,36 @@ maintenance_done:
         number:
           min: 1
           mode: box
+
+set_ready_by:
+  name: Set preheat ready-by time
+  description: >-
+    Schedules the machine to be preheated and ready by a target time, via the
+    app's /api/preheat/ready-by endpoint. The app's own watcher turns the
+    configured preheat switch on at the computed time so the machine reaches
+    temperature by target_time. Omit target_time to cancel a scheduled
+    ready-by. Fails with an error if the app's preheat switch entity or HA
+    token isn't configured when a target_time is given.
+  fields:
+    target_time:
+      name: Ready by
+      description: The time the machine should be ready by. Omit to cancel scheduling.
+      required: false
+      example: "2026-07-28 07:30:00"
+      selector:
+        datetime:
+    machine:
+      name: Machine
+      description: >-
+        Optional machine registry id to scope the request to (#48/#317's
+        multi-machine mode) — sent as a ?machine=<id> query parameter.
+        No effect yet: the app's /api/preheat/ready-by endpoint doesn't read
+        this parameter as of app v2.0.0, so it's accepted here in preparation
+        for when that lands. Omit for the default machine (today's only
+        supported behavior).
+      required: false
+      example: 2
+      selector:
+        number:
+          min: 1
+          mode: box

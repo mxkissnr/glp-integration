@@ -289,6 +289,8 @@ class GlpDataCoordinator(DataUpdateCoordinator):
         data["preheat_remaining"]          = preheat.get("remaining")
         data["machine_temperature"]        = preheat.get("temp")
         data["machine_target_temperature"] = preheat.get("targetTemp")
+        data["preheat_ready_by_target_at"]   = _parse_ts(preheat.get("readyByTargetAt"))
+        data["preheat_planned_switch_on_at"] = _parse_ts(preheat.get("plannedSwitchOnAt"))
 
         # Version / update info
         data["version_current"]        = version_info.get("current")

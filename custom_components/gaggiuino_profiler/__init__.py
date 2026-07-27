@@ -7,7 +7,10 @@ import aiohttp
 import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.util import dt as dt_util
 
 from .const import CONF_SCAN_INTERVAL, DOMAIN, SCAN_INTERVAL_SECONDS
 from .coordinator import GlpDataCoordinator
@@ -24,6 +27,10 @@ MAINTENANCE_DONE_SCHEMA = vol.Schema({
     vol.Optional("machine"): vol.Coerce(int),
 })
 BACKUP_SCHEMA = vol.Schema({vol.Optional("machine"): vol.Coerce(int)})
+SET_READY_BY_SCHEMA = vol.Schema({
+    vol.Optional("target_time"): vol.Any(None, cv.datetime),
+    vol.Optional("machine"): vol.Coerce(int),
+})
 
 
 def _machine_query_suffix(call: ServiceCall) -> str:
@@ -116,6 +123,48 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             )
 
         hass.services.async_register(DOMAIN, "backup", _handle_backup, schema=BACKUP_SCHEMA)
+
+    # Register the set_ready_by service once (idempotent)
+    if not hass.services.has_service(DOMAIN, "set_ready_by"):
+        async def _handle_set_ready_by(call: ServiceCall) -> None:
+            coord: GlpDataCoordinator | None = next(
+                (d["data"] for d in hass.data.get(DOMAIN, {}).values()
+                 if isinstance(d, dict) and "data" in d),
+                None,
+            )
+            if coord is None:
+                _LOGGER.error("set_ready_by: no GLP coordinator available")
+                return
+            target_time = call.data.get("target_time")
+            target_at = int(dt_util.as_utc(target_time).timestamp() * 1000) if target_time else None
+            try:
+                async with coord._session.post(
+                    f"{coord._url}/api/preheat/ready-by{_machine_query_suffix(call)}",
+                    json={"targetAt": target_at},
+                    headers=coord._headers,
+                    timeout=aiohttp.ClientTimeout(total=10),
+                ) as r:
+                    if r.status == 400:
+                        try:
+                            body = await r.json(content_type=None)
+                        except Exception:
+                            body = None
+                        message = (
+                            (body or {}).get("error") or (body or {}).get("message")
+                            if isinstance(body, dict) else None
+                        ) or "the app rejected the request (is the preheat switch configured?)"
+                        raise HomeAssistantError(f"set_ready_by failed: {message}")
+                    r.raise_for_status()
+            except HomeAssistantError:
+                raise
+            except Exception as err:
+                _LOGGER.error("set_ready_by failed: %s", err)
+                raise
+            await coord.async_request_refresh()
+
+        hass.services.async_register(
+            DOMAIN, "set_ready_by", _handle_set_ready_by, schema=SET_READY_BY_SCHEMA
+        )
 
     session       = async_get_clientsession(hass)
     url           = entry.options.get("url") or entry.data["url"]
