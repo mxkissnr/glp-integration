@@ -17,12 +17,11 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import GlpDataCoordinator
+from .entity import GlpAdditionalMachineEntity, GlpEntity
 from .machine_coordinator import GlpMachineCoordinator
 
 
@@ -347,25 +346,15 @@ async def async_setup_entry(
     entry.async_on_unload(coordinator.async_add_listener(_sync_additional_machines))
 
 
-class GlpSensor(CoordinatorEntity[GlpDataCoordinator], SensorEntity):
-    _attr_has_entity_name = True
-
+class GlpSensor(GlpEntity[GlpDataCoordinator], SensorEntity):
     def __init__(
         self,
         coordinator: GlpDataCoordinator,
         entry: ConfigEntry,
         description: GlpSensorDescription,
     ) -> None:
-        super().__init__(coordinator)
+        super().__init__(coordinator, entry, description.key)
         self.entity_description = description
-        self._attr_unique_id = f"{entry.entry_id}_{description.key}"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, entry.entry_id)},
-            name="Gaggiuino Local Profiler",
-            manufacturer="Gaggiuino",
-            model="Local Profiler",
-            configuration_url=entry.data["url"],
-        )
 
     @property
     def suggested_object_id(self) -> str | None:
@@ -396,21 +385,12 @@ class GlpSensor(CoordinatorEntity[GlpDataCoordinator], SensorEntity):
         return {}
 
 
-class GlpGrinderMaintenanceSensor(CoordinatorEntity[GlpDataCoordinator], SensorEntity):
-    _attr_has_entity_name = True
+class GlpGrinderMaintenanceSensor(GlpEntity[GlpDataCoordinator], SensorEntity):
     _attr_name = "Maintenance Grinders"
     _attr_icon = "mdi:coffee-maker-outline"
 
     def __init__(self, coordinator: GlpDataCoordinator, entry: ConfigEntry) -> None:
-        super().__init__(coordinator)
-        self._attr_unique_id = f"{entry.entry_id}_maint_grinders"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, entry.entry_id)},
-            name="Gaggiuino Local Profiler",
-            manufacturer="Gaggiuino",
-            model="Local Profiler",
-            configuration_url=entry.data["url"],
-        )
+        super().__init__(coordinator, entry, "maint_grinders")
 
     @property
     def suggested_object_id(self) -> str | None:
@@ -425,25 +405,15 @@ class GlpGrinderMaintenanceSensor(CoordinatorEntity[GlpDataCoordinator], SensorE
         return self.coordinator.data.get("grinder_maintenance_details") or {}
 
 
-class GlpMaintenanceSensor(CoordinatorEntity[GlpDataCoordinator], SensorEntity):
-    _attr_has_entity_name = True
-
+class GlpMaintenanceSensor(GlpEntity[GlpDataCoordinator], SensorEntity):
     def __init__(
         self,
         coordinator: GlpDataCoordinator,
         entry: ConfigEntry,
         description: GlpMaintenanceSensorDescription,
     ) -> None:
-        super().__init__(coordinator)
+        super().__init__(coordinator, entry, description.key)
         self.entity_description = description
-        self._attr_unique_id = f"{entry.entry_id}_{description.key}"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, entry.entry_id)},
-            name="Gaggiuino Local Profiler",
-            manufacturer="Gaggiuino",
-            model="Local Profiler",
-            configuration_url=entry.data["url"],
-        )
 
     @property
     def suggested_object_id(self) -> str | None:
@@ -467,10 +437,8 @@ class GlpMaintenanceSensor(CoordinatorEntity[GlpDataCoordinator], SensorEntity):
         }
 
 
-class GlpMachineSensor(CoordinatorEntity[GlpMachineCoordinator], SensorEntity):
+class GlpMachineSensor(GlpEntity[GlpMachineCoordinator], SensorEntity):
     """Live sensor sourced from the Gaggiuino machine via GLP add-on proxy."""
-
-    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -478,16 +446,8 @@ class GlpMachineSensor(CoordinatorEntity[GlpMachineCoordinator], SensorEntity):
         entry: ConfigEntry,
         description: GlpMachineSensorDescription,
     ) -> None:
-        super().__init__(coordinator)
+        super().__init__(coordinator, entry, description.key)
         self.entity_description = description
-        self._attr_unique_id = f"{entry.entry_id}_{description.key}"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, entry.entry_id)},
-            name="Gaggiuino Local Profiler",
-            manufacturer="Gaggiuino",
-            model="Local Profiler",
-            configuration_url=entry.data["url"],
-        )
 
     @property
     def suggested_object_id(self) -> str | None:
@@ -504,27 +464,16 @@ class GlpMachineSensor(CoordinatorEntity[GlpMachineCoordinator], SensorEntity):
         return self.coordinator.data.get(self.entity_description.data_key)
 
 
-class GlpAdditionalMachineSensor(CoordinatorEntity[GlpDataCoordinator], SensorEntity):
+class GlpAdditionalMachineSensor(GlpAdditionalMachineEntity[GlpDataCoordinator], SensorEntity):
     """Status summary sensor for one additional (non-default) machine
     (#48) — see the scope-note comment in async_setup_entry() above for why
     this doesn't mirror the default machine's full sensor set."""
 
-    _attr_has_entity_name = True
     _attr_name = "Status"
     _attr_icon = "mdi:coffee-maker"
 
     def __init__(self, coordinator: GlpDataCoordinator, entry: ConfigEntry, machine_id: int, machine_name: str) -> None:
-        super().__init__(coordinator)
-        self._machine_id = machine_id
-        self._attr_unique_id = f"{entry.entry_id}_{machine_id}_status"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"{entry.entry_id}_{machine_id}")},
-            name=machine_name,
-            manufacturer="Gaggiuino",
-            model="Local Profiler (additional machine)",
-            configuration_url=entry.data["url"],
-            via_device=(DOMAIN, entry.entry_id),
-        )
+        super().__init__(coordinator, entry, machine_id, machine_name, "status")
 
     @property
     def suggested_object_id(self) -> str | None:

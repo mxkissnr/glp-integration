@@ -8,12 +8,11 @@ from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import GlpDataCoordinator
+from .entity import GlpEntity
 from .machine_coordinator import GlpMachineCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -29,7 +28,7 @@ async def async_setup_entry(
     async_add_entities([GlpProfileSelect(coordinator, machine_coordinator, entry)])
 
 
-class GlpProfileSelect(CoordinatorEntity[GlpDataCoordinator], SelectEntity):
+class GlpProfileSelect(GlpEntity[GlpDataCoordinator], SelectEntity):
     """Gaggiuino brew profile selector.
 
     Profile options list comes from the main coordinator (60 s) — profiles
@@ -38,7 +37,6 @@ class GlpProfileSelect(CoordinatorEntity[GlpDataCoordinator], SelectEntity):
     Writing a new profile calls /api/machine/profile/set on the add-on.
     """
 
-    _attr_has_entity_name = True
     _attr_name = "Profile"
     _attr_icon = "mdi:coffee"
 
@@ -48,17 +46,9 @@ class GlpProfileSelect(CoordinatorEntity[GlpDataCoordinator], SelectEntity):
         machine_coordinator: GlpMachineCoordinator,
         entry: ConfigEntry,
     ) -> None:
-        super().__init__(coordinator)
-        self._machine_coordinator = machine_coordinator
-        self._attr_unique_id = f"{entry.entry_id}_profile"
         _url = (entry.options.get("url") or entry.data["url"]).rstrip("/")
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, entry.entry_id)},
-            name="Gaggiuino Local Profiler",
-            manufacturer="Gaggiuino",
-            model="Local Profiler",
-            configuration_url=_url,
-        )
+        super().__init__(coordinator, entry, "profile", url=_url)
+        self._machine_coordinator = machine_coordinator
         self._url = _url
 
     async def async_added_to_hass(self) -> None:

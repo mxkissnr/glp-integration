@@ -8,12 +8,11 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import GlpDataCoordinator
+from .entity import GlpAdditionalMachineEntity, GlpEntity
 from .live_coordinator import GlpLiveCoordinator
 from .machine_coordinator import GlpMachineCoordinator
 
@@ -57,22 +56,13 @@ async def async_setup_entry(
     entry.async_on_unload(data_coordinator.async_add_listener(_sync_additional_machines))
 
 
-class IsBrewingSensor(CoordinatorEntity[GlpLiveCoordinator], BinarySensorEntity):
-    _attr_has_entity_name = True
+class IsBrewingSensor(GlpEntity[GlpLiveCoordinator], BinarySensorEntity):
     _attr_name = "Brewing"
     _attr_device_class = BinarySensorDeviceClass.RUNNING
     _attr_icon = "mdi:coffee-maker-check-outline"
 
     def __init__(self, coordinator: GlpLiveCoordinator, entry: ConfigEntry) -> None:
-        super().__init__(coordinator)
-        self._attr_unique_id = f"{entry.entry_id}_is_brewing"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, entry.entry_id)},
-            name="Gaggiuino Local Profiler",
-            manufacturer="Gaggiuino",
-            model="Local Profiler",
-            configuration_url=entry.data["url"],
-        )
+        super().__init__(coordinator, entry, "is_brewing")
 
     @property
     def is_on(self) -> bool | None:
@@ -95,21 +85,12 @@ class IsBrewingSensor(CoordinatorEntity[GlpLiveCoordinator], BinarySensorEntity)
         }
 
 
-class PreheatReadySensor(CoordinatorEntity[GlpDataCoordinator], BinarySensorEntity):
-    _attr_has_entity_name = True
+class PreheatReadySensor(GlpEntity[GlpDataCoordinator], BinarySensorEntity):
     _attr_name = "Preheat Ready"
     _attr_icon = "mdi:coffee-maker-check"
 
     def __init__(self, coordinator: GlpDataCoordinator, entry: ConfigEntry) -> None:
-        super().__init__(coordinator)
-        self._attr_unique_id = f"{entry.entry_id}_preheat_ready"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, entry.entry_id)},
-            name="Gaggiuino Local Profiler",
-            manufacturer="Gaggiuino",
-            model="Local Profiler",
-            configuration_url=entry.data["url"],
-        )
+        super().__init__(coordinator, entry, "preheat_ready")
 
     @property
     def is_on(self) -> bool | None:
@@ -118,24 +99,15 @@ class PreheatReadySensor(CoordinatorEntity[GlpDataCoordinator], BinarySensorEnti
         return bool(self.coordinator.data.get("preheat_ready"))
 
 
-class SteamSwitchSensor(CoordinatorEntity[GlpMachineCoordinator], BinarySensorEntity):
+class SteamSwitchSensor(GlpEntity[GlpMachineCoordinator], BinarySensorEntity):
     """Physical steam switch state from the Gaggiuino machine."""
 
-    _attr_has_entity_name = True
     _attr_name = "Steam Switch"
     _attr_device_class = BinarySensorDeviceClass.HEAT
     _attr_icon = "mdi:weather-fog"
 
     def __init__(self, coordinator: GlpMachineCoordinator, entry: ConfigEntry) -> None:
-        super().__init__(coordinator)
-        self._attr_unique_id = f"{entry.entry_id}_steam_switch"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, entry.entry_id)},
-            name="Gaggiuino Local Profiler",
-            manufacturer="Gaggiuino",
-            model="Local Profiler",
-            configuration_url=entry.data["url"],
-        )
+        super().__init__(coordinator, entry, "steam_switch")
 
     @property
     def available(self) -> bool:
@@ -148,25 +120,14 @@ class SteamSwitchSensor(CoordinatorEntity[GlpMachineCoordinator], BinarySensorEn
         return bool(self.coordinator.data.get("steamSwitchState"))
 
 
-class GlpAdditionalMachineReachableSensor(CoordinatorEntity[GlpDataCoordinator], BinarySensorEntity):
+class GlpAdditionalMachineReachableSensor(GlpAdditionalMachineEntity[GlpDataCoordinator], BinarySensorEntity):
     """Reachability of one additional (non-default) machine (#48)."""
 
-    _attr_has_entity_name = True
     _attr_name = "Reachable"
     _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
 
     def __init__(self, coordinator: GlpDataCoordinator, entry: ConfigEntry, machine_id: int, machine_name: str) -> None:
-        super().__init__(coordinator)
-        self._machine_id = machine_id
-        self._attr_unique_id = f"{entry.entry_id}_{machine_id}_reachable"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"{entry.entry_id}_{machine_id}")},
-            name=machine_name,
-            manufacturer="Gaggiuino",
-            model="Local Profiler (additional machine)",
-            configuration_url=entry.data["url"],
-            via_device=(DOMAIN, entry.entry_id),
-        )
+        super().__init__(coordinator, entry, machine_id, machine_name, "reachable")
 
     def _machine(self) -> dict | None:
         machines = (self.coordinator.data or {}).get("machines") or []
