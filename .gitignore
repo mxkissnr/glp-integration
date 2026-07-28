@@ -6,3 +6,4 @@ graphify-out/
 .venv-test/
 .venv/
 .pytest_cache/
+.coverage
