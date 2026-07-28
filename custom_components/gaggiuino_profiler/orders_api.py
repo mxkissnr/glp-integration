@@ -71,7 +71,7 @@ async def _proxy(request: Request, method: str, addon_path: str) -> Response:
     if request.query_string:
         url += f"?{request.query_string}"
 
-    headers = dict(c._headers)
+    headers = dict(await c.auth.headers())
     hass_user = request.get("hass_user")
     if hass_user:
         headers["X-GLP-HA-User-ID"] = str(hass_user.id)

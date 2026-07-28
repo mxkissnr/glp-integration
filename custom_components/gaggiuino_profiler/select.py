@@ -97,7 +97,7 @@ class GlpProfileSelect(CoordinatorEntity[GlpDataCoordinator], SelectEntity):
             async with session.post(
                 f"{self._url}/api/machine/profile/set",
                 json={"option": option},
-                headers=self.coordinator._headers,
+                headers=await self.coordinator.auth.headers(),
                 timeout=aiohttp.ClientTimeout(total=10),
             ) as r:
                 r.raise_for_status()
