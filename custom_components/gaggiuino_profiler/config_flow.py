@@ -15,24 +15,60 @@ _SUPERVISOR_URL = "http://supervisor"
 _ADDON_SLUG     = "gaggiuino_local_profiler"
 
 
+def _matches_addon_slug(slug: str) -> bool:
+    """Supervisor prefixes the installed slug with a repository identifier
+    (`local_`, `core_`, or the 8-char sha1 of the repo URL for a custom
+    repository like ours), so the bare config.yaml slug never appears
+    verbatim except for the unlikely `repository: local` case."""
+    return slug == _ADDON_SLUG or slug.endswith(f"_{_ADDON_SLUG}")
+
+
+async def _resolve_addon_slug(
+    session: aiohttp.ClientSession, headers: dict[str, str], timeout: aiohttp.ClientTimeout
+) -> str | None:
+    """Find the real Supervisor-visible slug for the GLP add-on by listing
+    all installed add-ons and matching on slug suffix (see #78)."""
+    async with session.get(
+        f"{_SUPERVISOR_URL}/addons", headers=headers, timeout=timeout
+    ) as r:
+        if r.status >= 400:
+            return None
+        addons = (await r.json()).get("data", {}).get("addons", [])
+    return next(
+        (a["slug"] for a in addons if _matches_addon_slug(a.get("slug", ""))),
+        None,
+    )
+
+
 async def _supervisor_port(session: aiohttp.ClientSession) -> int | None:
     """Ask the HA Supervisor which host port the GLP app is mapped to.
 
     Returns the host port integer, or None if Supervisor is unavailable
-    (non-supervised install) or the app is not installed.
+    (non-supervised install), the app is not installed, or the port can't
+    be determined.
     """
     token = os.environ.get("SUPERVISOR_TOKEN")
     if not token:
         return None
+    headers = {"Authorization": f"Bearer {token}"}
+    timeout = aiohttp.ClientTimeout(total=5)
     try:
+        slug = await _resolve_addon_slug(session, headers, timeout)
+        if slug is None:
+            return None
         async with session.get(
-            f"{_SUPERVISOR_URL}/addons/{_ADDON_SLUG}/info",
-            headers={"Authorization": f"Bearer {token}"},
-            timeout=aiohttp.ClientTimeout(total=5),
+            f"{_SUPERVISOR_URL}/addons/{slug}/info",
+            headers=headers,
+            timeout=timeout,
         ) as r:
-            if not r.ok:
+            if r.status >= 400:
                 return None
             data = (await r.json()).get("data", {})
+            # The detail endpoint also exposes `hostname`/`dns` directly,
+            # which would let a future #75 reach the add-on over the
+            # internal container network without hardcoding "localhost".
+            # The `/addons` list endpoint used above does NOT carry those
+            # fields, only this per-addon detail endpoint does.
             network = data.get("network") or {}
             # network = {"8099/tcp": <host_port_int_or_null>, ...}
             return next(
