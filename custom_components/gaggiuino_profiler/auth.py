@@ -17,11 +17,23 @@ from urllib.parse import urlparse
 
 import aiohttp
 
+from .const import ADDON_SLUG
+
 _LOGGER = logging.getLogger(__name__)
 
 # Suffixes for LAN hostnames that aren't IP literals and can't be checked via
 # ipaddress (mDNS-style names commonly used for the GLP host on this network).
 _LOCAL_HOST_SUFFIXES = (".local", ".internal", ".intern", ".lan", ".home", ".home.arpa")
+
+# The add-on's own hostname on the internal Supervisor container network
+# (#75): Supervisor exposes installed add-ons there as
+# <repo-prefix>-gaggiuino-local-profiler (underscores from the slug become
+# dashes), or bare "gaggiuino-local-profiler" for a `repository: local`
+# install (see config_flow.py's _addon_hostname). Trusted by exact suffix
+# match to this integration's own add-on only -- not a general "looks
+# internal" heuristic.
+_ADDON_HOSTNAME = ADDON_SLUG.replace("_", "-")
+_ADDON_HOSTNAME_SUFFIX = f"-{_ADDON_HOSTNAME}"
 
 
 def _is_trusted_host(url: str) -> bool:
@@ -37,13 +49,16 @@ def _is_trusted_host(url: str) -> bool:
         return False
     if not host:
         return False
+    host = host.lower()
     if host == "localhost":
         return True
     try:
         return ipaddress.ip_address(host).is_private
     except ValueError:
-        pass  # not an IP literal — fall through to the suffix check
-    return host.lower().endswith(_LOCAL_HOST_SUFFIXES)
+        pass  # not an IP literal — fall through to the suffix checks
+    if host.endswith(_LOCAL_HOST_SUFFIXES):
+        return True
+    return host == _ADDON_HOSTNAME or host.endswith(_ADDON_HOSTNAME_SUFFIX)
 
 
 class GlpAuth:
