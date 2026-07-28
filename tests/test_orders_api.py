@@ -67,16 +67,20 @@ async def test_delete_rejected_for_non_admin(monkeypatch) -> None:
 
 @pytest.mark.asyncio
 async def test_post_allowed_for_admin(monkeypatch) -> None:
+    # "abc123/accept" rather than "menu": #65 restricts POST `rest` to the
+    # order-action allowlist (accept/complete/decline) — "menu" POST is a
+    # real add-on endpoint but never called through this HA proxy, only via
+    # the add-on's own bundled UI (see orders_api.py's allowlist comment).
     view = GlpOrdersSubView()
     sentinel = MagicMock(status=200)
     proxy_mock = AsyncMock(return_value=sentinel)
     monkeypatch.setattr("custom_components.gaggiuino_profiler.orders_api._proxy", proxy_mock)
 
     request = _fake_request(_FakeUser(is_admin=True))
-    response = await view.post(request, "menu")
+    response = await view.post(request, "abc123/accept")
 
     assert response is sentinel
-    proxy_mock.assert_awaited_once_with(request, "POST", "api/orders/menu")
+    proxy_mock.assert_awaited_once_with(request, "POST", "api/orders/abc123/accept")
 
 
 @pytest.mark.asyncio
