@@ -6,6 +6,7 @@ import aiohttp
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
+from .auth import GlpAuth
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -37,7 +38,7 @@ class GlpMachineCoordinator(DataUpdateCoordinator):
         hass: HomeAssistant,
         session: aiohttp.ClientSession,
         url: str,
-        data_coordinator,
+        auth: GlpAuth,
         machine_id: int | None = None,
     ) -> None:
         super().__init__(
@@ -46,17 +47,18 @@ class GlpMachineCoordinator(DataUpdateCoordinator):
             name=f"{DOMAIN}_machine" + (f"_{machine_id}" if machine_id else ""),
             update_interval=timedelta(seconds=MACHINE_INTERVAL_SECONDS),
         )
-        self._session          = session
-        self._url              = url.rstrip("/")
-        self._data_coordinator = data_coordinator
-        self._machine_id       = machine_id
+        self._session   = session
+        self._url       = url.rstrip("/")
+        self._auth      = auth
+        self._machine_id = machine_id
 
     async def _async_update_data(self) -> dict:
         suffix = f"?machine={self._machine_id}" if self._machine_id else ""
         try:
+            headers = await self._auth.headers()
             async with self._session.get(
                 f"{self._url}/api/machine/status{suffix}",
-                headers=self._data_coordinator._headers,
+                headers=headers,
                 timeout=aiohttp.ClientTimeout(total=5),
             ) as r:
                 r.raise_for_status()

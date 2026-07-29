@@ -1,43 +1,15 @@
-import ipaddress
 import logging
-import os
 from datetime import UTC, datetime, timedelta
-from urllib.parse import urlparse
 
 import aiohttp
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
+from .auth import GlpAuth
 from .const import DOMAIN, SCAN_INTERVAL_SECONDS
 
 _LOGGER = logging.getLogger(__name__)
-
-# Suffixes for LAN hostnames that aren't IP literals and can't be checked via
-# ipaddress (mDNS-style names commonly used for the GLP host on this network).
-_LOCAL_HOST_SUFFIXES = (".local", ".internal", ".intern", ".lan", ".home", ".home.arpa")
-
-
-def _is_trusted_host(url: str) -> bool:
-    """Only send the privileged Supervisor token (see below) to a host that's
-    clearly local/LAN — never to an arbitrary configured URL. `url` is
-    admin-configured (config_flow only validates the scheme), so without this
-    a misconfigured or malicious URL would otherwise get the Supervisor token
-    handed to it directly. Best-effort string/IP-literal check, not a DNS
-    resolution — keeps this synchronous and side-effect-free."""
-    try:
-        host = urlparse(url).hostname or ""
-    except Exception:
-        return False
-    if not host:
-        return False
-    if host == "localhost":
-        return True
-    try:
-        return ipaddress.ip_address(host).is_private
-    except ValueError:
-        pass  # not an IP literal — fall through to the suffix check
-    return host.lower().endswith(_LOCAL_HOST_SUFFIXES)
 
 
 def _ds(arr: list, n: int = 40) -> list:
@@ -76,6 +48,7 @@ class GlpDataCoordinator(DataUpdateCoordinator):
         session: aiohttp.ClientSession,
         url: str,
         scan_interval: int = SCAN_INTERVAL_SECONDS,
+        auth: GlpAuth | None = None,
     ):
         super().__init__(
             hass,
@@ -85,7 +58,7 @@ class GlpDataCoordinator(DataUpdateCoordinator):
         )
         self._session = session
         self._url     = url.rstrip("/")
-        self._headers: dict = {}
+        self.auth     = auth or GlpAuth(session, url)
         self._last_shot_id: int | None = None
 
     async def _async_update_data(self) -> dict:
@@ -94,38 +67,10 @@ class GlpDataCoordinator(DataUpdateCoordinator):
                 r.raise_for_status()
                 status = await r.json()
 
-            # Fetch GLP API token once.  Send the HA Supervisor token in the
-            # Authorization header so the add-on can verify via the Supervisor
-            # API, even when the request does not arrive from a private IP —
-            # but only to a host we recognize as local/LAN (see
-            # _is_trusted_host): self._url is admin-configured and only
-            # scheme-validated by config_flow, so an untrusted host must never
-            # receive this privileged token.
-            if not self._headers:
-                try:
-                    token_req_headers: dict[str, str] = {}
-                    supervisor_token = os.environ.get("SUPERVISOR_TOKEN")
-                    if supervisor_token and _is_trusted_host(self._url):
-                        token_req_headers["Authorization"] = f"Bearer {supervisor_token}"
-                    async with self._session.get(
-                        f"{self._url}/api/token",
-                        headers=token_req_headers,
-                        timeout=aiohttp.ClientTimeout(total=5),
-                    ) as tr:
-                        if tr.ok:
-                            td = await tr.json()
-                            if td.get("apiToken"):
-                                self._headers = {"X-GLP-Token": td["apiToken"]}
-                        else:
-                            _LOGGER.warning(
-                                "GLP /api/token returned %s — check add-on logs for denied IP",
-                                tr.status,
-                            )
-                except Exception as token_err:
-                    _LOGGER.warning("GLP token fetch failed: %s", token_err)
+            headers = await self.auth.headers()
 
             async with self._session.get(
-                f"{self._url}/shots.json", headers=self._headers, timeout=aiohttp.ClientTimeout(total=10)
+                f"{self._url}/shots.json", headers=headers, timeout=aiohttp.ClientTimeout(total=10)
             ) as r:
                 r.raise_for_status()
                 shots = await r.json()
@@ -135,7 +80,7 @@ class GlpDataCoordinator(DataUpdateCoordinator):
 
         try:
             async with self._session.get(
-                f"{self._url}/api/maintenance", headers=self._headers, timeout=aiohttp.ClientTimeout(total=10)
+                f"{self._url}/api/maintenance", headers=headers, timeout=aiohttp.ClientTimeout(total=10)
             ) as r:
                 r.raise_for_status()
                 maintenance = await r.json()
@@ -144,7 +89,7 @@ class GlpDataCoordinator(DataUpdateCoordinator):
 
         try:
             async with self._session.get(
-                f"{self._url}/api/preheat", headers=self._headers, timeout=aiohttp.ClientTimeout(total=10)
+                f"{self._url}/api/preheat", headers=headers, timeout=aiohttp.ClientTimeout(total=10)
             ) as r:
                 r.raise_for_status()
                 preheat = await r.json()
@@ -153,7 +98,7 @@ class GlpDataCoordinator(DataUpdateCoordinator):
 
         try:
             async with self._session.get(
-                f"{self._url}/api/machine/profiles", headers=self._headers, timeout=aiohttp.ClientTimeout(total=10)
+                f"{self._url}/api/machine/profiles", headers=headers, timeout=aiohttp.ClientTimeout(total=10)
             ) as r:
                 r.raise_for_status()
                 profiles_data = await r.json()
@@ -162,17 +107,17 @@ class GlpDataCoordinator(DataUpdateCoordinator):
 
         try:
             async with self._session.get(
-                f"{self._url}/api/menu", headers=self._headers, timeout=aiohttp.ClientTimeout(total=5)
+                f"{self._url}/api/menu", headers=headers, timeout=aiohttp.ClientTimeout(total=5)
             ) as r:
-                menu_items = await r.json() if r.ok else []
+                menu_items = await r.json() if r.status < 400 else []
         except Exception:
             menu_items = []
 
         try:
             async with self._session.get(
-                f"{self._url}/api/version", headers=self._headers, timeout=aiohttp.ClientTimeout(total=10)
+                f"{self._url}/api/version", headers=headers, timeout=aiohttp.ClientTimeout(total=10)
             ) as r:
-                version_info = await r.json() if r.ok else {}
+                version_info = await r.json() if r.status < 400 else {}
         except Exception:
             version_info = {}
         drink_lookup: dict[str, str] = {

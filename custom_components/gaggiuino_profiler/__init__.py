@@ -12,6 +12,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util import dt as dt_util
 
+from .auth import GlpAuth
 from .const import CONF_SCAN_INTERVAL, DOMAIN, SCAN_INTERVAL_SECONDS
 from .coordinator import GlpDataCoordinator
 from .live_coordinator import GlpLiveCoordinator
@@ -67,7 +68,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             try:
                 async with coord._session.post(
                     f"{coord._url}/api/maintenance/{task}/done{_machine_query_suffix(call)}",
-                    headers=coord._headers,
+                    headers=await coord.auth.headers(),
                     timeout=aiohttp.ClientTimeout(total=10),
                 ) as r:
                     r.raise_for_status()
@@ -94,7 +95,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             try:
                 async with coord._session.get(
                     f"{coord._url}/api/backup{_machine_query_suffix(call)}",
-                    headers=coord._headers,
+                    headers=await coord.auth.headers(),
                     timeout=aiohttp.ClientTimeout(total=30),
                 ) as r:
                     r.raise_for_status()
@@ -141,7 +142,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 async with coord._session.post(
                     f"{coord._url}/api/preheat/ready-by{_machine_query_suffix(call)}",
                     json={"targetAt": target_at},
-                    headers=coord._headers,
+                    headers=await coord.auth.headers(),
                     timeout=aiohttp.ClientTimeout(total=10),
                 ) as r:
                     if r.status == 400:
@@ -170,11 +171,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     url           = entry.options.get("url") or entry.data["url"]
     scan_interval = entry.options.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL_SECONDS)
 
-    coordinator      = GlpDataCoordinator(hass, session, url, scan_interval)
+    auth             = GlpAuth(session, url)
+    coordinator      = GlpDataCoordinator(hass, session, url, scan_interval, auth)
     await coordinator.async_config_entry_first_refresh()
-    live_coordinator = GlpLiveCoordinator(hass, session, url, coordinator)
+    live_coordinator = GlpLiveCoordinator(hass, session, url, auth)
     await live_coordinator.async_config_entry_first_refresh()
-    machine_coordinator = GlpMachineCoordinator(hass, session, url, coordinator)
+    machine_coordinator = GlpMachineCoordinator(hass, session, url, auth)
     # Machine coordinator is best-effort — don't fail setup if machine is unreachable
     try:
         await machine_coordinator.async_config_entry_first_refresh()

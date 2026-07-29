@@ -3,12 +3,11 @@ from __future__ import annotations
 from homeassistant.components.update import UpdateEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import GlpDataCoordinator
+from .entity import GlpEntity
 
 
 async def async_setup_entry(
@@ -20,7 +19,7 @@ async def async_setup_entry(
     async_add_entities([GlpUpdateEntity(coordinator, entry)])
 
 
-class GlpUpdateEntity(CoordinatorEntity[GlpDataCoordinator], UpdateEntity):
+class GlpUpdateEntity(GlpEntity[GlpDataCoordinator], UpdateEntity):
     """Read-only version display — no install capability.
 
     HA already creates its own Supervisor-backed update entity for the
@@ -34,21 +33,12 @@ class GlpUpdateEntity(CoordinatorEntity[GlpDataCoordinator], UpdateEntity):
     /api/update always returned 503 there).
     """
 
-    _attr_has_entity_name = True
     _attr_name = "Update"
     _attr_title = "Gaggiuino Local Profiler"
     _attr_icon = "mdi:coffee-maker"
 
     def __init__(self, coordinator: GlpDataCoordinator, entry: ConfigEntry) -> None:
-        super().__init__(coordinator)
-        self._attr_unique_id = f"{entry.entry_id}_update"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, entry.entry_id)},
-            name="Gaggiuino Local Profiler",
-            manufacturer="Gaggiuino",
-            model="Local Profiler",
-            configuration_url=entry.data["url"],
-        )
+        super().__init__(coordinator, entry, "update")
 
     @property
     def installed_version(self) -> str | None:

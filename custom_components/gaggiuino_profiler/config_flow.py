@@ -9,10 +9,9 @@ from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResu
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_SCAN_INTERVAL, DEFAULT_URL, DOMAIN, SCAN_INTERVAL_SECONDS
+from .const import ADDON_SLUG, CONF_SCAN_INTERVAL, DEFAULT_URL, DOMAIN, SCAN_INTERVAL_SECONDS
 
 _SUPERVISOR_URL = "http://supervisor"
-_ADDON_SLUG     = "gaggiuino_local_profiler"
 
 
 def _matches_addon_slug(slug: str) -> bool:
@@ -20,7 +19,7 @@ def _matches_addon_slug(slug: str) -> bool:
     (`local_`, `core_`, or the 8-char sha1 of the repo URL for a custom
     repository like ours), so the bare config.yaml slug never appears
     verbatim except for the unlikely `repository: local` case."""
-    return slug == _ADDON_SLUG or slug.endswith(f"_{_ADDON_SLUG}")
+    return slug == ADDON_SLUG or slug.endswith(f"_{ADDON_SLUG}")
 
 
 async def _resolve_addon_slug(
@@ -64,11 +63,6 @@ async def _supervisor_port(session: aiohttp.ClientSession) -> int | None:
             if r.status >= 400:
                 return None
             data = (await r.json()).get("data", {})
-            # The detail endpoint also exposes `hostname`/`dns` directly,
-            # which would let a future #75 reach the add-on over the
-            # internal container network without hardcoding "localhost".
-            # The `/addons` list endpoint used above does NOT carry those
-            # fields, only this per-addon detail endpoint does.
             network = data.get("network") or {}
             # network = {"8099/tcp": <host_port_int_or_null>, ...}
             return next(
@@ -79,12 +73,87 @@ async def _supervisor_port(session: aiohttp.ClientSession) -> int | None:
         return None
 
 
-async def _auto_discover_url(session: aiohttp.ClientSession) -> str:
-    """Return the GLP URL derived from the Supervisor port mapping.
+def _container_port(info: dict) -> int | None:
+    """Parse the container-side port out of the add-on info's `network`
+    dict (keys look like `"8099/tcp"`), rather than hardcoding 8099."""
+    network = info.get("network") or {}
+    for key in network:
+        port_str = key.split("/", 1)[0]
+        if port_str.isdigit():
+            return int(port_str)
+    return None
 
-    Falls back to DEFAULT_URL when Supervisor is not available or the
-    port cannot be read (e.g. non-HA-OS installs).
+
+def _addon_hostname(slug: str, info: dict) -> str:
+    """The add-on's hostname on the internal Supervisor container network
+    (#75). Prefers the `hostname` field the per-add-on detail endpoint may
+    expose directly; falls back to the documented Supervisor convention of
+    replacing underscores in the slug with dashes (empirically confirmed
+    for well-known core add-ons, e.g. `core_mosquitto` -> `core-mosquitto`,
+    the MQTT integration's own default host). Either form is only ever used
+    after being probed for reachability by `_auto_discover_internal_url`
+    below, never assumed blindly."""
+    return info.get("hostname") or slug.replace("_", "-")
+
+
+async def _auto_discover_internal_url(session: aiohttp.ClientSession) -> str | None:
+    """Try to reach the add-on over the internal container network instead
+    of the host port mapping (#75), so the host port can become optional.
+
+    Returns the internal URL only after successfully probing it with
+    GET /api/status -- never assumed, always verified live. Returns None on
+    any failure (Supervisor unavailable, add-on not found, internal
+    networking unsupported on this install type, wrong hostname guess...)
+    so callers fall back to the existing host-port path unchanged.
     """
+    token = os.environ.get("SUPERVISOR_TOKEN")
+    if not token:
+        return None
+    headers = {"Authorization": f"Bearer {token}"}
+    timeout = aiohttp.ClientTimeout(total=5)
+    try:
+        slug = await _resolve_addon_slug(session, headers, timeout)
+        if slug is None:
+            return None
+        async with session.get(
+            f"{_SUPERVISOR_URL}/addons/{slug}/info", headers=headers, timeout=timeout
+        ) as r:
+            if r.status >= 400:
+                return None
+            info = (await r.json()).get("data", {})
+    except Exception:
+        return None
+
+    port = _container_port(info)
+    if port is None:
+        return None
+    candidate = f"http://{_addon_hostname(slug, info)}:{port}"
+
+    try:
+        async with session.get(
+            f"{candidate}/api/status", timeout=aiohttp.ClientTimeout(total=5)
+        ) as r:
+            if r.status >= 400:
+                return None
+    except Exception:
+        return None
+
+    return candidate
+
+
+async def _auto_discover_url(session: aiohttp.ClientSession) -> str:
+    """Return the GLP URL to try first.
+
+    Prefers the add-on's internal container-network address if reachable
+    (#75 -- makes the host port mapping optional), then falls back to the
+    Supervisor host-port mapping (#78), then DEFAULT_URL for non-supervised
+    installs. Existing config entries already storing a `localhost:<port>`
+    URL are untouched by this -- this function only runs during initial
+    setup (`async_step_user`), never against a stored entry.
+    """
+    internal_url = await _auto_discover_internal_url(session)
+    if internal_url:
+        return internal_url
     port = await _supervisor_port(session)
     return f"http://localhost:{port}" if port else DEFAULT_URL
 
