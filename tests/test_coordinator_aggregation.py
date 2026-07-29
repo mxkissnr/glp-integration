@@ -55,10 +55,12 @@ async def _refresh(hass, **kwargs) -> dict:
     return await coordinator._async_update_data()
 
 
-def _shot(shot_id=1, dose=None, weight=None, pressure=None, timestamp=None, **extra) -> dict:
+def _shot(shot_id=1, dose=None, weight=None, pressure=None, timestamp=None, bean_id=None, **extra) -> dict:
     ann = {}
     if dose is not None:
         ann["dose"] = dose
+    if bean_id is not None:
+        ann["beanId"] = bean_id
     dp = {}
     if weight is not None:
         dp["shotWeight"] = weight
@@ -163,6 +165,18 @@ def test_ds_downsamples_and_keeps_last_point() -> None:
     assert len(result) == 40
     assert result[-1] == 199
     assert result[0] == 0
+
+
+async def test_recent_shots_threads_bean_id_from_annotation(hass, aioclient_mock) -> None:
+    _mock_all(aioclient_mock, shots=[_shot(bean_id="bean-42")])
+    data = await _refresh(hass)
+    assert data["recent_shots"][0]["beanId"] == "bean-42"
+
+
+async def test_recent_shots_bean_id_is_none_without_annotation_field(hass, aioclient_mock) -> None:
+    _mock_all(aioclient_mock, shots=[_shot()])
+    data = await _refresh(hass)
+    assert data["recent_shots"][0]["beanId"] is None
 
 
 async def test_shot_completed_event_fires_on_new_last_shot(hass, aioclient_mock) -> None:
