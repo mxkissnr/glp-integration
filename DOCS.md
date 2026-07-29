@@ -25,7 +25,8 @@ Integrates the [Gaggiuino Local Profiler](https://github.com/mxkissnr/gaggiuino-
 
 1. **Settings → Devices & Services → Add Integration**
 2. Search for *Gaggiuino Local Profiler*
-3. Enter the GLP app's URL: `http://localhost:8099`
+3. On Supervisor installs, setup first tries to auto-discover the add-on — including over the internal container network, so a host-port mapping is no longer required for this to work. If auto-discovery succeeds, the integration is added automatically with no further input.
+4. If auto-discovery doesn't find it, enter the GLP app's URL manually: `http://localhost:8099`
    > **Use `localhost`, not `homeassistant.local`** — mDNS resolution fails intermittently inside HA OS and makes all sensors unavailable. `localhost:8099` always works reliably.
 
 The integration tests the connection right away during setup.
