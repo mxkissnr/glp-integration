@@ -274,6 +274,7 @@ class GlpDataCoordinator(DataUpdateCoordinator):
                 "ts":       s.get("timestamp"),
                 "profile":  s.get("profileName") or (s.get("profile") or {}).get("name"),
                 "coffee":   s_ann.get("coffee"),
+                "beanId":   s_ann.get("beanId"),
                 "grinder":  s_ann.get("grinder"),
                 "grind":    s_ann.get("grindSetting"),
                 "duration": round(s_dur[-1] / 10, 1) if s_dur else None,
