@@ -1,4 +1,4 @@
-const GLP_CARD_VERSION = '2.17.4';
+const GLP_CARD_VERSION = '2.17.5';
 
 // ─── i18n ────────────────────────────────────────────────────────────────────
 // DE wording is the original card text; language follows hass.language (DE/EN/IT/FR/ES/NL, falls back to EN).
@@ -215,17 +215,23 @@ function roastAgeDays(str) {
 // ─── helpers ─────────────────────────────────────────────────────────────────
 
 function esc(s) {
+  // GLP-SHARED:esc v1 — body kept byte-identical with glp-order-card.js's _esc()
   if (s == null) return '';
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  // /GLP-SHARED:esc v1
 }
 
 function safeUrl(url) {
+  // GLP-SHARED:safeUrl v1 — body kept byte-identical with glp-order-card.js's
+  // _safeUrl() (#74 — that copy had drifted to returning the raw input,
+  // losing this reasoning; re-sync it from here)
   if (!url) return null;
   // Returns u.href (the normalized/re-serialized URL), not the raw input —
   // the raw string could still contain quote/angle-bracket characters that
   // break out of an href="..." attribute even though the protocol is fine.
   try { const u = new URL(url); return (u.protocol==='http:'||u.protocol==='https:') ? u.href : null; }
   catch { return null; }
+  // /GLP-SHARED:safeUrl v1
 }
 
 function parseTs(val) {
@@ -1043,6 +1049,7 @@ class GlpCard extends HTMLElement {
     this._ordersSig = null;
     this._ordersPoll = null;
     this._beansInfo = null;
+    this._beansInfoById = null;
     this._beansInfoAt = 0;
     this._beansInfoUnavailable = false;
     this._orderEtaFor = null;
@@ -1223,8 +1230,13 @@ class GlpCard extends HTMLElement {
       if (!realTargetAt) { clearTimeout(this._pendingReadyByTimer); this._pendingReadyByTargetAt = null; }
       else return { targetAt: null, plannedAt: null };
     } else if (this._pendingReadyByTargetAt) {
-      if (realTargetAt) { clearTimeout(this._pendingReadyByTimer); this._pendingReadyByTargetAt = null; }
-      else return { targetAt: this._pendingReadyByTargetAt, plannedAt: null };
+      // Compare by value, not truthiness (#70): a stale realTargetAt (old
+      // target still live, or the #68 unavailable-fallback cache holding the
+      // pre-reschedule value) must not clear a pending re-schedule to a
+      // *different* new target — only the matching value counts as confirmed.
+      if (realTargetAt && realTargetAt.getTime() === this._pendingReadyByTargetAt.getTime()) {
+        clearTimeout(this._pendingReadyByTimer); this._pendingReadyByTargetAt = null;
+      } else return { targetAt: this._pendingReadyByTargetAt, plannedAt: null };
     }
     return { targetAt: realTargetAt, plannedAt: realPlannedAt };
   }
@@ -1481,13 +1493,21 @@ class GlpCard extends HTMLElement {
       const r = await this._hass.fetchWithAuth('/api/glp/library/beans-info');
       if (!r.ok) { this._beansInfoUnavailable = true; return; }
       const list = await r.json();
-      this._beansInfo = new Map((Array.isArray(list) ? list : [])
-        .map(b => [String(b.name || '').toLowerCase(), b]));
+      const beans = Array.isArray(list) ? list : [];
+      this._beansInfoById = new Map(beans.filter(b => b.id != null).map(b => [b.id, b]));
+      this._beansInfo = new Map(beans.map(b => [String(b.name || '').toLowerCase(), b]));
     } catch { /* transient — retry after the cache window */ }
   }
 
-  _beanExtraHtml(coffee) {
-    const bean = this._beansInfo?.get(String(coffee || '').toLowerCase());
+  // #55 (follow-up to gaggiuino-local-profiler#456): prefers the stable
+  // beanId link over the free-text coffee name — mirrors the app's
+  // resolveBeanForAnnotation, since a delete+reimport under the same name
+  // gets a new id but keeps stale references matching by name alone. Falls
+  // back to name matching when beanId isn't available (shots that predate
+  // beanId on the annotation, or an integration too old to expose it).
+  _beanExtraHtml(coffee, beanId) {
+    const bean = (beanId != null && this._beansInfoById?.get(beanId))
+      || this._beansInfo?.get(String(coffee || '').toLowerCase());
     if (!bean) return '';
     const parts = [];
     const fl = flagEmoji(bean.origin);
@@ -1511,16 +1531,22 @@ class GlpCard extends HTMLElement {
   _resolvePrefix() {
     if (this._config.entity_prefix) return this._config.entity_prefix;
     const candidates = Object.keys(this._hass.states).filter(id => id.endsWith('_machine_status'));
-    if (this._config.machine) {
+    if (this._config?.machine) {
+      // GLP-SHARED:machine-match v1 — needle/needleSlug + find() predicate
+      // kept byte-identical with glp-order-card.js's
+      // _findMachineStatusEntity(); what each side does with `matched`
+      // afterward differs (a prefix here vs the raw entity id there), so
+      // only the predicate itself is shared.
       const needle = String(this._config.machine).toLowerCase();
       const needleSlug = needle.replace(/\s+/g, '_');
       const matched = candidates.find(id =>
-        this._hass.states[id].attributes.friendly_name?.toLowerCase().includes(needle) ||
+        this._hass.states[id]?.attributes?.friendly_name?.toLowerCase().includes(needle) ||
         id.toLowerCase().includes(needleSlug));
+      // /GLP-SHARED:machine-match v1
       if (matched) return matched.replace(/machine_status$/, '');
     }
     const found = candidates.find(id =>
-      this._hass.states[id].attributes.friendly_name?.toLowerCase().includes('gaggiuino'));
+      this._hass.states[id]?.attributes?.friendly_name?.toLowerCase().includes('gaggiuino'));
     if (found) return found.replace(/machine_status$/, '');
     const fallback = candidates[0];
     return fallback ? fallback.replace(/machine_status$/, '') : 'sensor.gaggiuino_local_profiler_';
@@ -1619,6 +1645,8 @@ class GlpCard extends HTMLElement {
     </div>`;
   }
 
+  /* GLP-SHARED:contrast v1 — kept byte-identical with glp-order-card.js's
+     _luminanceOf()/_applySemanticColorContrast() */
   // Resolves the relative luminance of a CSS color string by normalizing it
   // through a scratch element's computed style (handles hex/rgb/named/etc —
   // whatever the real cascade actually resolved a custom property to).
@@ -1673,6 +1701,7 @@ class GlpCard extends HTMLElement {
       this.style.setProperty('--glp-accent-text', accentLuminance > 0.179 ? '#000' : '#fff');
     }
   }
+  /* /GLP-SHARED:contrast v1 */
 
   // Single source of truth for "a full re-render would currently wipe out an
   // in-progress user interaction" (#72 — this used to be duplicated verbatim
@@ -2025,7 +2054,7 @@ class GlpCard extends HTMLElement {
               <div class="shot-profile">${esc(profile)}</div>
               <div class="shot-meta">
                 ${drinkType ? `<span class="shot-drink">${esc(drinkType)}</span>` : ''}
-                ${coffee    ? `<span class="shot-coffee">☕ ${esc(coffee)}</span>${this._beanExtraHtml(coffee)}` : ''}
+                ${coffee    ? `<span class="shot-coffee">☕ ${esc(coffee)}</span>${this._beanExtraHtml(coffee, shotObj?.beanId)}` : ''}
               </div>
               ${(grinder || grind) ? `<div class="shot-grind">⚙️ ${esc([grinder, grind].filter(Boolean).join(' · '))}</div>` : ''}
             </div>
