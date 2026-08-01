@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.24.1] – 2026-08-01
+### Fixed
+- **The bundled `www/glp-card.js` was stale.** It was copied from glp-lovelace-card before that repo's v2.17.5 release landed (ready-by pending-override fix #70, id-first bean matching #55, token-sync hardening #74) — re-synced. Closes #94
+
 ## [1.24.0] – 2026-08-01
 ### Added
 - **GLP Shot Card now ships bundled inside this integration and is auto-registered as a Lovelace resource on setup.** Per HACS policy for a paired card+integration by the same author with a hard dependency (the card calls this integration's `set_ready_by`/`maintenance_done` services and falls back to this integration's entity-id prefix), the card can no longer be listed as a separate HACS plugin — see `hacs/default` PR #8568/#8567. `custom_components/gaggiuino_profiler/www/glp-card.js` is served as a static path and registered via `frontend.add_extra_js_url()`, cache-busted with this integration's own version, so no manual dashboard resource config is needed. Adds `frontend` to `manifest.json` dependencies (required for `add_extra_js_url` to work — it needs `frontend.async_setup` to have already initialized its own `hass.data` key). `custom_components/gaggiuino_profiler/__init__.py`, `tests/test_bundled_lovelace_card.py` (new). Closes #90
