@@ -5,7 +5,7 @@ Bindet den [Gaggiuino Local Profiler](https://github.com/mxkissnr/gaggiuino-loca
 ## Voraussetzungen
 
 - [Gaggiuino Local Profiler App](https://github.com/mxkissnr/gaggiuino-local-profiler) installiert und gestartet
-- Home Assistant 2024.1.0 oder neuer
+- Home Assistant 2024.7.0 oder neuer
 
 ## Installation
 
@@ -30,6 +30,10 @@ Bindet den [Gaggiuino Local Profiler](https://github.com/mxkissnr/gaggiuino-loca
    > **`localhost` verwenden, nicht `homeassistant.local`** — mDNS-Auflösung schlägt innerhalb von HA OS intermittierend fehl und macht alle Sensoren unavailable. `localhost:8099` funktioniert immer zuverlässig.
 
 Die Integration testet die Verbindung direkt beim Einrichten.
+
+## Mitgelieferte GLP Shot Card
+
+Die [GLP Shot Card](https://github.com/mxkissnr/glp-lovelace-card) (Lovelace-Karte) ist Teil dieser Integration und wird beim Einrichten automatisch als Dashboard-Ressource registriert — keine separate HACS-Installation oder manuelle Ressourcenkonfiguration nötig. Einfach eine Karte mit `type: custom:glp-card` zum Dashboard hinzufügen, nachdem diese Integration installiert ist. (Die [GLP Order Card](https://github.com/mxkissnr/glp-order-card) hat keine Abhängigkeit zu dieser Integration und bleibt eine separate HACS-Installation.)
 
 ## Optionen nach der Einrichtung
 
