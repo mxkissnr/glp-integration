@@ -5,11 +5,14 @@ from datetime import datetime
 
 import aiohttp
 import voluptuous as vol
+from homeassistant.components.frontend import add_extra_js_url
+from homeassistant.components.http import StaticPathConfig
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.loader import async_get_integration
 from homeassistant.util import dt as dt_util
 
 from .auth import GlpAuth
@@ -52,6 +55,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.http.register_view(GlpShotsSubView())
         hass.http.register_view(GlpBeansInfoView())
         hass.data[f"{DOMAIN}_views_registered"] = True
+
+    # Register the bundled GLP Shot Card and its Lovelace resource once
+    # (idempotent across multiple config entries). #90: the card ships inside
+    # this repo per HACS policy since it has a hard dependency on our services
+    # (set_ready_by/maintenance_done) and entity naming.
+    if not hass.data.get(f"{DOMAIN}_frontend_registered"):
+        integration = await async_get_integration(hass, DOMAIN)
+        www_path = os.path.join(os.path.dirname(__file__), "www")
+        await hass.http.async_register_static_paths(
+            [StaticPathConfig(f"/{DOMAIN}/www", www_path, cache_headers=False)]
+        )
+        add_extra_js_url(hass, f"/{DOMAIN}/www/glp-card.js?v={integration.version}")
+        hass.data[f"{DOMAIN}_frontend_registered"] = True
 
     # Register the maintenance_done service once (idempotent)
     if not hass.services.has_service(DOMAIN, "maintenance_done"):
