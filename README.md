@@ -20,7 +20,8 @@
 
 <p align="center">
   Exposes <a href="https://github.com/mxkissnr/gaggiuino-local-profiler">Gaggiuino Local Profiler</a> as native Home Assistant entities —<br/>
-  machine status, shot data, live brewing state and machine sensors, all without cloud.
+  machine status, shot data, live brewing state and machine sensors, all without cloud.<br/>
+  Ships with the <strong>GLP Shot Card</strong>, a Lovelace dashboard card, auto-registered on setup — no separate install needed.
 </p>
 
 <p align="center">
@@ -41,6 +42,7 @@
 
 | | Feature | Description |
 |---|---|---|
+| 🃏 | **Bundled Shot Card** | The [GLP Shot Card](https://github.com/mxkissnr/glp-lovelace-card) ships inside this integration and registers itself as a Lovelace resource on setup — just add `type: custom:glp-card` to a dashboard, no separate HACS install or resource config |
 | ☕ | **Brewing Sensor** | Binary sensor updated every 2 seconds — perfect as automation trigger |
 | 📊 | **Shot Sensors** | Profile, rating, duration, pressure, yield, ratio, dose, coffee, grinder, shots today and more |
 | 🌡️ | **Machine Sensors** | Live pressure, temperature, water level, weight, uptime, active profile — updated every 5 s |
