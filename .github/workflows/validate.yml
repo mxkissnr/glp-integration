@@ -9,18 +9,21 @@ on:
     - cron: "0 0 * * *"
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   hacs:
     name: HACS
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: HACS validation
-        uses: Wandalen/wretry.action@master
+        uses: Wandalen/wretry.action@e94c43bf2e865e7dbbd90b0c1061053f5888932a # master
         with:
-          action: hacs/action@main
+          action: hacs/action@1ebf01c408f29afcb6406bd431bc98fd8cbb15aa # main
           attempt_limit: 3
           attempt_delay: 2000
           with: |
@@ -31,20 +34,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Hassfest validation
-        uses: home-assistant/actions/hassfest@master
+        uses: home-assistant/actions/hassfest@ab22029681aa532bfe7de5774a9972d67bfbd2c0 # master
 
   pytest:
     name: Pytest
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Set up Python
-        uses: actions/setup-python@v7
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
         with:
           python-version: "3.13"
 
