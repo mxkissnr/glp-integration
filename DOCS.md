@@ -48,6 +48,12 @@ The [GLP Shot Card](https://github.com/mxkissnr/glp-lovelace-card) lovelace card
 
 All sensors/entities update at the poll interval of their respective coordinator: the main coordinator (`coordinator.py`) every 60 seconds (configurable, see above), the live coordinator (`live_coordinator.py`) every 2 seconds during a brew, and the machine coordinator (`machine_coordinator.py`) every 5 seconds for live machine values.
 
+### Relationship to Gaggiuino firmware's own MQTT entities
+
+Newer Gaggiuino firmware (build 7889b7d+) can publish its own MQTT/Home Assistant auto-discovery entities directly — boiler temperature/pressure/flow/weight, brew/steam/hot-water status, an operation-mode select, active profile, a tare button, and live shot-in-progress sensors. This integration never talks to the machine directly — it only polls the add-on's own REST API — so nothing here is affected by enabling firmware MQTT.
+
+If you enable both, some entities will look duplicated (this integration's `Machine Live Pressure`/`Machine Live Weight`/`Machine Water Level`/`Machine Temperature`/`Machine Active Profile` overlap with the firmware's native equivalents) — that's expected, not a bug, and either set can be safely ignored/disabled per your preference. This integration additionally provides things firmware-native MQTT does not: persisted shot history and scoring, preheat scheduling, and broader (5-task) maintenance tracking with configurable thresholds.
+
 ### Sensors
 
 | Entity | Description | Unit |

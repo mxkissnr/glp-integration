@@ -48,6 +48,12 @@ Die [GLP Shot Card](https://github.com/mxkissnr/glp-lovelace-card) (Lovelace-Kar
 
 Alle Sensoren/Entities aktualisieren sich mit dem Poll-Intervall des jeweiligen Coordinators: der Haupt-Coordinator (`coordinator.py`) alle 60 Sekunden (konfigurierbar, s.o.), der Live-Coordinator (`live_coordinator.py`) alle 2 Sekunden während eines Bezugs, der Machine-Coordinator (`machine_coordinator.py`) alle 5 Sekunden für Live-Maschinenwerte.
 
+### Verhältnis zu Gaggiuinos eigenen MQTT-Entities
+
+Neuere Gaggiuino-Firmware (ab Build 7889b7d) kann eigene MQTT/Home-Assistant-Autodiscovery-Entities direkt veröffentlichen — Boiler-Temperatur/-Druck/-Flow/-Gewicht, Brüh-/Dampf-/Heißwasser-Status, ein Betriebsmodus-Select, aktives Profil, ein Tara-Button sowie Live-Sensoren während eines laufenden Shots. Diese Integration spricht nie direkt mit der Maschine — sie fragt ausschließlich die REST-API des Add-ons ab —, daher hat das Aktivieren von Firmware-MQTT keinerlei Auswirkung auf diese Integration.
+
+Wer beides aktiviert, sieht scheinbar doppelte Entities (`Machine Live Pressure`/`Machine Live Weight`/`Machine Water Level`/`Machine Temperature`/`Machine Active Profile` überschneiden sich mit den nativen Firmware-Pendants) — das ist erwartet, kein Bug, und beide Sätze können nach Belieben ignoriert/deaktiviert werden. Diese Integration liefert zusätzlich Dinge, die natives Firmware-MQTT nicht bietet: persistente Shot-Historie samt Scoring, Preheat-Scheduling und ein breiteres (5-Aufgaben-) Wartungs-Tracking mit konfigurierbaren Schwellenwerten.
+
 ### Sensoren
 
 | Entity | Beschreibung | Einheit |
