@@ -1,12 +1,15 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Any
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
+    BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -15,6 +18,73 @@ from .coordinator import GlpDataCoordinator
 from .entity import GlpAdditionalMachineEntity, GlpEntity
 from .live_coordinator import GlpLiveCoordinator
 from .machine_coordinator import GlpMachineCoordinator
+
+
+@dataclass(frozen=True)
+class GlpMachineBinarySensorDescription(BinarySensorEntityDescription):
+    data_key: str = ""
+    # Only set on the two fault sensors (#108) -- exposed as the
+    # `fault_reason` extra state attribute.
+    reason_key: str = ""
+
+
+# #108: relay/valve states and sensor-fault flags merged into
+# /api/machine/status by gaggiuino-local-profiler#597/#599.
+MACHINE_BINARY_SENSORS: tuple[GlpMachineBinarySensorDescription, ...] = (
+    GlpMachineBinarySensorDescription(
+        key="thermocouple_faulted",
+        data_key="thermocoupleFaulted",
+        reason_key="thermocoupleFaultReason",
+        name="Thermocouple Faulted",
+        icon="mdi:thermometer-alert",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    GlpMachineBinarySensorDescription(
+        key="pressure_sensor_faulted",
+        data_key="pressureSensorFaulted",
+        reason_key="pressureSensorFaultReason",
+        name="Pressure Sensor Faulted",
+        icon="mdi:gauge-full",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    GlpMachineBinarySensorDescription(
+        key="boiler_state",
+        data_key="boilerState",
+        name="Boiler Relay",
+        icon="mdi:radiator",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    GlpMachineBinarySensorDescription(
+        key="valve_state",
+        data_key="valveState",
+        name="Valve",
+        icon="mdi:valve",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    GlpMachineBinarySensorDescription(
+        key="steam_valve_state",
+        data_key="steamValveState",
+        name="Steam Valve",
+        icon="mdi:valve",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    GlpMachineBinarySensorDescription(
+        key="valve_b_state",
+        data_key="valveBState",
+        name="Valve B",
+        icon="mdi:valve",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    GlpMachineBinarySensorDescription(
+        key="steam_boiler_relay_state",
+        data_key="steamBoilerRelayState",
+        name="Steam Boiler Relay",
+        icon="mdi:radiator",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+)
 
 
 async def async_setup_entry(
@@ -29,6 +99,7 @@ async def async_setup_entry(
         IsBrewingSensor(live_coordinator, entry),
         PreheatReadySensor(data_coordinator, entry),
         SteamSwitchSensor(machine_coordinator, entry),
+        *[GlpMachineBinarySensor(machine_coordinator, entry, d) for d in MACHINE_BINARY_SENSORS],
     ])
 
     # Multi-machine (#48) — one "Reachable" binary_sensor per additional
@@ -118,6 +189,41 @@ class SteamSwitchSensor(GlpEntity[GlpMachineCoordinator], BinarySensorEntity):
         if not self.coordinator.data:
             return None
         return bool(self.coordinator.data.get("steamSwitchState"))
+
+
+class GlpMachineBinarySensor(GlpEntity[GlpMachineCoordinator], BinarySensorEntity):
+    """Relay/valve state or sensor-fault flag from the Gaggiuino machine (#108)."""
+
+    def __init__(
+        self,
+        coordinator: GlpMachineCoordinator,
+        entry: ConfigEntry,
+        description: GlpMachineBinarySensorDescription,
+    ) -> None:
+        super().__init__(coordinator, entry, description.key)
+        self.entity_description = description
+
+    @property
+    def suggested_object_id(self) -> str | None:
+        return self.entity_description.key
+
+    @property
+    def available(self) -> bool:
+        return bool(self.coordinator.data)
+
+    @property
+    def is_on(self) -> bool | None:
+        if not self.coordinator.data:
+            return None
+        return bool(self.coordinator.data.get(self.entity_description.data_key))
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        reason_key = self.entity_description.reason_key
+        if not reason_key or not self.coordinator.data:
+            return {}
+        reason = self.coordinator.data.get(reason_key)
+        return {"fault_reason": reason} if reason else {}
 
 
 class GlpAdditionalMachineReachableSensor(GlpAdditionalMachineEntity[GlpDataCoordinator], BinarySensorEntity):

@@ -86,6 +86,9 @@ If you enable both, some entities will look duplicated (this integration's `Mach
 | Machine Live Weight | Live weight on the scale | g |
 | Machine Uptime | Controller uptime since its last restart | s |
 | Machine Active Profile | Profile currently active on the machine | — |
+| Pump Flow | Live pump flow rate | L/min |
+| Weight Flow | Live flow rate on the scale | g/s |
+| Water Temperature | Live water (boiler inlet) temperature | °C |
 
 With multi-machine mode enabled (app v2.0.0+), a `Reachable` binary sensor is added automatically on its own device for every additional (non-default) machine — reachable/on are currently the only fields the app API (`machines[]` registry) provides per additional machine.
 
@@ -98,7 +101,16 @@ With multi-machine mode enabled (app v2.0.0+), a `Reachable` binary sensor is ad
 | Brewing | `true` during an active brew | Live (2 s) |
 | Preheat Ready | `true` once preheat time has elapsed | Main (60 s) |
 | Steam Switch | Physical steam switch state of the machine | Machine (5 s) |
+| Thermocouple Faulted² | `true` when the boiler thermocouple reports a fault (`fault_reason` attribute) | Machine (5 s) |
+| Pressure Sensor Faulted² | `true` when the pressure sensor reports a fault (`fault_reason` attribute) | Machine (5 s) |
+| Boiler Relay² | Raw boiler heating relay state | Machine (5 s) |
+| Valve² | Raw brew valve state | Machine (5 s) |
+| Steam Valve² | Raw steam valve state | Machine (5 s) |
+| Valve B² | Raw secondary valve state (machines with a second valve) | Machine (5 s) |
+| Steam Boiler Relay² | Raw steam boiler relay state | Machine (5 s) |
 | Reachable *(per additional machine)* | Reachability of a non-default machine (multi-machine mode) | Main (60 s) |
+
+² Diagnostic entity (category `diagnostic`, grouped separately in the device's entity list) — raw low-level state, mainly useful for troubleshooting.
 
 ### Select
 

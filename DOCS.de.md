@@ -86,6 +86,9 @@ Wer beides aktiviert, sieht scheinbar doppelte Entities (`Machine Live Pressure`
 | Machine Live Weight | Live-Gewicht auf der Waage | g |
 | Machine Uptime | Betriebszeit des Controllers seit letztem Neustart | s |
 | Machine Active Profile | Aktuell auf der Maschine aktives Profil | — |
+| Pump Flow | Live-Durchflussrate der Pumpe | L/min |
+| Weight Flow | Live-Durchflussrate an der Waage | g/s |
+| Water Temperature | Live-Wassertemperatur (Kessel-Zulauf) | °C |
 
 Bei aktiviertem Multi-Machine-Modus (App v2.0.0+) kommt pro zusätzlicher (nicht-Standard-)Maschine automatisch ein `Reachable`-Binary-Sensor auf einem eigenen Gerät hinzu — reachable/on sind aktuell die einzigen Felder, die die App-API (`machines[]`-Registry) pro Zusatzmaschine liefert.
 
@@ -98,7 +101,16 @@ Bei aktiviertem Multi-Machine-Modus (App v2.0.0+) kommt pro zusätzlicher (nicht
 | Brewing | `true` während eines aktiven Bezugs | Live (2 s) |
 | Preheat Ready | `true` sobald die Aufwärmzeit abgelaufen ist | Haupt (60 s) |
 | Steam Switch | Physischer Dampf-Schalterzustand der Maschine | Machine (5 s) |
+| Thermocouple Faulted² | `true`, wenn der Kessel-Thermofühler einen Fehler meldet (`fault_reason`-Attribut) | Machine (5 s) |
+| Pressure Sensor Faulted² | `true`, wenn der Drucksensor einen Fehler meldet (`fault_reason`-Attribut) | Machine (5 s) |
+| Boiler Relay² | Rohzustand des Kessel-Heizrelais | Machine (5 s) |
+| Valve² | Rohzustand des Brühventils | Machine (5 s) |
+| Steam Valve² | Rohzustand des Dampfventils | Machine (5 s) |
+| Valve B² | Rohzustand des zweiten Ventils (bei Maschinen mit zweitem Ventil) | Machine (5 s) |
+| Steam Boiler Relay² | Rohzustand des Dampfkessel-Relais | Machine (5 s) |
 | Reachable *(pro Zusatzmaschine)* | Erreichbarkeit einer nicht-Standard-Maschine (Multi-Machine-Modus) | Haupt (60 s) |
+
+² Diagnose-Entity (Kategorie `diagnostic`, separat gruppiert in der Entity-Liste des Geräts) — Low-Level-Rohzustand, hauptsächlich für die Fehlersuche relevant.
 
 ### Select
 

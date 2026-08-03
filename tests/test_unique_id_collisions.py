@@ -46,6 +46,7 @@ from __future__ import annotations
 import ast
 from pathlib import Path
 
+from custom_components.gaggiuino_profiler.binary_sensor import MACHINE_BINARY_SENSORS
 from custom_components.gaggiuino_profiler.sensor import (
     MACHINE_SENSORS,
     MAINTENANCE_SENSORS,
@@ -159,6 +160,7 @@ def test_unique_id_keys_are_globally_unique() -> None:
         [d.key for d in SENSORS]
         + [d.key for d in MAINTENANCE_SENSORS]
         + [d.key for d in MACHINE_SENSORS]
+        + [d.key for d in MACHINE_BINARY_SENSORS]
         + literal_suffixes
     )
     duplicates = sorted({k for k in keys if keys.count(k) > 1})
