@@ -52,7 +52,7 @@ Alle Sensoren/Entities aktualisieren sich mit dem Poll-Intervall des jeweiligen 
 
 Neuere Gaggiuino-Firmware (ab Build 7889b7d) kann eigene MQTT/Home-Assistant-Autodiscovery-Entities direkt veröffentlichen — Boiler-Temperatur/-Druck/-Flow/-Gewicht, Brüh-/Dampf-/Heißwasser-Status, ein Betriebsmodus-Select, aktives Profil, ein Tara-Button sowie Live-Sensoren während eines laufenden Shots. Diese Integration spricht nie direkt mit der Maschine — sie fragt ausschließlich die REST-API des Add-ons ab —, daher hat das Aktivieren von Firmware-MQTT keinerlei Auswirkung auf diese Integration.
 
-Wer beides aktiviert, sieht scheinbar doppelte Entities (`Machine Live Pressure`/`Machine Live Weight`/`Machine Water Level`/`Machine Temperature`/`Machine Active Profile` überschneiden sich mit den nativen Firmware-Pendants) — das ist erwartet, kein Bug, und beide Sätze können nach Belieben ignoriert/deaktiviert werden. Diese Integration liefert zusätzlich Dinge, die natives Firmware-MQTT nicht bietet: persistente Shot-Historie samt Scoring, Preheat-Scheduling und ein breiteres (5-Aufgaben-) Wartungs-Tracking mit konfigurierbaren Schwellenwerten.
+Wer beides aktiviert, sieht scheinbar doppelte Entities (`Machine Live Pressure`/`Machine Live Weight`/`Machine Water Level`/`Machine Temperature`/`Machine Active Profile`/`Operation Mode`/`Tare Scale` überschneiden sich mit den nativen Firmware-Pendants) — das ist erwartet, kein Bug, und beide Sätze können nach Belieben ignoriert/deaktiviert werden. Diese Integration liefert zusätzlich Dinge, die natives Firmware-MQTT nicht bietet: persistente Shot-Historie samt Scoring, Preheat-Scheduling, ein breiteres (5-Aufgaben-) Wartungs-Tracking mit konfigurierbaren Schwellenwerten sowie (seit v1.26.0) die Steuerung von Kessel-/Display-/Waagen-/LED-Einstellungen (Number/Switch/Light) und eine Release-Channel-Auswahl.
 
 ### Sensoren
 
@@ -117,6 +117,60 @@ Bei aktiviertem Multi-Machine-Modus (App v2.0.0+) kommt pro zusätzlicher (nicht
 | Entity | Beschreibung |
 |---|---|
 | Profile | Profilauswahl. Optionsliste kommt vom Haupt-Coordinator (60 s, Profile ändern sich selten), der aktuell gewählte Wert wird vom Machine-Coordinator (5 s) gelesen, damit ein direkt an der Maschine gewechseltes Profil zügig in HA ankommt. Eine Auswahl in HA ruft `/api/machine/profile/set` am Add-on auf. |
+| Operation Mode | `BREW_AUTO` / `FLUSH` / `DESCALE` / `STEAM` / `FLUSH_AUTO` / `HOT_WATER` / `HOME`. `BREW_MANUAL` wird bewusst nicht angeboten — das Add-on lehnt es über `/api/machine/opmode` im Leerlauf ab. Aktueller Wert kommt vom Machine-Coordinator (5 s, via `GET /api/machine/live`). |
+| Release Channel³ | Firmware-Update-Kanal `stable` / `test` / `debug`. |
+
+### Light
+
+| Entity | Beschreibung |
+|---|---|
+| LED | Status-LED der Maschine. RGB-Farbe plus Effekt `Disco`/`None`. |
+
+### Number³
+
+| Entity | Beschreibung | Einheit | Bereich |
+|---|---|---|---|
+| Steam Set Point | Ziel-Dampftemperatur des Kessels | °C | 100–160 |
+| Offset Temperature | Kalibrierungs-Offset der Kesseltemperatur | °C | -10–10 |
+| Heating Power | Heizleistung des Kessels | — | 100–1500 |
+| Main Divider | PID-Divider des Hauptkessels | — | 1–5 |
+| Brew Divider | PID-Divider des Brühkessels | — | 1–5 |
+| Startup Heat Delta | Zusätzliche Aufheizreserve beim Start | °C | 0–10 |
+| LCD Brightness | Helligkeit des Touchscreens | % | 0–100 |
+| LCD Sleep Timeout | Leerlaufzeit bis der Screen schläft | s | 0–3600 |
+| LCD Go Home Timeout | Leerlaufzeit bis zur Rückkehr zum Startbildschirm | s | 0–60 |
+| LED Time-of-Flight Min/Max | Abstandssensor-Schwellenwerte für den Näherungstrigger der LED | — | 0–200 |
+
+### Switch³
+
+| Entity | Beschreibung |
+|---|---|
+| Brew Delta | Brüh-Temperatur-Delta-Kompensation des Kessels |
+| Dream Steam | Dream-Steam-Kesselmodus |
+| LCD Dark Mode | Dunkles Touchscreen-Theme |
+| LCD Close On Brew Off | Schließt den Brüh-Bildschirm automatisch nach Bezugsende |
+| Simple UI | Vereinfachte Touchscreen-Oberfläche |
+| Force Predictive Scales | Erzwingt prädiktive Gewichtswerte |
+| Hardware Scales Enabled | Fest verbaute (kabelgebundene) Waage |
+| Bluetooth Scales Enabled | Bluetooth-Waage |
+
+³ `entity_category: config` — in der UI unter "Konfiguration" des Geräts gruppiert, nicht standardmäßig neben den Alltagssteuerungen sichtbar.
+
+### Button
+
+| Entity | Beschreibung |
+|---|---|
+| Tare Scale | Fordert eine Waagen-Tarierung an |
+| Save Settings | Persistiert alles, was aktuell im RAM angewendet ist, auf den Flash-Speicher. Über die Number-/Switch-/Light-Entities oben geänderte Einstellungen werden bereits über den jeweiligen REST-Aufruf automatisch persistiert — dieser Button ist speziell für Änderungen am Touchscreen/Web-UI der Maschine selbst gedacht, die GLP dauerhaft speichern soll. |
+| Save Active Profile | Persistiert das aktuell aktive Profil (samt ID) auf den Flash-Speicher |
+
+Komponenten-Testbuttons (Pumpe/Ventil/Ventil B/LED) sind bewusst nicht enthalten — sie steuern kurzzeitig echte Hardware an und sind gegen den Proxy des Add-ons noch nicht live-verifiziert (`gaggiuino-local-profiler`#600).
+
+Alle Light-/Number-/Switch-/Button-/Select-Entities (Operation Mode, Release Channel) stammen vom `GlpSettingsCoordinator` (30 s) bzw. vom Machine-Coordinator (5 s, nur Operation Mode) und sind vorerst nur für die Standardmaschine verfügbar — gleicher Multi-Machine-Hinweis wie bei den Sensoren oben.
+
+### Umstieg von ALERTua/hass-gaggiuino
+
+Diese Integration deckt inzwischen die Steuerfläche ab, die die Community-Integration bietet: Profilauswahl, Operation Mode, Kessel-/Display-/Waagen-Einstellungen (Number/Switch), die Status-LED (Light), Tare/Save-Settings/Save-Profile (Button), sowie Live-Sensoren/Binary-Sensoren für Durchfluss, Wassertemperatur, Relaiszustände und Sensorfehler (seit v1.25.0). Bei einem Umstieg kann `hass-gaggiuino` entfernt werden, sobald Automatisierungen auf die entsprechenden Entities dieser Integration umgestellt sind — keine Datenmigration nötig, alles hier wird frisch von Maschine/Add-on gelesen.
 
 ## Dienste
 

@@ -49,13 +49,16 @@ class GlpMachineCoordinator(DataUpdateCoordinator):
         )
         self._session   = session
         self._url       = url.rstrip("/")
-        self._auth      = auth
+        # Public (like GlpDataCoordinator.auth) -- select.py's
+        # GlpOperationModeSelect writes through this coordinator the same way
+        # GlpProfileSelect already does via coordinator.auth.headers() (#109).
+        self.auth       = auth
         self._machine_id = machine_id
 
     async def _async_update_data(self) -> dict:
         suffix = f"?machine={self._machine_id}" if self._machine_id else ""
         try:
-            headers = await self._auth.headers()
+            headers = await self.auth.headers()
             async with self._session.get(
                 f"{self._url}/api/machine/status{suffix}",
                 headers=headers,
@@ -66,6 +69,32 @@ class GlpMachineCoordinator(DataUpdateCoordinator):
                 # available=false → return empty dict, entities become unavailable
                 if not data.get("available"):
                     return {}
-                return data
         except Exception as err:
             raise UpdateFailed(f"GLP machine status unreachable: {err}") from err
+
+        # #109: also merge sysState.operationMode/coreVersion/timeAlive from
+        # GET /api/machine/live -- operationMode isn't part of /api/machine/status
+        # (see GlpOperationModeSelect in select.py), so the opmode select needs
+        # this additional call to read a live value at the same 5 s cadence as
+        # the other machine-coordinator entities. Best-effort: a failure here
+        # must not fail the whole update, since /api/machine/status already
+        # succeeded and every other machine-coordinator entity only depends on
+        # that -- the opmode select alone falls back to unknown.
+        live_suffix = f"?machineId={self._machine_id}" if self._machine_id else ""
+        try:
+            async with self._session.get(
+                f"{self._url}/api/machine/live{live_suffix}",
+                headers=headers,
+                timeout=aiohttp.ClientTimeout(total=5),
+            ) as r:
+                r.raise_for_status()
+                live = await r.json()
+                sys_state = (live or {}).get("sysState") or {}
+                if sys_state:
+                    data["operationMode"] = sys_state.get("operationMode")
+                    data["coreVersion"] = sys_state.get("coreVersion")
+                    data["timeAlive"] = sys_state.get("timeAlive")
+        except Exception as err:
+            _LOGGER.debug("GLP machine live status unreachable: %s", err)
+
+        return data
