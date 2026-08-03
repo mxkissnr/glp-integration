@@ -15,6 +15,7 @@ from homeassistant.const import (
     UnitOfPressure,
     UnitOfTemperature,
     UnitOfTime,
+    UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -300,6 +301,37 @@ MACHINE_SENSORS: tuple[GlpMachineSensorDescription, ...] = (
         data_key="profileName",
         name="Machine Active Profile",
         icon="mdi:chart-bell-curve",
+    ),
+    # #108: pumpFlow/weightFlow/waterTemperature merged into /api/machine/status
+    # by gaggiuino-local-profiler#597/#599 from the machine's live sensor push.
+    GlpMachineSensorDescription(
+        key="pump_flow",
+        data_key="pumpFlow",
+        name="Pump Flow",
+        icon="mdi:pump",
+        device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
+        suggested_display_precision=2,
+    ),
+    GlpMachineSensorDescription(
+        key="weight_flow",
+        data_key="weightFlow",
+        name="Weight Flow",
+        icon="mdi:speedometer",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement="g/s",
+        suggested_display_precision=2,
+    ),
+    GlpMachineSensorDescription(
+        key="water_temperature",
+        data_key="waterTemperature",
+        name="Water Temperature",
+        icon="mdi:water-thermometer-outline",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        suggested_display_precision=1,
     ),
 )
 

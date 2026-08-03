@@ -46,11 +46,15 @@ from __future__ import annotations
 import ast
 from pathlib import Path
 
+from custom_components.gaggiuino_profiler.binary_sensor import MACHINE_BINARY_SENSORS
+from custom_components.gaggiuino_profiler.button import BUTTONS
+from custom_components.gaggiuino_profiler.number import NUMBERS
 from custom_components.gaggiuino_profiler.sensor import (
     MACHINE_SENSORS,
     MAINTENANCE_SENSORS,
     SENSORS,
 )
+from custom_components.gaggiuino_profiler.switch import SWITCHES
 
 COMPONENT_DIR = (
     Path(__file__).resolve().parents[1] / "custom_components" / "gaggiuino_profiler"
@@ -159,6 +163,10 @@ def test_unique_id_keys_are_globally_unique() -> None:
         [d.key for d in SENSORS]
         + [d.key for d in MAINTENANCE_SENSORS]
         + [d.key for d in MACHINE_SENSORS]
+        + [d.key for d in MACHINE_BINARY_SENSORS]
+        + [d.key for d in NUMBERS]
+        + [d.key for d in SWITCHES]
+        + [d.key for d in BUTTONS]
         + literal_suffixes
     )
     duplicates = sorted({k for k in keys if keys.count(k) > 1})
@@ -177,5 +185,8 @@ def test_scanner_finds_expected_suffixes() -> None:
         "profile",
         "update",
         "maint_grinders",
+        "operation_mode",
+        "release_channel",
+        "led",
     }
     assert set(machine_scoped) == {"reachable", "status"}

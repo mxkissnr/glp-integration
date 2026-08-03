@@ -21,10 +21,15 @@ from .coordinator import GlpDataCoordinator
 from .live_coordinator import GlpLiveCoordinator
 from .machine_coordinator import GlpMachineCoordinator
 from .orders_api import GlpBeansInfoView, GlpOrdersSubView, GlpOrdersView, GlpShotsSubView
+from .settings_coordinator import GlpSettingsCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["sensor", "binary_sensor", "select", "update"]
+# light/number/switch/button (#109): write-capable control entities backed by
+# the new GlpSettingsCoordinator below (light/number/switch) or the existing
+# data/machine coordinators (button, select's new operation-mode/release-
+# channel entries).
+PLATFORMS = ["sensor", "binary_sensor", "select", "update", "light", "number", "switch", "button"]
 
 MAINTENANCE_DONE_SCHEMA = vol.Schema({
     vol.Required("task"): vol.All(str, vol.Length(min=1)),
@@ -199,10 +204,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except Exception:
         pass
 
+    settings_coordinator = GlpSettingsCoordinator(hass, session, url, auth)
+    # Settings coordinator is best-effort too (#109) — a machine without the
+    # settings proxy (non-Gaggiuino, or unreachable) must not block setup;
+    # its entities just come up unavailable, same convention as `machine`.
+    try:
+        await settings_coordinator.async_config_entry_first_refresh()
+    except Exception:
+        pass
+
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
-        "data":    coordinator,
-        "live":    live_coordinator,
-        "machine": machine_coordinator,
+        "data":     coordinator,
+        "live":     live_coordinator,
+        "machine":  machine_coordinator,
+        "settings": settings_coordinator,
     }
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

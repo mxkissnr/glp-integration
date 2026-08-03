@@ -52,7 +52,7 @@ All sensors/entities update at the poll interval of their respective coordinator
 
 Newer Gaggiuino firmware (build 7889b7d+) can publish its own MQTT/Home Assistant auto-discovery entities directly — boiler temperature/pressure/flow/weight, brew/steam/hot-water status, an operation-mode select, active profile, a tare button, and live shot-in-progress sensors. This integration never talks to the machine directly — it only polls the add-on's own REST API — so nothing here is affected by enabling firmware MQTT.
 
-If you enable both, some entities will look duplicated (this integration's `Machine Live Pressure`/`Machine Live Weight`/`Machine Water Level`/`Machine Temperature`/`Machine Active Profile` overlap with the firmware's native equivalents) — that's expected, not a bug, and either set can be safely ignored/disabled per your preference. This integration additionally provides things firmware-native MQTT does not: persisted shot history and scoring, preheat scheduling, and broader (5-task) maintenance tracking with configurable thresholds.
+If you enable both, some entities will look duplicated (this integration's `Machine Live Pressure`/`Machine Live Weight`/`Machine Water Level`/`Machine Temperature`/`Machine Active Profile`/`Operation Mode`/`Tare Scale` overlap with the firmware's native equivalents) — that's expected, not a bug, and either set can be safely ignored/disabled per your preference. This integration additionally provides things firmware-native MQTT does not: persisted shot history and scoring, preheat scheduling, broader (5-task) maintenance tracking with configurable thresholds, and (since v1.26.0) boiler/display/scales/LED settings control (number/switch/light) and a release-channel select.
 
 ### Sensors
 
@@ -86,6 +86,9 @@ If you enable both, some entities will look duplicated (this integration's `Mach
 | Machine Live Weight | Live weight on the scale | g |
 | Machine Uptime | Controller uptime since its last restart | s |
 | Machine Active Profile | Profile currently active on the machine | — |
+| Pump Flow | Live pump flow rate | L/min |
+| Weight Flow | Live flow rate on the scale | g/s |
+| Water Temperature | Live water (boiler inlet) temperature | °C |
 
 With multi-machine mode enabled (app v2.0.0+), a `Reachable` binary sensor is added automatically on its own device for every additional (non-default) machine — reachable/on are currently the only fields the app API (`machines[]` registry) provides per additional machine.
 
@@ -98,13 +101,76 @@ With multi-machine mode enabled (app v2.0.0+), a `Reachable` binary sensor is ad
 | Brewing | `true` during an active brew | Live (2 s) |
 | Preheat Ready | `true` once preheat time has elapsed | Main (60 s) |
 | Steam Switch | Physical steam switch state of the machine | Machine (5 s) |
+| Thermocouple Faulted² | `true` when the boiler thermocouple reports a fault (`fault_reason` attribute) | Machine (5 s) |
+| Pressure Sensor Faulted² | `true` when the pressure sensor reports a fault (`fault_reason` attribute) | Machine (5 s) |
+| Boiler Relay² | Raw boiler heating relay state | Machine (5 s) |
+| Valve² | Raw brew valve state | Machine (5 s) |
+| Steam Valve² | Raw steam valve state | Machine (5 s) |
+| Valve B² | Raw secondary valve state (machines with a second valve) | Machine (5 s) |
+| Steam Boiler Relay² | Raw steam boiler relay state | Machine (5 s) |
 | Reachable *(per additional machine)* | Reachability of a non-default machine (multi-machine mode) | Main (60 s) |
+
+² Diagnostic entity (category `diagnostic`, grouped separately in the device's entity list) — raw low-level state, mainly useful for troubleshooting.
 
 ### Select
 
 | Entity | Description |
 |---|---|
 | Profile | Profile selector. The option list comes from the main coordinator (60 s — profiles rarely change), while the currently selected value is read from the machine coordinator (5 s) so a profile switch made directly on the machine reaches HA quickly. Selecting a profile in HA calls `/api/machine/profile/set` on the add-on. |
+| Operation Mode | `BREW_AUTO` / `FLUSH` / `DESCALE` / `STEAM` / `FLUSH_AUTO` / `HOT_WATER` / `HOME`. `BREW_MANUAL` is intentionally not offered — the add-on's own `/api/machine/opmode` rejects it while idle. Current value comes from the machine coordinator (5 s, via `GET /api/machine/live`). |
+| Release Channel³ | `stable` / `test` / `debug` firmware update channel. |
+
+### Light
+
+| Entity | Description |
+|---|---|
+| LED | Machine status LED. RGB color plus a `Disco`/`None` effect. |
+
+### Number³
+
+| Entity | Description | Unit | Range |
+|---|---|---|---|
+| Steam Set Point | Boiler steam target temperature | °C | 100–160 |
+| Offset Temperature | Boiler temperature calibration offset | °C | -10–10 |
+| Heating Power | Boiler heating power | — | 100–1500 |
+| Main Divider | Main boiler PID divider | — | 1–5 |
+| Brew Divider | Brew boiler PID divider | — | 1–5 |
+| Startup Heat Delta | Extra heat added during startup | °C | 0–10 |
+| LCD Brightness | Touchscreen brightness | % | 0–100 |
+| LCD Sleep Timeout | Idle time before the screen sleeps | min | 0–120 |
+| LCD Go Home Timeout | Idle time before returning to the home screen | s | 0–60 |
+| LED Time-of-Flight Min/Max | Distance sensor thresholds for the LED's proximity trigger | — | 0–200 |
+
+### Switch³
+
+| Entity | Description |
+|---|---|
+| Brew Delta | Boiler brew-temperature delta compensation |
+| Dream Steam | Dream-steam boiler mode |
+| LCD Dark Mode | Touchscreen dark theme |
+| LCD Close On Brew Off | Close the active-brew screen automatically when the brew ends |
+| Simple UI | Simplified touchscreen UI |
+| Force Predictive Scales | Force predictive weight readings |
+| Hardware Scales Enabled | Onboard (wired) scale |
+| Bluetooth Scales Enabled | Bluetooth scale |
+
+³ `entity_category: config` — grouped under the device's "Configuration" section in the UI, not shown alongside everyday controls by default.
+
+### Button
+
+| Entity | Description |
+|---|---|
+| Tare Scale | Requests a scale tare |
+| Save Settings | Persists whatever's currently applied in RAM to flash. Settings changed through the Number/Switch/Light entities above already auto-persist via their own REST call — this button is specifically for settings changed on the machine's own touchscreen/web UI that you want GLP to make durable. |
+| Save Active Profile | Persists the currently active profile (and its ID) to flash |
+
+Component-test buttons (pump/valve/valve B/LED) are intentionally not included — they briefly actuate real hardware and aren't yet live-verified against the add-on's proxy (`gaggiuino-local-profiler`#600).
+
+All light/number/switch/button/select (Operation Mode, Release Channel) entities are sourced from `GlpSettingsCoordinator` (30 s) or the machine coordinator (5 s, Operation Mode only) and are default-machine-only for now — same multi-machine scope note as the sensors above.
+
+### Migrating from ALERTua/hass-gaggiuino
+
+This integration now covers the control surface that community integration exposes: profile selection, operation mode, boiler/display/scales settings (number/switch), the status LED (light), tare/save-settings/save-profile (button), plus live sensors/binary sensors for flow, water temperature, relay states and sensor faults (added in v1.25.0). If you're switching over, you can remove `hass-gaggiuino` once you've re-pointed any automations at this integration's equivalent entities — no data migration needed, everything here is read fresh from the machine/add-on.
 
 ## Services
 
