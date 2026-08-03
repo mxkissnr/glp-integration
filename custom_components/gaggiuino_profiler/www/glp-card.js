@@ -1,4 +1,4 @@
-const GLP_CARD_VERSION = '2.17.5';
+const GLP_CARD_VERSION = '2.18.0';
 
 // ─── i18n ────────────────────────────────────────────────────────────────────
 // DE wording is the original card text; language follows hass.language (DE/EN/IT/FR/ES/NL, falls back to EN).
@@ -252,6 +252,125 @@ function downsample(arr, maxPts) {
 // --glp-series-* fallback values in STYLES and with glp-order-card.js (see CLAUDE.md).
 const CC = { pres: '#0072b2', flow: '#c77000', temp: '#c0392b', wt: '#009e73' };
 
+// GLP-SHARED:theme-presets v1 — the 8 approved per-machine colour theme
+// presets (#87), kept byte-identical (key -> {a,b} hex pair) with
+// gaggiuino-local-profiler's lib/machines/theme-presets.js and with
+// glp-order-card.js's copy — same contract as machines.theme, see
+// mxkissnr/gaggiuino-local-profiler#595. This card has no theme-picker UI
+// (YAML-config-only, see the `theme` setConfig() key), so unlike the app's
+// copy there are no i18n name/hint labels here, just the hex values.
+const THEME_PRESETS = {
+  'amber-americano':   { a: '#f59e0b', b: '#f59e0b' },
+  'ruby-ristretto':    { a: '#7f1d1d', b: '#7f1d1d' },
+  'copper-cortado':    { a: '#c2703d', b: '#e8b4a0' },
+  'twilight-turkish':  { a: '#0891b2', b: '#4338ca' },
+  'marbled-macchiato': { a: '#f59e0b', b: '#ec4899' },
+  'ember-espresso':    { a: '#dc4a1f', b: '#f5a623' },
+  'mulberry-mocha':    { a: '#5b21b6', b: '#db2777' },
+  'frosty-flat-white': { a: '#0f766e', b: '#38bdf8' },
+};
+// /GLP-SHARED:theme-presets v1
+
+// Strict #rrggbb only — `accent_color`/`accent_gradient` are operator-set
+// YAML, not attacker input, but they still flow into a style attribute
+// (_applyMachineTheme()) so get the same validation discipline as any other
+// value reaching the DOM: reject anything that isn't exactly a 6-digit hex
+// triplet, never pass an unvalidated string through.
+const HEX_COLOR_RE = /^#[0-9a-fA-F]{6}$/;
+
+// GLP-SHARED:machine-icon v1 — approved detailed Gaggia Classic icon
+// geometry (#87), ported faithfully from the Theme Lab mockup Max approved
+// (see ICON-AND-THEMES-SPEC.js in the glp-project workspace) and kept in
+// sync with glp-order-card.js's copy. `id` is a per-render-instance-unique
+// gradient id (this card can appear more than once on one dashboard, see
+// _iconGradId in the constructor) coloured via --glp-accent-start/-end (the
+// mockup's --acc-a/--acc-b, renamed to this card's own token names); a
+// second, fixed `${id}-steel` gradient colours the drip-tray mesh in silver,
+// independent of the accent theme. `mini` drops fine detail (portafilter
+// spout, steam wand tip, button highlights/LEDs, drip-tray mesh holes) for
+// small render sizes, per the mockup's own MACHINE_BODY(id, mini).
+const MACHINE_BODY = (id, mini) => `
+    <!-- Seitenwand rechts inkl. Kantenlicht, volle Hoehe -->
+    <path d="M72.2 2.3 L100 11 L100 130 L88 153 L72.2 153 Z" fill="url(#${id})"/>
+    <path d="M72.2 2.3 L100 11 L100 130 L88 153 L72.2 153 Z" fill="#000" opacity=".26"/>
+    <path d="M93.2 8.6 L100 11 L100 130 L90 149 L93.2 142 Z" fill="#fff" opacity=".13"/>
+
+    <!-- Frontflaeche Korpus -->
+    <path d="M13 2.4 L72.2 2.3 L72.2 71.9 L10.2 71.9 L10.2 5.2 A2.8 2.8 0 0 1 13 2.4 Z" fill="url(#${id})"/>
+    <path d="M72.2 3 L72.2 71" stroke="#fff" opacity=".22" stroke-width="3"/>
+
+    <!-- Mittelblock: Korpus kragt links darueber, dort ragt der Siebtraeger ins Freie -->
+    <path d="M20 72 L94 72 L94 122 L24 122 Z" fill="#2b2b31"/>
+    <path d="M20 72 L94 72 L94 77 L20.6 77 Z" fill="#000" opacity=".3"/>
+
+    <!-- Bruehgruppe + Siebtraeger (ragt nach links ins Freie) -->
+    <rect x="42" y="71.5" width="16" height="10.5" rx="2.2" fill="#b9bec5"/>
+    ${mini ? '' : '<path d="M47 82 L53 82 L52 87.5 L48 87.5 Z" fill="#8f959d"/>'}
+    <path d="M20.5 91 L45 84" stroke="#26262c" stroke-width="6.6" stroke-linecap="round"/>
+    <circle cx="18.6" cy="91.6" r="5.9" fill="#ded8ca" stroke="#26262c" stroke-width="1.2"/>
+
+    <!-- Dampflanze RECHTS: Gummimanschette oben, Chromrohr nach unten -->
+    <path d="M84.2 72 C85.2 78 84.6 82 84 88" stroke="#26262c" stroke-width="5" stroke-linecap="round"/>
+    <path d="M84 88 C83.5 101 83 115 83.5 130" stroke="#a3a9b1" stroke-width="2.6" stroke-linecap="round"/>
+    ${mini ? '' : '<path d="M21.5 97 L21.5 130" stroke="#9aa0a8" stroke-width="2" stroke-linecap="round"/>'}
+
+    <!-- Tropfschale: silbernes Lochblech in dunklem Rahmen, breiter als der Korpus -->
+    <path d="M17 122 L93 122 L80 134 L0 134 Z" fill="#25252b"/>
+    <path d="M20.5 123.4 L88.5 123.4 L77 132.6 L4 132.6 Z" fill="url(#${id}-steel)"/>
+    ${mini ? '' : `
+    <circle cx="28" cy="126" r="1.5" fill="#4a4a52"/>
+    <circle cx="39" cy="126" r="1.5" fill="#4a4a52"/>
+    <circle cx="50" cy="126" r="1.5" fill="#4a4a52"/>
+    <circle cx="61" cy="126" r="1.5" fill="#4a4a52"/>
+    <circle cx="72" cy="126" r="1.5" fill="#4a4a52"/>
+    <circle cx="21" cy="130.4" r="1.5" fill="#4a4a52"/>
+    <circle cx="32" cy="130.4" r="1.5" fill="#4a4a52"/>
+    <circle cx="43" cy="130.4" r="1.5" fill="#4a4a52"/>
+    <circle cx="54" cy="130.4" r="1.5" fill="#4a4a52"/>
+    <circle cx="65" cy="130.4" r="1.5" fill="#4a4a52"/>`}
+
+    <!-- Sockelfront: senkrecht, rechte Kante trifft die Seitenwand -->
+    <path d="M0 134 L80 134 L84 155 L0 155 Z" fill="#2b2b31"/>
+    <path d="M0 134 L80 134 L80.8 138 L0 138 Z" fill="#fff" opacity=".07"/>
+
+    <!-- Fuesse -->
+    <rect x="4.5" y="155" width="7.5" height="4.4" rx="1.5" fill="#26262c"/>
+    <rect x="66" y="155" width="7.5" height="4.4" rx="1.5" fill="#26262c"/>
+
+    <!-- Bedienfeld: 3 Wipptasten -->
+    <rect x="20.5" y="13.6" width="9" height="14.8" rx="2.1" fill="#26262c"/>
+    <rect x="33" y="13.6" width="9" height="14.8" rx="2.1" fill="#26262c"/>
+    <rect x="45.5" y="13.6" width="9" height="14.8" rx="2.1" fill="#26262c"/>
+    ${mini ? '' : `
+    <rect x="21.6" y="14.9" width="6.8" height="5.4" rx="1.4" fill="#fff" opacity=".13"/>
+    <rect x="34.1" y="14.9" width="6.8" height="5.4" rx="1.4" fill="#fff" opacity=".13"/>
+    <rect x="46.6" y="14.9" width="6.8" height="5.4" rx="1.4" fill="#fff" opacity=".13"/>
+    <rect x="23.7" y="31.8" width="2.6" height="2.2" rx=".8" fill="#d9422e"/>
+    <rect x="36.2" y="31.8" width="2.6" height="2.2" rx=".8" fill="#d9422e"/>
+    <rect x="48.7" y="31.8" width="2.6" height="2.2" rx=".8" fill="#d9422e"/>`}
+
+    <!-- Dampfknopf: liegender Zylinder auf der Seitenwand -->
+    <rect x="74" y="23.4" width="9" height="8" fill="#26262c"/>
+    <rect x="80.7" y="20.5" width="17" height="13.6" rx="6.8" fill="#212126"/>
+    <ellipse cx="82.6" cy="27.3" rx="2.4" ry="6.8" fill="#3b3b43"/>
+    ${mini ? '' : '<rect x="81.4" y="23.4" width="1.7" height="7.8" rx=".85" fill="#fff" opacity=".2"/>'}`;
+
+const MACHINE_ICON_MINI = (id) => `
+    <svg viewBox="0 0 100 162" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="${id}" x1="6" y1="0" x2="92" y2="145" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stop-color="var(--glp-accent-start)"/>
+          <stop offset="1" stop-color="var(--glp-accent-end)"/>
+        </linearGradient>
+        <linearGradient id="${id}-steel" x1="0" y1="123" x2="0" y2="133" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stop-color="#d3d6db"/>
+          <stop offset="1" stop-color="#9ba1a9"/>
+        </linearGradient>
+      </defs>
+      ${MACHINE_BODY(id, true)}
+    </svg>`;
+// /GLP-SHARED:machine-icon v1
+
 function _scale(arr) { return (Array.isArray(arr) && arr.length) ? arr.map(v => v / 10) : []; }
 
 function fmtClock(s) {
@@ -391,7 +510,32 @@ const STYLES = `
     --glp-border:  var(--divider-color, #3f3f46);
     --glp-text:    var(--primary-text-color, #e4e4e7);
     --glp-sub:     var(--secondary-text-color, #a1a1aa);
-    --glp-accent:  var(--primary-color, #f59e0b);
+    /* --glp-accent-start/--glp-accent-end: per-machine colour theme (8
+       curated presets or a custom flat colour/gradient, see the
+       theme/accent_color/accent_gradient setConfig() keys and this file's
+       theme-resolving method). Both default directly to HA's --primary-color,
+       so a card with no theme configured renders identically to before this
+       existed (flat colour = both stops equal). The theme-resolving method
+       sets these as inline styles on the host (highest-priority cascade,
+       same pattern as _applySemanticColorContrast() below) only when a
+       theme is configured; otherwise they fall through to these stylesheet
+       defaults.
+       --glp-accent itself is kept as the legacy single-colour alias (e.g.
+       glp-card.js's preheat progress bar fill, or any spot in either card
+       that only ever needed one accent value) and MUST derive FROM
+       --glp-accent-start (not the other way around) — it resolves through
+       --glp-accent-start via the cascade, so it also picks up a configured
+       theme's first stop automatically. Getting this direction backwards
+       (--glp-accent-start deriving from --glp-accent) would leave
+       --glp-accent permanently pinned to --primary-color, silently ignoring
+       any configured theme wherever old code still reads --glp-accent
+       directly. Likewise --glp-accent-end derives from --glp-accent-start
+       (not an independent --primary-color default) so that code which only
+       ever sets --glp-accent-start (forgetting the end stop) degrades to a
+       flat colour instead of an unintentional two-tone mismatch. */
+    --glp-accent-start: var(--primary-color, #f59e0b);
+    --glp-accent-end:   var(--glp-accent-start);
+    --glp-accent:       var(--glp-accent-start);
     /* --glp-accent-text: the readable-on-accent text/icon color, for
        anything rendering directly on a full-strength --glp-accent fill (e.g.
        glp-order-card.js's .order-btn). --glp-accent can be ANY HA theme's
@@ -401,10 +545,15 @@ const STYLES = `
        this card previously hardcoded dark text unconditionally, safe only by
        coincidence with GLP's own amber defaults. --glp-accent-text is instead
        picked at runtime by _applySemanticColorContrast() from the LUMINANCE
-       OF THE RESOLVED --glp-accent itself (a separate, independent input
-       from --glp-bg's luminance, which drives --glp-ok/--glp-warn/--glp-err
-       above — theme darkness and accent darkness are orthogonal). Uses pure
-       #000/#fff with the same 0.179 WCAG flip-point threshold: at that exact
+       OF THE RESOLVED --glp-accent-start/--glp-accent-end (a separate,
+       independent input from --glp-bg's luminance, which drives
+       --glp-ok/--glp-warn/--glp-err above — theme darkness and accent
+       darkness are orthogonal). When a gradient theme is active (start !==
+       end), the DARKER of the two stops is used — a fill sweeping across
+       both (e.g. glp-order-card.js's .order-btn) must stay readable against
+       the worst case, not just the first stop; a flat theme has start ===
+       end and reduces to the original single-color check. Uses pure #000/
+       #fff with the same 0.179 WCAG flip-point threshold: at that exact
        crossover luminance, black and white text both measure ~4.58:1 against
        it, and either color's contrast only increases moving away from that
        point — so, unlike --glp-ok/--glp-warn/--glp-err (which had to be
@@ -416,9 +565,9 @@ const STYLES = `
        #1a237e correctly picks white (13.24:1) instead of the old hardcoded
        dark text's 1.13:1. glp-card.js has no full-strength accent fill with
        text on it today (--glp-accent is only a progress-bar fill), so this
-       token is unused here — kept in sync anyway so the shared block doesn't
-       drift, and so _applySemanticColorContrast() stays identical in both
-       files. */
+       token is unused there for that reason alone — kept in sync anyway so
+       the shared block doesn't drift, and so _applySemanticColorContrast()
+       stays identical in both files. */
     --glp-accent-text: #000;
     /* --glp-ok/--glp-warn/--glp-err deliberately do NOT chain through HA's
        own --success-color/--warning-color/--error-color. Checked both HA
@@ -520,6 +669,12 @@ const STYLES = `
     text-transform: uppercase;
   }
   .title svg { opacity: .5; flex-shrink: 0; }
+  /* #87: the detailed machine icon renders in the (possibly themed)
+     --glp-accent-start/-end colour, so it must NOT get the generic title
+     icon's dimming opacity — full opacity, sized to the title's line-height,
+     aspect ratio matches the icon's 100x162 viewBox. */
+  .machine-icon-badge { display: flex; flex-shrink: 0; width: 12px; height: 19px; }
+  .title .machine-icon-badge svg { opacity: 1; width: 100%; height: 100%; display: block; }
   .header-right { display: flex; align-items: center; gap: 8px; }
   .machine-uptime {
     font-size: .62rem; font-weight: 600; color: var(--sub);
@@ -1055,6 +1210,11 @@ class GlpCard extends HTMLElement {
     this._orderEtaFor = null;
     this._orderDeclineFor = null;
     this._switchEntity = localStorage.getItem('glp_switch_entity') || null;
+    // Per-instance-unique SVG gradient id (#87) — a dashboard can render more
+    // than one glp-card, and duplicate <linearGradient id> values across
+    // instances would make later instances' gradients resolve to an
+    // earlier instance's (or fail to resolve at all in some browsers).
+    this._iconGradId = `glp-icon-${Math.random().toString(36).slice(2, 10)}`;
     this._readyByTimer = null;
     this._readyByPlannedAt = null;
     this._readyByTargetAt = null;
@@ -1466,6 +1626,13 @@ class GlpCard extends HTMLElement {
     }));
   }
 
+  // setConfig() also accepts the optional per-machine colour theme keys
+  // (#87): `theme` (one of the THEME_PRESETS keys), `accent_color` (a flat
+  // custom #rrggbb), and `accent_gradient` (a [start, end] #rrggbb pair) —
+  // see _resolveMachineTheme(). These mirror the GLP app's `machines.theme`
+  // storage contract (gaggiuino-local-profiler#595) as this card's
+  // standalone/no-app YAML fallback; once a card-to-app sync exists (a later
+  // round), the app's own stored theme will take precedence over these.
   setConfig(config) {
     this._config = { title: 'Gaggiuino', ...config };
     // Re-resolve the switch entity from the machine-scoped storage key now
@@ -1473,6 +1640,46 @@ class GlpCard extends HTMLElement {
     // setConfig() and could only read the unscoped global key.
     this._switchEntity = localStorage.getItem(this._switchStorageKey())
       || localStorage.getItem('glp_switch_entity') || null;
+  }
+
+  // Resolves this card's optional theme config (#87) to a {a,b} hex pair, or
+  // null when nothing valid is configured (falls back to the default
+  // --glp-accent-start/-end = --glp-accent behavior). Precedence, matching
+  // "more specific wins": accent_gradient > accent_color > theme preset key.
+  // Strict hex validation only (HEX_COLOR_RE) — operator-set YAML, not
+  // attacker input, but never let an unvalidated string reach a style
+  // attribute regardless of source.
+  _resolveMachineTheme() {
+    const cfg = this._config || {};
+    if (Array.isArray(cfg.accent_gradient) && cfg.accent_gradient.length === 2 &&
+        HEX_COLOR_RE.test(cfg.accent_gradient[0]) && HEX_COLOR_RE.test(cfg.accent_gradient[1])) {
+      return { a: cfg.accent_gradient[0], b: cfg.accent_gradient[1] };
+    }
+    if (typeof cfg.accent_color === 'string' && HEX_COLOR_RE.test(cfg.accent_color)) {
+      return { a: cfg.accent_color, b: cfg.accent_color };
+    }
+    if (typeof cfg.theme === 'string' && Object.prototype.hasOwnProperty.call(THEME_PRESETS, cfg.theme)) {
+      return THEME_PRESETS[cfg.theme];
+    }
+    return null;
+  }
+
+  // Applies the resolved machine theme (if any) as inline --glp-accent-start
+  // /--glp-accent-end overrides on the host — same "inline style always wins
+  // the cascade" pattern as _applySemanticColorContrast(). Called from
+  // _render() before that method, so its luminance read already sees the
+  // themed colours. Removes the inline overrides (falling back to the
+  // GLP-TOKENS stylesheet defaults) when no theme is configured, so a config
+  // change back to "no theme" is reflected on the next render too.
+  _applyMachineTheme() {
+    const theme = this._resolveMachineTheme();
+    if (theme) {
+      this.style.setProperty('--glp-accent-start', theme.a);
+      this.style.setProperty('--glp-accent-end', theme.b);
+    } else {
+      this.style.removeProperty('--glp-accent-start');
+      this.style.removeProperty('--glp-accent-end');
+    }
   }
 
   set hass(hass) {
@@ -1675,8 +1882,9 @@ class GlpCard extends HTMLElement {
   // color scheme can mismatch the actual active HA theme (dark system +
   // light HA theme is common), and this card has no data-theme attribute to
   // key off instead. --glp-ok/--glp-warn/--glp-err key off --glp-bg's
-  // luminance; --glp-accent-text keys off --glp-accent's luminance
-  // separately (theme darkness and accent darkness are orthogonal — see the
+  // luminance; --glp-accent-text keys off --glp-accent-start/-end's
+  // luminance (the darker of the two, see below) separately (theme darkness
+  // and accent darkness are orthogonal — see the
   // long comments in the GLP-TOKENS block above for the measured contrast
   // ratios behind all four). Sets the winning values as an inline style on
   // the host, which always outranks the plain :host declarations in STYLES
@@ -1692,7 +1900,15 @@ class GlpCard extends HTMLElement {
       this.style.setProperty('--glp-warn', light ? '#a16207' : '#eab308');
       this.style.setProperty('--glp-err',  light ? '#dc2626' : '#ef4444');
     }
-    const accentLuminance = this._luminanceOf(getComputedStyle(this).getPropertyValue('--glp-accent').trim());
+    // #87: when a per-machine gradient theme is active, --glp-accent-start
+    // and --glp-accent-end differ — pick the DARKER (lower-luminance) stop
+    // as the worst case, since text/icon content can sit anywhere across the
+    // gradient. A flat colour (no theme, or a flat custom/preset) has both
+    // stops equal, so this reduces to the original single-value check.
+    const startLuminance = this._luminanceOf(getComputedStyle(this).getPropertyValue('--glp-accent-start').trim());
+    const endLuminance    = this._luminanceOf(getComputedStyle(this).getPropertyValue('--glp-accent-end').trim());
+    const accentLuminance = [startLuminance, endLuminance].filter(v => v != null)
+      .reduce((min, v) => (min == null || v < min ? v : min), null);
     if (accentLuminance != null) {
       // Pure #000/#fff at the same 0.179 split is a mathematical guarantee
       // of >=4.58:1 against ANY accent color (both text colors measure
@@ -1771,9 +1987,7 @@ class GlpCard extends HTMLElement {
         <ha-card><div class="card collapsed">
           <div class="header">
             <div class="title">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M2 21v-2h2V3h14v2h2a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2v6h2v2H2zm4-2h8V5H6v14zm10-6h2V7h-2v6z"/>
-              </svg>
+              <span class="machine-icon-badge">${MACHINE_ICON_MINI(this._iconGradId)}</span>
               ${esc(this._config.title)}
             </div>
             <div class="header-right">
@@ -1783,6 +1997,7 @@ class GlpCard extends HTMLElement {
           ${readyByHtml}
           ${offOrders}
         </div></ha-card>`;
+      this._applyMachineTheme();
       this._applySemanticColorContrast();
       this._bindPowerBtn();
       this._bindReadyByPicker();
@@ -2088,9 +2303,7 @@ class GlpCard extends HTMLElement {
 
         <div class="header">
           <div class="title">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M2 21v-2h2V3h14v2h2a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2v6h2v2H2zm4-2h8V5H6v14zm10-6h2V7h-2v6z"/>
-            </svg>
+            <span class="machine-icon-badge">${MACHINE_ICON_MINI(this._iconGradId)}</span>
             ${esc(this._config.title)}
           </div>
           <div class="header-right">
@@ -2123,6 +2336,7 @@ class GlpCard extends HTMLElement {
 
       </div></ha-card>`;
 
+    this._applyMachineTheme();
     this._applySemanticColorContrast();
     this._bindPowerBtn();
     this._bindProfilePicker();

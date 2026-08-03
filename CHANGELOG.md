@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.27.0] – 2026-08-03
+### Changed
+- **Bundled `www/glp-card.js` updated to GLP Shot Card v2.18.0.** Adds per-machine colour theme support (the card now picks up each machine's configured colour/icon and reflects it in the card header) — a real capability change for anyone running multi-machine, not just a stale-copy resync (contrast with the pure resync in v1.24.1), so this ships as a minor bump per this repo's versioning rule. No changes to this integration's own Python code. `custom_components/gaggiuino_profiler/www/glp-card.js`.
+
 ## [1.26.0] – 2026-08-03
 ### Added
 - **New write-capable control entities: light, number, switch, button and two selects, backed by `gaggiuino-local-profiler`#597's settings/control proxy.** Phase 2b (write-capable half) of hass-gaggiuino parity — see #108 for the read-only sensors/binary sensors shipped alongside this. New `GlpSettingsCoordinator` (`settings_coordinator.py`, 30 s) polls `GET /api/machine/settings?category=<c>` for `boiler`/`display`/`led`/`scales`/`system` in parallel, one dict per category, so every write below can read-modify-write the full category payload rather than clobbering sibling fields the entity itself doesn't own. `GlpMachineCoordinator` (`machine_coordinator.py`) now also fetches `GET /api/machine/live` alongside its existing `GET /api/machine/status` call every 5 s and merges `sysState.operationMode`/`coreVersion`/`timeAlive` into its data — best-effort, a live-fetch failure doesn't affect the other machine-coordinator entities.
