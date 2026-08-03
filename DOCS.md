@@ -73,8 +73,8 @@ If you enable both, some entities will look duplicated (this integration's `Mach
 | Last Shot Grinder | Grinder annotation | — |
 | Last Sync | Timestamp of the last sync | — |
 | Machine Hostname | Hostname of the Gaggiuino controller | — |
-| Machine Temperature | Current boiler temperature | °C |
-| Machine Target Temperature | Target boiler temperature | °C |
+| Machine Temperature¹ | Current boiler temperature | °C |
+| Machine Target Temperature¹ | Target boiler temperature | °C |
 | Preheat Elapsed | Elapsed preheat time | s |
 | Preheat Remaining | Time remaining until preheat is ready | s |
 | Preheat Ready By | Scheduled target time for preheat readiness (`set_ready_by` service) | — |
@@ -88,6 +88,8 @@ If you enable both, some entities will look duplicated (this integration's `Mach
 | Machine Active Profile | Profile currently active on the machine | — |
 
 With multi-machine mode enabled (app v2.0.0+), a `Reachable` binary sensor is added automatically on its own device for every additional (non-default) machine — reachable/on are currently the only fields the app API (`machines[]` registry) provides per additional machine.
+
+¹ Goes `unavailable` when the Gaggiuino machine itself is powered off or unreachable, not just when the GLP add-on is unreachable — use this to detect "is the machine actually on" in automations. `Machine Status` is unaffected: it reflects the add-on's own sync-link health, a separate signal.
 
 ### Binary Sensor
 

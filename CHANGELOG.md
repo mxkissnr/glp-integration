@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.24.2] – 2026-08-03
+### Fixed
+- **Machine Temperature / Machine Target Temperature sensors now go `unavailable` when the Gaggiuino machine itself is powered off or unreachable**, instead of holding their last known value forever as long as the GLP add-on stayed reachable — making it impossible to build an automation that detects the machine going offline. `GlpDataCoordinator` now reads the add-on's `GET /api/status` top-level `machineReachable` boolean into `coordinator.data["machine_reachable"]`; `GlpSensorDescription` gained an opt-in `requires_machine_reachable` flag (set on the two affected entries), and `GlpSensor.available` checks it. `machine_status` is unaffected — it reflects a distinct signal, the add-on's own sync-link health via `lastSyncError`, not the physical machine's reachability. Reported in https://github.com/mxkissnr/gaggiuino-local-profiler/discussions/596. `custom_components/gaggiuino_profiler/coordinator.py`, `sensor.py`, `tests/test_machine_reachable_availability.py` (new). Closes #106
+
 ## [1.24.1] – 2026-08-01
 ### Fixed
 - **The bundled `www/glp-card.js` was stale.** It was copied from glp-lovelace-card before that repo's v2.17.5 release landed (ready-by pending-override fix #70, id-first bean matching #55, token-sync hardening #74) — re-synced. Closes #94

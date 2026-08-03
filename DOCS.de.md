@@ -73,8 +73,8 @@ Wer beides aktiviert, sieht scheinbar doppelte Entities (`Machine Live Pressure`
 | Last Shot Grinder | Grinder-Annotation | — |
 | Last Sync | Zeitstempel der letzten Synchronisation | — |
 | Machine Hostname | Hostname des Gaggiuino-Controllers | — |
-| Machine Temperature | Aktuelle Kesseltemperatur | °C |
-| Machine Target Temperature | Ziel-Kesseltemperatur | °C |
+| Machine Temperature¹ | Aktuelle Kesseltemperatur | °C |
+| Machine Target Temperature¹ | Ziel-Kesseltemperatur | °C |
 | Preheat Elapsed | Verstrichene Aufwärmzeit | s |
 | Preheat Remaining | Verbleibende Zeit bis Aufwärmbereitschaft | s |
 | Preheat Ready By | Geplanter Zielzeitpunkt für Aufwärmbereitschaft (`set_ready_by`-Dienst) | — |
@@ -88,6 +88,8 @@ Wer beides aktiviert, sieht scheinbar doppelte Entities (`Machine Live Pressure`
 | Machine Active Profile | Aktuell auf der Maschine aktives Profil | — |
 
 Bei aktiviertem Multi-Machine-Modus (App v2.0.0+) kommt pro zusätzlicher (nicht-Standard-)Maschine automatisch ein `Reachable`-Binary-Sensor auf einem eigenen Gerät hinzu — reachable/on sind aktuell die einzigen Felder, die die App-API (`machines[]`-Registry) pro Zusatzmaschine liefert.
+
+¹ Wird `unavailable`, sobald die Gaggiuino-Maschine selbst ausgeschaltet oder nicht erreichbar ist — nicht erst, wenn das GLP-Add-on selbst nicht erreichbar ist. Damit lässt sich in Automatisierungen erkennen, ob die Maschine tatsächlich eingeschaltet ist. `Machine Status` ist davon nicht betroffen: er spiegelt den Sync-Link-Zustand des Add-ons, ein eigenständiges Signal.
 
 ### Binary Sensor
 
