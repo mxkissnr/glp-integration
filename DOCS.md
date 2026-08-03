@@ -137,7 +137,7 @@ With multi-machine mode enabled (app v2.0.0+), a `Reachable` binary sensor is ad
 | Brew Divider | Brew boiler PID divider | — | 1–5 |
 | Startup Heat Delta | Extra heat added during startup | °C | 0–10 |
 | LCD Brightness | Touchscreen brightness | % | 0–100 |
-| LCD Sleep Timeout | Idle time before the screen sleeps | s | 0–3600 |
+| LCD Sleep Timeout | Idle time before the screen sleeps | min | 0–120 |
 | LCD Go Home Timeout | Idle time before returning to the home screen | s | 0–60 |
 | LED Time-of-Flight Min/Max | Distance sensor thresholds for the LED's proximity trigger | — | 0–200 |
 

@@ -19,6 +19,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .entity import GlpEntity
+from .gaggiuino_bool import coerce_gaggiuino_bool, encode_gaggiuino_bool
 from .settings_coordinator import GlpSettingsCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -135,7 +136,7 @@ class GlpMachineSwitch(GlpEntity[GlpSettingsCoordinator], SwitchEntity):
         settings = self._settings()
         if not settings:
             return None
-        return bool(settings.get(self.entity_description.data_key))
+        return coerce_gaggiuino_bool(settings.get(self.entity_description.data_key))
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         await self._write(True)
@@ -145,7 +146,8 @@ class GlpMachineSwitch(GlpEntity[GlpSettingsCoordinator], SwitchEntity):
 
     async def _write(self, value: bool) -> None:
         payload = dict(self._settings())
-        payload[self.entity_description.data_key] = value
+        data_key = self.entity_description.data_key
+        payload[data_key] = encode_gaggiuino_bool(value, like=payload.get(data_key))
         session = async_get_clientsession(self.hass)
         category = self.entity_description.category
         try:

@@ -115,16 +115,19 @@ NUMBERS: tuple[GlpNumberDescription, ...] = (
         native_step=1,
     ),
     GlpNumberDescription(
+        # Minutes, not seconds -- confirmed against gaggiuino/gaggiuino.github.io's
+        # docs/rest-api/rest-api.md field notes ("Time in minutes before screen
+        # sleeps"), unlike lcdGoHome below which really is seconds.
         key="lcd_sleep",
         category="display",
         data_path=("lcdSleep",),
         name="LCD Sleep Timeout",
         icon="mdi:sleep",
         entity_category=EntityCategory.CONFIG,
-        native_unit_of_measurement=UnitOfTime.SECONDS,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
         native_min_value=0,
-        native_max_value=3600,
-        native_step=30,
+        native_max_value=120,
+        native_step=1,
     ),
     GlpNumberDescription(
         key="lcd_go_home",

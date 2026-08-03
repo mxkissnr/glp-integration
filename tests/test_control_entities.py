@@ -13,17 +13,25 @@ from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.gaggiuino_profiler.const import DOMAIN
 
-LED_SETTINGS = {"state": True, "color": {"R": 10, "G": 20, "B": 30}, "disco": False, "tof": {"min": 5, "max": 50}}
+# Mirrors the Gaggiuino REST API's actual (live-verified against
+# gaggiuino/gaggiuino.github.io's docs/rest-api/rest-api.md) mixed boolean
+# representation: several fields below are the JSON *strings* "true"/"false"
+# rather than real JSON booleans -- led.state/disco, boiler.brewDeltaState/
+# dreamSteamState, display.lcdDarkMode, scales.*. display.lcdCloseOnBrewOff/
+# simpleUI ARE real booleans in the same category, on purpose (see
+# test_gaggiuino_bool_coercion.py for the dedicated regression coverage this
+# mix is meant to exercise).
+LED_SETTINGS = {"state": "true", "color": {"R": 10, "G": 20, "B": 30}, "disco": "false", "tof": {"min": 5, "max": 50}}
 BOILER_SETTINGS = {
     "steamSetPoint": 145, "offsetTemp": 1.5, "hpwr": 800,
     "mainDivider": 2, "brewDivider": 2, "startupHeatDelta": 5,
-    "brewDeltaState": True, "dreamSteamState": False,
+    "brewDeltaState": "true", "dreamSteamState": "false",
 }
 DISPLAY_SETTINGS = {
-    "lcdBrightness": 80, "lcdSleep": 300, "lcdGoHome": 10,
-    "lcdDarkMode": False, "lcdCloseOnBrewOff": True, "simpleUI": False,
+    "lcdBrightness": 80, "lcdSleep": 5, "lcdGoHome": 10,
+    "lcdDarkMode": "false", "lcdCloseOnBrewOff": True, "simpleUI": False,
 }
-SCALES_SETTINGS = {"forcePredictive": True, "hwScalesEnabled": True, "btScalesEnabled": False}
+SCALES_SETTINGS = {"forcePredictive": "true", "hwScalesEnabled": "true", "btScalesEnabled": "false"}
 SYSTEM_SETTINGS = {"releaseChannel": 1}
 
 
@@ -90,9 +98,11 @@ async def test_led_light_turn_on_posts_full_category_payload(hass, aioclient_moc
     assert len(calls) == 1
     _, called_url, body, _ = calls[0]
     assert str(called_url).endswith("/api/machine/settings/led")
-    assert body["state"] is True
+    # #109 review fix: state/disco round-trip as the string "true"/"false"
+    # (matching what LED_SETTINGS returned them as), not a real JSON bool.
+    assert body["state"] == "true"
     assert body["color"] == {"R": 255, "G": 0, "B": 128}
-    assert body["disco"] is False  # unrelated existing field preserved
+    assert body["disco"] == "false"  # unrelated existing field preserved as-is
 
 
 async def test_led_light_turn_off_preserves_color(hass, aioclient_mock) -> None:
@@ -105,7 +115,7 @@ async def test_led_light_turn_off_preserves_color(hass, aioclient_mock) -> None:
     await hass.async_block_till_done()
 
     _, _, body, _ = _post_calls(aioclient_mock)[0]
-    assert body["state"] is False
+    assert body["state"] == "false"
     assert body["color"] == {"R": 10, "G": 20, "B": 30}
 
 
@@ -151,7 +161,7 @@ async def test_number_set_value_merges_into_nested_led_field(hass, aioclient_moc
     _, called_url, body, _ = _post_calls(aioclient_mock)[0]
     assert str(called_url).endswith("/api/machine/settings/led")
     assert body["tof"] == {"min": 15, "max": 50}
-    assert body["state"] is True  # sibling top-level field preserved
+    assert body["state"] == "true"  # sibling top-level field preserved as-is
 
 
 # ── switch.py ───────────────────────────────────────────────────────────
@@ -176,8 +186,10 @@ async def test_switch_turn_on_merges_into_category_payload(hass, aioclient_mock)
 
     _, called_url, body, _ = _post_calls(aioclient_mock)[0]
     assert str(called_url).endswith("/api/machine/settings/scales")
-    assert body["btScalesEnabled"] is True
-    assert body["hwScalesEnabled"] is True  # sibling field preserved
+    # #109 review fix: round-trips as the string "true", matching what
+    # SCALES_SETTINGS returned this field as, not a real JSON bool.
+    assert body["btScalesEnabled"] == "true"
+    assert body["hwScalesEnabled"] == "true"  # sibling field preserved as-is
 
 
 # ── button.py ───────────────────────────────────────────────────────────

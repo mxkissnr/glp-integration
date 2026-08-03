@@ -19,6 +19,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .entity import GlpEntity
+from .gaggiuino_bool import coerce_gaggiuino_bool, encode_gaggiuino_bool
 from .settings_coordinator import GlpSettingsCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -69,7 +70,7 @@ class GlpLedLight(GlpEntity[GlpSettingsCoordinator], LightEntity):
         settings = self._settings()
         if not settings:
             return None
-        return bool(settings.get("state"))
+        return coerce_gaggiuino_bool(settings.get("state"))
 
     @property
     def rgb_color(self) -> tuple[int, int, int] | None:
@@ -87,21 +88,21 @@ class GlpLedLight(GlpEntity[GlpSettingsCoordinator], LightEntity):
         settings = self._settings()
         if not settings:
             return None
-        return EFFECT_DISCO if settings.get("disco") else EFFECT_NONE
+        return EFFECT_DISCO if coerce_gaggiuino_bool(settings.get("disco")) else EFFECT_NONE
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         payload = dict(self._settings())
-        payload["state"] = True
+        payload["state"] = encode_gaggiuino_bool(True, like=payload.get("state"))
         if ATTR_RGB_COLOR in kwargs:
             r, g, b = kwargs[ATTR_RGB_COLOR]
             payload["color"] = {"R": r, "G": g, "B": b}
         if ATTR_EFFECT in kwargs:
-            payload["disco"] = kwargs[ATTR_EFFECT] == EFFECT_DISCO
+            payload["disco"] = encode_gaggiuino_bool(kwargs[ATTR_EFFECT] == EFFECT_DISCO, like=payload.get("disco"))
         await self._write(payload)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         payload = dict(self._settings())
-        payload["state"] = False
+        payload["state"] = encode_gaggiuino_bool(False, like=payload.get("state"))
         await self._write(payload)
 
     async def _write(self, payload: dict) -> None:

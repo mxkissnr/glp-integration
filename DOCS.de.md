@@ -137,7 +137,7 @@ Bei aktiviertem Multi-Machine-Modus (App v2.0.0+) kommt pro zusätzlicher (nicht
 | Brew Divider | PID-Divider des Brühkessels | — | 1–5 |
 | Startup Heat Delta | Zusätzliche Aufheizreserve beim Start | °C | 0–10 |
 | LCD Brightness | Helligkeit des Touchscreens | % | 0–100 |
-| LCD Sleep Timeout | Leerlaufzeit bis der Screen schläft | s | 0–3600 |
+| LCD Sleep Timeout | Leerlaufzeit bis der Screen schläft | min | 0–120 |
 | LCD Go Home Timeout | Leerlaufzeit bis zur Rückkehr zum Startbildschirm | s | 0–60 |
 | LED Time-of-Flight Min/Max | Abstandssensor-Schwellenwerte für den Näherungstrigger der LED | — | 0–200 |
 
