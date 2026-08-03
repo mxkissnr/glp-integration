@@ -159,6 +159,12 @@ class GlpDataCoordinator(DataUpdateCoordinator):
 
         data = {
             "machine_status":      "online" if not status.get("lastSyncError") else "error",
+            # Whether the physical Gaggiuino machine itself is reachable behind the
+            # add-on (distinct from "machine_status", which reflects the add-on's
+            # own sync-link health) -- see #106. Sensors sourced from live machine
+            # values opt into going unavailable on this via
+            # GlpSensorDescription.requires_machine_reachable.
+            "machine_reachable":   bool(status.get("machineReachable")),
             "switch_entity":       status.get("switchEntity") or None,
             "shot_count":          status.get("shotCount", 0),
             "shots_today":         shots_today,

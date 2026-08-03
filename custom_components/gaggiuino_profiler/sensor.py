@@ -28,6 +28,13 @@ from .machine_coordinator import GlpMachineCoordinator
 @dataclass(frozen=True)
 class GlpSensorDescription(SensorEntityDescription):
     data_key: str = ""
+    # Opt-in (#106): when True, the sensor also goes unavailable whenever the
+    # add-on reports the physical Gaggiuino machine itself as unreachable
+    # (coordinator.data["machine_reachable"] is False), not just when the
+    # add-on's own /api/status endpoint fails to respond. Only for entries
+    # sourced from genuinely live machine values -- shot history, maintenance
+    # counters etc. should stay available with the machine powered off.
+    requires_machine_reachable: bool = False
 
 
 @dataclass(frozen=True)
@@ -159,6 +166,7 @@ SENSORS: tuple[GlpSensorDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         suggested_display_precision=1,
+        requires_machine_reachable=True,
     ),
     GlpSensorDescription(
         key="machine_target_temperature",
@@ -169,6 +177,7 @@ SENSORS: tuple[GlpSensorDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         suggested_display_precision=1,
+        requires_machine_reachable=True,
     ),
     GlpSensorDescription(
         key="preheat_elapsed",
@@ -363,6 +372,18 @@ class GlpSensor(GlpEntity[GlpDataCoordinator], SensorEntity):
         which produced an unpredictable, collision-mangled entity_id on a
         real instance (#62)."""
         return self.entity_description.key
+
+    @property
+    def available(self) -> bool:
+        """#106: entries flagged requires_machine_reachable also need the
+        physical machine itself reachable, not just the add-on's own
+        /api/status endpoint responding (the default CoordinatorEntity
+        behavior via last_update_success)."""
+        if not super().available:
+            return False
+        if self.entity_description.requires_machine_reachable:
+            return bool(self.coordinator.data.get("machine_reachable"))
+        return True
 
     @property
     def native_value(self) -> Any:
