@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.27.1] – 2026-08-04
+### Fixed
+- **Security: the `maintenance_done` service's `task` parameter was only length-checked before being interpolated straight into `/api/maintenance/{task}/done`**, with no enforcement of the 6 shapes `services.yaml` documents — its `selector: text:` leaves the field free-text in the UI, so nothing upstream constrained it. Mirrors the `_SAFE_ID`/`_ORDERS_POST_ALLOW_RE` fix already applied to `orders_api.py` for #65. Now validated against a fixed allowlist regex (`descaling`/`backflush`/`grouphead`/`gaskets`/`waterfilter`/`grinder_<id>`) before the URL is built, raising `ServiceValidationError` on a non-match. No change in behavior for any documented task value. `custom_components/gaggiuino_profiler/__init__.py`, `tests/test_maintenance_task_allowlist.py` (new). Closes #119
+### Changed
+- Bumped 3 GitHub Actions dependencies in CI workflows (`home-assistant/actions/hassfest`, `actions/upload-artifact` 4.6.2→7.0.1, `actions/dependency-review-action` 4.9.0→5.0.0). CI infrastructure only, no runtime effect. Closes #118, #117, #116
+
 ## [1.27.0] – 2026-08-03
 ### Changed
 - **Bundled `www/glp-card.js` updated to GLP Shot Card v2.18.0.** Adds per-machine colour theme support (the card now picks up each machine's configured colour/icon and reflects it in the card header) — a real capability change for anyone running multi-machine, not just a stale-copy resync (contrast with the pure resync in v1.24.1), so this ships as a minor bump per this repo's versioning rule. No changes to this integration's own Python code. `custom_components/gaggiuino_profiler/www/glp-card.js`.
