@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+import re
 from datetime import datetime
 
 import aiohttp
@@ -9,7 +10,7 @@ from homeassistant.components.frontend import add_extra_js_url
 from homeassistant.components.http import StaticPathConfig
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.loader import async_get_integration
@@ -35,6 +36,15 @@ MAINTENANCE_DONE_SCHEMA = vol.Schema({
     vol.Required("task"): vol.All(str, vol.Length(min=1)),
     vol.Optional("machine"): vol.Coerce(int),
 })
+# Allowlist for the `task` service field, which is interpolated straight into
+# the /api/maintenance/{task}/done URL path below. Mirrors the fix for #65
+# (path traversal in orders_api.py's _SAFE_ID) -- services.yaml documents
+# exactly these 6 shapes (the fixed task names plus grinder_<id> for
+# per-grinder cleaning entries), but its `selector: text:` leaves the field
+# free-text in the UI, so nothing upstream of this check constrains it.
+_MAINTENANCE_TASK_RE = re.compile(
+    r"^(?:descaling|backflush|grouphead|gaskets|waterfilter|grinder_[A-Za-z0-9_-]+)$"
+)
 BACKUP_SCHEMA = vol.Schema({vol.Optional("machine"): vol.Coerce(int)})
 SET_READY_BY_SCHEMA = vol.Schema({
     vol.Optional("target_time"): vol.Any(None, cv.datetime),
@@ -78,6 +88,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if not hass.services.has_service(DOMAIN, "maintenance_done"):
         async def _handle_maintenance_done(call: ServiceCall) -> None:
             task = call.data["task"]
+            if not _MAINTENANCE_TASK_RE.fullmatch(task):
+                raise ServiceValidationError(f"Invalid maintenance task: {task!r}")
             coord: GlpDataCoordinator | None = next(
                 (d["data"] for d in hass.data.get(DOMAIN, {}).values()
                  if isinstance(d, dict) and "data" in d),
