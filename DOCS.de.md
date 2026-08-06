@@ -170,6 +170,13 @@ Komponenten-Testbuttons (Pumpe/Ventil/Ventil B/LED) sind bewusst nicht enthalten
 
 Alle Light-/Number-/Switch-/Button-/Select-Entities (Operation Mode, Release Channel) stammen vom `GlpSettingsCoordinator` (30 s) bzw. vom Machine-Coordinator (5 s, nur Operation Mode) und sind vorerst nur für die Standardmaschine verfügbar — gleicher Multi-Machine-Hinweis wie bei den Sensoren oben.
 
+### Update
+
+| Entity | Beschreibung |
+|---|---|
+| Update (Gaggiuino Local Profiler) | Reine Versionsanzeige für das Add-on selbst. HAs eigene Supervisor-gestützte `update.<slug>_glp_update`-Entity ist diejenige, die Add-on-Updates tatsächlich installiert — diese hier existiert für Installationen ohne Supervisor (reines Docker), wo es diese native Entity nicht gibt. |
+| Firmware (Machine Firmware) | Zeigt, ob eine neuere Firmware-Version für die Espressomaschine selbst verfügbar ist — Vergleich der installierten Version gegen das neueste passende Release im eigenen GitHub-Projekt der Firmware. Unterstützt Installation: Auslösen startet den eigenen OTA-Update-Ablauf der Maschine. Es gibt keine Live-Fortschrittsanzeige während des OTA — `installed_version` zieht nach, sobald die Maschine ihre neue Version beim nächsten Poll meldet. Nur für Gaggiuino-Maschinen; bei GaggiMate nicht verfügbar (dort existiert keine entsprechende Prüfung). |
+
 ### Umstieg von ALERTua/hass-gaggiuino
 
 Diese Integration deckt inzwischen die Steuerfläche ab, die die Community-Integration bietet: Profilauswahl, Operation Mode, Kessel-/Display-/Waagen-Einstellungen (Number/Switch), die Status-LED (Light), Tare/Save-Settings/Save-Profile (Button), sowie Live-Sensoren/Binary-Sensoren für Durchfluss, Wassertemperatur, Relaiszustände und Sensorfehler (seit v1.25.0). Bei einem Umstieg kann `hass-gaggiuino` entfernt werden, sobald Automatisierungen auf die entsprechenden Entities dieser Integration umgestellt sind — keine Datenmigration nötig, alles hier wird frisch von Maschine/Add-on gelesen.
