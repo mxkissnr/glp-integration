@@ -1,44 +1,30 @@
 # CLAUDE.md — GLP Integration
 
-Working rules for this repo. Mirrors the ecosystem-wide rules the other three GLP
-repos already document (full rationale lives in
-`gaggiuino-local-profiler/CLAUDE.md`), adapted for this repo being a Python HACS
+Working rules for this repo (mirrors the app repo's rules; full rationale lives in
+`../gaggiuino-local-profiler/CLAUDE.md`), adapted for this repo being a Python HACS
 integration (Home Assistant custom component), not a Node/Vite project — no npm,
 no ESLint, no JS i18n files here.
 
-## Language rules
-
-- **Code, comments, commit messages, GitHub issues, PR descriptions** → always English
-- **DOCS.md** → English (primary)
-- **DOCS.de.md** → German (supplementary, always kept in sync with DOCS.md — same
-  heading structure, same section order)
-
-## Workflow
-
-**Issue first, then code.** No implementation without a GitHub issue number in hand.
-Only exception: a typo or single-word change.
-
-```
-gh issue create --repo mxkissnr/glp-integration --title "..." --label "bug|enhancement" --body "..."
-gh project item-add 2 --owner mxkissnr --url <issue-url>
-```
-
-Project `2` ("GLP Roadmap", owner `mxkissnr`) is the shared roadmap board for all
-four GLP repos — add every new issue to it. Close the issue in the commit message
-(`Closes #N`).
+- **Language**: code/comments/commits/issues/PRs in English. `DOCS.md` English
+  (primary), `DOCS.de.md` German (supplementary, same heading structure, always in sync).
+- **Issue first, then code** — no implementation without a GitHub issue number
+  (`gh issue create --repo mxkissnr/glp-integration`, add to GLP Roadmap project 2,
+  owner mxkissnr). Only exception: typos. Close via `Closes #N` in the commit message.
+- **Version**: `MAJOR.MINOR.PATCH` in `custom_components/gaggiuino_profiler/manifest.json`
+  (`"version"` field) — patch for fixes, minor for features (no size carve-out).
+- **Commits**: `CHANGELOG.md` entry in the same commit as the code; `DOCS.md` **and**
+  `DOCS.de.md` update in the same commit if user-facing. Trailer required, model
+  spelled out: `Co-Authored-By: Claude <model name> <noreply@anthropic.com>`.
+- **Releases** end at the GitHub release; no HA deploy (Max installs HACS updates himself).
+  `git tag v<version> && git push origin main && git push origin v<version> && gh release create v<version> ...`
 
 ## Regression policy
 
-**A fix or feature must never break already-working functionality.** Concretely:
-
-- Before "fixing" something that looks wrong, verify against real ground truth
-  (an actual HA instance, existing passing tests, or the add-on's documented API) —
-  not just plausible general reasoning.
-- When changing a coordinator, sensor description or service handler used by
-  multiple entities, check every consumer's assumptions before changing its
-  contract.
-- Run the full test suite after every change, not just tests related to the
-  change; a newly-failing test is a stop condition, not noise to explain away.
+**A fix or feature must never break already-working functionality.** Verify against
+real ground truth (an actual HA instance, existing passing tests, or the add-on's
+documented API) before "fixing" something that looks wrong. When changing a
+coordinator, sensor description or service handler used by multiple entities, check
+every consumer's assumptions before changing its contract.
 
 **Precedent:** the v1.22.1 entity-id collision (#62/#63). `GlpSensor` and its
 sibling sensor classes relied on Home Assistant's automatic slugification of the
@@ -50,42 +36,6 @@ instead of the display name — the pattern to follow for any new sensor/binary
 sensor/select going forward. `entity_id` mistakes here are silent (HA never
 renames an already-registered entity), so get this right the first time rather
 than patching it after installs are already affected.
-
-## Versioning
-
-`MAJOR.MINOR.PATCH` in `custom_components/gaggiuino_profiler/manifest.json`
-(`"version"` field) — same disambiguation as the add-on:
-
-- Patch fix → bump third number
-- New feature → bump second number
-- Breaking change → bump first number (rare)
-- **No size carve-out:** any net-new user-facing capability, however small, is a
-  feature and gets a minor bump. A round stays patch only if every change in it is
-  a pure bugfix/regression-restore with zero new capability.
-
-## Commits
-
-- `CHANGELOG.md` entry in the same commit as the code — never delivered separately
-  afterward.
-- `DOCS.md` **and** `DOCS.de.md` update in the same commit if the change is
-  user-facing (new entity, new service, new option, changed behavior) — both
-  languages always in sync.
-- **Every commit involving Claude/an AI agent must carry a `Co-Authored-By:`
-  trailer naming the specific model, not a bare "Claude".** Format:
-  `Co-Authored-By: Claude <model name> <noreply@anthropic.com>`, e.g.
-  `Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>`.
-
-## Release rules
-
-- **A release ends at the GitHub release.** Do NOT deploy to Home Assistant —
-  Max installs HACS updates himself.
-- Tag and release after the commit:
-  ```
-  git tag v<version>
-  git push origin main
-  git push origin v<version>
-  gh release create v<version> --title "v<version>" --notes "..."
-  ```
 
 ## Testing and lint
 
