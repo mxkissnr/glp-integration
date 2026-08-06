@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.27.2] – 2026-08-06
+### Changed
+- **Consolidated the 4 stuck Dependabot bumps to `requirements_test.txt` (#112–#115) into one change, plus bumped CI to Python 3.14.** `pytest-homeassistant-custom-component` (from 0.13.317) and `home-assistant-frontend` (from 20260225.0) now require Python >=3.14, but `.github/workflows/validate.yml` still pinned 3.13 — so every isolated single-package bump either failed to install under 3.13 or hit a resolver conflict against the still-old `pytest-homeassistant-custom-component==0.13.316` pin. Bumped all 4 pins together (`pytest-homeassistant-custom-component==0.13.351`, `pytest-asyncio==1.4.0`, `pytest-cov==7.1.0`, `home-assistant-frontend==20260729.3`) and CI's `python-version` to `"3.14"`. Verified locally: `pip install -r requirements_test.txt` resolves cleanly under Python 3.14, all 207 tests pass. CI/test-toolchain only, no runtime effect on the integration itself. `.github/workflows/validate.yml`, `requirements_test.txt`. Closes #122, #112, #113, #114, #115
+
 ## [1.27.1] – 2026-08-04
 ### Fixed
 - **Security: the `maintenance_done` service's `task` parameter was only length-checked before being interpolated straight into `/api/maintenance/{task}/done`**, with no enforcement of the 6 shapes `services.yaml` documents — its `selector: text:` leaves the field free-text in the UI, so nothing upstream constrained it. Mirrors the `_SAFE_ID`/`_ORDERS_POST_ALLOW_RE` fix already applied to `orders_api.py` for #65. Now validated against a fixed allowlist regex (`descaling`/`backflush`/`grouphead`/`gaskets`/`waterfilter`/`grinder_<id>`) before the URL is built, raising `ServiceValidationError` on a non-match. No change in behavior for any documented task value. `custom_components/gaggiuino_profiler/__init__.py`, `tests/test_maintenance_task_allowlist.py` (new). Closes #119
