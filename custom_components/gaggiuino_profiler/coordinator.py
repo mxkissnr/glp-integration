@@ -120,6 +120,19 @@ class GlpDataCoordinator(DataUpdateCoordinator):
                 version_info = await r.json() if r.status < 400 else {}
         except Exception:
             version_info = {}
+
+        # Machine firmware update check (#125, gaggiuino-local-profiler#620
+        # Phase 1). 501 on a non-Gaggiuino adapter (e.g. GaggiMate, no
+        # settingsProxy support) or any other failure both fall back to {},
+        # same "no data -> entity goes unavailable" pattern used elsewhere
+        # in this coordinator.
+        try:
+            async with self._session.get(
+                f"{self._url}/api/machine/firmware/version", headers=headers, timeout=aiohttp.ClientTimeout(total=10)
+            ) as r:
+                firmware_info = await r.json() if r.status < 400 else {}
+        except Exception:
+            firmware_info = {}
         drink_lookup: dict[str, str] = {
             m["id"]: f"{m.get('emoji', '')} {m['name']}".strip()
             for m in menu_items if m.get("id") and m.get("name")
@@ -248,6 +261,12 @@ class GlpDataCoordinator(DataUpdateCoordinator):
         data["version_latest"]         = version_info.get("latest")
         data["version_update_available"] = bool(version_info.get("update_available"))
         data["version_release_url"]    = version_info.get("release_url")
+
+        # Machine firmware version / update info (#125)
+        data["firmware_installed"]        = firmware_info.get("installed")
+        data["firmware_latest"]           = firmware_info.get("latest")
+        data["firmware_update_available"] = bool(firmware_info.get("updateAvailable"))
+        data["firmware_release_url"]      = firmware_info.get("releaseUrl")
 
         # Profile selector data
         data["profile_options"]  = profiles_data.get("options") or []

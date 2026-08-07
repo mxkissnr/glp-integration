@@ -184,6 +184,7 @@ def test_scanner_finds_expected_suffixes() -> None:
         "steam_switch",
         "profile",
         "update",
+        "firmware_update",
         "maint_grinders",
         "operation_mode",
         "release_channel",
