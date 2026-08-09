@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.29.1] – 2026-08-09
+### Changed
+- **Synced the bundled Shot Card to glp-lovelace-card v2.19.0** (theme-sync from the app's Settings → Machines picker, gaggiuino-local-profiler#701) — `custom_components/gaggiuino_profiler/www/glp-card.js` was still on v2.18.0 despite that card release shipping. Syncing the bundled copy and releasing this repo again is an explicit release step for every glp-lovelace-card release (see `glp-lovelace-card/scripts/sync-to-integration.sh`'s own header comment) — the cache-busting version query param only changes on a real release here. No integration code changed. Closes #130
+
 ## [1.29.0] – 2026-08-09
 ### Added
 - **A non-default machine's status sensor now exposes its `theme` as an entity attribute**, the same way it already exposes `type`/`enabled`/`reachable` (part of gaggiuino-local-profiler#701: syncing the Lovelace/Order cards' accent color to the app's own Settings → Machines theme picker). The default machine's `machine_status` sensor needed no change — it already forwards the entire `machines[]` array verbatim, which includes `theme` now that the app returns it (gaggiuino-local-profiler#701). Cards don't consume this yet — that's the remaining half of #701. `sensor.py`, `tests/test_additional_machine_theme_attribute.py` (new). Closes #128
