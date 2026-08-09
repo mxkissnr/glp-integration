@@ -558,4 +558,11 @@ class GlpAdditionalMachineSensor(GlpAdditionalMachineEntity[GlpDataCoordinator],
         m = self._machine()
         if not m:
             return {}
-        return {"type": m.get("type"), "enabled": m.get("enabled"), "reachable": m.get("reachable")}
+        return {
+            "type": m.get("type"), "enabled": m.get("enabled"), "reachable": m.get("reachable"),
+            # #128: lets a card scoped to this specific machine read its
+            # accent theme straight off this entity instead of having to
+            # cross-reference the default machine's machine_status sensor's
+            # `machines` list attribute.
+            "theme": m.get("theme"),
+        }
