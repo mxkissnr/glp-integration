@@ -94,6 +94,8 @@ Wer beides aktiviert, sieht scheinbar doppelte Entities (`Machine Live Pressure`
 
 Bei aktiviertem Multi-Machine-Modus (App v2.0.0+) kommt pro zusätzlicher (nicht-Standard-)Maschine automatisch ein `Reachable`-Binary-Sensor auf einem eigenen Gerät hinzu — reachable/on sind aktuell die einzigen Felder, die die App-API (`machines[]`-Registry) pro Zusatzmaschine liefert.
 
+Das `machines`-Attribut des `Machine Status`-Sensors der Standardmaschine sowie der `Status`-Sensor jeder Zusatzmaschine (seit v1.29.0) liefern zusätzlich ein `theme`-Attribut — das für die jeweilige Maschine in den App-Einstellungen → Maschinen konfigurierte Farbthema, das die mitgelieferten Lovelace-/Order-Karten lesen, um ihren Kartenkopf passend zur Maschine einzufärben.
+
 ¹ Wird `unavailable`, sobald die Gaggiuino-Maschine selbst ausgeschaltet oder nicht erreichbar ist — nicht erst, wenn das GLP-Add-on selbst nicht erreichbar ist. Damit lässt sich in Automatisierungen erkennen, ob die Maschine tatsächlich eingeschaltet ist. `Machine Status` ist davon nicht betroffen: er spiegelt den Sync-Link-Zustand des Add-ons, ein eigenständiges Signal.
 
 ### Binary Sensor
