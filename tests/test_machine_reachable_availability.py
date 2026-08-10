@@ -4,9 +4,10 @@ the add-on reports the physical Gaggiuino machine as unreachable
 (GET /api/status "machineReachable": false), instead of holding their last
 value forever as long as the add-on's own HTTP endpoint keeps responding.
 
-Unrelated sensors -- including machine_status, which reflects the add-on's
-own sync-link health via lastSyncError, a distinct signal -- must stay
-available regardless of machineReachable.
+Unrelated sensors -- shot history / add-on link status -- must stay
+available regardless of machineReachable; that's a distinct mechanism
+(entity availability) from machine_status's own state value, covered below
+and in test_machine_status_reachability.py (#667).
 """
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
@@ -85,13 +86,3 @@ async def test_unrelated_sensors_stay_available_when_machine_unreachable(hass, a
         state = hass.states.get(_entity_id(key))
         assert state is not None
         assert state.state != "unavailable", f"{key} unexpectedly unavailable"
-
-
-async def test_machine_status_reflects_addon_sync_not_machine_reachable(hass, aioclient_mock) -> None:
-    """machine_status is a distinct signal (add-on sync-link health via
-    lastSyncError) and keeps its existing online/error semantic even when
-    the machine itself is unreachable."""
-    await _setup_entry(hass, aioclient_mock, {"machineReachable": False, "lastSyncError": None})
-    state = hass.states.get(_entity_id("machine_status"))
-    assert state is not None
-    assert state.state == "online"
