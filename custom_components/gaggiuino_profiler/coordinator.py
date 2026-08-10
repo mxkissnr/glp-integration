@@ -171,12 +171,19 @@ class GlpDataCoordinator(DataUpdateCoordinator):
         )
 
         data = {
-            "machine_status":      "online" if not status.get("lastSyncError") else "error",
+            # #667: machine_reachable is False is the strongest, most direct signal
+            # (mirrors the app's own status.js dot logic since #655) -- only fall
+            # back to lastSyncError (the add-on's own sync-link health) when
+            # reachability is unknown/true, so an add-on predating #106 (no
+            # "machineReachable" key, i.e. None here) keeps its old behavior.
+            "machine_status": (
+                "error" if status.get("machineReachable") is False or status.get("lastSyncError") else "online"
+            ),
             # Whether the physical Gaggiuino machine itself is reachable behind the
-            # add-on (distinct from "machine_status", which reflects the add-on's
-            # own sync-link health) -- see #106. Sensors sourced from live machine
-            # values opt into going unavailable on this via
-            # GlpSensorDescription.requires_machine_reachable.
+            # add-on -- see #106. Sensors sourced from live machine values opt into
+            # going unavailable on this via GlpSensorDescription.requires_machine_reachable
+            # (a separate mechanism from machine_status above, which only affects
+            # entity availability, not its state value).
             "machine_reachable":   bool(status.get("machineReachable")),
             "switch_entity":       status.get("switchEntity") or None,
             "shot_count":          status.get("shotCount", 0),
