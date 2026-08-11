@@ -209,6 +209,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await coordinator.async_config_entry_first_refresh()
     live_coordinator = GlpLiveCoordinator(hass, session, url, auth)
     await live_coordinator.async_config_entry_first_refresh()
+    # #708/#736: SSE push (GET /api/events) is the primary path for live data,
+    # the coordinator's own poll cycle is just the fallback -- see
+    # live_coordinator.py. Tied to the config entry's own background-task
+    # tracking so it's automatically cancelled on unload, same as any other
+    # entry teardown; no explicit cleanup needed in async_unload_entry below.
+    entry.async_create_background_task(
+        hass, live_coordinator.async_sse_loop(), name=f"{DOMAIN}_live_sse_{entry.entry_id}"
+    )
     machine_coordinator = GlpMachineCoordinator(hass, session, url, auth)
     # Machine coordinator is best-effort — don't fail setup if machine is unreachable
     try:

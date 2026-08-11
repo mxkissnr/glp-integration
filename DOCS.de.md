@@ -48,7 +48,7 @@ Ab dem mitgelieferten Build v2.18.0 übernimmt die Karte bei Multi-Machine-Setup
 
 ## Entities
 
-Alle Sensoren/Entities aktualisieren sich mit dem Poll-Intervall des jeweiligen Coordinators: der Haupt-Coordinator (`coordinator.py`) alle 60 Sekunden (konfigurierbar, s.o.), der Live-Coordinator (`live_coordinator.py`) alle 2 Sekunden während eines Bezugs, der Machine-Coordinator (`machine_coordinator.py`) alle 5 Sekunden für Live-Maschinenwerte.
+Alle Sensoren/Entities aktualisieren sich mit dem Poll-Intervall des jeweiligen Coordinators: der Haupt-Coordinator (`coordinator.py`) alle 60 Sekunden (konfigurierbar, s.o.), und der Machine-Coordinator (`machine_coordinator.py`) alle 5 Sekunden für Live-Maschinenwerte. Der Live-Coordinator (`live_coordinator.py`, treibt den `Brewing`-Sensor) wird seit v1.30.0 per SSE-Stream des Add-ons in Echtzeit gepusht (nahezu verzögerungsfrei) und fällt nur auf einen 2-Sekunden-Poll zurück, solange dieser Stream nicht verfügbar ist.
 
 ### Verhältnis zu Gaggiuinos eigenen MQTT-Entities
 
@@ -102,7 +102,7 @@ Das `machines`-Attribut des `Machine Status`-Sensors der Standardmaschine sowie 
 
 | Entity | Beschreibung | Coordinator |
 |---|---|---|
-| Brewing | `true` während eines aktiven Bezugs | Live (2 s) |
+| Brewing | `true` während eines aktiven Bezugs | Live (SSE-Push, 2 s Poll-Fallback) |
 | Preheat Ready | `true` sobald die Aufwärmzeit abgelaufen ist | Haupt (60 s) |
 | Steam Switch | Physischer Dampf-Schalterzustand der Maschine | Machine (5 s) |
 | Thermocouple Faulted² | `true`, wenn der Kessel-Thermofühler einen Fehler meldet (`fault_reason`-Attribut) | Machine (5 s) |
