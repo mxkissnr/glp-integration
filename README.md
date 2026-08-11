@@ -43,7 +43,7 @@
 | | Feature | Description |
 |---|---|---|
 | 🃏 | **Bundled Shot Card** | The [GLP Shot Card](https://github.com/mxkissnr/glp-lovelace-card) ships inside this integration and registers itself as a Lovelace resource on setup — just add `type: custom:glp-card` to a dashboard, no separate HACS install or resource config |
-| ☕ | **Brewing Sensor** | Binary sensor updated every 2 seconds — perfect as automation trigger |
+| ☕ | **Brewing Sensor** | Binary sensor pushed live over SSE (2 s poll fallback) — perfect as automation trigger |
 | 📊 | **Shot Sensors** | Profile, rating, duration, pressure, yield, ratio, dose, coffee, grinder, shots today and more |
 | 🌡️ | **Machine Sensors** | Live pressure, temperature, water level, weight, uptime, active profile — updated every 5 s |
 | 🔧 | **Maintenance Sensors** | One sensor per task (descaling, backflush, group head, gaskets, water filter) with progress value |
@@ -157,7 +157,7 @@
 
 | Entity | Description | Update rate |
 |---|---|---|
-| Brewing | `on` during an active pull; attributes: `datapoints`, `profile_name`, `seq` | every 2 s |
+| Brewing | `on` during an active pull; attributes: `datapoints`, `profile_name`, `seq` | SSE push (2 s poll fallback) |
 | Preheat Ready | `on` when machine has reached stable brewing temperature | 60 s |
 | Steam Switch | `on` when steam mode is active | 5 s |
 | Thermocouple Faulted¹ | `on` when the boiler thermocouple reports a fault; `fault_reason` attribute | 5 s |
@@ -311,8 +311,9 @@ Home Assistant
 │   ├── GET /api/status    → machine status, shotCount, lastSync, preheat
 │   └── GET /shots.json    → shot data, annotations, datapoints
 │
-├── GlpLiveCoordinator  (2 s)
-│   └── GET /api/live/data → isLive (brewing state + live datapoints)
+├── GlpLiveCoordinator  (SSE push, 2 s poll fallback)
+│   ├── GET /api/events (`live-snapshot`) → isLive (brewing state + live datapoints)
+│   └── GET /api/live/data → same shape, polled only while the SSE stream is down
 │
 ├── GlpMachineCoordinator  (5 s)
 │   └── GET /api/machine/status → pressure, temperature, water level,

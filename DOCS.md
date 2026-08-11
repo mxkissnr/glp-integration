@@ -48,7 +48,7 @@ As of the bundled v2.18.0 build, the card also picks up each machine's configure
 
 ## Entities
 
-All sensors/entities update at the poll interval of their respective coordinator: the main coordinator (`coordinator.py`) every 60 seconds (configurable, see above), the live coordinator (`live_coordinator.py`) every 2 seconds during a brew, and the machine coordinator (`machine_coordinator.py`) every 5 seconds for live machine values.
+All sensors/entities update at the poll interval of their respective coordinator: the main coordinator (`coordinator.py`) every 60 seconds (configurable, see above), and the machine coordinator (`machine_coordinator.py`) every 5 seconds for live machine values. The live coordinator (`live_coordinator.py`, driving the `Brewing` sensor) is pushed live over the add-on's SSE stream (near-instant) since v1.30.0, falling back to a 2-second poll only while that stream is unavailable.
 
 ### Relationship to Gaggiuino firmware's own MQTT entities
 
@@ -102,7 +102,7 @@ The default machine's `Machine Status` sensor's `machines` attribute, and each a
 
 | Entity | Description | Coordinator |
 |---|---|---|
-| Brewing | `true` during an active brew | Live (2 s) |
+| Brewing | `true` during an active brew | Live (SSE push, 2 s poll fallback) |
 | Preheat Ready | `true` once preheat time has elapsed | Main (60 s) |
 | Steam Switch | Physical steam switch state of the machine | Machine (5 s) |
 | Thermocouple Faulted² | `true` when the boiler thermocouple reports a fault (`fault_reason` attribute) | Machine (5 s) |
