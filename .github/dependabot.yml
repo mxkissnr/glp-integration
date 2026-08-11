@@ -9,3 +9,14 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    # #141: github/codeql-action/{init,analyze,upload-sarif} must all run at the
+    # same version -- a bump of one alone leaves the others behind and the
+    # resulting version mismatch fails the Analyze job. Ungrouped, Dependabot
+    # opens one PR per action path, so every such PR is born red and stays
+    # stuck (see #136/#137/#138, and glp-order-card#81 where it was diagnosed).
+    # One group over all actions keeps them in lockstep and cuts PR noise;
+    # actions are reviewed together here anyway.
+    groups:
+      github-actions:
+        patterns:
+          - "*"
