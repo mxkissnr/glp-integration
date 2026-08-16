@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.30.1] – 2026-08-16
+### Changed
+- **Synced the bundled Shot Card to glp-lovelace-card v2.20.0** (the "Instrument" redesign: cool graphite tokens, typographic verdict, drawn icons, guided metric row) — `custom_components/gaggiuino_profiler/www/glp-card.js` was still on v2.19.0. Syncing the bundled copy and releasing this repo again is an explicit release step for every glp-lovelace-card release (see `glp-lovelace-card/scripts/sync-to-integration.sh`'s own header comment) — the cache-busting version query param only changes on a real release here. No integration code changed.
+
 ## [1.30.0] – 2026-08-11
 ### Changed
 - **`GlpLiveCoordinator` (the `Brewing` binary sensor's data source) now consumes the app's `GET /api/events` SSE stream instead of only polling `GET /api/live/data` every 2s**, taking advantage of the app now pushing a `live-snapshot` event on every fresh sample from the machine (gaggiuino-local-profiler#708) instead of on a fixed 1s tick — HA no longer waits up to 2s behind the app's own UI. The 2s REST poll is kept as a fallback safety net: it's a no-op while a SSE event arrived within the last 5s, and only actually hits `/api/live/data` again once the stream looks stale (never connected, or dropped and hasn't reconnected yet). The SSE connection reconnects with capped exponential backoff on any drop (app restart, HA Ingress restart, network blip) and runs as a background task tied to the config entry's own lifecycle, so it's cancelled automatically on unload — no explicit teardown code needed. The other three coordinators (`GlpDataCoordinator`, `GlpMachineCoordinator`, `GlpSettingsCoordinator`) are unaffected and stay REST-polling. `live_coordinator.py`, `const.py`, `__init__.py`, `tests/test_live_coordinator.py`, `tests/test_live_coordinator_sse.py` (new). Closes #139
