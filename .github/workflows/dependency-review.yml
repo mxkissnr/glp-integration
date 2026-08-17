@@ -9,6 +9,8 @@ permissions:
 jobs:
   dependency-review:
     name: Dependency Review
+    # Gitea Actions also auto-detects .github/workflows — skip there, GitHub-only.
+    if: github.server_url == 'https://github.com'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout

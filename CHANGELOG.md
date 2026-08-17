@@ -1,5 +1,9 @@
 # Changelog
 
+## [Unreleased]
+### Fixed
+- **GitHub-only CI workflows (CodeQL, dependency review, scorecard) no longer auto-run against the local Gitea mirror.** Gitea Actions picks up `.github/workflows` automatically, so registering the local runner would re-run all of them there too. Each now skips outside `github.com`; the `validate.yml` HACS/Hassfest/Pytest gate is unaffected and runs on both. Closes #146
+
 ## [1.30.1] – 2026-08-16
 ### Changed
 - **Synced the bundled Shot Card to glp-lovelace-card v2.20.0** (the "Instrument" redesign: cool graphite tokens, typographic verdict, drawn icons, guided metric row) — `custom_components/gaggiuino_profiler/www/glp-card.js` was still on v2.19.0. Syncing the bundled copy and releasing this repo again is an explicit release step for every glp-lovelace-card release (see `glp-lovelace-card/scripts/sync-to-integration.sh`'s own header comment) — the cache-busting version query param only changes on a real release here. No integration code changed.

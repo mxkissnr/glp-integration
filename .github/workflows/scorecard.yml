@@ -13,6 +13,8 @@ permissions: read-all
 jobs:
   analysis:
     name: Scorecard analysis
+    # Gitea Actions also auto-detects .github/workflows — skip there, GitHub-only.
+    if: github.server_url == 'https://github.com'
     runs-on: ubuntu-latest
     permissions:
       security-events: write
