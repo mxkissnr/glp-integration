@@ -14,6 +14,8 @@ permissions:
 jobs:
   analyze:
     name: Analyze (python)
+    # Gitea Actions also auto-detects .github/workflows — skip there, GitHub-only.
+    if: github.server_url == 'https://github.com'
     runs-on: ubuntu-latest
     permissions:
       actions: read
