@@ -82,6 +82,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             [StaticPathConfig(f"/{DOMAIN}/www", www_path, cache_headers=False)]
         )
         add_extra_js_url(hass, f"/{DOMAIN}/www/glp-card.js?v={integration.version}")
+        add_extra_js_url(hass, f"/{DOMAIN}/www/glp-order-card.js?v={integration.version}")
         hass.data[f"{DOMAIN}_frontend_registered"] = True
 
     # Register the maintenance_done service once (idempotent)
