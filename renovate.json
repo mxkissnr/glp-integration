@@ -2,11 +2,31 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": ["config:recommended"],
   "schedule": ["before 6am on monday"],
+  "semanticCommits": "enabled",
+  "vulnerabilityAlerts": {
+    "enabled": true,
+    "schedule": ["at any time"],
+    "labels": ["security"],
+    "automerge": false
+  },
   "packageRules": [
+    {
+      "matchManagers": ["pip_requirements"],
+      "description": "requirements_test.txt is test/dev tooling only — manifest.json declares zero runtime pip dependencies. Safe to automerge on green CI (Pytest/Hassfest/HACS).",
+      "matchUpdateTypes": ["minor", "patch"],
+      "automerge": true
+    },
     {
       "matchManagers": ["github-actions"],
       "groupName": "github-actions",
-      "description": "github/codeql-action ships init/analyze/upload-sarif as one versioned unit; a single-action bump leaves the others behind and breaks the Analyze job (#141). Grouping all github-actions updates together avoids that and cuts PR noise."
+      "matchUpdateTypes": ["minor", "patch"],
+      "automerge": true,
+      "description": "github/codeql-action's init/analyze/upload-sarif sub-actions must stay version-matched or the Analyze job fails (#141). Grouped together, CI-only, safe to automerge on green."
+    },
+    {
+      "matchManagers": ["github-actions"],
+      "matchUpdateTypes": ["major"],
+      "groupName": "github-actions"
     }
   ]
 }
