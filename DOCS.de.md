@@ -33,7 +33,7 @@ Die Integration testet die Verbindung direkt beim Einrichten.
 
 ## Mitgelieferte GLP Shot Card
 
-Die [GLP Shot Card](https://github.com/mxkissnr/glp-lovelace-card) (Lovelace-Karte) ist Teil dieser Integration und wird beim Einrichten automatisch als Dashboard-Ressource registriert — keine separate HACS-Installation oder manuelle Ressourcenkonfiguration nötig. Einfach eine Karte mit `type: custom:glp-card` zum Dashboard hinzufügen, nachdem diese Integration installiert ist. (Die [GLP Order Card](https://github.com/mxkissnr/glp-order-card) (Lovelace-Karte) ist Teil dieser Integration und wird beim Einrichten automatisch als Dashboard-Ressource registriert — keine separate HACS-Installation oder manuelle Ressourcenkonfiguration nötig. Einfach eine Karte mit `type: custom:glp-order` zum Dashboard hinzufügen, nachdem diese Integration installiert ist.
+Die [GLP Shot Card](https://github.com/mxkissnr/glp-lovelace-card) (Lovelace-Karte) ist Teil dieser Integration und wird beim Einrichten automatisch als Dashboard-Ressource registriert — keine separate HACS-Installation oder manuelle Ressourcenkonfiguration nötig. Einfach eine Karte mit `type: custom:glp-card` zum Dashboard hinzufügen, nachdem diese Integration installiert ist. Die [GLP Order Card](https://github.com/mxkissnr/glp-order-card) ist auf dieselbe Weise Teil dieser Integration — einfach eine Karte mit `type: custom:glp-order-card` zum Dashboard hinzufügen, nachdem diese Integration installiert ist.
 
 Ab dem mitgelieferten Build v2.18.0 übernimmt die Karte bei Multi-Machine-Setups außerdem das konfigurierte Farbthema und Icon der jeweiligen Maschine, sodass der Kartenkopf zur angezeigten Maschine passt.
 

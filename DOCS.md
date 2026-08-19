@@ -33,7 +33,7 @@ The integration tests the connection right away during setup.
 
 ## Bundled GLP Shot Card
 
-The [GLP Shot Card](https://github.com/mxkissnr/glp-lovelace-card) lovelace card ships inside this integration and is registered automatically as a dashboard resource on setup — no separate HACS install or manual resource config needed. Just add a card with `type: custom:glp-card` to your dashboard after installing this integration. (The [GLP Order Card](https://github.com/mxkissnr/glp-order-card) lovelace card ships inside this integration and is registered automatically as a dashboard resource on setup — no separate HACS install or manual resource config needed. Just add a card with `type: custom:glp-order` to your dashboard after installing this integration.
+The [GLP Shot Card](https://github.com/mxkissnr/glp-lovelace-card) lovelace card ships inside this integration and is registered automatically as a dashboard resource on setup — no separate HACS install or manual resource config needed. Just add a card with `type: custom:glp-card` to your dashboard after installing this integration. The [GLP Order Card](https://github.com/mxkissnr/glp-order-card) ships inside this integration the same way — just add a card with `type: custom:glp-order-card` to your dashboard after installing this integration.
 
 As of the bundled v2.18.0 build, the card also picks up each machine's configured colour theme and icon on multi-machine setups, so the card header matches whichever machine it's showing.
 
