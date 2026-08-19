@@ -1,3 +1,11 @@
+// Wrapped in an IIFE so top-level `const`/`class` declarations don't leak into
+// the shared document-global scope: this card ships bundled alongside
+// glp-order-card.js as a second classic <script src> in the same HA frontend
+// page (glp-integration#157), and classic scripts share that lexical scope —
+// a same-named top-level const in both files throws on the second load and
+// aborts before customElements.define() runs. #141
+(() => {
+
 const GLP_CARD_VERSION = '2.20.1';
 
 // ─── i18n ────────────────────────────────────────────────────────────────────
@@ -2767,3 +2775,5 @@ console.info(
   'background:#ff3b30;color:#fff;padding:2px 4px;border-radius:3px 0 0 3px',
   'background:#111113;color:#ff3b30;padding:2px 4px;border-radius:0 3px 3px 0'
 );
+
+})();
