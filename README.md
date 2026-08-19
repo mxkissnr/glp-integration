@@ -43,6 +43,7 @@
 | | Feature | Description |
 |---|---|---|
 | 🃏 | **Bundled Shot Card** | The [GLP Shot Card](https://github.com/mxkissnr/glp-lovelace-card) ships inside this integration and registers itself as a Lovelace resource on setup — just add `type: custom:glp-card` to a dashboard, no separate HACS install or resource config |
+| 🃏 | **Bundled Order Card** | The [GLP Order Card](https://github.com/mxkissnr/glp-order-card) ships inside this integration and registers itself as a Lovelace resource on setup — just add `type: custom:glp-order` to a dashboard, no separate HACS install or resource config |
 | ☕ | **Brewing Sensor** | Binary sensor pushed live over SSE (2 s poll fallback) — perfect as automation trigger |
 | 📊 | **Shot Sensors** | Profile, rating, duration, pressure, yield, ratio, dose, coffee, grinder, shots today and more |
 | 🌡️ | **Machine Sensors** | Live pressure, temperature, water level, weight, uptime, active profile — updated every 5 s |
