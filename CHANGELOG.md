@@ -1,6 +1,9 @@
 # Changelog
 
 ## [Unreleased]
+### Changed
+- **Switched dependency updates from Dependabot to Renovate** (`renovate.json`), matching the same github-actions grouping as before (codeql-action's version-locked sub-actions, #141). CI/tooling only, no runtime effect on the integration itself. Closes #153
+
 ### Fixed
 - **GitHub-only CI workflows (CodeQL, dependency review, scorecard) no longer auto-run against the local Gitea mirror.** Gitea Actions picks up `.github/workflows` automatically, so registering the local runner would re-run all of them there too. Each now skips outside `github.com`; the `validate.yml` HACS/Hassfest/Pytest gate is unaffected and runs on both. Closes #146
 

@@ -1,0 +1,12 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "schedule": ["before 6am on monday"],
+  "packageRules": [
+    {
+      "matchManagers": ["github-actions"],
+      "groupName": "github-actions",
+      "description": "github/codeql-action ships init/analyze/upload-sarif as one versioned unit; a single-action bump leaves the others behind and breaks the Analyze job (#141). Grouping all github-actions updates together avoids that and cuts PR noise."
+    }
+  ]
+}
