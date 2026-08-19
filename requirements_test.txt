@@ -1,4 +1,4 @@
-pytest-homeassistant-custom-component==0.13.355
+pytest-homeassistant-custom-component==0.13.356
 pytest-asyncio==1.4.0
 pytest-cov==7.1.0
 home-assistant-frontend==20260729.6
