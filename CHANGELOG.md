@@ -1,10 +1,11 @@
 # Changelog
 
-## [Unreleased]
+## [1.31.0] – 2026-08-19
 ### Added
 - **The GLP Order Card now ships inside this integration too, the same way the Shot Card already does.** `glp-order-card.js` is served from the existing `www/` static path and registered via `add_extra_js_url` alongside `glp-card.js` — add a card with `type: custom:glp-order-card` to your dashboard, no separate HACS install or manual resource config needed. `glp-order-card` gained its own `scripts/sync-to-integration.sh` (mirroring `glp-lovelace-card`'s) to copy the built card here on release. `custom_components/gaggiuino_profiler/__init__.py`, `custom_components/gaggiuino_profiler/www/glp-order-card.js` (new), `README.md`, `DOCS.md`, `DOCS.de.md`. Closes #152
 
 ### Changed
+- **Synced both bundled cards to their latest releases** — `custom_components/gaggiuino_profiler/www/glp-card.js` to glp-lovelace-card v2.20.1, `custom_components/gaggiuino_profiler/www/glp-order-card.js` to glp-order-card v1.21.1. Syncing the bundled copies and releasing this repo again is an explicit release step for every glp-lovelace-card/glp-order-card release (see each card's own `scripts/sync-to-integration.sh` header comment) — the cache-busting version query param only changes on a real release here. No integration code changed.
 - **Switched dependency updates from Dependabot to Renovate** (`renovate.json`), matching the same github-actions grouping as before (codeql-action's version-locked sub-actions, #141), plus automerge for green minor/patch updates (both `requirements_test.txt` — test tooling only, `manifest.json` declares zero runtime pip dependencies — and github-actions), immediate unscheduled security PRs, and semantic commits matching the existing convention. CI/tooling only, no runtime effect on the integration itself. Closes #153
 
 ### Fixed

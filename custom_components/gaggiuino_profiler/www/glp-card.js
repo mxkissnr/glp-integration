@@ -1,4 +1,4 @@
-const GLP_CARD_VERSION = '2.20.0';
+const GLP_CARD_VERSION = '2.20.1';
 
 // ─── i18n ────────────────────────────────────────────────────────────────────
 // DE wording is the original card text; language follows hass.language (DE/EN/IT/FR/ES/NL, falls back to EN).
@@ -621,7 +621,7 @@ const STYLES = `
   /* GLP-TOKENS v1 — shared contract between glp-card.js and glp-order-card.js, keep byte-identical */
   :host {
     --glp-radius:    var(--ha-card-border-radius, 12px);
-    --glp-radius-sm: 8px;
+    --glp-radius-sm: 4px;
     --glp-bg:      var(--ha-card-background, var(--card-background-color, #18181b));
     --glp-surface: var(--secondary-background-color, #27272a);
     --glp-border:  var(--divider-color, #3f3f46);
@@ -739,11 +739,15 @@ const STYLES = `
        cards used to reach for: the border diet removes boxes as a grouping
        device, and it must not come back as hairline micro-typography nobody
        can read.
-       Radii are deliberately NOT part of this ladder. Both cards already
-       resolve every corner through --glp-radius / --glp-radius-sm above, and
-       --glp-radius stays HA-led (var(--ha-card-border-radius)) so a card
-       keeps matching the dashboard it sits on — pinning it to a fixed
-       redesign value would break exactly that. */
+       Radii are deliberately NOT part of this ladder. --glp-radius stays
+       HA-led (var(--ha-card-border-radius)) and is scoped to the outer
+       .card/ha-card shell only, so a card keeps matching the dashboard it
+       sits on — pinning it to a fixed redesign value would break exactly
+       that. Every other corner (buttons, tiles, inputs, status/tag pills)
+       resolves through --glp-radius-sm instead, a fixed 4px (the redesign
+       plan's control radius, glp-project/redesign-2026-08/PLAN.md §2) —
+       controls read visibly flatter than the card shell around them, which
+       is the point: two distinct radii, not one value reused everywhere. */
     --glp-fs-1: 0.8125rem;
     --glp-fs-2: 0.875rem;
     --glp-fs-3: 1rem;
@@ -902,7 +906,7 @@ const STYLES = `
   .tab-bar {
     display: flex; gap: 3px;
     background: color-mix(in srgb, var(--text) 5%, transparent);
-    border-radius: var(--glp-radius); padding: var(--glp-sp-1);
+    border-radius: var(--glp-radius-sm); padding: var(--glp-sp-1);
     margin-bottom: var(--glp-sp-4);
   }
   .tab-btn {
@@ -1165,7 +1169,7 @@ const STYLES = `
      tinted background instead of a tinted border. */
   .lm-tile {
     flex: 1; background: var(--surface);
-    border-radius: var(--glp-radius); padding: var(--glp-sp-2) 6px; text-align: center;
+    border-radius: var(--glp-radius-sm); padding: var(--glp-sp-2) 6px; text-align: center;
   }
   .lm-tile.warming { background: color-mix(in srgb, var(--amber) 12%, var(--surface)); }
   .lm-val { font-size: var(--glp-fs-4); font-weight: 700; color: var(--text); letter-spacing: -.02em; line-height: 1.1; }
@@ -1178,7 +1182,7 @@ const STYLES = `
     width: 100%;
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: var(--glp-radius);
+    border-radius: var(--glp-radius-sm);
     padding: var(--glp-sp-3) var(--glp-sp-4);
     min-height: 46px;
     cursor: pointer; color: var(--text);
@@ -1208,11 +1212,11 @@ const STYLES = `
     display: flex; flex-wrap: wrap; gap: 6px;
     padding: var(--glp-sp-3) var(--glp-sp-3) var(--glp-sp-3);
     background: var(--surface);
-    border-bottom-left-radius: var(--glp-radius); border-bottom-right-radius: var(--glp-radius);
+    border-bottom-left-radius: var(--glp-radius-sm); border-bottom-right-radius: var(--glp-radius-sm);
   }
   .profile-opt {
     background: color-mix(in srgb, var(--text) 6%, transparent); border: 1px solid var(--border);
-    border-radius: 20px; padding: var(--glp-sp-2) var(--glp-sp-4); min-height: 34px;
+    border-radius: var(--glp-radius-sm); padding: var(--glp-sp-2) var(--glp-sp-4); min-height: 34px;
     cursor: pointer; color: var(--text);
     font-family: inherit; font-size: var(--glp-fs-1); font-weight: 500;
     touch-action: manipulation; transition: all .15s; white-space: nowrap;
@@ -1227,19 +1231,19 @@ const STYLES = `
      tinted background alone carries the semantic color now. */
   .brewing-banner {
     background: color-mix(in srgb, var(--accent) 10%, transparent);
-    border-radius: var(--glp-radius); padding: var(--glp-sp-3) var(--glp-sp-4);
+    border-radius: var(--glp-radius-sm); padding: var(--glp-sp-3) var(--glp-sp-4);
     font-size: var(--glp-fs-2); font-weight: 700; color: var(--accent);
     text-align: center; margin-bottom: var(--glp-sp-3);
   }
   .steam-banner {
     background: color-mix(in srgb, var(--amber) 7%, transparent);
-    border-radius: var(--glp-radius); padding: var(--glp-sp-2) var(--glp-sp-4);
+    border-radius: var(--glp-radius-sm); padding: var(--glp-sp-2) var(--glp-sp-4);
     font-size: var(--glp-fs-2); font-weight: 600; color: var(--amber);
     text-align: center; margin-bottom: var(--glp-sp-3);
   }
   .water-low {
     background: color-mix(in srgb, var(--accent) 7%, transparent);
-    border-radius: var(--glp-radius); padding: 7px var(--glp-sp-4);
+    border-radius: var(--glp-radius-sm); padding: 7px var(--glp-sp-4);
     font-size: var(--glp-fs-1); font-weight: 600; color: var(--accent);
     text-align: center; margin-bottom: var(--glp-sp-3);
   }
@@ -1251,7 +1255,7 @@ const STYLES = `
   .preheat-ready {
     display: flex; align-items: center; justify-content: center; gap: var(--glp-sp-2);
     background: color-mix(in srgb, var(--green) 8%, transparent);
-    color: var(--green); border-radius: var(--glp-radius); padding: var(--glp-sp-3) var(--glp-sp-4);
+    color: var(--green); border-radius: var(--glp-radius-sm); padding: var(--glp-sp-3) var(--glp-sp-4);
     font-size: var(--glp-fs-2); font-weight: 700; margin-bottom: var(--glp-sp-4);
   }
   .preheat-warming { display: flex; flex-direction: column; gap: 6px; margin-bottom: var(--glp-sp-4); }
@@ -1273,7 +1277,7 @@ const STYLES = `
   .ready-by {
     display: flex; align-items: center; justify-content: space-between; gap: var(--glp-sp-3);
     background: var(--surface);
-    border-radius: var(--glp-radius); padding: var(--glp-sp-3) var(--glp-sp-4); margin-top: var(--glp-sp-3); margin-bottom: var(--glp-sp-4);
+    border-radius: var(--glp-radius-sm); padding: var(--glp-sp-3) var(--glp-sp-4); margin-top: var(--glp-sp-3); margin-bottom: var(--glp-sp-4);
   }
   .ready-by-picker { flex-direction: column; align-items: stretch; gap: var(--glp-sp-2); }
   .ready-by-picker-row { display: flex; align-items: center; gap: var(--glp-sp-2); }
@@ -1291,7 +1295,7 @@ const STYLES = `
     font-size: var(--glp-fs-1); padding: 7px var(--glp-sp-3); cursor: pointer; min-height: 34px;
     touch-action: manipulation; white-space: nowrap;
   }
-  .ready-by-btn.primary { background: var(--green); color: #06210f; }
+  .ready-by-btn.primary { background: color-mix(in srgb, var(--green) 14%, transparent); color: var(--green); }
   .ready-by-btn.ghost   { background: transparent; border: 1px solid var(--border); color: var(--sub); }
 
   /* ── maintenance ── border diet (#120): the row itself is only clickable
@@ -1300,7 +1304,7 @@ const STYLES = `
   .maint-list { display: flex; flex-direction: column; gap: var(--glp-sp-2); margin-bottom: var(--glp-sp-3); }
   .maint-row {
     background: var(--surface);
-    border-radius: var(--glp-radius); padding: var(--glp-sp-3);
+    border-radius: var(--glp-radius-sm); padding: var(--glp-sp-3);
     display: flex; flex-direction: column; gap: 5px;
   }
   .maint-row[role="button"] { border: 1px solid var(--border); }
@@ -1334,7 +1338,7 @@ const STYLES = `
     font-size: var(--glp-fs-1); padding: 5px var(--glp-sp-3); cursor: pointer;
     display: inline-flex; align-items: center; gap: 4px;
   }
-  .maint-confirm-yes { background: var(--green); color: #06210f; }
+  .maint-confirm-yes { background: color-mix(in srgb, var(--green) 14%, transparent); color: var(--green); }
   .maint-confirm-no  { background: var(--surface); color: var(--sub); }
   .maint-confirm-no svg { width: 11px; height: 11px; }
 
@@ -1350,7 +1354,7 @@ const STYLES = `
   .ord-list { display: flex; flex-direction: column; gap: var(--glp-sp-2); margin-bottom: var(--glp-sp-3); }
   .ord-row {
     background: var(--surface);
-    border-radius: var(--glp-radius); padding: var(--glp-sp-3); display: flex; flex-direction: column; gap: 7px;
+    border-radius: var(--glp-radius-sm); padding: var(--glp-sp-3); display: flex; flex-direction: column; gap: 7px;
   }
   .ord-row.pending  { border: 1px solid color-mix(in srgb, var(--amber) 30%, transparent); }
   .ord-top { display: flex; align-items: baseline; gap: var(--glp-sp-2); }
