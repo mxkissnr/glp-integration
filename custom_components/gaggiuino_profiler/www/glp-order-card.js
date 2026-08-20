@@ -6,7 +6,7 @@
 // aborts before customElements.define() runs. #114
 (() => {
 
-const GLP_ORDER_CARD_VERSION = '1.21.1';
+const GLP_ORDER_CARD_VERSION = '1.21.2';
 
 // Menu items younger than this show the NEW badge (config: new_badge_days)
 const NEW_BADGE_DAYS_DEFAULT = 7;

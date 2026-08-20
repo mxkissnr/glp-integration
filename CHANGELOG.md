@@ -1,8 +1,10 @@
 # Changelog
 
 ## [Unreleased]
+
+## [1.31.1] – 2026-08-20
 ### Fixed
-- **The bundled Shot Card failed to register at all**, showing "Custom element doesn't exist: glp-card" in the card picker (Order Card registered fine). `glp-card.js` and `glp-order-card.js` are both loaded as classic `<script src>` tags in the same HA frontend document, and both declared identical top-level `const` names — classic scripts share that lexical scope, so whichever card's script loaded second threw `SyntaxError: Identifier already declared` and aborted before `customElements.define()` ran. Fixed at the source in both card repos (each file now wraps its content in an IIFE) and re-synced here: `www/glp-card.js` to glp-lovelace-card v2.20.1, `www/glp-order-card.js` to glp-order-card v1.21.1 — same version numbers as v1.31.0's sync, this time with the fix included. Closes #159
+- **The bundled Shot Card failed to register at all**, showing "Custom element doesn't exist: glp-card" in the card picker (Order Card registered fine). `glp-card.js` and `glp-order-card.js` are both loaded as classic `<script src>` tags in the same HA frontend document, and both declared identical top-level `const` names — classic scripts share that lexical scope, so whichever card's script loaded second threw `SyntaxError: Identifier already declared` and aborted before `customElements.define()` ran. Fixed at the source in both card repos (each file now wraps its content in an IIFE) and re-synced here: `www/glp-card.js` to glp-lovelace-card v2.20.2, `www/glp-order-card.js` to glp-order-card v1.21.2. Closes #159
 
 ## [1.31.0] – 2026-08-19
 ### Added
