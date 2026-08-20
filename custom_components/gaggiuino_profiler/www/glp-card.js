@@ -6,7 +6,7 @@
 // aborts before customElements.define() runs. #141
 (() => {
 
-const GLP_CARD_VERSION = '2.20.1';
+const GLP_CARD_VERSION = '2.20.2';
 
 // ─── i18n ────────────────────────────────────────────────────────────────────
 // DE wording is the original card text; language follows hass.language (DE/EN/IT/FR/ES/NL, falls back to EN).
