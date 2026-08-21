@@ -9,10 +9,10 @@
   <a href="https://github.com/mxkissnr/glp-integration/actions/workflows/validate.yml">
     <img src="https://img.shields.io/github/actions/workflow/status/mxkissnr/glp-integration/validate.yml?branch=main&label=Validate&style=flat-square" alt="Validate"/>
   </a>
-  <a href="https://github.com/custom-components/hacs">
-    <img src="https://img.shields.io/badge/HACS-Custom-orange?style=flat-square" alt="HACS Custom"/>
+  <a href="https://github.com/hacs/default">
+    <img src="https://img.shields.io/badge/HACS-Default-41bdf5?style=flat-square" alt="HACS Default"/>
   </a>
-  <img src="https://img.shields.io/badge/Home%20Assistant-2024.1%2B-41bdf5?logo=home-assistant&style=flat-square" alt="HA Version"/>
+  <img src="https://img.shields.io/badge/Home%20Assistant-2024.7.0%2B-41bdf5?logo=home-assistant&style=flat-square" alt="HA Version"/>
   <img src="https://img.shields.io/badge/Polling-local-6b7280?style=flat-square" alt="Local Polling"/>
   <img src="https://img.shields.io/badge/Built%20with-Claude%20by%20Anthropic-D97706?style=flat-square" alt="Built with Claude"/>
   <img src="https://img.shields.io/badge/license-GPL--3.0-blue?style=flat-square" alt="License GPL-3.0"/>
@@ -68,10 +68,8 @@
 
 ### HACS (recommended)
 
-1. Click the button above — or: HACS → Integrations → ⋮ → **Custom repositories**
-2. Add `https://github.com/mxkissnr/glp-integration` as **Integration**
-3. Search for *Gaggiuino Local Profiler* and install
-4. Restart Home Assistant
+1. Click the button above, or search HACS for *Gaggiuino Local Profiler* and install
+2. Restart Home Assistant
 
 ### Manual
 

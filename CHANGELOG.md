@@ -1,6 +1,8 @@
 # Changelog
 
 ## [Unreleased]
+### Changed
+- **Updated documentation to reflect HACS Default listing** — glp-integration is now available in the default HACS integration directory (as of https://github.com/hacs/default/pull/8567). Removed custom-repository setup steps from README.md, DOCS.md, and DOCS.de.md. Also updated Home Assistant version requirement badge from 2024.1+ to 2024.7.0+.
 
 ## [1.31.1] – 2026-08-20
 ### Fixed
