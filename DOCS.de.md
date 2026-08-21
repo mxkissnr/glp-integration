@@ -11,10 +11,8 @@ Bindet den [Gaggiuino Local Profiler](https://github.com/mxkissnr/gaggiuino-loca
 
 ### HACS (empfohlen)
 
-1. HACS → Integrationen → ⋮ → **Benutzerdefinierte Repositories**
-2. URL `https://github.com/mxkissnr/glp-integration` als **Integration** hinzufügen
-3. Nach *Gaggiuino Local Profiler* suchen und installieren
-4. Home Assistant neu starten
+1. In HACS nach *Gaggiuino Local Profiler* suchen und installieren
+2. Home Assistant neu starten
 
 ### Manuell
 
