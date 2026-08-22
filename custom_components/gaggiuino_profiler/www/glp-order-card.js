@@ -6,7 +6,7 @@
 // aborts before customElements.define() runs. #114
 (() => {
 
-const GLP_ORDER_CARD_VERSION = '1.21.2';
+const GLP_ORDER_CARD_VERSION = '1.21.3';
 
 // Menu items younger than this show the NEW badge (config: new_badge_days)
 const NEW_BADGE_DAYS_DEFAULT = 7;
@@ -98,8 +98,15 @@ function _validHex(s) {
 // the drip-tray mesh in silver, independent of the accent theme. `mini`
 // drops fine detail (portafilter spout, steam wand tip, button
 // highlights/LEDs, drip-tray mesh holes) for small render sizes, per the
-// mockup's own MACHINE_BODY(id, mini).
-const MACHINE_BODY = (id, mini) => `
+// mockup's own MACHINE_BODY(id, mini). `type` ('gaggiuino' | 'gaggimate',
+// default 'gaggiuino') swaps only the top control area — 3 rocker switches
+// + steam knob for Gaggiuino, a round chrome-housed puck for GaggiMate —
+// both types share the same lower body (side wall, front face, drip tray,
+// base, feet). Puck geometry adapted from redesign-2026-08/build-prototype.py's
+// approved machine_anim('gaggimate') panel, repositioned to sit within this
+// badge's existing `0 0 100 162` viewBox instead of that prototype's taller
+// offset viewBox (mxkissnr/glp-lovelace-card#127 / mxkissnr/glp-order-card#97).
+const MACHINE_BODY = (id, mini, type = 'gaggiuino') => `
     <!-- Seitenwand rechts inkl. Kantenlicht, volle Hoehe -->
     <path d="M72.2 2.3 L100 11 L100 130 L88 153 L72.2 153 Z" fill="url(#${id})"/>
     <path d="M72.2 2.3 L100 11 L100 130 L88 153 L72.2 153 Z" fill="#000" opacity=".26"/>
@@ -147,6 +154,17 @@ const MACHINE_BODY = (id, mini) => `
     <rect x="4.5" y="155" width="7.5" height="4.4" rx="1.5" fill="#26262c"/>
     <rect x="66" y="155" width="7.5" height="4.4" rx="1.5" fill="#26262c"/>
 
+    ${type === 'gaggimate' ? `
+    <!-- GaggiMate: runder Puck mit Chromgehaeuse ersetzt Wipptasten +
+         Dampfknopf (mxkissnr/glp-lovelace-card#127 / mxkissnr/glp-order-card#97) -->
+    <circle cx="41" cy="24" r="14" fill="#cfd4d9"/>
+    <circle cx="41" cy="24" r="14" fill="none" stroke="#8f959d" stroke-width=".9"/>
+    <circle cx="41" cy="24" r="11.4" fill="#17171b"/>
+    <circle cx="41" cy="24" r="10.2" fill="#0b0d12"/>
+    ${mini ? '' : `
+    <path d="M31.1 14.1 A14 14 0 0 1 45 10.6" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" opacity=".65"/>
+    <path d="M33.4 16.4 A10.7 10.7 0 0 1 48.6 16.4" fill="none" stroke="#e8452a" stroke-width="1.3" stroke-linecap="round" opacity=".9"/>
+    <path d="M42.6 13.4 A10.7 10.7 0 0 1 48.6 16.4" fill="none" stroke="#6aa9d8" stroke-width="1.3" stroke-linecap="round"/>`}` : `
     <!-- Bedienfeld: 3 Wipptasten -->
     <rect x="20.5" y="13.6" width="9" height="14.8" rx="2.1" fill="#26262c"/>
     <rect x="33" y="13.6" width="9" height="14.8" rx="2.1" fill="#26262c"/>
@@ -163,9 +181,9 @@ const MACHINE_BODY = (id, mini) => `
     <rect x="74" y="23.4" width="9" height="8" fill="#26262c"/>
     <rect x="80.7" y="20.5" width="17" height="13.6" rx="6.8" fill="#212126"/>
     <ellipse cx="82.6" cy="27.3" rx="2.4" ry="6.8" fill="#3b3b43"/>
-    ${mini ? '' : '<rect x="81.4" y="23.4" width="1.7" height="7.8" rx=".85" fill="#fff" opacity=".2"/>'}`;
+    ${mini ? '' : '<rect x="81.4" y="23.4" width="1.7" height="7.8" rx=".85" fill="#fff" opacity=".2"/>'}`}`;
 
-const MACHINE_ICON_MINI = (id) => `
+const MACHINE_ICON_MINI = (id, type = 'gaggiuino') => `
     <svg viewBox="0 0 100 162" fill="none" xmlns="http://www.w3.org/2000/svg">
       <defs>
         <linearGradient id="${id}" x1="6" y1="0" x2="92" y2="145" gradientUnits="userSpaceOnUse">
@@ -177,7 +195,7 @@ const MACHINE_ICON_MINI = (id) => `
           <stop offset="1" stop-color="#9ba1a9"/>
         </linearGradient>
       </defs>
-      ${MACHINE_BODY(id, true)}
+      ${MACHINE_BODY(id, true, type)}
     </svg>`;
 // /GLP-SHARED:machine-icon v1
 
@@ -889,19 +907,23 @@ class GlpOrderCard extends HTMLElement {
     if (config.glp_token) this._token = String(config.glp_token);
   }
 
-  // GLP-SHARED:app-theme-lookup v1 — reads this card's own machine's
-  // app-stored theme (#701) out of `hass` state, or null when unavailable
-  // (no app-side sync yet, e.g. this card's zero-config/standalone mode).
-  // glp-integration forwards every machine's `theme` verbatim off the app's
-  // GET /api/status `machines[]` (gaggiuino-local-profiler#701): any
+  // GLP-SHARED:app-theme-lookup v1 — reads this card's own machine's entry
+  // out of `hass` state's `machines[]` array, or null when unavailable (no
+  // app-side sync yet, e.g. this card's zero-config/standalone mode).
+  // glp-integration forwards every machine's attributes verbatim off the
+  // app's GET /api/status `machines[]` (gaggiuino-local-profiler#701): any
   // `*_machine_status`-suffixed entity carries the WHOLE array (every
   // machine, not just the default one) as its `machines` attribute, so any
   // one such entity is enough regardless of which machine this card
   // instance represents. Matched against `this._config.machine` the same
   // "name or id" needle way this card's own machine-status-entity matching
-  // works, falling back to the isDefault entry when unconfigured. Kept
-  // byte-identical between glp-card.js and glp-order-card.js.
-  _appMachineTheme() {
+  // works, falling back to the isDefault entry when unconfigured. Shared by
+  // _appMachineTheme() (theme colours) and _appMachineType() (machine body
+  // shape for MACHINE_ICON_MINI, mxkissnr/glp-lovelace-card#127 /
+  // mxkissnr/glp-order-card#97) so both read the one resolved entry instead
+  // of duplicating the lookup. Kept byte-identical between glp-card.js and
+  // glp-order-card.js.
+  _appMachineEntry() {
     if (!this._hass) return null;
     const statusIds = Object.keys(this._hass.states).filter(id => id.endsWith('_machine_status'));
     let machines = null;
@@ -917,7 +939,11 @@ class GlpOrderCard extends HTMLElement {
         String(m.name || '').toLowerCase() === needle || String(m.id) === needle);
     }
     if (!entry) entry = machines.find(m => m.isDefault) || null;
-    const theme = entry?.theme;
+    return entry;
+  }
+
+  _appMachineTheme() {
+    const theme = this._appMachineEntry()?.theme;
     if (!theme) return null;
     if (typeof theme.preset === 'string' && Object.prototype.hasOwnProperty.call(THEME_PRESETS, theme.preset)) {
       return THEME_PRESETS[theme.preset];
@@ -929,6 +955,14 @@ class GlpOrderCard extends HTMLElement {
       return { a: theme.a, b: theme.b };
     }
     return null;
+  }
+
+  // Machine type ('gaggiuino' | 'gaggimate') for MACHINE_BODY/MACHINE_ICON_MINI's
+  // badge shape. Defaults to 'gaggiuino' when unresolved/unrecognized, same
+  // backward-compatible default MACHINE_BODY itself falls back to.
+  _appMachineType() {
+    const type = this._appMachineEntry()?.type;
+    return type === 'gaggimate' ? 'gaggimate' : 'gaggiuino';
   }
   // /GLP-SHARED:app-theme-lookup v1
 
@@ -976,7 +1010,7 @@ class GlpOrderCard extends HTMLElement {
   // simultaneously) from sharing one SVG gradient id.
   _machineGlyphHtml(sizeClass, idSuffix) {
     const id = `glp-oc-icon-${this._instanceId}-${idSuffix}`;
-    return `<div class="machine-glyph ${sizeClass}">${MACHINE_ICON_MINI(id)}</div>`;
+    return `<div class="machine-glyph ${sizeClass}">${MACHINE_ICON_MINI(id, this._appMachineType())}</div>`;
   }
 
   _getBase() {
