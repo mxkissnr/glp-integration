@@ -1,7 +1,10 @@
 # Changelog
 
 ## [Unreleased]
+
+## [1.31.2] – 2026-08-22
 ### Changed
+- **Synced both bundled cards to their latest releases** — `custom_components/gaggiuino_profiler/www/glp-card.js` to glp-lovelace-card v2.20.3, `custom_components/gaggiuino_profiler/www/glp-order-card.js` to glp-order-card v1.21.3. Both fix the same bug: the machine-icon badge always rendered the Gaggiuino body shape even for GaggiMate-type machines, since neither badge function took a machine-type parameter. The badge now shows a round chrome-housed puck for GaggiMate machines and the familiar rectangular display/knob/switches body for Gaggiuino. Syncing the bundled copies and releasing this repo again is an explicit release step for every glp-lovelace-card/glp-order-card release — the cache-busting version query param only changes on a real release here. No integration code changed. Closes glp-lovelace-card#127, glp-order-card#97
 - **Updated documentation to reflect HACS Default listing** — glp-integration is now available in the default HACS integration directory (as of https://github.com/hacs/default/pull/8567). Removed custom-repository setup steps from README.md, DOCS.md, and DOCS.de.md. Also updated Home Assistant version requirement badge from 2024.1+ to 2024.7.0+.
 
 ## [1.31.1] – 2026-08-20
