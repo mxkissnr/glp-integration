@@ -1,6 +1,8 @@
 # Changelog
 
 ## [Unreleased]
+### Changed
+- **Bumped the `github/codeql-action` digest pin to `db488dd`** (Renovate, #166). CI/tooling only, no runtime effect on the integration itself.
 
 ## [1.31.3] – 2026-08-24
 ### Changed
