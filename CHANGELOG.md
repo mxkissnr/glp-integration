@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [1.31.3] – 2026-08-24
+### Changed
+- **Bumped the `pytest-homeassistant-custom-component` dev dependency to v0.13.357** (Renovate, #167). Test tooling only, no runtime effect on the integration itself.
+
 ## [1.31.2] – 2026-08-22
 ### Changed
 - **Synced both bundled cards to their latest releases** — `custom_components/gaggiuino_profiler/www/glp-card.js` to glp-lovelace-card v2.20.3, `custom_components/gaggiuino_profiler/www/glp-order-card.js` to glp-order-card v1.21.3. Both fix the same bug: the machine-icon badge always rendered the Gaggiuino body shape even for GaggiMate-type machines, since neither badge function took a machine-type parameter. The badge now shows a round chrome-housed puck for GaggiMate machines and the familiar rectangular display/knob/switches body for Gaggiuino. Syncing the bundled copies and releasing this repo again is an explicit release step for every glp-lovelace-card/glp-order-card release — the cache-busting version query param only changes on a real release here. No integration code changed. Closes glp-lovelace-card#127, glp-order-card#97
