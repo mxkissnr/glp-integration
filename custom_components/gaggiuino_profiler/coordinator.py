@@ -63,11 +63,20 @@ class GlpDataCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data(self) -> dict:
         try:
-            async with self._session.get(f"{self._url}/api/status", timeout=aiohttp.ClientTimeout(total=10)) as r:
+            headers = await self.auth.headers()
+
+            # #170: /api/status must carry the auth header too -- the add-on
+            # gates its whole `sensitive` response object (switch_entity,
+            # machineUrl, lastSyncError, ...) behind req.glpAuthenticated,
+            # which requires X-GLP-Token. Without it switch_entity never
+            # reaches machine_status's attributes, so the bundled Lovelace
+            # cards can never detect the machine being off or show the power
+            # toggle.
+            async with self._session.get(
+                f"{self._url}/api/status", headers=headers, timeout=aiohttp.ClientTimeout(total=10)
+            ) as r:
                 r.raise_for_status()
                 status = await r.json()
-
-            headers = await self.auth.headers()
 
             async with self._session.get(
                 f"{self._url}/shots.json", headers=headers, timeout=aiohttp.ClientTimeout(total=10)
