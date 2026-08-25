@@ -1,8 +1,11 @@
 # Changelog
 
 ## [Unreleased]
+
+## [1.31.4] – 2026-08-25
 ### Fixed
 - **`machine_status`'s `switch_entity` attribute now actually reaches Home Assistant.** The coordinator's `/api/status` request was missing its auth header, so the add-on always returned it without `switch_entity` (and other sensitive fields) — both bundled Lovelace cards depend on that attribute to detect the machine being off and to show their power toggle button. Closes #170
+- **Synced the bundled Shot Card to glp-lovelace-card v2.20.4** — `custom_components/gaggiuino_profiler/www/glp-card.js`. Fixes a watchdog against a permanently stuck touch guard flag that could freeze the card on Android. No integration code changed. Closes glp-lovelace-card#155
 
 ### Changed
 - **Bumped the `github/codeql-action` digest pin to `db488dd`** (Renovate, #166). CI/tooling only, no runtime effect on the integration itself.

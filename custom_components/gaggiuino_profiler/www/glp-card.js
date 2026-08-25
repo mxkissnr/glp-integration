@@ -6,7 +6,7 @@
 // aborts before customElements.define() runs. #141
 (() => {
 
-const GLP_CARD_VERSION = '2.20.3';
+const GLP_CARD_VERSION = '2.20.4';
 
 // ─── i18n ────────────────────────────────────────────────────────────────────
 // DE wording is the original card text; language follows hass.language (DE/EN/IT/FR/ES/NL, falls back to EN).
@@ -1467,6 +1467,13 @@ class GlpCard extends HTMLElement {
     // #147: true while the user's finger is in contact with the card
     // (touchstart..touchend/touchcancel) — see _bindTouchGuard().
     this._touchActive   = false;
+    // #155: safety-net timer that force-clears _touchActive if the
+    // WebView never delivers a matching touchend/touchcancel (Android
+    // ghost-touch cases) — see _bindTouchGuard(). Exposed as an instance
+    // field (not a hardcoded literal in _bindTouchGuard()) so tests can
+    // shrink it instead of depending on mocked global timers.
+    this._touchGuardTimer = null;
+    this._touchGuardTimeoutMs = 1000;
     // set when a render was requested while _renderBlocked() (#72) — replayed
     // once by _requestRender() as soon as the blocking interaction ends,
     // instead of being discarded like it was before.
@@ -1566,7 +1573,21 @@ class GlpCard extends HTMLElement {
   // preventDefault(), or the very native scroll this guard exists to protect
   // would itself be blocked.
   _bindTouchGuard() {
-    this.addEventListener('touchstart', () => { this._touchActive = true; }, { passive: true });
+    // #155: some Android WebViews occasionally fail to deliver a matching
+    // touchend/touchcancel for a touch (ghost/interrupted gesture) — without
+    // a safety net, _touchActive would then stay true forever, permanently
+    // blocking _renderBlocked() and freezing the card for the rest of the
+    // session. This timer force-clears it if no real end event shows up.
+    const clearTouchActive = () => {
+      this._touchActive = false;
+      this._touchGuardTimer = null;
+      if (this._pendingRender) this._requestRender();
+    };
+    this.addEventListener('touchstart', () => {
+      this._touchActive = true;
+      clearTimeout(this._touchGuardTimer);
+      this._touchGuardTimer = setTimeout(clearTouchActive, this._touchGuardTimeoutMs);
+    }, { passive: true });
     // touchend/touchcancel fire once per finger lifted, not once all fingers
     // are gone (Touch Events spec) — a second finger resting on the card
     // (accidental edge touch, or a pinch/zoom starting on the card) must keep
@@ -1575,8 +1596,8 @@ class GlpCard extends HTMLElement {
     // mid-gesture rebuild #147 exists to prevent.
     const onTouchEnd = e => {
       if (e.touches.length > 0) return;
-      this._touchActive = false;
-      if (this._pendingRender) this._requestRender();
+      clearTimeout(this._touchGuardTimer);
+      clearTouchActive();
     };
     this.addEventListener('touchend', onTouchEnd, { passive: true });
     this.addEventListener('touchcancel', onTouchEnd, { passive: true });
