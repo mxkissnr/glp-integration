@@ -6,7 +6,7 @@
 // aborts before customElements.define() runs. #141
 (() => {
 
-const GLP_CARD_VERSION = '2.20.4';
+const GLP_CARD_VERSION = '2.20.5';
 
 // ─── i18n ────────────────────────────────────────────────────────────────────
 // DE wording is the original card text; language follows hass.language (DE/EN/IT/FR/ES/NL, falls back to EN).
@@ -2432,8 +2432,12 @@ class GlpCard extends HTMLElement {
       localStorage.setItem(this._switchStorageKey(), resolvedSwitch);
     }
     const switchState = this._switchEntity ? this._hass.states[this._switchEntity] : null;
-    this._machineOnSince = (switchState?.state === 'on' && switchState.last_changed)
-      ? Date.parse(switchState.last_changed) : null;
+    // Derived from preheat_elapsed (restart-safe, persisted by the add-on),
+    // not switch.*.last_changed — that jumps to restart time on every HA
+    // core restart even while the machine stays physically on (#158).
+    const uptimePreheatEl = parseFloat(this._val('preheat_elapsed', null));
+    this._machineOnSince = (switchState?.state === 'on' && !isNaN(uptimePreheatEl))
+      ? Date.now() - uptimePreheatEl * 1000 : null;
     const machineOff  = !!(this._switchEntity &&
       (switchState?.state === 'off' || switchState?.state === 'unavailable'));
 
@@ -2556,7 +2560,7 @@ class GlpCard extends HTMLElement {
     const preheatReady   = this._hass.states[bsPrefix + 'preheat_ready']?.state === 'on';
     const preheatHasEnt  = !!this._hass.states[bsPrefix + 'preheat_ready'];
     const preheatRem     = parseFloat(this._val('preheat_remaining', null));
-    const preheatEl      = parseFloat(this._val('preheat_elapsed',   null));
+    const preheatEl      = uptimePreheatEl;
     const preheatTotal   = (!isNaN(preheatRem) && !isNaN(preheatEl)) ? preheatEl + preheatRem : null;
     const preheatPct     = preheatTotal ? Math.min(1, preheatEl / preheatTotal) : null;
     const preheatMinLeft = isNaN(preheatRem) ? null : Math.ceil(preheatRem / 60);
