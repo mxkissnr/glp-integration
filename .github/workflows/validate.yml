@@ -61,4 +61,28 @@ jobs:
         run: ruff check .
 
       - name: Run tests
-        run: pytest tests/ -q --cov=custom_components/gaggiuino_profiler --cov-report=term-missing
+        run: pytest tests/ -q --cov=custom_components/gaggiuino_profiler --cov-report=term-missing --cov-fail-under=88
+
+  card-sync:
+    name: Bundled cards match upstream releases
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Compare bundled card versions against latest upstream release
+        run: |
+          set -euo pipefail
+          check() {
+            local repo="$1" const_name="$2" bundled_file="$3"
+            local latest bundled
+            latest=$(curl -fsSL "https://api.github.com/repos/mxkissnr/${repo}/releases/latest" | jq -r '.tag_name' | sed 's/^v//')
+            bundled=$(grep -oP "const ${const_name} = '\K[^']+" "${bundled_file}")
+            echo "${repo}: latest release v${latest}, bundled ${bundled}"
+            if [ "${latest}" != "${bundled}" ]; then
+              echo "::error file=${bundled_file}::${repo} latest release is v${latest} but the bundled copy is v${bundled} — run scripts/sync-to-integration.sh in that repo and re-copy here"
+              exit 1
+            fi
+          }
+          check "glp-lovelace-card" "GLP_CARD_VERSION" "custom_components/gaggiuino_profiler/www/glp-card.js"
+          check "glp-order-card" "GLP_ORDER_CARD_VERSION" "custom_components/gaggiuino_profiler/www/glp-order-card.js"
