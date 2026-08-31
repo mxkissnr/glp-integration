@@ -1,9 +1,12 @@
 # Changelog
 
 ## [Unreleased]
+
+## [1.31.6] – 2026-08-31
 ### Fixed
-- **Migrated off deprecated `device_registry.async_get_device()` in test code** so the pytest-homeassistant-custom-component dependency chain can move forward again. No production code affected. Closes #177
+- **Synced the bundled Order Card to glp-order-card v1.21.4** — `custom_components/gaggiuino_profiler/www/glp-order-card.js`. CI/coverage chores only upstream, no card behavior change. Closes #180
 ### CI
+- **Migrated off deprecated `device_registry.async_get_device()` in test code** so the pytest-homeassistant-custom-component dependency chain can move forward again. No production code affected. Closes #177
 - **Added a CI check that fails when the bundled Shot Card / Order Card drift from their upstream releases**, and gated the coverage measurement CI already collected (was measured but never enforced). Closes #176, #178
 
 ## [1.31.5] – 2026-08-26
