@@ -96,8 +96,8 @@ async def test_additional_machine_device_is_separate_from_and_linked_to_the_defa
     from homeassistant.helpers import device_registry as dr
     registry = dr.async_get(hass)
 
-    default_device = registry.async_get_device(identifiers={(DOMAIN, entry.entry_id)})
-    additional_device = registry.async_get_device(identifiers={(DOMAIN, f"{entry.entry_id}_2")})
+    default_device = registry.async_get_device_by_identifier((DOMAIN, entry.entry_id), entry.entry_id)
+    additional_device = registry.async_get_device_by_identifier((DOMAIN, f"{entry.entry_id}_2"), entry.entry_id)
     assert default_device is not None
     assert additional_device is not None
     assert additional_device.id != default_device.id
