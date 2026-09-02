@@ -15,6 +15,9 @@ no ESLint, no JS i18n files here.
 - **Commits**: `CHANGELOG.md` entry in the same commit as the code; `DOCS.md` **and**
   `DOCS.de.md` update in the same commit if user-facing. Trailer required, model
   spelled out: `Co-Authored-By: Claude <model name> <noreply@anthropic.com>`.
+- **PR AI disclosure** — every PR fills the PR template's "AI assistance disclosure" section
+  (`none`/`assisted`/`substantial`/`generated` + tool/model); every AI-assisted commit carries
+  a `Co-Authored-By:` trailer. CI enforces it. See CONTRIBUTING.md.
 - **Releases** end at the GitHub release; no HA deploy (Max installs HACS updates himself).
   `git tag v<version> && git push origin main && git push origin v<version> && gh release create v<version> ...`
 
