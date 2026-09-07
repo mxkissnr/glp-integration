@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [1.32.0] – 2026-09-07
+### Added
+- **Consumed `isFlushing`/`isDescaling` from the app's live-snapshot payload** (gaggiuino-local-profiler#902/#983) and exposed them as `is_flushing`/`is_descaling` attributes on the `Brewing` binary sensor, alongside the existing `profile_name`/`seq`/`datapoints` attributes — same coordinator (`live_coordinator.py`, SSE push), same entity, no new sensor. Unblocks glp-lovelace-card#170 (Live tab descaling banner). Closes #186
+
 ## [1.31.6] – 2026-08-31
 ### Fixed
 - **Synced the bundled Order Card to glp-order-card v1.21.4** — `custom_components/gaggiuino_profiler/www/glp-order-card.js`. CI/coverage chores only upstream, no card behavior change. Closes #180

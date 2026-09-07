@@ -146,14 +146,22 @@ class IsBrewingSensor(GlpEntity[GlpLiveCoordinator], BinarySensorEntity):
         data = self.coordinator.data
         if not data:
             return {}
-        dp = data.get("datapoints")
-        if not dp:
-            return {}
-        return {
-            "profile_name": data.get("profileName"),
-            "seq":          data.get("seq"),
-            "datapoints":   dp,
+        # #186: isFlushing/isDescaling are separate live-session flags on the
+        # same live-snapshot payload, independent of an active brew -- always
+        # exposed (unlike profile_name/seq/datapoints below) so the card can
+        # render a flush/descale indicator even when isLive is false.
+        attrs: dict[str, Any] = {
+            "is_flushing":  bool(data.get("isFlushing")),
+            "is_descaling": bool(data.get("isDescaling")),
         }
+        dp = data.get("datapoints")
+        if dp:
+            attrs.update({
+                "profile_name": data.get("profileName"),
+                "seq":          data.get("seq"),
+                "datapoints":   dp,
+            })
+        return attrs
 
 
 class PreheatReadySensor(GlpEntity[GlpDataCoordinator], BinarySensorEntity):
