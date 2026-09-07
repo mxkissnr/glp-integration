@@ -100,7 +100,7 @@ Das `machines`-Attribut des `Machine Status`-Sensors der Standardmaschine sowie 
 
 | Entity | Beschreibung | Coordinator |
 |---|---|---|
-| Brewing | `true` während eines aktiven Bezugs | Live (SSE-Push, 2 s Poll-Fallback) |
+| Brewing | `true` während eines aktiven Bezugs (Attribute `is_flushing`/`is_descaling` spiegeln einen gleichzeitigen Spül-/Entkalkungs-Betriebsmodus) | Live (SSE-Push, 2 s Poll-Fallback) |
 | Preheat Ready | `true` sobald die Aufwärmzeit abgelaufen ist | Haupt (60 s) |
 | Steam Switch | Physischer Dampf-Schalterzustand der Maschine | Machine (5 s) |
 | Thermocouple Faulted² | `true`, wenn der Kessel-Thermofühler einen Fehler meldet (`fault_reason`-Attribut) | Machine (5 s) |

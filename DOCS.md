@@ -100,7 +100,7 @@ The default machine's `Machine Status` sensor's `machines` attribute, and each a
 
 | Entity | Description | Coordinator |
 |---|---|---|
-| Brewing | `true` during an active brew | Live (SSE push, 2 s poll fallback) |
+| Brewing | `true` during an active brew (`is_flushing`/`is_descaling` attributes reflect a concurrent flush/descale operation mode) | Live (SSE push, 2 s poll fallback) |
 | Preheat Ready | `true` once preheat time has elapsed | Main (60 s) |
 | Steam Switch | Physical steam switch state of the machine | Machine (5 s) |
 | Thermocouple Faulted² | `true` when the boiler thermocouple reports a fault (`fault_reason` attribute) | Machine (5 s) |
