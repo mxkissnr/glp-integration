@@ -5,6 +5,7 @@
 ## [1.32.0] – 2026-09-07
 ### Added
 - **Consumed `isFlushing`/`isDescaling` from the app's live-snapshot payload** (gaggiuino-local-profiler#902/#983) and exposed them as `is_flushing`/`is_descaling` attributes on the `Brewing` binary sensor, alongside the existing `profile_name`/`seq`/`datapoints` attributes — same coordinator (`live_coordinator.py`, SSE push), same entity, no new sensor. Unblocks glp-lovelace-card#170 (Live tab descaling banner). Closes #186
+- **Synced the bundled Shot Card to glp-lovelace-card v2.21.0**, which adds the Live tab descaling banner enabled by the `is_descaling` attribute above. `custom_components/gaggiuino_profiler/www/glp-card.js`. No integration code changed. Closes glp-lovelace-card#170
 
 ## [1.31.6] – 2026-08-31
 ### Fixed

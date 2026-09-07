@@ -6,7 +6,7 @@
 // aborts before customElements.define() runs. #141
 (() => {
 
-const GLP_CARD_VERSION = '2.20.5';
+const GLP_CARD_VERSION = '2.21.0';
 
 // ─── i18n ────────────────────────────────────────────────────────────────────
 // DE wording is the original card text; language follows hass.language (DE/EN/IT/FR/ES/NL, falls back to EN).
@@ -28,6 +28,7 @@ const STRINGS = {
     profile_label: 'Profil', profile_switching: 'wechselt …',
     lm_live: 'Maschine live',
     steam_mode: 'Dampfmodus', water_low: p => `Wasser fast leer (${p}%)`,
+    descaling_mode: 'Entkalkung läuft',
     preheat_ready: 'Brühbereit', preheat_heating: 'Aufheizen …',
     ready_by_set_label: 'Brühbereit bis', ready_by_set: 'Setzen',
     ready_by_target: hhmm => `Brühbereit bis ${hhmm}`, ready_by_cancel: 'Abbrechen',
@@ -58,6 +59,7 @@ const STRINGS = {
     profile_label: 'Profile', profile_switching: 'switching …',
     lm_live: 'Machine live',
     steam_mode: 'Steam mode', water_low: p => `Water almost empty (${p}%)`,
+    descaling_mode: 'Descaling',
     preheat_ready: 'Ready to brew', preheat_heating: 'Warming up …',
     ready_by_set_label: 'Ready by', ready_by_set: 'Set',
     ready_by_target: hhmm => `Ready by ${hhmm}`, ready_by_cancel: 'Cancel',
@@ -88,6 +90,7 @@ const STRINGS = {
     profile_label: 'Profilo', profile_switching: 'cambio in corso …',
     lm_live: 'Macchina in diretta',
     steam_mode: 'Modalità vapore', water_low: p => `Acqua quasi esaurita (${p}%)`,
+    descaling_mode: 'Decalcificazione in corso',
     preheat_ready: 'Pronto per l\'estrazione', preheat_heating: 'Riscaldamento …',
     ready_by_set_label: 'Pronto entro', ready_by_set: 'Imposta',
     ready_by_target: hhmm => `Pronto entro le ${hhmm}`, ready_by_cancel: 'Annulla',
@@ -118,6 +121,7 @@ const STRINGS = {
     profile_label: 'Profil', profile_switching: 'changement …',
     lm_live: 'Machine en direct',
     steam_mode: 'Mode vapeur', water_low: p => `Eau presque vide (${p}%)`,
+    descaling_mode: 'Détartrage en cours',
     preheat_ready: 'Prêt à infuser', preheat_heating: 'Chauffage …',
     ready_by_set_label: 'Prêt avant', ready_by_set: 'Définir',
     ready_by_target: hhmm => `Prêt avant ${hhmm}`, ready_by_cancel: 'Annuler',
@@ -148,6 +152,7 @@ const STRINGS = {
     profile_label: 'Perfil', profile_switching: 'cambiando …',
     lm_live: 'Máquina en directo',
     steam_mode: 'Modo vapor', water_low: p => `Agua casi vacía (${p}%)`,
+    descaling_mode: 'Descalcificación en curso',
     preheat_ready: 'Listo para extraer', preheat_heating: 'Calentando …',
     ready_by_set_label: 'Listo antes de', ready_by_set: 'Fijar',
     ready_by_target: hhmm => `Listo antes de las ${hhmm}`, ready_by_cancel: 'Cancelar',
@@ -178,6 +183,7 @@ const STRINGS = {
     profile_label: 'Profiel', profile_switching: 'wisselt …',
     lm_live: 'Machine live',
     steam_mode: 'Stoommodus', water_low: p => `Water bijna leeg (${p}%)`,
+    descaling_mode: 'Ontkalken',
     preheat_ready: 'Klaar om te zetten', preheat_heating: 'Opwarmen …',
     ready_by_set_label: 'Klaar voor', ready_by_set: 'Instellen',
     ready_by_target: hhmm => `Klaar voor ${hhmm}`, ready_by_cancel: 'Annuleren',
@@ -479,6 +485,14 @@ const ICONS = {
     : ''),
 };
 // /GLP-SHARED:icons v1
+
+// #170: card-local addition, deliberately outside the GLP-SHARED:icons block
+// above (kept byte-identical with glp-order-card.js, see test/token-sync.test.js)
+// -- glp-order-card has no live-brewing view and no use for a descaling icon.
+// Same droplet silhouette as `droplet` (water) with a jagged crystalline line
+// through it, standing in for the mineral/scale deposit being flushed out --
+// visually distinct from the plain droplet used for the water-level banner.
+GLP_ICON_PATHS.descale = '<path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/><path d="M8.3 13.6l1.5 1.7 1.4-2.3 1.5 1.7 1.5-2.3"/>';
 
 function _scale(arr) { return (Array.isArray(arr) && arr.length) ? arr.map(v => v / 10) : []; }
 
@@ -1267,13 +1281,26 @@ const STYLES = `
     font-size: var(--glp-fs-2); font-weight: 600; color: var(--amber);
     text-align: center; margin-bottom: var(--glp-sp-3);
   }
+  /* Same --accent family as .brewing-banner and .maint-pill.due (#170) --
+     descaling is a due-maintenance operation in this design system's own
+     color language, not a brand-new hue. Differentiated from the static
+     brewing/steam banners by a slow icon pulse instead: an ongoing
+     maintenance process reads as "in progress", not just "on". */
+  .descaling-banner {
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
+    border-radius: var(--glp-radius-sm); padding: var(--glp-sp-3) var(--glp-sp-4);
+    font-size: var(--glp-fs-2); font-weight: 700; color: var(--accent);
+    text-align: center; margin-bottom: var(--glp-sp-3);
+  }
+  .descaling-banner svg { animation: descale-pulse 1.6s ease-in-out infinite; }
+  @keyframes descale-pulse { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
   .water-low {
     background: color-mix(in srgb, var(--accent) 7%, transparent);
     border-radius: var(--glp-radius-sm); padding: 7px var(--glp-sp-4);
     font-size: var(--glp-fs-1); font-weight: 600; color: var(--accent);
     text-align: center; margin-bottom: var(--glp-sp-3);
   }
-  .brewing-banner svg, .steam-banner svg, .water-low svg, .preheat-ready svg {
+  .brewing-banner svg, .steam-banner svg, .descaling-banner svg, .water-low svg, .preheat-ready svg {
     width: 13px; height: 13px; vertical-align: -2px;
   }
 
@@ -2511,6 +2538,11 @@ class GlpCard extends HTMLElement {
     const brewing        = brewingEnt?.state === 'on';
     const liveDatapoints = brewingEnt?.attributes?.datapoints || null;
     const liveProfile    = brewingEnt?.attributes?.profile_name || null;
+    // #170: is_descaling is a separate live-session flag on the Brewing
+    // binary sensor (glp-integration#186), always exposed regardless of
+    // is_on/isLive -- same shape as is_flushing, added by the same PR but
+    // not surfaced in the card yet (out of scope for #170).
+    const isDescaling    = !!brewingEnt?.attributes?.is_descaling;
     const steamOn        = this._hass.states[bsPrefix + 'steam_switch']?.state === 'on';
     const tArr           = liveDatapoints?.timeInShot;
     const elapsedSec     = tArr?.length ? Math.round(tArr[tArr.length - 1] / 10) : null;
@@ -2809,6 +2841,7 @@ class GlpCard extends HTMLElement {
         </div>
 
         ${tabBarHtml}
+        ${isDescaling && !brewing ? `<div class="descaling-banner">${ICONS.of('descale')} ${T('descaling_mode')}</div>` : ''}
         ${steamOn && !brewing ? `<div class="steam-banner">${ICONS.of('steam')} ${T('steam_mode')}</div>` : ''}
         ${waterLevel !== null && waterLevel < 20 ? `<div class="water-low">${ICONS.of('droplet')} ${T('water_low', waterLevel)}</div>` : ''}
         ${preheatHtml}
