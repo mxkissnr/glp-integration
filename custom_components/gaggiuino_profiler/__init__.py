@@ -63,28 +63,48 @@ def _machine_query_suffix(call: ServiceCall) -> str:
     return f"?machine={machine}" if machine else ""
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    # Register proxy views once (idempotent across multiple config entries)
-    if not hass.data.get(f"{DOMAIN}_views_registered"):
-        hass.http.register_view(GlpOrdersView())
-        hass.http.register_view(GlpOrdersSubView())
-        hass.http.register_view(GlpShotsSubView())
-        hass.http.register_view(GlpBeansInfoView())
-        hass.data[f"{DOMAIN}_views_registered"] = True
+async def _async_register_frontend(hass: HomeAssistant) -> None:
+    """Register the HTTP proxy views and the bundled Lovelace cards, once.
 
-    # Register the bundled GLP Shot Card and its Lovelace resource once
-    # (idempotent across multiple config entries). #90: the card ships inside
-    # this repo per HACS policy since it has a hard dependency on our services
-    # (set_ready_by/maintenance_done) and entity naming.
-    if not hass.data.get(f"{DOMAIN}_frontend_registered"):
-        integration = await async_get_integration(hass, DOMAIN)
-        www_path = os.path.join(os.path.dirname(__file__), "www")
+    #193: with two config entries (the stable app plus the DEV / Go-Preview
+    one) HA runs their `async_setup_entry` concurrently. The old code checked a
+    `hass.data` flag and only set it *after* several `await`s, so both entries
+    could pass the check, and the second `async_register_static_paths` for the
+    shared `/{DOMAIN}/www` path hit aiohttp's "already registered" RuntimeError
+    -- failing that whole entry's setup and taking its cards/entities down
+    until a retry or restart. Now the flag is claimed synchronously before any
+    `await` (so the second caller returns immediately), and the static-path
+    registration is wrapped defensively for a stale route surviving a
+    full-integration reload within one HA session.
+    """
+    if hass.data.get(f"{DOMAIN}_frontend_registered"):
+        return
+    hass.data[f"{DOMAIN}_frontend_registered"] = True
+
+    hass.http.register_view(GlpOrdersView())
+    hass.http.register_view(GlpOrdersSubView())
+    hass.http.register_view(GlpShotsSubView())
+    hass.http.register_view(GlpBeansInfoView())
+
+    # #90: the cards ship inside this repo per HACS policy -- hard dependency on
+    # our services (set_ready_by/maintenance_done) and entity naming.
+    integration = await async_get_integration(hass, DOMAIN)
+    www_path = os.path.join(os.path.dirname(__file__), "www")
+    try:
         await hass.http.async_register_static_paths(
             [StaticPathConfig(f"/{DOMAIN}/www", www_path, cache_headers=False)]
         )
-        add_extra_js_url(hass, f"/{DOMAIN}/www/glp-card.js?v={integration.version}")
-        add_extra_js_url(hass, f"/{DOMAIN}/www/glp-order-card.js?v={integration.version}")
-        hass.data[f"{DOMAIN}_frontend_registered"] = True
+    except RuntimeError:
+        # Path already registered (e.g. a stale route from a full-integration
+        # reload within the same HA session). The existing route still serves
+        # the same files -- nothing to do.
+        _LOGGER.debug("GLP www static path already registered")
+    add_extra_js_url(hass, f"/{DOMAIN}/www/glp-card.js?v={integration.version}")
+    add_extra_js_url(hass, f"/{DOMAIN}/www/glp-order-card.js?v={integration.version}")
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    await _async_register_frontend(hass)
 
     # Register the maintenance_done service once (idempotent)
     if not hass.services.has_service(DOMAIN, "maintenance_done"):
