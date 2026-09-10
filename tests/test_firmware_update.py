@@ -73,6 +73,25 @@ def test_version_fields_are_none_when_coordinator_has_no_data():
     assert entity.release_url is None
 
 
+def test_latest_version_falls_back_to_installed_when_latest_unknown():
+    # #191: the add-on couldn't resolve the latest Gaggiuino release. Rather
+    # than leave HA rendering the entity as "Unknown" (installed set, latest
+    # None), report the installed coreVersion as latest so it shows "up to
+    # date" / the current version.
+    entity, _coordinator = _make_entity(data={
+        "firmware_installed": "15a737d",
+        "firmware_latest": None,
+        "firmware_update_available": False,
+    })
+    assert entity.installed_version == "15a737d"
+    assert entity.latest_version == "15a737d"
+
+
+def test_latest_version_none_when_neither_installed_nor_latest_known():
+    entity, _coordinator = _make_entity(data={"firmware_installed": None, "firmware_latest": None})
+    assert entity.latest_version is None
+
+
 def test_suggested_object_id_is_stable_key_not_display_name():
     # Precedent: v1.22.1 entity_id collision (#62/#63) -- every entity must
     # derive suggested_object_id from a stable key, never HA's automatic

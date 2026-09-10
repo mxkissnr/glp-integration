@@ -60,6 +60,12 @@ class GlpDataCoordinator(DataUpdateCoordinator):
         self._url     = url.rstrip("/")
         self.auth     = auth or GlpAuth(session, url)
         self._last_shot_id: int | None = None
+        # #191: last /api/machine/firmware/version payload that actually carried
+        # an "installed" coreVersion. The machine is powered off most of the
+        # time here, and the add-on 502s that endpoint (or drops "installed")
+        # whenever it can't reach the machine -- without this the firmware
+        # update entity flips to "Unknown" on every brief outage.
+        self._last_firmware: dict = {}
 
     async def _async_update_data(self) -> dict:
         try:
@@ -278,7 +284,14 @@ class GlpDataCoordinator(DataUpdateCoordinator):
         data["version_update_available"] = bool(version_info.get("update_available"))
         data["version_release_url"]    = version_info.get("release_url")
 
-        # Machine firmware version / update info (#125)
+        # Machine firmware version / update info (#125). #191: keep the last
+        # payload that carried a real "installed" coreVersion -- a failed or
+        # machine-unreachable fetch (firmware_info == {}) must not null out a
+        # previously known firmware version.
+        if firmware_info.get("installed"):
+            self._last_firmware = firmware_info
+        else:
+            firmware_info = self._last_firmware or firmware_info
         data["firmware_installed"]        = firmware_info.get("installed")
         data["firmware_latest"]           = firmware_info.get("latest")
         data["firmware_update_available"] = bool(firmware_info.get("updateAvailable"))
