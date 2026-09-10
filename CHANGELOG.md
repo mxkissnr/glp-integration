@@ -2,7 +2,9 @@
 
 ## [Unreleased]
 
-## [1.32.1] – 2026-09-10
+## [1.32.2] – 2026-09-10
+### Fixed
+- **Bundled Shot Card / Order Card no longer intermittently disappear** when both the stable app and the DEV / Go-Preview app have a config entry. Their two `async_setup_entry` calls run concurrently and both used to pass the "frontend already registered" check before either set the flag, so the second registration of the shared `/gaggiuino_profiler/www` static path hit an aiohttp "route already registered" error and failed that whole entry's setup (taking its cards and entities down until a retry or restart). The flag is now claimed before any `await`, and the static-path registration tolerates an already-registered path. Closes #193
 ### Fixed
 - **Machine firmware update entity no longer stuck on "Unknown".** When the add-on can't resolve the latest Gaggiuino release (machine unreachable, GitHub rate-limited), `GlpMachineFirmwareUpdate` now reports the installed coreVersion as up to date instead of leaving Home Assistant to render the entity as "Unknown", and the coordinator keeps the last known `firmware_*` payload across transient `/api/machine/firmware/version` failures instead of nulling it on every brief machine outage. It flips back to "update available" on its own once the check succeeds. Closes #191
 ### Changed
