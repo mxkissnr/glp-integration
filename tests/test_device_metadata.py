@@ -42,7 +42,7 @@ async def _setup(hass, aioclient_mock, status_json, firmware=_FW):
 
 
 def _device(hass, entry):
-    return dr.async_get(hass).async_get_device(identifiers={(DOMAIN, entry.entry_id)})
+    return dr.async_get(hass).async_get_device_by_identifier((DOMAIN, entry.entry_id), entry.entry_id)
 
 
 async def test_visit_link_points_at_machine_web_ui(hass, aioclient_mock) -> None:

@@ -269,7 +269,7 @@ def _async_sync_device_metadata(
         return
 
     registry = dr.async_get(hass)
-    device = registry.async_get_device(identifiers={(DOMAIN, entry.entry_id)})
+    device = registry.async_get_device_by_identifier((DOMAIN, entry.entry_id), entry.entry_id)
     if device is None:
         return
 
