@@ -175,7 +175,9 @@ All light/number/switch/button/select (Operation Mode, Release Channel) entities
 | Entity | Description |
 |---|---|
 | Update (Gaggiuino Local Profiler) | Read-only version display for the add-on itself. HA's own Supervisor-backed `update.<slug>_glp_update` entity is the one that actually installs add-on updates — this one exists for non-Supervisor (plain Docker) installs, where that native entity doesn't exist. |
-| Firmware (Machine Firmware) | Shows whether a newer firmware build is available for the espresso machine itself, comparing the machine's installed version against the latest matching release on the firmware's own GitHub project. Supports installing: triggering it starts the machine's own OTA update flow. There is no live progress reporting during the OTA — `installed_version` catches up once the machine reports its new version on the next poll. Gaggiuino machines only; unavailable on GaggiMate (no such check exists on that adapter). |
+| Firmware (Machine Firmware) | Shows whether a newer firmware build is available for the espresso machine itself, comparing the machine's installed version against the latest matching release on the firmware's own GitHub project. Supports installing: triggering it starts the machine's own OTA update flow. There is no live progress reporting during the OTA — `installed_version` catches up once the machine reports its new version on the next poll. Gaggiuino machines only; unavailable on GaggiMate (no such check exists on that adapter). If the add-on can't currently resolve the latest release (machine unreachable, GitHub rate-limited), the entity shows the installed version as up to date rather than "Unknown", and the last known firmware version is kept across brief machine outages; it flips back to "update available" on its own once the check succeeds. |
+
+The GLP device page's **Visit** link opens the espresso machine's own web interface (`http://<machine hostname>`), and the device shows the machine's installed firmware version as its software version — both populate once the machine has been reachable at least once.
 
 ### Migrating from ALERTua/hass-gaggiuino
 

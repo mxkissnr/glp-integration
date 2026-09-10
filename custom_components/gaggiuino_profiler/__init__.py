@@ -12,6 +12,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.loader import async_get_integration
 from homeassistant.util import dt as dt_util
@@ -243,7 +244,44 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(_async_options_updated))
+
+    # #191: keep the default-machine device's "Visit" link pointed at the
+    # machine's own web UI and its firmware version shown, sourced from the
+    # data coordinator. Done centrally here (not per-entity DeviceInfo) because
+    # both values are dynamic and shared across entities from three coordinators
+    # -- racing them through DeviceInfo gives a non-deterministic result.
+    _async_sync_device_metadata(hass, entry, coordinator)
+    entry.async_on_unload(
+        coordinator.async_add_listener(
+            lambda: _async_sync_device_metadata(hass, entry, coordinator)
+        )
+    )
     return True
+
+
+def _async_sync_device_metadata(
+    hass: HomeAssistant, entry: ConfigEntry, coordinator: GlpDataCoordinator
+) -> None:
+    data = coordinator.data or {}
+    machine_host = data.get("machine_url")  # bare hostname, e.g. "gaggia.intern"
+    firmware = data.get("firmware_installed")
+    if not machine_host and not firmware:
+        return
+
+    registry = dr.async_get(hass)
+    device = registry.async_get_device(identifiers={(DOMAIN, entry.entry_id)})
+    if device is None:
+        return
+
+    changes: dict = {}
+    if machine_host:
+        want_url = f"http://{machine_host}"
+        if device.configuration_url != want_url:
+            changes["configuration_url"] = want_url
+    if firmware and device.sw_version != firmware:
+        changes["sw_version"] = firmware
+    if changes:
+        registry.async_update_device(device.id, **changes)
 
 
 async def _async_options_updated(hass: HomeAssistant, entry: ConfigEntry) -> None:

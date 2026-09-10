@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [1.32.1] – 2026-09-10
+### Fixed
+- **Machine firmware update entity no longer stuck on "Unknown".** When the add-on can't resolve the latest Gaggiuino release (machine unreachable, GitHub rate-limited), `GlpMachineFirmwareUpdate` now reports the installed coreVersion as up to date instead of leaving Home Assistant to render the entity as "Unknown", and the coordinator keeps the last known `firmware_*` payload across transient `/api/machine/firmware/version` failures instead of nulling it on every brief machine outage. It flips back to "update available" on its own once the check succeeds. Closes #191
+### Changed
+- **The GLP device page's "Visit" link now opens the espresso machine's own web interface** (`http://<machineHostname>`) instead of the add-on, and the device carries the machine's installed firmware version as its `sw_version`. Both are applied centrally to the device registry from the data coordinator (and refreshed on later polls), so they populate once the machine has been reachable at least once. Part of #191
+
 ## [1.32.0] – 2026-09-07
 ### Added
 - **Consumed `isFlushing`/`isDescaling` from the app's live-snapshot payload** (gaggiuino-local-profiler#902/#983) and exposed them as `is_flushing`/`is_descaling` attributes on the `Brewing` binary sensor, alongside the existing `profile_name`/`seq`/`datapoints` attributes — same coordinator (`live_coordinator.py`, SSE push), same entity, no new sensor. Unblocks glp-lovelace-card#170 (Live tab descaling banner). Closes #186

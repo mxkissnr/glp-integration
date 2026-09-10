@@ -34,6 +34,13 @@ class GlpEntity(CoordinatorEntity[_CoordinatorT]):
     def __init__(self, coordinator: _CoordinatorT, entry: ConfigEntry, key: str, url: str | None = None) -> None:
         super().__init__(coordinator)
         self._attr_unique_id = f"{entry.entry_id}_{key}"
+        # #191: "Visit" should open the machine's own web UI, and the device
+        # should carry the machine firmware version. Both are dynamic (only
+        # known once the machine has been reachable) and shared across entities
+        # from three different coordinators, so they're applied centrally to the
+        # device registry in __init__.py (_async_sync_device_metadata) rather
+        # than raced through per-entity DeviceInfo. This static block only
+        # provides the identity + the add-on URL as the initial fallback.
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},
             name="Gaggiuino Local Profiler",

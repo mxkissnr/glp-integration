@@ -115,7 +115,18 @@ class GlpMachineFirmwareUpdate(GlpEntity[GlpDataCoordinator], UpdateEntity):
     def latest_version(self) -> str | None:
         if self.coordinator.data is None:
             return None
-        return self.coordinator.data.get("firmware_latest")
+        latest = self.coordinator.data.get("firmware_latest")
+        if latest:
+            return latest
+        # #191: the add-on couldn't resolve the latest Gaggiuino release
+        # (machine unreachable, GitHub rate-limited/unreachable). Fall back to
+        # the installed coreVersion so HA shows the current version / "up to
+        # date" instead of "Unknown". Trade-off: a genuinely pending update is
+        # hidden until the add-on's `latest` lookup recovers -- but
+        # `firmware_update_available` (surfaced separately) stays false
+        # meanwhile, and the entity flips to "update available" on its own once
+        # a real latest arrives.
+        return self.coordinator.data.get("firmware_installed")
 
     @property
     def release_url(self) -> str | None:
