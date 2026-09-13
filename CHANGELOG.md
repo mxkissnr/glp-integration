@@ -1,6 +1,8 @@
 # Changelog
 
 ## [Unreleased]
+### Fixed
+- **The shot score is now coerced to a number before it reaches Home Assistant**, matching every neighbouring field in the same attribute and making sure no unvalidated upstream value is handed on to whatever renders it. Closes #195
 
 ## [1.32.2] – 2026-09-10
 ### Fixed

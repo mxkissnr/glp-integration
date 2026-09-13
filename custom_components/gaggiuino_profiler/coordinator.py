@@ -337,7 +337,11 @@ class GlpDataCoordinator(DataUpdateCoordinator):
                 "pressure": round(sum(s_pres) / len(s_pres) / 10, 2) if s_pres else None,
                 "rating":     int(s_ann["rating"]) if s_ann.get("rating") else None,
                 "drink_type": drink_lookup.get(s_ann.get("drinkType", "")) or None,
-                "score":      s.get("score"),
+                # Coerced like every sibling above, but via isinstance rather than a
+                # bare int(): a non-numeric value here would come from a source we do
+                # not control, and raising would take down the whole coordinator
+                # refresh. Dropping it to None fails closed instead.
+                "score":      int(s["score"]) if isinstance(s.get("score"), (int, float)) else None,
                 "dp":         s_dp_small,
             })
         data["recent_shots"] = recent
