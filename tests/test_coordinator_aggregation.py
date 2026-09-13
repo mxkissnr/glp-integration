@@ -95,6 +95,26 @@ async def test_avg_pressure_computed_from_datapoints(hass, aioclient_mock) -> No
     assert data["last_shot_pressure"] == 9.0  # avg(80,90,100)/10 = 9.0
 
 
+async def test_score_is_coerced_to_a_number(hass, aioclient_mock) -> None:
+    _mock_all(aioclient_mock, shots=[_shot(score=83.6)])
+    data = await _refresh(hass)
+    assert data["recent_shots"][0]["score"] == 83
+
+
+async def test_non_numeric_score_is_dropped_rather_than_passed_on(hass, aioclient_mock) -> None:
+    """#195: the attribute must never carry an unvalidated upstream value, and a
+    bad one must not take down the whole refresh either."""
+    _mock_all(aioclient_mock, shots=[_shot(score="<img src=x onerror=alert(1)>")])
+    data = await _refresh(hass)
+    assert data["recent_shots"][0]["score"] is None
+
+
+async def test_missing_score_stays_none(hass, aioclient_mock) -> None:
+    _mock_all(aioclient_mock, shots=[_shot()])
+    data = await _refresh(hass)
+    assert data["recent_shots"][0]["score"] is None
+
+
 async def test_empty_shots_list_yields_no_last_shot_fields(hass, aioclient_mock) -> None:
     _mock_all(aioclient_mock, shots=[])
     data = await _refresh(hass)
