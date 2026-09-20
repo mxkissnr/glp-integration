@@ -4,6 +4,9 @@
 ### Fixed
 - **The shot score is now coerced to a number before it reaches Home Assistant**, matching every neighbouring field in the same attribute and making sure no unvalidated upstream value is handed on to whatever renders it. Closes #195
 
+### CI
+- **The bundled Shot Card / Order Card sync gate now compares file contents byte-for-byte instead of only the version constant**, so a bundle whose content drifted while its version stayed put — a hand-edit, a partial sync, or a re-release under the same tag — can no longer pass the gate; on mismatch it prints a diff stat and fails the run. Closes #196
+
 ## [1.32.2] – 2026-09-10
 ### Fixed
 - **Bundled Shot Card / Order Card no longer intermittently disappear** when both the stable app and the DEV / Go-Preview app have a config entry. Their two `async_setup_entry` calls run concurrently and both used to pass the "frontend already registered" check before either set the flag, so the second registration of the shared `/gaggiuino_profiler/www` static path hit an aiohttp "route already registered" error and failed that whole entry's setup (taking its cards and entities down until a retry or restart). The flag is now claimed before any `await`, and the static-path registration tolerates an already-registered path. Closes #193
