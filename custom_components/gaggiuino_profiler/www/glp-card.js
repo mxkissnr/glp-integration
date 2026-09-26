@@ -6,7 +6,7 @@
 // aborts before customElements.define() runs. #141
 (() => {
 
-const GLP_CARD_VERSION = '2.21.0';
+const GLP_CARD_VERSION = '2.21.1';
 
 // ─── i18n ────────────────────────────────────────────────────────────────────
 // DE wording is the original card text; language follows hass.language (DE/EN/IT/FR/ES/NL, falls back to EN).
@@ -2786,7 +2786,7 @@ class GlpCard extends HTMLElement {
     const scoreCls = score == null ? '' : score >= 80 ? 'high' : score >= 55 ? 'mid' : 'low';
     const verdictWord = { high: T('verdict_high'), mid: T('verdict_mid'), low: T('verdict_low') }[scoreCls];
     const scoreBadge = score != null
-      ? `<div class="verdict ${scoreCls}"><span class="verdict-num">${score}</span><span class="verdict-sep"> · </span><span class="verdict-word">${esc(verdictWord)}</span></div>`
+      ? `<div class="verdict ${scoreCls}"><span class="verdict-num">${esc(score)}</span><span class="verdict-sep"> · </span><span class="verdict-word">${esc(verdictWord)}</span></div>`
       : '';
 
     const shotSectionHtml = !brewing && !showMaint ? `
@@ -2880,7 +2880,10 @@ class GlpCard extends HTMLElement {
   static getStubConfig() { return { entity_prefix: 'sensor.gaggiuino_local_profiler_' }; }
 }
 
-customElements.define('glp-card', GlpCard);
+// Deferred until HA's scoped-registry polyfill has replaced customElements. #184
+const define = () => customElements.get('glp-card') || customElements.define('glp-card', GlpCard);
+if (customElements.get('home-assistant')) define();
+else customElements.whenDefined('home-assistant').then(define);
 
 window.customCards = window.customCards || [];
 window.customCards.push({
