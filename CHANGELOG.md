@@ -3,6 +3,7 @@
 ## [Unreleased]
 ### Fixed
 - **The shot score is now coerced to a number before it reaches Home Assistant**, matching every neighbouring field in the same attribute and making sure no unvalidated upstream value is handed on to whatever renders it. Closes #195
+- **Listing orders through Home Assistant no longer sends the query string to the app twice.** Closes #207
 
 ### CI
 - **The bundled Shot Card / Order Card sync gate now compares file contents byte-for-byte instead of only the version constant**, so a bundle whose content drifted while its version stayed put — a hand-edit, a partial sync, or a re-release under the same tag — can no longer pass the gate; on mismatch it prints a diff stat and fails the run. Closes #196
