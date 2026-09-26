@@ -96,8 +96,10 @@ class GlpOrdersView(HomeAssistantView):
     requires_auth = True
 
     async def get(self, request: Request) -> Response:
-        qs = request.query_string
-        return await _proxy(request, "GET", "api/orders" + (f"?{qs}" if qs else ""))
+        # `_proxy` is the single place that appends request.query_string; passing
+        # it here too produced `api/orders?x=1?x=1` (the app then read `x` as
+        # `1?x=1`). Keep the add-on path bare.
+        return await _proxy(request, "GET", "api/orders")
 
     async def post(self, request: Request) -> Response:
         return await _proxy(request, "POST", "api/orders")

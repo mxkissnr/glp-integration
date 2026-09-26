@@ -5,8 +5,10 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
+from custom_components.gaggiuino_profiler.const import DOMAIN
 from custom_components.gaggiuino_profiler.orders_api import (
     GlpOrdersSubView,
+    GlpOrdersView,
     _forbidden_unless_admin,
 )
 
@@ -96,3 +98,59 @@ async def test_get_allowed_for_non_admin(monkeypatch) -> None:
 
     assert response is sentinel
     proxy_mock.assert_awaited_once_with(request, "GET", "api/orders/menu")
+
+
+class _FakeUpstreamResponse:
+    def __init__(self, status: int = 200, body: bytes = b"{}") -> None:
+        self.status = status
+        self._body = body
+
+    async def read(self) -> bytes:
+        return self._body
+
+    async def __aenter__(self) -> "_FakeUpstreamResponse":
+        return self
+
+    async def __aexit__(self, *exc_info) -> bool:
+        return False
+
+
+class _FakeSession:
+    def __init__(self) -> None:
+        self.requests: list[tuple[str, str]] = []
+
+    def request(self, method, url, **kwargs):
+        self.requests.append((method, url))
+        return _FakeUpstreamResponse()
+
+
+@pytest.mark.asyncio
+async def test_orders_root_get_appends_query_string_exactly_once(monkeypatch) -> None:
+    """GET /api/glp/orders?status=pending must proxy to `.../api/orders?status=pending`.
+
+    Regression for the double-append: passing `request.query_string` in the view
+    *and* letting `_proxy()` append it produced `api/orders?status=pending?status=pending`.
+    Asserting the exact upstream URL catches that at the only place it matters.
+    """
+    coordinator = MagicMock()
+    coordinator._url = "http://glp-addon.local:8080"
+    coordinator.auth.headers = AsyncMock(return_value={})
+
+    hass = MagicMock()
+    hass.data = {DOMAIN: {"entry": {"data": coordinator}}}
+
+    session = _FakeSession()
+    monkeypatch.setattr(
+        "custom_components.gaggiuino_profiler.orders_api.async_get_clientsession",
+        lambda _hass: session,
+    )
+
+    request = MagicMock()
+    request.app = {"hass": hass}
+    request.query_string = "status=pending"
+    request.get.return_value = None
+
+    response = await GlpOrdersView().get(request)
+
+    assert response.status == 200
+    assert session.requests == [("GET", "http://glp-addon.local:8080/api/orders?status=pending")]
