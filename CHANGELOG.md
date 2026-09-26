@@ -1,11 +1,9 @@
 # Changelog
 
 ## [Unreleased]
-
-## [1.32.3] – 2026-09-26
 ### Fixed
 - **The shot score is now coerced to a number before it reaches Home Assistant**, matching every neighbouring field in the same attribute and making sure no unvalidated upstream value is handed on to whatever renders it. Closes #195
-- **Pre-release cleanup: the committed `graphify-out` symlink is untracked, `.gitignore` gaps are closed and the duplicated orders query string is gone.** The old `graphify-out/` rule (trailing slash) only matched directories, so the tool-cache symlink added in #197 stayed tracked and leaked a maintainer-machine absolute path; it is now removed from the index and matched by `graphify-out` without the slash, and `.gitignore` additionally covers `.env*`, `*.pem`, `*.key`, `.DS_Store` and `node_modules/`. Separately, `GlpOrdersView.get` appended `request.query_string` on top of the append already done inside `_proxy()`, so `GET /api/glp/orders?status=pending` reached the add-on as `api/orders?status=pending?status=pending`; the view now passes the bare path, `_proxy()` is the only place that appends the query, and a new test asserts the exact upstream URL. Closes #207
+- **Listing orders through Home Assistant no longer sends the query string to the app twice.** Closes #207
 
 ### CI
 - **The bundled Shot Card / Order Card sync gate now compares file contents byte-for-byte instead of only the version constant**, so a bundle whose content drifted while its version stayed put — a hand-edit, a partial sync, or a re-release under the same tag — can no longer pass the gate; on mismatch it prints a diff stat and fails the run. Closes #196
