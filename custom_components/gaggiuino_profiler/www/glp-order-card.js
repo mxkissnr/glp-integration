@@ -6,7 +6,7 @@
 // aborts before customElements.define() runs. #114
 (() => {
 
-const GLP_ORDER_CARD_VERSION = '1.21.4';
+const GLP_ORDER_CARD_VERSION = '1.21.5';
 
 // Menu items younger than this show the NEW badge (config: new_badge_days)
 const NEW_BADGE_DAYS_DEFAULT = 7;
@@ -1828,7 +1828,10 @@ class GlpOrderCard extends HTMLElement {
   static getStubConfig()    { return {}; }
 }
 
-customElements.define('glp-order-card', GlpOrderCard);
+// Deferred until HA's scoped-registry polyfill has replaced customElements. #145
+const define = () => customElements.get('glp-order-card') || customElements.define('glp-order-card', GlpOrderCard);
+if (customElements.get('home-assistant')) define();
+else customElements.whenDefined('home-assistant').then(define);
 
 window.customCards = window.customCards || [];
 window.customCards.push({
