@@ -2,5 +2,7 @@
   "name": "Gaggiuino Local Profiler",
   "content_in_root": false,
   "render_readme": true,
+  "zip_release": true,
+  "filename": "gaggiuino_profiler.zip",
   "homeassistant": "2024.7.0"
 }

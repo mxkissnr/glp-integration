@@ -1,6 +1,8 @@
 # Changelog
 
 ## [Unreleased]
+### CI
+- **Each release now carries a `gaggiuino_profiler.zip` asset that HACS installs from, so installs are countable and a downloads badge is shown in the README.** Closes #224
 
 ## [1.33.0] – 2026-10-08
 ### Added
