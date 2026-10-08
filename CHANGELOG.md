@@ -1,8 +1,14 @@
 # Changelog
 
 ## [Unreleased]
+
+## [1.33.0] – 2026-10-08
 ### Added
-- **A GaggiMate in standby is now exposed as a `Machine Standby` binary sensor**, and while the machine is in standby the preheat elapsed/remaining sensors report `unknown` instead of a frozen full/zero countdown. Closes #219
+- **A GaggiMate in standby is now shown as a "Machine Standby" binary sensor, and the preheat elapsed and remaining sensors report `unknown` during standby instead of a frozen countdown.** Closes #219
+
+### Changed
+- **The bundled Shot Card is updated to v2.22.0 ([release notes](https://github.com/mxkissnr/glp-lovelace-card/releases/tag/v2.22.0)): a GaggiMate in standby now shows as off instead of a frozen warm-up, the header power button follows the machine's power switch, your ready-by choice stays on screen until Home Assistant confirms it, and touches, open pickers, typed times and animations no longer delay or lose live updates.**
+- **The bundled Order Card is updated to v1.22.0 ([release notes](https://github.com/mxkissnr/glp-order-card/releases/tag/v1.22.0)): after a declined or finished order, "New order" now stays on the menu instead of the old order popping back a few seconds later, and a selected drink, a typed note and running animations survive Home Assistant updates.**
 
 ## [1.32.3] – 2026-09-26
 ### Fixed
