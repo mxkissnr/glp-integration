@@ -13,6 +13,7 @@
     <img src="https://img.shields.io/badge/HACS-Default-41bdf5?style=flat-square" alt="HACS Default"/>
   </a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.7.0%2B-41bdf5?logo=home-assistant&style=flat-square" alt="HA Version"/>
+  <img src="https://img.shields.io/github/downloads/mxkissnr/glp-integration/total?style=flat-square&label=Downloads" alt="Downloads"/>
   <img src="https://img.shields.io/badge/Polling-local-6b7280?style=flat-square" alt="Local Polling"/>
   <img src="https://img.shields.io/badge/Built%20with-Claude%20by%20Anthropic-D97706?style=flat-square" alt="Built with Claude"/>
   <img src="https://img.shields.io/badge/license-GPL--3.0-blue?style=flat-square" alt="License GPL-3.0"/>

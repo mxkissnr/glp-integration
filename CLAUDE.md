@@ -20,6 +20,8 @@ no ESLint, no JS i18n files here.
   a `Co-Authored-By:` trailer. CI enforces it. See CONTRIBUTING.md.
 - **Releases** end at the GitHub release; no HA deploy (Max installs HACS updates himself).
   `git tag v<version> && git push origin main && git push origin v<version> && gh release create v<version> ...`
+  Afterwards verify `gaggiuino_profiler.zip` is attached to the release (`release-asset.yml`
+  uploads it within seconds; HACS installs from it).
 
 ## Regression policy
 
