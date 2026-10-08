@@ -271,8 +271,14 @@ class GlpDataCoordinator(DataUpdateCoordinator):
         }
 
         data["preheat_ready"]              = bool(preheat.get("ready"))
-        data["preheat_elapsed"]            = preheat.get("elapsed")
-        data["preheat_remaining"]          = preheat.get("remaining")
+        # A GaggiMate in standby is reachable but reports ready=false, elapsed=0
+        # and the full preheat time as remaining; a missing key (older app
+        # versions, Gaggiuino) means not in standby (#219).
+        data["machine_standby"]            = bool(preheat.get("standby"))
+        # While in standby those two counters are frozen, so expose them as
+        # unknown instead of the app's full/zero placeholder values (#219).
+        data["preheat_elapsed"]            = None if data["machine_standby"] else preheat.get("elapsed")
+        data["preheat_remaining"]          = None if data["machine_standby"] else preheat.get("remaining")
         data["machine_temperature"]        = preheat.get("temp")
         data["machine_target_temperature"] = preheat.get("targetTemp")
         data["preheat_ready_by_target_at"]   = _parse_ts(preheat.get("readyByTargetAt"))

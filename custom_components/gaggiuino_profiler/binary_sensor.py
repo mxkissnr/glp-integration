@@ -98,6 +98,7 @@ async def async_setup_entry(
     async_add_entities([
         IsBrewingSensor(live_coordinator, entry),
         PreheatReadySensor(data_coordinator, entry),
+        MachineStandbySensor(data_coordinator, entry),
         SteamSwitchSensor(machine_coordinator, entry),
         *[GlpMachineBinarySensor(machine_coordinator, entry, d) for d in MACHINE_BINARY_SENSORS],
     ])
@@ -176,6 +177,22 @@ class PreheatReadySensor(GlpEntity[GlpDataCoordinator], BinarySensorEntity):
         if self.coordinator.data is None:
             return None
         return bool(self.coordinator.data.get("preheat_ready"))
+
+
+class MachineStandbySensor(GlpEntity[GlpDataCoordinator], BinarySensorEntity):
+    """#219: true while a GaggiMate reports standby; Gaggiuino always reports false."""
+
+    _attr_name = "Machine Standby"
+    _attr_icon = "mdi:power-sleep"
+
+    def __init__(self, coordinator: GlpDataCoordinator, entry: ConfigEntry) -> None:
+        super().__init__(coordinator, entry, "machine_standby")
+
+    @property
+    def is_on(self) -> bool | None:
+        if self.coordinator.data is None:
+            return None
+        return bool(self.coordinator.data.get("machine_standby"))
 
 
 class SteamSwitchSensor(GlpEntity[GlpMachineCoordinator], BinarySensorEntity):
