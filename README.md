@@ -124,8 +124,8 @@
 | Machine Hostname | Gaggiuino controller hostname | — |
 | Machine Temperature | Current boiler temperature | °C |
 | Machine Target Temperature | Target boiler temperature | °C |
-| Preheat Elapsed | Time elapsed since machine switched on | s |
-| Preheat Remaining | Estimated time until machine is ready | s |
+| Preheat Elapsed | Time elapsed since machine switched on (`unknown` while the machine is in standby) | s |
+| Preheat Remaining | Estimated time until machine is ready (`unknown` while the machine is in standby) | s |
 | Preheat Ready-By Target | Timestamp the machine should be ready by, set via `set_ready_by` | — |
 | Preheat Planned Switch-On | Timestamp the app plans to switch the machine on to hit the ready-by target | — |
 
@@ -158,6 +158,7 @@
 |---|---|---|
 | Brewing | `on` during an active pull; attributes: `datapoints`, `profile_name`, `seq` | SSE push (2 s poll fallback) |
 | Preheat Ready | `on` when machine has reached stable brewing temperature | 60 s |
+| Machine Standby | `on` while a GaggiMate reports standby (a Gaggiuino always reports `off`) | 60 s |
 | Steam Switch | `on` when steam mode is active | 5 s |
 | Thermocouple Faulted¹ | `on` when the boiler thermocouple reports a fault; `fault_reason` attribute | 5 s |
 | Pressure Sensor Faulted¹ | `on` when the pressure sensor reports a fault; `fault_reason` attribute | 5 s |
