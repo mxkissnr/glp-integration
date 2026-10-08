@@ -40,7 +40,8 @@ def _mock_all(aioclient_mock, *, preheat: dict) -> None:
     aioclient_mock.get(f"{URL}/api/machine/status", json={"available": False})
 
 
-async def _refresh(hass, *, preheat: dict) -> dict:
+async def _refresh(hass, aioclient_mock, *, preheat: dict) -> dict:
+    _mock_all(aioclient_mock, preheat=preheat)
     session = async_get_clientsession(hass)
     coordinator = GlpDataCoordinator(hass, session, URL)
     return await coordinator._async_update_data()
@@ -68,14 +69,20 @@ def _state(hass, entry, key: str):
 # --- coordinator aggregation -------------------------------------------------
 
 async def test_standby_true_sets_machine_standby_and_hides_preheat_counters(hass, aioclient_mock) -> None:
-    data = await _refresh(hass, preheat={"ready": False, "elapsed": 0, "remaining": 300, "standby": True})
+    data = await _refresh(
+        hass, aioclient_mock,
+        preheat={"ready": False, "elapsed": 0, "remaining": 300, "standby": True},
+    )
     assert data["machine_standby"] is True
     assert data["preheat_elapsed"] is None
     assert data["preheat_remaining"] is None
 
 
 async def test_standby_false_passes_preheat_counters_through(hass, aioclient_mock) -> None:
-    data = await _refresh(hass, preheat={"ready": False, "elapsed": 12, "remaining": 288, "standby": False})
+    data = await _refresh(
+        hass, aioclient_mock,
+        preheat={"ready": False, "elapsed": 12, "remaining": 288, "standby": False},
+    )
     assert data["machine_standby"] is False
     assert data["preheat_elapsed"] == 12
     assert data["preheat_remaining"] == 288
@@ -83,7 +90,10 @@ async def test_standby_false_passes_preheat_counters_through(hass, aioclient_moc
 
 async def test_missing_standby_key_defaults_to_false(hass, aioclient_mock) -> None:
     """Older app versions don't send `standby` at all."""
-    data = await _refresh(hass, preheat={"ready": False, "elapsed": 12, "remaining": 288})
+    data = await _refresh(
+        hass, aioclient_mock,
+        preheat={"ready": False, "elapsed": 12, "remaining": 288},
+    )
     assert data["machine_standby"] is False
     assert data["preheat_elapsed"] == 12
     assert data["preheat_remaining"] == 288
@@ -92,7 +102,10 @@ async def test_missing_standby_key_defaults_to_false(hass, aioclient_mock) -> No
 # --- entities ----------------------------------------------------------------
 
 async def test_standby_true_sensor_is_on_and_counters_unknown(hass, aioclient_mock) -> None:
-    entry = await _setup_entry(hass, aioclient_mock, preheat={"ready": False, "elapsed": 0, "remaining": 300, "standby": True})
+    entry = await _setup_entry(
+        hass, aioclient_mock,
+        preheat={"ready": False, "elapsed": 0, "remaining": 300, "standby": True},
+    )
     standby = _state(hass, entry, "machine_standby")
     assert standby.state == "on"
     assert standby.attributes.get("icon") == "mdi:power-sleep"
@@ -102,7 +115,10 @@ async def test_standby_true_sensor_is_on_and_counters_unknown(hass, aioclient_mo
 
 
 async def test_standby_false_sensor_is_off_and_counters_pass_through(hass, aioclient_mock) -> None:
-    entry = await _setup_entry(hass, aioclient_mock, preheat={"ready": False, "elapsed": 12, "remaining": 288, "standby": False})
+    entry = await _setup_entry(
+        hass, aioclient_mock,
+        preheat={"ready": False, "elapsed": 12, "remaining": 288, "standby": False},
+    )
     assert _state(hass, entry, "machine_standby").state == "off"
     assert _state(hass, entry, "preheat_elapsed").state == "12"
     assert _state(hass, entry, "preheat_remaining").state == "288"
