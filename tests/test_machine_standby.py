@@ -4,6 +4,14 @@ is in standby the preheat elapsed/remaining sensors report `unknown` instead
 of the app's frozen full/zero countdown. Older app versions (and Gaggiuino)
 omit the key entirely, which must read as not-standby with the counters passed
 through unchanged.
+
+Scope note: these tests reuse the existing pytest fixtures defined in
+`tests/conftest.py` (`hass`, `aioclient_mock`, and the autouse
+custom-integrations enabler) and follow the repo convention of keeping helper
+functions local to each `test_*.py`, so `conftest.py` itself needs no change.
+The bundled `www/glp-card.js` is deliberately left untouched — the card's
+standby display is tracked in glp-lovelace-card#195 and the bundle is synced at
+release.
 """
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
