@@ -1,0 +1,15 @@
+# Renovate (renovate.json) handles all dependency updates in this repo.
+# This file only exists to retire Dependabot's leftover version-update jobs (#221):
+# without it they kept running after the switch. Limit 0 = no version-update PRs.
+version: 2
+updates:
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    open-pull-requests-limit: 0
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    open-pull-requests-limit: 0
