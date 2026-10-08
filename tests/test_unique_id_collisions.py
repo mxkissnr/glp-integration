@@ -181,6 +181,7 @@ def test_scanner_finds_expected_suffixes() -> None:
     assert set(literal_suffixes) == {
         "is_brewing",
         "preheat_ready",
+        "machine_standby",
         "steam_switch",
         "profile",
         "update",
