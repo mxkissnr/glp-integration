@@ -75,8 +75,8 @@ Wer beides aktiviert, sieht scheinbar doppelte Entities (`Machine Live Pressure`
 | Machine Hostname | Hostname des Gaggiuino-Controllers | — |
 | Machine Temperature¹ | Aktuelle Kesseltemperatur | °C |
 | Machine Target Temperature¹ | Ziel-Kesseltemperatur | °C |
-| Preheat Elapsed | Verstrichene Aufwärmzeit | s |
-| Preheat Remaining | Verbleibende Zeit bis Aufwärmbereitschaft | s |
+| Preheat Elapsed | Verstrichene Aufwärmzeit (`unknown`, während die Maschine im Standby ist) | s |
+| Preheat Remaining | Verbleibende Zeit bis Aufwärmbereitschaft (`unknown`, während die Maschine im Standby ist) | s |
 | Preheat Ready By | Geplanter Zielzeitpunkt für Aufwärmbereitschaft (`set_ready_by`-Dienst) | — |
 | Preheat Planned Switch On | Geplanter Einschaltzeitpunkt, um das Ready-By-Ziel zu erreichen | — |
 | Maintenance Descaling / Backflush / Group Head / Gaskets / Water Filter | Status (`status`-Attribut) der jeweiligen Wartungsaufgabe, inkl. Attributen `days_since`, `shots_since`, `last_date`, `pct` | — |
@@ -102,6 +102,7 @@ Das `machines`-Attribut des `Machine Status`-Sensors der Standardmaschine sowie 
 |---|---|---|
 | Brewing | `true` während eines aktiven Bezugs (Attribute `is_flushing`/`is_descaling` spiegeln einen gleichzeitigen Spül-/Entkalkungs-Betriebsmodus) | Live (SSE-Push, 2 s Poll-Fallback) |
 | Preheat Ready | `true` sobald die Aufwärmzeit abgelaufen ist | Haupt (60 s) |
+| Machine Standby | `true`, während eine GaggiMate Standby meldet (eine Gaggiuino meldet immer `false`) | Haupt (60 s) |
 | Steam Switch | Physischer Dampf-Schalterzustand der Maschine | Machine (5 s) |
 | Thermocouple Faulted² | `true`, wenn der Kessel-Thermofühler einen Fehler meldet (`fault_reason`-Attribut) | Machine (5 s) |
 | Pressure Sensor Faulted² | `true`, wenn der Drucksensor einen Fehler meldet (`fault_reason`-Attribut) | Machine (5 s) |

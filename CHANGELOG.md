@@ -1,6 +1,8 @@
 # Changelog
 
 ## [Unreleased]
+### Added
+- **A GaggiMate in standby is now exposed as a `Machine Standby` binary sensor**, and while the machine is in standby the preheat elapsed/remaining sensors report `unknown` instead of a frozen full/zero countdown. Closes #219
 
 ## [1.32.3] – 2026-09-26
 ### Fixed

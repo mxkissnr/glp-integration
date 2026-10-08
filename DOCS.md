@@ -75,8 +75,8 @@ If you enable both, some entities will look duplicated (this integration's `Mach
 | Machine Hostname | Hostname of the Gaggiuino controller | — |
 | Machine Temperature¹ | Current boiler temperature | °C |
 | Machine Target Temperature¹ | Target boiler temperature | °C |
-| Preheat Elapsed | Elapsed preheat time | s |
-| Preheat Remaining | Time remaining until preheat is ready | s |
+| Preheat Elapsed | Elapsed preheat time (`unknown` while the machine is in standby) | s |
+| Preheat Remaining | Time remaining until preheat is ready (`unknown` while the machine is in standby) | s |
 | Preheat Ready By | Scheduled target time for preheat readiness (`set_ready_by` service) | — |
 | Preheat Planned Switch On | Scheduled switch-on time to hit the ready-by target | — |
 | Maintenance Descaling / Backflush / Group Head / Gaskets / Water Filter | Status (`status` attribute) of each maintenance task, plus `days_since`, `shots_since`, `last_date`, `pct` attributes | — |
@@ -102,6 +102,7 @@ The default machine's `Machine Status` sensor's `machines` attribute, and each a
 |---|---|---|
 | Brewing | `true` during an active brew (`is_flushing`/`is_descaling` attributes reflect a concurrent flush/descale operation mode) | Live (SSE push, 2 s poll fallback) |
 | Preheat Ready | `true` once preheat time has elapsed | Main (60 s) |
+| Machine Standby | `true` while a GaggiMate reports standby (a Gaggiuino always reports `false`) | Main (60 s) |
 | Steam Switch | Physical steam switch state of the machine | Machine (5 s) |
 | Thermocouple Faulted² | `true` when the boiler thermocouple reports a fault (`fault_reason` attribute) | Machine (5 s) |
 | Pressure Sensor Faulted² | `true` when the pressure sensor reports a fault (`fault_reason` attribute) | Machine (5 s) |
