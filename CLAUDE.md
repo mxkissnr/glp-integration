@@ -23,6 +23,14 @@ no ESLint, no JS i18n files here.
   Afterwards verify `gaggiuino_profiler.zip` is attached to the release (`release-asset.yml`
   uploads it within seconds; HACS installs from it).
 
+## Language rule
+
+Integration code is Python — no hand-written JavaScript or TypeScript. The two
+card bundles under `custom_components/gaggiuino_profiler/www/`
+(`glp-card.js`, `glp-order-card.js`) are build output of the two card repos,
+copied in by their sync scripts and never edited here; fix the card repo and
+re-sync instead. `tests/test_no_handwritten_js.py` enforces this.
+
 ## Regression policy
 
 **A fix or feature must never break already-working functionality.** Verify against
