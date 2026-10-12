@@ -194,7 +194,7 @@ Neben den Entities registriert die Integration drei HA-Dienste (`gaggiuino_profi
 | `maintenance_done` | Markiert eine Wartungsaufgabe (`task`: `descaling`, `backflush`, `grouphead`, `gaskets`, `waterfilter` oder `grinder_<id>`) als erledigt und setzt ihren Timer zurück. Wird von der GLP Lovelace-Karte genutzt. |
 | `set_ready_by` | Plant, dass die Maschine bis zu einer Zielzeit (`target_time`) vorgeheizt und bereit ist, über `/api/preheat/ready-by`. Ohne `target_time` wird eine geplante Aufwärmung storniert. Schlägt fehl, wenn das Preheat-Switch-Entity oder der App-Token der App nicht konfiguriert ist. |
 
-Alle drei Dienste akzeptieren optional ein `machine`-Feld (Maschinen-ID aus der Multi-Machine-Registry) — dieses wird zwar bereits als `?machine=<id>`-Query-Parameter mitgeschickt, hat aber noch keine Wirkung, da die entsprechenden App-Endpunkte den Parameter Stand App v2.0.0 noch nicht auswerten. Ohne `machine` wirken alle drei Dienste auf die Standardmaschine (aktuell einziges unterstütztes Verhalten).
+Alle drei Dienste akzeptieren optional ein `machine`-Feld (Maschinen-ID aus der Multi-Machine-Registry) — dieses wird als `?machineId=<id>`-Query-Parameter mitgeschickt. `maintenance_done` wertet ihn aus: Die Aufgabe wird auf dieser Maschine als erledigt markiert. `backup` und `set_ready_by` reichen ihn ebenfalls weiter, aber die Endpunkte `/api/backup` und `/api/preheat/ready-by` der App lesen ihn Stand App v2.0.0 noch nicht aus, daher wirken diese beiden vorerst immer auf die Standardmaschine. Ohne `machine` wirken die Dienste auf die Standardmaschine.
 
 ## HA-Event: `gaggiuino_profiler_shot_completed`
 
