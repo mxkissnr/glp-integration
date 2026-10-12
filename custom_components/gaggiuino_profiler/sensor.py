@@ -364,7 +364,7 @@ async def async_setup_entry(
     # is actively misleading, not just incomplete. This sensor surfaces
     # exactly what IS genuinely available per machine today: name, type,
     # enabled and reachable/on from the machines[] registry array. Full
-    # parity is a follow-up gated on the app adding ?machine=<id> support
+    # parity is a follow-up gated on the app adding ?machineId=<id> support
     # to those endpoints.
     #
     # New machines added later (via the app's Settings UI, #319) get their
