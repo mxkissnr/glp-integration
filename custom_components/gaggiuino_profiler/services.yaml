@@ -11,11 +11,10 @@ backup:
       name: Machine
       description: >-
         Optional machine registry id to scope the backup to (#48/#317's
-        multi-machine mode) — sent as a ?machine=<id> query parameter.
-        No effect yet: the app's /api/backup endpoint doesn't read this
-        parameter as of app v2.0.0, so it's accepted here in preparation for
-        when that lands. Omit for the default machine (today's only
-        supported behavior).
+        multi-machine mode) — sent as a ?machineId=<id> query parameter.
+        The app's /api/backup endpoint doesn't read this parameter as of app
+        v2.0.0, so the backup always runs against the default machine today.
+        Omit for the default machine.
       required: false
       example: 2
       selector:
@@ -42,11 +41,9 @@ maintenance_done:
       name: Machine
       description: >-
         Optional machine registry id to scope the task to (#48/#317's
-        multi-machine mode) — sent as a ?machine=<id> query parameter.
-        No effect yet: the app's /api/maintenance/<task>/done endpoint
-        doesn't read this parameter as of app v2.0.0, so it's accepted here
-        in preparation for when that lands. Omit for the default machine
-        (today's only supported behavior).
+        multi-machine mode) — sent as a ?machineId=<id> query parameter,
+        which the app's /api/maintenance/<task>/done endpoint reads: the
+        task is marked done on that machine. Omit for the default machine.
       required: false
       example: 2
       selector:
@@ -75,11 +72,10 @@ set_ready_by:
       name: Machine
       description: >-
         Optional machine registry id to scope the request to (#48/#317's
-        multi-machine mode) — sent as a ?machine=<id> query parameter.
-        No effect yet: the app's /api/preheat/ready-by endpoint doesn't read
-        this parameter as of app v2.0.0, so it's accepted here in preparation
-        for when that lands. Omit for the default machine (today's only
-        supported behavior).
+        multi-machine mode) — sent as a ?machineId=<id> query parameter.
+        The app's /api/preheat/ready-by endpoint doesn't read this parameter
+        as of app v2.0.0, so the request always applies to the default
+        machine today. Omit for the default machine.
       required: false
       example: 2
       selector:

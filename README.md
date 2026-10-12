@@ -245,7 +245,7 @@ With multi-machine mode enabled (app v2.0.0+), each additional (non-default) con
 | `gaggiuino_profiler.maintenance_done` | Marks a maintenance task (`task`: `descaling`, `backflush`, `grouphead`, `gaskets`, `waterfilter`, or `grinder_<id>`) as done and resets its timer |
 | `gaggiuino_profiler.set_ready_by` | Schedules the machine to be preheated and ready by a target time (`target_time`) via `/api/preheat/ready-by`. Omit `target_time` to cancel |
 
-All three services optionally accept a `machine` field (a machine id from the multi-machine registry) for future per-machine scoping.
+All three services optionally accept a `machine` field (a machine id from the multi-machine registry), sent as `machineId`: `maintenance_done` acts on that machine; `backup` and `set_ready_by` use the default machine for now.
 
 ---
 

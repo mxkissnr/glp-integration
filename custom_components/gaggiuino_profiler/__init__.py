@@ -54,13 +54,13 @@ SET_READY_BY_SCHEMA = vol.Schema({
 
 
 def _machine_query_suffix(call: ServiceCall) -> str:
-    """#48/#317: appends ?machine=<id> when the service call specifies one.
-    The app doesn't read this parameter on /api/maintenance/*/done or
-    /api/backup as of app v2.0.0 -- accepted here so the service call is
-    already forward-compatible once that lands, and harmless today (an
-    unrecognized query param on these routes is simply ignored)."""
+    """#48/#317/#234: appends ?machineId=<id> when the service call specifies one.
+    maintenance_done honours it -- the app's /api/maintenance/*/done route
+    reads machineId and falls back to the default machine when it is absent.
+    backup and set_ready_by forward it too, but the app currently ignores it
+    on /api/backup and /api/preheat/ready-by and acts on the default machine there."""
     machine = call.data.get("machine")
-    return f"?machine={machine}" if machine else ""
+    return f"?machineId={machine}" if machine else ""
 
 
 async def _async_register_frontend(hass: HomeAssistant) -> None:
