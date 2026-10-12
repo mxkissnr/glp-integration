@@ -29,7 +29,7 @@ class GlpMachineCoordinator(DataUpdateCoordinator):
     return the same data mislabeled as that machine's, which would be
     actively misleading. No additional-machine live sensors are set up in
     this round for that reason (see the scope note in sensor.py); once the
-    app adds ?machine=<id> support here, per-machine live coordinators/
+    app reads ?machineId=<id> here, per-machine live coordinators/
     sensors are a straightforward follow-up using this same parameter.
     """
 
@@ -56,7 +56,7 @@ class GlpMachineCoordinator(DataUpdateCoordinator):
         self._machine_id = machine_id
 
     async def _async_update_data(self) -> dict:
-        suffix = f"?machine={self._machine_id}" if self._machine_id else ""
+        suffix = f"?machineId={self._machine_id}" if self._machine_id else ""
         try:
             headers = await self.auth.headers()
             async with self._session.get(

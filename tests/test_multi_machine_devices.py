@@ -135,7 +135,7 @@ async def test_new_machine_added_at_runtime_gets_its_entity_without_reload(hass,
 
 async def test_maintenance_done_service_appends_machine_query_param(hass, aioclient_mock) -> None:
     entry, url = await _setup_entry(hass, aioclient_mock, {"machines": MACHINES_TWO})
-    aioclient_mock.post(f"{url}/api/maintenance/descaling/done?machine=2", json={"ok": True})
+    aioclient_mock.post(f"{url}/api/maintenance/descaling/done?machineId=2", json={"ok": True})
 
     await hass.services.async_call(
         DOMAIN, "maintenance_done", {"task": "descaling", "machine": 2}, blocking=True
@@ -143,7 +143,7 @@ async def test_maintenance_done_service_appends_machine_query_param(hass, aiocli
     await hass.async_block_till_done()
 
     called_urls = [str(call[1]) for call in aioclient_mock.mock_calls]
-    assert any(u.endswith("/api/maintenance/descaling/done?machine=2") for u in called_urls)
+    assert any(u.endswith("/api/maintenance/descaling/done?machineId=2") for u in called_urls)
 
 
 async def test_maintenance_done_service_omits_query_param_when_machine_not_given(hass, aioclient_mock) -> None:
@@ -154,15 +154,18 @@ async def test_maintenance_done_service_omits_query_param_when_machine_not_given
     await hass.async_block_till_done()
 
     called_urls = [str(call[1]) for call in aioclient_mock.mock_calls]
-    assert any(u.endswith("/api/maintenance/descaling/done") and "machine=" not in u for u in called_urls)
+    assert any(
+        u.endswith("/api/maintenance/descaling/done") and "machineId=" not in u and "machine=" not in u
+        for u in called_urls
+    )
 
 
 async def test_backup_service_appends_machine_query_param(hass, aioclient_mock) -> None:
     entry, url = await _setup_entry(hass, aioclient_mock, {"machines": MACHINES_TWO})
-    aioclient_mock.get(f"{url}/api/backup?machine=2", json={"shots": []})
+    aioclient_mock.get(f"{url}/api/backup?machineId=2", json={"shots": []})
 
     await hass.services.async_call(DOMAIN, "backup", {"machine": 2}, blocking=True)
     await hass.async_block_till_done()
 
     called_urls = [str(call[1]) for call in aioclient_mock.mock_calls]
-    assert any(u.endswith("/api/backup?machine=2") for u in called_urls)
+    assert any(u.endswith("/api/backup?machineId=2") for u in called_urls)
