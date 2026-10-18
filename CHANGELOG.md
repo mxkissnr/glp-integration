@@ -4,6 +4,9 @@
 ### Fixed
 - **The maintenance_done service with a machine id now resets that machine's counter instead of the default machine's.** Refs #234
 
+### Security
+- **Fetching the app's API token no longer sends Home Assistant's Supervisor token along.** Closes #243
+
 ### CI
 - **Each release now carries a `gaggiuino_profiler.zip` asset that HACS installs from, so installs are countable and a downloads badge is shown in the README.** Closes #224
 
