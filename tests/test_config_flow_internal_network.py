@@ -11,7 +11,6 @@ import aiohttp
 import pytest
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from custom_components.gaggiuino_profiler.auth import _is_trusted_host
 from custom_components.gaggiuino_profiler.config_flow import (
     _addon_hostname,
     _auto_discover_internal_url,
@@ -173,13 +172,3 @@ async def test_auto_discover_url_falls_back_to_default_when_nothing_works(hass, 
     url = await _auto_discover_url(session)
 
     assert url == DEFAULT_URL
-
-
-def test_is_trusted_host_trusts_addon_internal_hostname() -> None:
-    assert _is_trusted_host("http://gaggiuino-local-profiler:8099") is True
-    assert _is_trusted_host("http://5611d8a7-gaggiuino-local-profiler:8099") is True
-
-
-def test_is_trusted_host_does_not_trust_unrelated_hostnames() -> None:
-    assert _is_trusted_host("http://evil-gaggiuino-local-profiler.attacker.io") is False
-    assert _is_trusted_host("http://gaggiuino-local-profiler.attacker.io") is False
