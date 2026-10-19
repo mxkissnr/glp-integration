@@ -24,12 +24,12 @@
         "data": {
           "url": "GLP-URL",
           "scan_interval": "Pollinterval (seconden)"
-        },
-        "error": {
-          "invalid_url": "De URL moet beginnen met http:// of https://.",
-          "cannot_connect": "Kan geen verbinding maken met GLP. Controleer de URL en zorg dat de app actief is."
         }
       }
+    },
+    "error": {
+      "invalid_url": "De URL moet beginnen met http:// of https://.",
+      "cannot_connect": "Kan geen verbinding maken met GLP. Controleer de URL en zorg dat de app actief is."
     }
   }
 }
