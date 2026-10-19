@@ -139,5 +139,5 @@ def test_every_translation_has_invalid_url() -> None:
     for path in files:
         data = json.loads(path.read_text(encoding="utf-8"))
         assert data["config"]["error"]["invalid_url"], path.name
-        assert data["options"]["step"]["init"]["error"]["invalid_url"], path.name
-        assert data["options"]["step"]["init"]["error"]["cannot_connect"], path.name
+        assert data["options"]["error"]["invalid_url"], path.name
+        assert data["options"]["error"]["cannot_connect"], path.name
