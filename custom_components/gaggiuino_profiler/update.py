@@ -1,19 +1,13 @@
 from __future__ import annotations
 
-import logging
-
-import aiohttp
 from homeassistant.components.update import UpdateEntity, UpdateEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import GlpDataCoordinator
 from .entity import GlpEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -99,7 +93,6 @@ class GlpMachineFirmwareUpdate(GlpEntity[GlpDataCoordinator], UpdateEntity):
     def __init__(self, coordinator: GlpDataCoordinator, entry: ConfigEntry) -> None:
         _url = (entry.options.get("url") or entry.data["url"]).rstrip("/")
         super().__init__(coordinator, entry, "firmware_update", url=_url)
-        self._url = _url
 
     @property
     def suggested_object_id(self) -> str | None:
@@ -135,16 +128,5 @@ class GlpMachineFirmwareUpdate(GlpEntity[GlpDataCoordinator], UpdateEntity):
         return self.coordinator.data.get("firmware_release_url")
 
     async def async_install(self, version: str | None, backup: bool, **kwargs: object) -> None:
-        session = async_get_clientsession(self.hass)
-        try:
-            async with session.post(
-                f"{self._url}/api/machine/firmware/update",
-                json={},
-                headers=await self.coordinator.auth.headers(),
-                timeout=aiohttp.ClientTimeout(total=10),
-            ) as r:
-                r.raise_for_status()
-        except Exception as err:
-            _LOGGER.error("Failed to trigger machine firmware update: %s", err)
-            raise
+        await self.coordinator.auth.post("/api/machine/firmware/update", json={})
         await self.coordinator.async_request_refresh()

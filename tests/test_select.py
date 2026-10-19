@@ -64,3 +64,17 @@ def test_current_option_falls_back_to_data_coordinator_when_machine_data_empty()
 def test_options_come_from_data_coordinator():
     select, data_coordinator, _machine_coordinator = _make_select()
     assert select.options == ["Adaptive", "Sertao Decaf"]
+
+
+@pytest.mark.asyncio
+async def test_async_select_option_posts_profile_and_refreshes_machine_coordinator():
+    select, data_coordinator, machine_coordinator = _make_select()
+    data_coordinator.auth.post = AsyncMock()
+    machine_coordinator.async_request_refresh = AsyncMock()
+
+    await select.async_select_option("Sertao Decaf")
+
+    data_coordinator.auth.post.assert_awaited_once_with(
+        "/api/machine/profile/set", json={"option": "Sertao Decaf"}
+    )
+    machine_coordinator.async_request_refresh.assert_awaited_once()

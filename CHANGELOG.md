@@ -3,6 +3,7 @@
 ## [Unreleased]
 ### Fixed
 - **Live brewing curves and the recent-shots list no longer fill the Home Assistant database, the regular poll fetches only the newest shots, and the backup service no longer times out on large backups.** Closes #236, Closes #242
+- **After the app gets a new API token, for example after a restore, the integration picks it up by itself instead of failing until Home Assistant restarts, and failed controls show a readable error.** Refs #235
 
 ## [1.33.1] – 2026-10-18
 ### Fixed

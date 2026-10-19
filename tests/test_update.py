@@ -12,7 +12,7 @@ from unittest.mock import MagicMock
 
 from homeassistant.components.update import UpdateEntityFeature
 
-from custom_components.gaggiuino_profiler.update import GlpUpdateEntity
+from custom_components.gaggiuino_profiler.update import GlpMachineFirmwareUpdate, GlpUpdateEntity
 
 
 def _make_entry():
@@ -49,6 +49,13 @@ def test_has_no_async_install_method():
     # raises NotImplementedError; overriding it again re-adds the self-update
     # path this entity intentionally no longer has.
     assert "async_install" not in GlpUpdateEntity.__dict__
+
+
+def test_machine_firmware_entity_is_the_only_install_path():
+    # The app self-update above stays read-only; the machine's own firmware
+    # entity keeps async_install and routes that write through auth.post
+    # (covered in test_firmware_update.py).
+    assert "async_install" in GlpMachineFirmwareUpdate.__dict__
 
 
 def test_installed_version_reads_from_coordinator():
