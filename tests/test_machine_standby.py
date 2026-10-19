@@ -38,6 +38,7 @@ MACHINES_ONE = [
 def _mock_all(aioclient_mock, *, preheat: dict) -> None:
     aioclient_mock.get(f"{URL}/api/status", json={"machines": MACHINES_ONE})
     aioclient_mock.get(f"{URL}/api/token", json={"apiToken": "test-token"})
+    aioclient_mock.get(f"{URL}/shots.json?limit=10", json=[])
     aioclient_mock.get(f"{URL}/shots.json", json=[])
     aioclient_mock.get(f"{URL}/api/maintenance", json={})
     aioclient_mock.get(f"{URL}/api/preheat", json=preheat)

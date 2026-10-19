@@ -43,6 +43,7 @@ MACHINES_TWO = MACHINES_ONE + [
 def _mock_all_coordinator_endpoints(aioclient_mock, url: str, status_json: dict) -> None:
     aioclient_mock.get(f"{url}/api/status", json=status_json)
     aioclient_mock.get(f"{url}/api/token", json={"apiToken": "test-token"})
+    aioclient_mock.get(f"{url}/shots.json?limit=10", json=[])
     aioclient_mock.get(f"{url}/shots.json", json=[])
     aioclient_mock.get(f"{url}/api/maintenance", json={})
     aioclient_mock.get(f"{url}/api/preheat", json={})

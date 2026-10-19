@@ -18,6 +18,7 @@ _FW = {"installed": "15a737d", "latest": "61bd042", "updateAvailable": True,
 def _mock_endpoints(aioclient_mock, *, status_json: dict, firmware=_FW) -> None:
     aioclient_mock.get(f"{URL}/api/status", json=status_json)
     aioclient_mock.get(f"{URL}/api/token", json={"apiToken": "test-token"})
+    aioclient_mock.get(f"{URL}/shots.json?limit=10", json=[])
     aioclient_mock.get(f"{URL}/shots.json", json=[])
     aioclient_mock.get(f"{URL}/api/maintenance", json={})
     aioclient_mock.get(f"{URL}/api/preheat", json={})

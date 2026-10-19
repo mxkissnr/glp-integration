@@ -29,6 +29,7 @@ def _mock_all_coordinator_endpoints(aioclient_mock, url: str) -> None:
     maintenance_done."""
     aioclient_mock.get(f"{url}/api/status", json={})
     aioclient_mock.get(f"{url}/api/token", json={"apiToken": "test-token"})
+    aioclient_mock.get(f"{url}/shots.json?limit=10", json=[])
     aioclient_mock.get(f"{url}/shots.json", json=[])
     aioclient_mock.get(f"{url}/api/maintenance", json={})
     aioclient_mock.get(f"{url}/api/preheat", json={})
@@ -89,3 +90,26 @@ async def test_backup_failure_does_not_fire_event(hass, aioclient_mock) -> None:
     await hass.async_block_till_done()
 
     assert events == []
+
+
+async def test_backup_streams_large_body_to_file(hass, aioclient_mock) -> None:
+    entry, url = await _setup_entry(hass, aioclient_mock)
+    large_payload = {
+        "glp_backup": True,
+        "shots": [{"id": i, "blob": "x" * 20000} for i in range(300)],
+    }
+    body = json.dumps(large_payload)
+    assert len(body) > 5 * 1024 * 1024
+    aioclient_mock.get(f"{url}/api/backup", text=body)
+
+    events = []
+    hass.bus.async_listen(f"{DOMAIN}_backup_created", lambda e: events.append(e))
+
+    await hass.services.async_call(DOMAIN, "backup", {}, blocking=True)
+    await hass.async_block_till_done()
+
+    assert len(events) == 1
+    path = events[0].data["path"]
+    assert events[0].data["shots"] == 300
+    with open(path, encoding="utf-8") as f:
+        assert f.read() == body
