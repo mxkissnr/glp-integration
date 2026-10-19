@@ -1,12 +1,12 @@
 """Regression tests for #236/#242: keep live curves and recent shots out of
 the recorder, poll only the newest shots, and refresh the machine coordinator
 after a profile switch."""
-from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import UpdateFailed
+from homeassistant.util import dt as dt_util
 
 from custom_components.gaggiuino_profiler.binary_sensor import IsBrewingSensor
 from custom_components.gaggiuino_profiler.coordinator import GlpDataCoordinator
@@ -54,7 +54,7 @@ async def test_poll_uses_limit_and_header_count(hass, aioclient_mock) -> None:
     _mock_endpoints(aioclient_mock)
     aioclient_mock.get(
         f"{URL}/shots.json?limit=10",
-        json=[_shot(7, datetime.now(UTC).isoformat())],
+        json=[_shot(7, dt_util.now().isoformat())],
         headers={"X-Shots-Today": "3"},
     )
 
@@ -67,7 +67,7 @@ async def test_poll_uses_limit_and_header_count(hass, aioclient_mock) -> None:
 
 
 async def test_old_app_counts_full_list_on_first_and_later_polls(hass, aioclient_mock) -> None:
-    now = datetime.now(UTC).isoformat()
+    now = dt_util.now().isoformat()
     _mock_endpoints(aioclient_mock)
     aioclient_mock.get(f"{URL}/shots.json?limit=10", json=[_shot(3, now)])
     aioclient_mock.get(
