@@ -10,7 +10,8 @@
       }
     },
     "error": {
-      "cannot_connect": "Verbindung zu GLP nicht möglich. Prüfe die URL und stelle sicher, dass die App läuft."
+      "cannot_connect": "Verbindung zu GLP nicht möglich. Prüfe die URL und stelle sicher, dass die App läuft.",
+      "invalid_url": "Die URL muss mit http:// oder https:// beginnen."
     },
     "abort": {
       "already_configured": "Diese GLP-Instanz ist bereits konfiguriert."
@@ -23,6 +24,10 @@
         "data": {
           "url": "GLP-URL",
           "scan_interval": "Abfrageintervall (Sekunden)"
+        },
+        "error": {
+          "invalid_url": "Die URL muss mit http:// oder https:// beginnen.",
+          "cannot_connect": "Verbindung zu GLP nicht möglich. Prüfe die URL und stelle sicher, dass die App läuft."
         }
       }
     }

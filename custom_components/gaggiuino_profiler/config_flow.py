@@ -158,6 +158,20 @@ async def _auto_discover_url(session: aiohttp.ClientSession) -> str:
     return f"http://localhost:{port}" if port else DEFAULT_URL
 
 
+async def _probe_status(
+    session: aiohttp.ClientSession, url: str, timeout_s: int
+) -> bool:
+    """GET <url>/api/status; True only on a non-error response."""
+    try:
+        async with session.get(
+            f"{url}/api/status", timeout=aiohttp.ClientTimeout(total=timeout_s)
+        ) as r:
+            r.raise_for_status()
+    except Exception:
+        return False
+    return True
+
+
 class GlpConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
@@ -168,22 +182,16 @@ class GlpConfigFlow(ConfigFlow, domain=DOMAIN):
         # the Supervisor port mapping and silently probe the app. If reachable,
         # create the entry without any user input.
         if user_input is None:
-            session     = async_get_clientsession(self.hass)
-            auto_url    = await _auto_discover_url(session)
-            try:
-                async with session.get(
-                    f"{auto_url}/api/status",
-                    timeout=aiohttp.ClientTimeout(total=5),
-                ) as r:
-                    r.raise_for_status()
+            session = async_get_clientsession(self.hass)
+            auto_url = await _auto_discover_url(session)
+            if await _probe_status(session, auto_url, 5):
                 await self.async_set_unique_id(auto_url)
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=f"GLP ({auto_url.removeprefix('http://')})",
                     data={"url": auto_url},
                 )
-            except Exception:
-                pass  # fall through to manual form
+            # Probe failed: fall through to manual form.
 
         errors: dict[str, str] = {}
         if user_input is not None:
@@ -228,14 +236,20 @@ class GlpOptionsFlow(OptionsFlow):
         self, user_input: dict | None = None
     ) -> ConfigFlowResult:
         errors: dict[str, str] = {}
-        if user_input is not None:
-            if urlparse(user_input["url"].rstrip("/")).scheme not in ("http", "https"):
-                errors["url"] = "invalid_url"
-            else:
-                return self.async_create_entry(data=user_input)
-
         current_interval = self._entry.options.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL_SECONDS)
-        current_url      = self._entry.options.get("url") or self._entry.data.get("url", DEFAULT_URL)
+        current_url = self._entry.options.get("url") or self._entry.data.get("url", DEFAULT_URL)
+
+        if user_input is not None:
+            url = user_input["url"].rstrip("/")
+            if urlparse(url).scheme not in ("http", "https"):
+                errors["url"] = "invalid_url"
+            elif url == current_url:
+                return self.async_create_entry(data=user_input)
+            else:
+                session = async_get_clientsession(self.hass)
+                if await _probe_status(session, url, 10):
+                    return self.async_create_entry(data=user_input)
+                errors["url"] = "cannot_connect"
 
         return self.async_show_form(
             step_id="init",
