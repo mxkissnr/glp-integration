@@ -57,6 +57,8 @@ class GlpLedLight(GlpEntity[GlpSettingsCoordinator], LightEntity):
 
     @property
     def available(self) -> bool:
+        if not super().available:
+            return False
         return bool(self._settings())
 
     @property
@@ -85,7 +87,7 @@ class GlpLedLight(GlpEntity[GlpSettingsCoordinator], LightEntity):
         return EFFECT_DISCO if coerce_gaggiuino_bool(settings.get("disco")) else EFFECT_NONE
 
     async def async_turn_on(self, **kwargs: Any) -> None:
-        payload = dict(self._settings())
+        payload = dict(await self.coordinator.async_fetch_category("led"))
         payload["state"] = encode_gaggiuino_bool(True, like=payload.get("state"))
         if ATTR_RGB_COLOR in kwargs:
             r, g, b = kwargs[ATTR_RGB_COLOR]
@@ -95,7 +97,7 @@ class GlpLedLight(GlpEntity[GlpSettingsCoordinator], LightEntity):
         await self._write(payload)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
-        payload = dict(self._settings())
+        payload = dict(await self.coordinator.async_fetch_category("led"))
         payload["state"] = encode_gaggiuino_bool(False, like=payload.get("state"))
         await self._write(payload)
 

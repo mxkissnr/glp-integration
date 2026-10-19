@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 ### Fixed
+- **Entities now show as unavailable when the app cannot be reached instead of keeping old values, and changing a machine setting no longer undoes a change made on the machine's screen.** Closes #235
 - **Live brewing curves and the recent-shots list no longer fill the Home Assistant database, the regular poll fetches only the newest shots, and the backup service no longer times out on large backups.** Closes #236, Closes #242
 - **After the app gets a new API token, for example after a restore, the integration picks it up by itself instead of failing until Home Assistant restarts, and failed controls show a readable error.** Refs #235
 

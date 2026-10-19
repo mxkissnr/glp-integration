@@ -512,6 +512,8 @@ class GlpMachineSensor(GlpEntity[GlpMachineCoordinator], SensorEntity):
 
     @property
     def available(self) -> bool:
+        if not super().available:
+            return False
         return bool(self.coordinator.data)
 
     @property
@@ -542,6 +544,8 @@ class GlpAdditionalMachineSensor(GlpAdditionalMachineEntity[GlpDataCoordinator],
 
     @property
     def available(self) -> bool:
+        if not super().available:
+            return False
         return self._machine() is not None
 
     @property

@@ -107,6 +107,8 @@ class GlpProfileSelect(GlpEntity[GlpDataCoordinator], SelectEntity):
 
     @property
     def available(self) -> bool:
+        if not super().available:
+            return False
         return bool(self.options)
 
     async def async_select_option(self, option: str) -> None:
@@ -134,6 +136,8 @@ class GlpOperationModeSelect(GlpEntity[GlpMachineCoordinator], SelectEntity):
 
     @property
     def available(self) -> bool:
+        if not super().available:
+            return False
         return bool(self.coordinator.data)
 
     @property
@@ -174,6 +178,8 @@ class GlpReleaseChannelSelect(GlpEntity[GlpSettingsCoordinator], SelectEntity):
 
     @property
     def available(self) -> bool:
+        if not super().available:
+            return False
         return bool(self._settings())
 
     @property
@@ -182,7 +188,7 @@ class GlpReleaseChannelSelect(GlpEntity[GlpSettingsCoordinator], SelectEntity):
         return _RELEASE_CHANNEL_BY_INDEX.get(raw)
 
     async def async_select_option(self, option: str) -> None:
-        payload = dict(self._settings())
+        payload = dict(await self.coordinator.async_fetch_category("system"))
         payload["releaseChannel"] = _RELEASE_CHANNEL_BY_NAME[option]
         await self.coordinator.auth.post("/api/machine/settings/system", json=payload)
         await self.coordinator.async_request_refresh()
