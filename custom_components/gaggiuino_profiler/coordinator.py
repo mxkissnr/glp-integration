@@ -75,6 +75,10 @@ class GlpDataCoordinator(DataUpdateCoordinator):
         async with self._session.get(
             f"{self._url}/api/status", headers=headers, timeout=aiohttp.ClientTimeout(total=10)
         ) as r:
+            if r.status == 401:
+                # The app handed out a new token (reinstall/restore): drop the
+                # cached one so the next poll of any coordinator fetches it.
+                self.auth.invalidate()
             r.raise_for_status()
             return await r.json()
 

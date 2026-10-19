@@ -5,24 +5,19 @@ intentionally not duplicated here, light.py already covers them.
 """
 from __future__ import annotations
 
-import logging
 from dataclasses import dataclass
 from typing import Any
 
-import aiohttp
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .entity import GlpEntity
 from .gaggiuino_bool import coerce_gaggiuino_bool, encode_gaggiuino_bool
 from .settings_coordinator import GlpSettingsCoordinator
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -118,7 +113,6 @@ class GlpMachineSwitch(GlpEntity[GlpSettingsCoordinator], SwitchEntity):
         _url = (entry.options.get("url") or entry.data["url"]).rstrip("/")
         super().__init__(coordinator, entry, description.key, url=_url)
         self.entity_description = description
-        self._url = _url
 
     @property
     def suggested_object_id(self) -> str | None:
@@ -148,17 +142,6 @@ class GlpMachineSwitch(GlpEntity[GlpSettingsCoordinator], SwitchEntity):
         payload = dict(self._settings())
         data_key = self.entity_description.data_key
         payload[data_key] = encode_gaggiuino_bool(value, like=payload.get(data_key))
-        session = async_get_clientsession(self.hass)
         category = self.entity_description.category
-        try:
-            async with session.post(
-                f"{self._url}/api/machine/settings/{category}",
-                json=payload,
-                headers=await self.coordinator.auth.headers(),
-                timeout=aiohttp.ClientTimeout(total=10),
-            ) as r:
-                r.raise_for_status()
-        except Exception as err:
-            _LOGGER.error("Failed to update %s.%s: %s", category, self.entity_description.data_key, err)
-            raise
+        await self.coordinator.auth.post(f"/api/machine/settings/{category}", json=payload)
         await self.coordinator.async_request_refresh()

@@ -109,7 +109,7 @@ def _make_profile_select():
         "profile_options": ["Adaptive", "Sertao Decaf"],
         "current_profile": "Adaptive",
     }
-    data_coordinator.auth.headers = AsyncMock(return_value={})
+    data_coordinator.auth.post = AsyncMock()
     data_coordinator.async_request_refresh = AsyncMock()
     machine_coordinator = MagicMock()
     machine_coordinator.data = {"profileName": "Adaptive"}
@@ -121,22 +121,13 @@ def _make_profile_select():
     )
 
 
-async def test_profile_select_refreshes_machine_coordinator(monkeypatch) -> None:
+async def test_profile_select_refreshes_machine_coordinator() -> None:
     select, data_coordinator, machine_coordinator = _make_profile_select()
-
-    response = MagicMock()
-    response.raise_for_status = MagicMock()
-    post_cm = MagicMock()
-    post_cm.__aenter__ = AsyncMock(return_value=response)
-    post_cm.__aexit__ = AsyncMock(return_value=False)
-    session = MagicMock()
-    session.post.return_value = post_cm
-    monkeypatch.setattr(
-        "custom_components.gaggiuino_profiler.select.async_get_clientsession",
-        lambda hass: session,
-    )
 
     await select.async_select_option("Adaptive")
 
+    data_coordinator.auth.post.assert_awaited_once_with(
+        "/api/machine/profile/set", json={"option": "Adaptive"}
+    )
     machine_coordinator.async_request_refresh.assert_awaited_once()
     data_coordinator.async_request_refresh.assert_not_awaited()

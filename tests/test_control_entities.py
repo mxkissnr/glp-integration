@@ -97,8 +97,11 @@ async def test_led_light_turn_on_posts_full_category_payload(hass, aioclient_moc
 
     calls = _post_calls(aioclient_mock)
     assert len(calls) == 1
-    _, called_url, body, _ = calls[0]
+    _, called_url, body, headers = calls[0]
     assert str(called_url).endswith("/api/machine/settings/led")
+    # The write goes through the shared GlpAuth.post() helper, so it carries
+    # the cached token (and would retry once on a 401).
+    assert headers["X-GLP-Token"] == "test-token"
     # #109 review fix: state/disco round-trip as the string "true"/"false"
     # (matching what LED_SETTINGS returned them as), not a real JSON bool.
     assert body["state"] == "true"

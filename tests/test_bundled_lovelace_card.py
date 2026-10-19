@@ -31,6 +31,10 @@ def _mock_all_coordinator_endpoints(aioclient_mock, url: str) -> None:
     aioclient_mock.get(f"{url}/api/version", json={})
     aioclient_mock.get(f"{url}/api/live/data", json={})
     aioclient_mock.get(f"{url}/api/machine/status", json={"available": False})
+    # The live coordinator's SSE loop runs as an entry background task. Give
+    # it a defined, immediately-finished stream instead of an unmocked URL
+    # (which would raise and retry every second for the rest of the test).
+    aioclient_mock.get(f"{url}/api/events", text="")
 
 
 async def test_card_registered_as_extra_js_url(hass, aioclient_mock) -> None:
@@ -51,6 +55,10 @@ async def test_card_registered_as_extra_js_url(hass, aioclient_mock) -> None:
         if getattr(route.resource, "canonical", None)
     )
 
+    # Cancel the entry's background SSE task before the cleanup fixture runs.
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
 
 async def test_frontend_registration_is_idempotent_across_entries(hass, aioclient_mock) -> None:
     url1, url2 = "http://glp1.example.com", "http://glp2.example.com"
@@ -69,6 +77,10 @@ async def test_frontend_registration_is_idempotent_across_entries(hass, aioclien
 
     assert hass.data.get(f"{DOMAIN}_frontend_registered") is True
     assert _www_get_route_count(hass) == 2
+
+    for entry in (entry1, entry2):
+        assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
 
 
 async def test_concurrent_entry_setups_register_www_path_once(hass, aioclient_mock) -> None:
@@ -93,3 +105,8 @@ async def test_concurrent_entry_setups_register_www_path_once(hass, aioclient_mo
     assert results == [True, True]
     assert _www_get_route_count(hass) == 2
     assert hass.data.get(f"{DOMAIN}_frontend_registered") is True
+
+    # Cancel the entries' background SSE tasks before the cleanup fixture runs.
+    for entry in (entry1, entry2):
+        assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
