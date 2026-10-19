@@ -15,6 +15,7 @@ URL = "http://glp.example.com"
 def _mock_core(aioclient_mock) -> None:
     aioclient_mock.get(f"{URL}/api/status", json={})
     aioclient_mock.get(f"{URL}/api/token", json={"apiToken": "test-token"})
+    aioclient_mock.get(f"{URL}/shots.json?limit=10", json=[])
     aioclient_mock.get(f"{URL}/shots.json", json=[])
     aioclient_mock.get(f"{URL}/api/maintenance", json={})
     aioclient_mock.get(f"{URL}/api/preheat", json={})

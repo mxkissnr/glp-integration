@@ -24,6 +24,7 @@ def _mock_all_coordinator_endpoints(aioclient_mock, url: str, preheat: dict | No
     to assert on."""
     aioclient_mock.get(f"{url}/api/status", json={})
     aioclient_mock.get(f"{url}/api/token", json={"apiToken": "test-token"})
+    aioclient_mock.get(f"{url}/shots.json?limit=10", json=[])
     aioclient_mock.get(f"{url}/shots.json", json=[])
     aioclient_mock.get(f"{url}/api/maintenance", json={})
     aioclient_mock.get(f"{url}/api/preheat", json=preheat if preheat is not None else {})

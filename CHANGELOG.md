@@ -1,5 +1,9 @@
 # Changelog
 
+## [Unreleased]
+### Fixed
+- **Live brewing curves and the recent-shots list no longer fill the Home Assistant database, the regular poll fetches only the newest shots, and the backup service no longer times out on large backups.** Closes #236, Closes #242
+
 ## [1.33.1] – 2026-10-18
 ### Fixed
 - **The maintenance_done service with a machine id now resets that machine's counter instead of the default machine's.** Refs #234

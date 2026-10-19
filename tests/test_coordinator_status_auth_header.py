@@ -14,6 +14,7 @@ URL = "http://glp.example.com"
 async def test_status_request_carries_auth_token_header(hass, aioclient_mock) -> None:
     aioclient_mock.get(f"{URL}/api/token", json={"apiToken": "test-token"})
     aioclient_mock.get(f"{URL}/api/status", json={"switchEntity": "switch.espresso_plug"})
+    aioclient_mock.get(f"{URL}/shots.json?limit=10", json=[])
     aioclient_mock.get(f"{URL}/shots.json", json=[])
     aioclient_mock.get(f"{URL}/api/maintenance", json={})
     aioclient_mock.get(f"{URL}/api/preheat", json={})

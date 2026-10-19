@@ -147,34 +147,58 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             if coord is None:
                 _LOGGER.error("backup: no GLP coordinator available")
                 return
+            backup_dir  = hass.config.path("glp_backups")
+            filename    = f"glp-backup-{datetime.now().strftime('%Y%m%d-%H%M%S')}.json"
+            backup_path = os.path.join(backup_dir, filename)
+            tmp_path    = f"{backup_path}.tmp"
+
+            def _prepare_backup_file() -> None:
+                os.makedirs(backup_dir, exist_ok=True)
+                with open(tmp_path, "wb"):
+                    pass
+
+            def _write_backup_chunk(chunk: bytes) -> None:
+                with open(tmp_path, "ab") as f:
+                    f.write(chunk)
+
+            def _drop_backup_tmp() -> None:
+                try:
+                    os.remove(tmp_path)
+                except FileNotFoundError:
+                    pass
+
+            def _count_backup_shots() -> int:
+                with open(backup_path, encoding="utf-8") as f:
+                    return len(json.load(f).get("shots", []))
+
             try:
                 async with coord._session.get(
                     f"{coord._url}/api/backup{_machine_query_suffix(call)}",
                     headers=await coord.auth.headers(),
-                    timeout=aiohttp.ClientTimeout(total=30),
+                    # Streaming: no overall body deadline, only socket-level
+                    # timeouts, so a large backup on a slow Pi cannot time out.
+                    timeout=aiohttp.ClientTimeout(total=None, sock_connect=10, sock_read=60),
                 ) as r:
                     r.raise_for_status()
-                    backup_data = await r.json()
+                    await hass.async_add_executor_job(_prepare_backup_file)
+                    try:
+                        async for chunk in r.content.iter_chunked(64 * 1024):
+                            await hass.async_add_executor_job(_write_backup_chunk, chunk)
+                        await hass.async_add_executor_job(os.replace, tmp_path, backup_path)
+                    except Exception:
+                        await hass.async_add_executor_job(_drop_backup_tmp)
+                        raise
             except Exception as err:
                 _LOGGER.error("backup failed: %s", err)
                 raise
 
-            backup_dir  = hass.config.path("glp_backups")
-            filename    = f"glp-backup-{datetime.now().strftime('%Y%m%d-%H%M%S')}.json"
-            backup_path = os.path.join(backup_dir, filename)
-
-            def _write_backup() -> None:
-                os.makedirs(backup_dir, exist_ok=True)
-                with open(backup_path, "w", encoding="utf-8") as f:
-                    json.dump(backup_data, f)
-
-            await hass.async_add_executor_job(_write_backup)
+            shots = await hass.async_add_executor_job(_count_backup_shots)
 
             hass.bus.async_fire(
                 f"{DOMAIN}_backup_created",
                 {
                     "path":  backup_path,
-                    "shots": len(backup_data.get("shots", [])),
+                    "shots": shots,
                 },
             )
 

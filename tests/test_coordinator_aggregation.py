@@ -30,6 +30,7 @@ def _mock_all(
 ) -> None:
     aioclient_mock.get(f"{URL}/api/status", json=status or {})
     aioclient_mock.get(f"{URL}/api/token", json={"apiToken": "test-token"})
+    aioclient_mock.get(f"{URL}/shots.json?limit=10", json=shots or [])
     aioclient_mock.get(f"{URL}/shots.json", json=shots or [])
     if maintenance_status < 400:
         aioclient_mock.get(f"{URL}/api/maintenance", json=maintenance or {})

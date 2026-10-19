@@ -132,6 +132,9 @@ class IsBrewingSensor(GlpEntity[GlpLiveCoordinator], BinarySensorEntity):
     _attr_name = "Brewing"
     _attr_device_class = BinarySensorDeviceClass.RUNNING
     _attr_icon = "mdi:coffee-maker-check-outline"
+    # Live sample data changes every 2 s; keep it out of the recorder (the
+    # bundled cards still read it live from the state machine).
+    _unrecorded_attributes = frozenset({"datapoints", "seq"})
 
     def __init__(self, coordinator: GlpLiveCoordinator, entry: ConfigEntry) -> None:
         super().__init__(coordinator, entry, "is_brewing")
