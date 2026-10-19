@@ -10,8 +10,8 @@ from homeassistant.util import dt as dt_util
 
 from custom_components.gaggiuino_profiler.binary_sensor import IsBrewingSensor
 from custom_components.gaggiuino_profiler.coordinator import GlpDataCoordinator
-from custom_components.gaggiuino_profiler.sensor import GlpSensor
 from custom_components.gaggiuino_profiler.select import GlpProfileSelect
+from custom_components.gaggiuino_profiler.sensor import GlpSensor
 
 URL = "http://glp.example.com"
 
