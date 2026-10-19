@@ -10,6 +10,7 @@ from datetime import timedelta
 
 import aiohttp
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .auth import GlpAuth
@@ -80,6 +81,22 @@ class GlpSettingsCoordinator(DataUpdateCoordinator):
         except Exception as err:
             _LOGGER.debug("GLP machine settings category %s unreachable: %s", category, err)
             return category, None
+
+    async def async_fetch_category(self, category: str) -> dict:
+        """Fetch one settings category fresh, for read-modify-write entities.
+
+        Raises HomeAssistantError instead of returning None-on-failure like
+        the poll does, so a write is aborted rather than built from a stale
+        snapshot when the machine can't be reached.
+        """
+        try:
+            headers = await self.auth.headers()
+            _, payload = await self._fetch_category(headers, category)
+        except Exception as err:
+            raise HomeAssistantError(f"GLP machine settings category {category} unreachable: {err}") from err
+        if payload is None:
+            raise HomeAssistantError(f"GLP machine settings category {category} unavailable")
+        return payload
 
     async def _async_update_data(self) -> dict:
         try:
