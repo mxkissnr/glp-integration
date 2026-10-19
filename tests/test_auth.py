@@ -150,6 +150,7 @@ async def test_data_coordinator_401_on_status_invalidates_cached_token(
 
     with pytest.raises(UpdateFailed):
         await coordinator._async_update_data()
+    await hass.async_block_till_done()
 
     # The stale header is gone, so the next poll fetches the new token.
     assert await coordinator.auth.headers() == {"X-GLP-Token": "new-token"}
