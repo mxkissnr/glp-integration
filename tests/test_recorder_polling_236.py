@@ -39,7 +39,7 @@ def _shot(shot_id: int, timestamp: str) -> dict:
 
 
 def _shot_urls(aioclient_mock) -> list[str]:
-    return [str(r.url) for r in aioclient_mock.request_history]
+    return [str(call[1]) for call in aioclient_mock.mock_calls]
 
 
 def test_live_brewing_attributes_are_unrecorded() -> None:
