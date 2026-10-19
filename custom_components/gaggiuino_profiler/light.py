@@ -1,10 +1,8 @@
 """LED light control for the Gaggiuino machine (#109) -- hass-gaggiuino parity."""
 from __future__ import annotations
 
-import logging
 from typing import Any
 
-import aiohttp
 from homeassistant.components.light import (
     ATTR_EFFECT,
     ATTR_RGB_COLOR,
@@ -14,15 +12,12 @@ from homeassistant.components.light import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .entity import GlpEntity
 from .gaggiuino_bool import coerce_gaggiuino_bool, encode_gaggiuino_bool
 from .settings_coordinator import GlpSettingsCoordinator
-
-_LOGGER = logging.getLogger(__name__)
 
 EFFECT_DISCO = "Disco"
 EFFECT_NONE = "None"
@@ -52,7 +47,6 @@ class GlpLedLight(GlpEntity[GlpSettingsCoordinator], LightEntity):
     def __init__(self, coordinator: GlpSettingsCoordinator, entry: ConfigEntry) -> None:
         _url = (entry.options.get("url") or entry.data["url"]).rstrip("/")
         super().__init__(coordinator, entry, "led", url=_url)
-        self._url = _url
 
     @property
     def suggested_object_id(self) -> str | None:
@@ -106,16 +100,5 @@ class GlpLedLight(GlpEntity[GlpSettingsCoordinator], LightEntity):
         await self._write(payload)
 
     async def _write(self, payload: dict) -> None:
-        session = async_get_clientsession(self.hass)
-        try:
-            async with session.post(
-                f"{self._url}/api/machine/settings/led",
-                json=payload,
-                headers=await self.coordinator.auth.headers(),
-                timeout=aiohttp.ClientTimeout(total=10),
-            ) as r:
-                r.raise_for_status()
-        except Exception as err:
-            _LOGGER.error("Failed to update LED settings: %s", err)
-            raise
+        await self.coordinator.auth.post("/api/machine/settings/led", json=payload)
         await self.coordinator.async_request_refresh()

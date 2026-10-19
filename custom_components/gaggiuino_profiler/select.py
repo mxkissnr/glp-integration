@@ -1,14 +1,10 @@
 """Profile selector for the Gaggiuino machine — replaces ALERTua/hass-gaggiuino."""
 from __future__ import annotations
 
-import logging
-
-import aiohttp
 from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -16,8 +12,6 @@ from .coordinator import GlpDataCoordinator
 from .entity import GlpEntity
 from .machine_coordinator import GlpMachineCoordinator
 from .settings_coordinator import GlpSettingsCoordinator
-
-_LOGGER = logging.getLogger(__name__)
 
 # #109: OperationModeDto enum, transcribed from
 # gaggiuino-local-profiler's lib/gaggiuino-proto.js -- the add-on's
@@ -84,7 +78,6 @@ class GlpProfileSelect(GlpEntity[GlpDataCoordinator], SelectEntity):
         _url = (entry.options.get("url") or entry.data["url"]).rstrip("/")
         super().__init__(coordinator, entry, "profile", url=_url)
         self._machine_coordinator = machine_coordinator
-        self._url = _url
 
     async def async_added_to_hass(self) -> None:
         await super().async_added_to_hass()
@@ -117,18 +110,7 @@ class GlpProfileSelect(GlpEntity[GlpDataCoordinator], SelectEntity):
         return bool(self.options)
 
     async def async_select_option(self, option: str) -> None:
-        session = async_get_clientsession(self.hass)
-        try:
-            async with session.post(
-                f"{self._url}/api/machine/profile/set",
-                json={"option": option},
-                headers=await self.coordinator.auth.headers(),
-                timeout=aiohttp.ClientTimeout(total=10),
-            ) as r:
-                r.raise_for_status()
-        except Exception as err:
-            _LOGGER.error("Failed to set profile %s: %s", option, err)
-            raise
+        await self.coordinator.auth.post("/api/machine/profile/set", json={"option": option})
         # Trigger immediate refresh so the UI reflects the new selection
         await self._machine_coordinator.async_request_refresh()
 
@@ -145,7 +127,6 @@ class GlpOperationModeSelect(GlpEntity[GlpMachineCoordinator], SelectEntity):
     def __init__(self, coordinator: GlpMachineCoordinator, entry: ConfigEntry) -> None:
         _url = (entry.options.get("url") or entry.data["url"]).rstrip("/")
         super().__init__(coordinator, entry, "operation_mode", url=_url)
-        self._url = _url
 
     @property
     def suggested_object_id(self) -> str | None:
@@ -166,18 +147,7 @@ class GlpOperationModeSelect(GlpEntity[GlpMachineCoordinator], SelectEntity):
         return name if name in OPERATION_MODE_OPTIONS else None
 
     async def async_select_option(self, option: str) -> None:
-        session = async_get_clientsession(self.hass)
-        try:
-            async with session.post(
-                f"{self._url}/api/machine/opmode",
-                json={"mode": option},
-                headers=await self.coordinator.auth.headers(),
-                timeout=aiohttp.ClientTimeout(total=10),
-            ) as r:
-                r.raise_for_status()
-        except Exception as err:
-            _LOGGER.error("Failed to set operation mode %s: %s", option, err)
-            raise
+        await self.coordinator.auth.post("/api/machine/opmode", json={"mode": option})
         await self.coordinator.async_request_refresh()
 
 
@@ -194,7 +164,6 @@ class GlpReleaseChannelSelect(GlpEntity[GlpSettingsCoordinator], SelectEntity):
     def __init__(self, coordinator: GlpSettingsCoordinator, entry: ConfigEntry) -> None:
         _url = (entry.options.get("url") or entry.data["url"]).rstrip("/")
         super().__init__(coordinator, entry, "release_channel", url=_url)
-        self._url = _url
 
     @property
     def suggested_object_id(self) -> str | None:
@@ -215,16 +184,5 @@ class GlpReleaseChannelSelect(GlpEntity[GlpSettingsCoordinator], SelectEntity):
     async def async_select_option(self, option: str) -> None:
         payload = dict(self._settings())
         payload["releaseChannel"] = _RELEASE_CHANNEL_BY_NAME[option]
-        session = async_get_clientsession(self.hass)
-        try:
-            async with session.post(
-                f"{self._url}/api/machine/settings/system",
-                json=payload,
-                headers=await self.coordinator.auth.headers(),
-                timeout=aiohttp.ClientTimeout(total=10),
-            ) as r:
-                r.raise_for_status()
-        except Exception as err:
-            _LOGGER.error("Failed to set release channel %s: %s", option, err)
-            raise
+        await self.coordinator.auth.post("/api/machine/settings/system", json=payload)
         await self.coordinator.async_request_refresh()
