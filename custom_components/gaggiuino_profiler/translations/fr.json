@@ -10,7 +10,8 @@
       }
     },
     "error": {
-      "cannot_connect": "Impossible de se connecter à GLP. Vérifiez l'URL et assurez-vous que l'application est en cours d'exécution."
+      "cannot_connect": "Impossible de se connecter à GLP. Vérifiez l'URL et assurez-vous que l'application est en cours d'exécution.",
+      "invalid_url": "L'URL doit commencer par http:// ou https://."
     },
     "abort": {
       "already_configured": "Cette instance GLP est déjà configurée."
@@ -25,6 +26,10 @@
           "scan_interval": "Intervalle d'interrogation (secondes)"
         }
       }
+    },
+    "error": {
+      "invalid_url": "L'URL doit commencer par http:// ou https://.",
+      "cannot_connect": "Impossible de se connecter à GLP. Vérifiez l'URL et assurez-vous que l'application est en cours d'exécution."
     }
   }
 }

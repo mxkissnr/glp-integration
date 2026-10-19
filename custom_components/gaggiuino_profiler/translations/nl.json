@@ -10,7 +10,8 @@
       }
     },
     "error": {
-      "cannot_connect": "Kan geen verbinding maken met GLP. Controleer de URL en zorg dat de app actief is."
+      "cannot_connect": "Kan geen verbinding maken met GLP. Controleer de URL en zorg dat de app actief is.",
+      "invalid_url": "De URL moet beginnen met http:// of https://."
     },
     "abort": {
       "already_configured": "Deze GLP-instantie is al geconfigureerd."
@@ -25,6 +26,10 @@
           "scan_interval": "Pollinterval (seconden)"
         }
       }
+    },
+    "error": {
+      "invalid_url": "De URL moet beginnen met http:// of https://.",
+      "cannot_connect": "Kan geen verbinding maken met GLP. Controleer de URL en zorg dat de app actief is."
     }
   }
 }

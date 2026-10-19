@@ -10,7 +10,8 @@
       }
     },
     "error": {
-      "cannot_connect": "Impossibile connettersi a GLP. Controlla l'URL e assicurati che l'app sia in esecuzione."
+      "cannot_connect": "Impossibile connettersi a GLP. Controlla l'URL e assicurati che l'app sia in esecuzione.",
+      "invalid_url": "L'URL deve iniziare con http:// o https://."
     },
     "abort": {
       "already_configured": "Questa istanza GLP è già configurata."
@@ -25,6 +26,10 @@
           "scan_interval": "Intervallo di polling (secondi)"
         }
       }
+    },
+    "error": {
+      "invalid_url": "L'URL deve iniziare con http:// o https://.",
+      "cannot_connect": "Impossibile connettersi a GLP. Controlla l'URL e assicurati che l'app sia in esecuzione."
     }
   }
 }
