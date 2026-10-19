@@ -3,7 +3,7 @@ profiler#620) -- unlike GlpUpdateEntity (app self-update, deliberately
 install-less, see test_update.py), this entity supports INSTALL by proxying
 to the machine's own OTA endpoint, so it needs its own async_install
 coverage."""
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from homeassistant.components.update import UpdateEntityFeature
@@ -31,7 +31,7 @@ _UNSET = object()
 def _make_entity(data=_UNSET):
     coordinator = MagicMock()
     coordinator.data = _DEFAULT_DATA if data is _UNSET else data
-    coordinator.auth.headers = AsyncMock(return_value={"X-GLP-Token": "test-token"})
+    coordinator.auth.post = AsyncMock()
     coordinator.async_request_refresh = AsyncMock()
     entity = GlpMachineFirmwareUpdate(coordinator, _make_entry())
     entity.hass = MagicMock()
@@ -103,40 +103,19 @@ def test_suggested_object_id_is_stable_key_not_display_name():
 @pytest.mark.asyncio
 async def test_async_install_posts_to_firmware_update_endpoint_and_refreshes():
     entity, coordinator = _make_entity()
-    mock_response = MagicMock()
-    mock_response.raise_for_status = MagicMock()
-    mock_post_cm = MagicMock()
-    mock_post_cm.__aenter__ = AsyncMock(return_value=mock_response)
-    mock_post_cm.__aexit__ = AsyncMock(return_value=False)
-    mock_session = MagicMock()
-    mock_session.post = MagicMock(return_value=mock_post_cm)
 
-    with patch(
-        "custom_components.gaggiuino_profiler.update.async_get_clientsession",
-        return_value=mock_session,
-    ):
-        await entity.async_install(version=None, backup=False)
+    await entity.async_install(version=None, backup=False)
 
-    mock_session.post.assert_called_once()
-    call_args = mock_session.post.call_args
-    assert call_args.args[0] == "http://glp.local:8099/api/machine/firmware/update"
-    assert call_args.kwargs["headers"] == {"X-GLP-Token": "test-token"}
+    coordinator.auth.post.assert_awaited_once_with("/api/machine/firmware/update", json={})
     coordinator.async_request_refresh.assert_awaited_once()
 
 
 @pytest.mark.asyncio
-async def test_async_install_raises_and_logs_on_failure():
+async def test_async_install_raises_and_does_not_refresh_on_failure():
     entity, coordinator = _make_entity()
-    mock_session = MagicMock()
-    mock_session.post = MagicMock(side_effect=RuntimeError("connection refused"))
+    coordinator.auth.post = AsyncMock(side_effect=RuntimeError("connection refused"))
 
-    with (
-        patch(
-            "custom_components.gaggiuino_profiler.update.async_get_clientsession",
-            return_value=mock_session,
-        ),
-        pytest.raises(RuntimeError),
-    ):
+    with pytest.raises(RuntimeError):
         await entity.async_install(version=None, backup=False)
 
     coordinator.async_request_refresh.assert_not_awaited()
