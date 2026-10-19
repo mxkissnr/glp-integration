@@ -190,6 +190,8 @@ class GlpMachineNumber(GlpEntity[GlpSettingsCoordinator], NumberEntity):
 
     @property
     def available(self) -> bool:
+        if not super().available:
+            return False
         return bool(self._settings())
 
     @property
@@ -202,16 +204,28 @@ class GlpMachineNumber(GlpEntity[GlpSettingsCoordinator], NumberEntity):
         return value if isinstance(value, (int, float)) else None
 
     async def async_set_native_value(self, value: float) -> None:
-        payload = dict(self._settings())
+        category = self.entity_description.category
+        # Built from a fresh GET, not the up-to-30 s-old snapshot, so a change
+        # made on the machine's touchscreen isn't overwritten.
+        payload = dict(await self.coordinator.async_fetch_category(category))
         path = self.entity_description.data_path
+        current = payload
+        for part in path:
+            current = current.get(part) if isinstance(current, dict) else None
+
+        step = self.entity_description.native_step
+        if (step is not None and float(step).is_integer()) or isinstance(current, int):
+            new_value: float | int = int(value)
+        else:
+            new_value = value
+
         if len(path) == 1:
-            payload[path[0]] = value
+            payload[path[0]] = new_value
         else:
             parent_key, child_key = path
             parent = dict(payload.get(parent_key) or {})
-            parent[child_key] = value
+            parent[child_key] = new_value
             payload[parent_key] = parent
 
-        category = self.entity_description.category
         await self.coordinator.auth.post(f"/api/machine/settings/{category}", json=payload)
         await self.coordinator.async_request_refresh()

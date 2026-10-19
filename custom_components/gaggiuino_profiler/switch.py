@@ -123,6 +123,8 @@ class GlpMachineSwitch(GlpEntity[GlpSettingsCoordinator], SwitchEntity):
 
     @property
     def available(self) -> bool:
+        if not super().available:
+            return False
         return bool(self._settings())
 
     @property
@@ -139,9 +141,10 @@ class GlpMachineSwitch(GlpEntity[GlpSettingsCoordinator], SwitchEntity):
         await self._write(False)
 
     async def _write(self, value: bool) -> None:
-        payload = dict(self._settings())
+        category = self.entity_description.category
+        # Fresh GET rather than the up-to-30 s-old snapshot (see number.py).
+        payload = dict(await self.coordinator.async_fetch_category(category))
         data_key = self.entity_description.data_key
         payload[data_key] = encode_gaggiuino_bool(value, like=payload.get(data_key))
-        category = self.entity_description.category
         await self.coordinator.auth.post(f"/api/machine/settings/{category}", json=payload)
         await self.coordinator.async_request_refresh()

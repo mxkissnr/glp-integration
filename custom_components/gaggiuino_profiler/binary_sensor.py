@@ -210,6 +210,8 @@ class SteamSwitchSensor(GlpEntity[GlpMachineCoordinator], BinarySensorEntity):
 
     @property
     def available(self) -> bool:
+        if not super().available:
+            return False
         return bool(self.coordinator.data)
 
     @property
@@ -237,6 +239,8 @@ class GlpMachineBinarySensor(GlpEntity[GlpMachineCoordinator], BinarySensorEntit
 
     @property
     def available(self) -> bool:
+        if not super().available:
+            return False
         return bool(self.coordinator.data)
 
     @property
@@ -269,6 +273,8 @@ class GlpAdditionalMachineReachableSensor(GlpAdditionalMachineEntity[GlpDataCoor
 
     @property
     def available(self) -> bool:
+        if not super().available:
+            return False
         return self._machine() is not None
 
     @property
