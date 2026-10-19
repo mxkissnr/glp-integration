@@ -130,7 +130,7 @@ class GlpProfileSelect(GlpEntity[GlpDataCoordinator], SelectEntity):
             _LOGGER.error("Failed to set profile %s: %s", option, err)
             raise
         # Trigger immediate refresh so the UI reflects the new selection
-        await self.coordinator.async_request_refresh()
+        await self._machine_coordinator.async_request_refresh()
 
 
 class GlpOperationModeSelect(GlpEntity[GlpMachineCoordinator], SelectEntity):

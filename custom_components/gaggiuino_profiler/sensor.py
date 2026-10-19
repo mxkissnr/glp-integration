@@ -388,6 +388,10 @@ async def async_setup_entry(
 
 
 class GlpSensor(GlpEntity[GlpDataCoordinator], SensorEntity):
+    # Curves and the machine registry change with every poll; keeping them out
+    # of the recorder avoids a new, growing attributes row every refresh.
+    _unrecorded_attributes = frozenset({"recent_shots", "machines"})
+
     def __init__(
         self,
         coordinator: GlpDataCoordinator,

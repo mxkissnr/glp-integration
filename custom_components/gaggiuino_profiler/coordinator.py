@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from datetime import UTC, datetime, timedelta
 
@@ -66,6 +67,60 @@ class GlpDataCoordinator(DataUpdateCoordinator):
         # whenever it can't reach the machine -- without this the firmware
         # update entity flips to "Unknown" on every brief outage.
         self._last_firmware: dict = {}
+        # None until the app proves it supports /shots.json?limit and
+        # X-Shots-Today; False switches all later polls to the full list.
+        self._shots_limit_supported: bool | None = None
+
+    async def _fetch_status(self, headers: dict) -> dict:
+        async with self._session.get(
+            f"{self._url}/api/status", headers=headers, timeout=aiohttp.ClientTimeout(total=10)
+        ) as r:
+            r.raise_for_status()
+            return await r.json()
+
+    async def _fetch_shots_request(self, headers: dict, *, limited: bool) -> tuple[list, str | None]:
+        path = "/shots.json?limit=10" if limited else "/shots.json"
+        async with self._session.get(
+            f"{self._url}{path}", headers=headers, timeout=aiohttp.ClientTimeout(total=10)
+        ) as r:
+            r.raise_for_status()
+            return await r.json(), r.headers.get("X-Shots-Today")
+
+    async def _fetch_shots(self, headers: dict) -> tuple[list, int | None]:
+        limited = self._shots_limit_supported is not False
+        shots, header = await self._fetch_shots_request(headers, limited=limited)
+        if header is not None:
+            try:
+                return shots, int(header)
+            except (TypeError, ValueError):
+                pass
+        # Older app (no X-Shots-Today / limit support): keep counting the full
+        # list client-side, and request it without limit from now on. Re-fetch
+        # once now so the very first shots_today value is already correct.
+        self._shots_limit_supported = False
+        if limited:
+            shots, _ = await self._fetch_shots_request(headers, limited=False)
+        return shots, None
+
+    async def _fetch_optional(
+        self,
+        headers: dict,
+        path: str,
+        default,
+        *,
+        timeout: int = 10,
+        status_ok_only: bool = False,
+    ):
+        try:
+            async with self._session.get(
+                f"{self._url}{path}", headers=headers, timeout=aiohttp.ClientTimeout(total=timeout)
+            ) as r:
+                if status_ok_only:
+                    return await r.json() if r.status < 400 else default
+                r.raise_for_status()
+                return await r.json()
+        except Exception:
+            return default
 
     async def _async_update_data(self) -> dict:
         try:
@@ -78,76 +133,39 @@ class GlpDataCoordinator(DataUpdateCoordinator):
             # reaches machine_status's attributes, so the bundled Lovelace
             # cards can never detect the machine being off or show the power
             # toggle.
-            async with self._session.get(
-                f"{self._url}/api/status", headers=headers, timeout=aiohttp.ClientTimeout(total=10)
-            ) as r:
-                r.raise_for_status()
-                status = await r.json()
 
-            async with self._session.get(
-                f"{self._url}/shots.json", headers=headers, timeout=aiohttp.ClientTimeout(total=10)
-            ) as r:
-                r.raise_for_status()
-                shots = await r.json()
-
+            # All independent GETs run concurrently; /api/status and
+            # /shots.json stay mandatory (UpdateFailed), the rest keep their
+            # per-request fallbacks.
+            (
+                status,
+                (shots, shots_today_header),
+                maintenance,
+                preheat,
+                profiles_data,
+                menu_items,
+                version_info,
+                firmware_info,
+            ) = await asyncio.gather(
+                self._fetch_status(headers),
+                self._fetch_shots(headers),
+                self._fetch_optional(headers, "/api/maintenance", {}),
+                self._fetch_optional(headers, "/api/preheat", {}),
+                self._fetch_optional(headers, "/api/machine/profiles", {}),
+                self._fetch_optional(headers, "/api/menu", [], timeout=5, status_ok_only=True),
+                self._fetch_optional(headers, "/api/version", {}, status_ok_only=True),
+                # Machine firmware update check (#125, gaggiuino-local-profiler#620
+                # Phase 1). 501 on a non-Gaggiuino adapter (e.g. GaggiMate, no
+                # settingsProxy support) or any other failure both fall back to {},
+                # same "no data -> entity goes unavailable" pattern used elsewhere
+                # in this coordinator.
+                self._fetch_optional(
+                    headers, "/api/machine/firmware/version", {}, status_ok_only=True
+                ),
+            )
         except Exception as err:
             raise UpdateFailed(f"GLP unreachable: {err}") from err
 
-        try:
-            async with self._session.get(
-                f"{self._url}/api/maintenance", headers=headers, timeout=aiohttp.ClientTimeout(total=10)
-            ) as r:
-                r.raise_for_status()
-                maintenance = await r.json()
-        except Exception:
-            maintenance = {}
-
-        try:
-            async with self._session.get(
-                f"{self._url}/api/preheat", headers=headers, timeout=aiohttp.ClientTimeout(total=10)
-            ) as r:
-                r.raise_for_status()
-                preheat = await r.json()
-        except Exception:
-            preheat = {}
-
-        try:
-            async with self._session.get(
-                f"{self._url}/api/machine/profiles", headers=headers, timeout=aiohttp.ClientTimeout(total=10)
-            ) as r:
-                r.raise_for_status()
-                profiles_data = await r.json()
-        except Exception:
-            profiles_data = {}
-
-        try:
-            async with self._session.get(
-                f"{self._url}/api/menu", headers=headers, timeout=aiohttp.ClientTimeout(total=5)
-            ) as r:
-                menu_items = await r.json() if r.status < 400 else []
-        except Exception:
-            menu_items = []
-
-        try:
-            async with self._session.get(
-                f"{self._url}/api/version", headers=headers, timeout=aiohttp.ClientTimeout(total=10)
-            ) as r:
-                version_info = await r.json() if r.status < 400 else {}
-        except Exception:
-            version_info = {}
-
-        # Machine firmware update check (#125, gaggiuino-local-profiler#620
-        # Phase 1). 501 on a non-Gaggiuino adapter (e.g. GaggiMate, no
-        # settingsProxy support) or any other failure both fall back to {},
-        # same "no data -> entity goes unavailable" pattern used elsewhere
-        # in this coordinator.
-        try:
-            async with self._session.get(
-                f"{self._url}/api/machine/firmware/version", headers=headers, timeout=aiohttp.ClientTimeout(total=10)
-            ) as r:
-                firmware_info = await r.json() if r.status < 400 else {}
-        except Exception:
-            firmware_info = {}
         drink_lookup: dict[str, str] = {
             m["id"]: f"{m.get('emoji', '')} {m['name']}".strip()
             for m in menu_items if m.get("id") and m.get("name")
@@ -179,11 +197,16 @@ class GlpDataCoordinator(DataUpdateCoordinator):
 
         now_local  = dt_util.now()
         today_date = now_local.date()
-        shots_today = sum(
-            1 for s in shots
-            if (ts := _parse_ts(s.get("timestamp"))) is not None
-            and ts.astimezone(now_local.tzinfo).date() == today_date
-        )
+        # X-Shots-Today counts in the app's local timezone, the fallback below
+        # counts in HA's timezone. On a standard HA OS install both are the same.
+        if shots_today_header is not None:
+            shots_today = shots_today_header
+        else:
+            shots_today = sum(
+                1 for s in shots
+                if (ts := _parse_ts(s.get("timestamp"))) is not None
+                and ts.astimezone(now_local.tzinfo).date() == today_date
+            )
 
         data = {
             # #667: machine_reachable is False is the strongest, most direct signal
