@@ -135,7 +135,7 @@ theme: ember-espresso
 | `glp_url` | URL des GLP-Apps auf Port 8099. Nur nötig, wenn die Karte außerhalb von Home Assistant verwendet wird oder die Ingress-Erkennung nicht greift. | *(automatisch — HA-Ingress)* |
 | `glp_token` | API-Token des GLP-Apps für den Direkt-URL-Modus, in dem die Karte selbst keinen Token holen kann. | *(keiner)* |
 | `switch_entity` | Switch-Entity der Maschine. Solange sie `off` oder `unavailable` meldet, zeigt die Karte die Ansicht "Maschine aus". | *(automatisch — aus dem Attribut `switch_entity` des `machine_status`-Sensors)* |
-| `machine` | Name oder ID einer Maschine aus der Multi-Machine-Registry des Apps. Legt fest, welches `*_machine_status`-Entity die `switch_entity` liefert, versieht jede Bestellung mit dem Maschinennamen und begrenzt das Maschinen-Thema darauf. | *(automatisch — erste gefundene Maschine)* |
+| `machine` | Name oder ID einer Maschine aus der Multi-Machine-Registry des Apps. Legt fest, welches `*_machine_status`-Entity die `switch_entity` liefert, versieht jede Bestellung mit dem Maschinennamen und begrenzt das Maschinen-Thema darauf. | *(automatisch — erste Maschine mit "Gaggiuino" im Namen, sonst die erste gefundene)* |
 | `new_badge_days` | Wie viele Tage ein neu hinzugefügtes Menü-Item sein NEW-Badge behält. | `7` |
 | `theme` | Eines der acht Farb-Presets weiter unten. Färbt den Bestell-Button, die Auswahl-Hervorhebungen und das Maschinen-Icon. | *(keine — `--primary-color` des Home-Assistant-Themes)* |
 | `accent_color` | Eigene, einfarbige Akzentfarbe als `#rrggbb` statt eines Presets. Überschreibt `theme`. Werte, die keine sechsstellige Hex-Farbe sind, werden ignoriert. | *(keine)* |

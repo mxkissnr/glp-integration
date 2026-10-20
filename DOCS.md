@@ -135,7 +135,7 @@ theme: ember-espresso
 | `glp_url` | URL of the GLP app on port 8099. Only needed when the card is used outside Home Assistant or ingress auto-detection doesn't apply. | *(auto — HA ingress)* |
 | `glp_token` | API token of the GLP app, for direct-URL mode where the card cannot fetch one itself. | *(none)* |
 | `switch_entity` | Switch entity of the machine. The card shows an "off" view while it reports `off` or `unavailable`. | *(auto — from the `machine_status` sensor's `switch_entity` attribute)* |
-| `machine` | Name or id of one machine from the app's multi-machine registry. Selects which machine's `*_machine_status` entity provides `switch_entity`, tags each placed order with the machine name, and scopes the machine theme. | *(auto — first machine found)* |
+| `machine` | Name or id of one machine from the app's multi-machine registry. Selects which machine's `*_machine_status` entity provides `switch_entity`, tags each placed order with the machine name, and scopes the machine theme. | *(auto — first Gaggiuino-named machine, else the first one found)* |
 | `new_badge_days` | How many days a newly added menu item keeps its NEW badge. | `7` |
 | `theme` | One of the eight colour presets below. Colours the order button, the selection highlights and the machine icon. | *(none — Home Assistant's `--primary-color`)* |
 | `accent_color` | Custom flat accent colour as `#rrggbb`, instead of a preset. Overrides `theme`. Values that aren't a six-digit hex colour are ignored. | *(none)* |
