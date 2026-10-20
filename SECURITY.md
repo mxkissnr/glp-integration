@@ -60,8 +60,8 @@ and these requests through the integration proxy, using
 The Order Card uses the same proxy in zero-config mode (`hass.fetchWithAuth`)
 for `api/orders/menu`, `api/orders/settings`, `api/orders/queue-eta`,
 `api/orders/active-beans`, `api/orders/mine`, `api/shots/<id>` and
-`POST api/orders` plus `POST api/orders/<id>/<action>` — the card's `api/`
-prefix is rewritten to `/api/glp/`. With an explicit
+`POST api/orders` to place an order — the card's `api/` prefix is rewritten
+to `/api/glp/`. With an explicit
 `glp_url` it talks to the app directly instead, sending `X-GLP-Token` from
 the `glp_token` YAML option or from the app's `/api/token` endpoint.
 
