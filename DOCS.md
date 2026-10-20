@@ -33,7 +33,7 @@ The integration tests the connection right away during setup.
 
 The GLP Shot Card ships inside this integration and is registered automatically as a dashboard resource on setup — no separate HACS install or manual resource config needed. Add a card with `type: custom:glp-card` to your dashboard after installing this integration. The source lives in [`cards/shot/`](cards/shot/).
 
-![GLP Shot Card showing a preheated machine, the current profile, live machine tiles and the last shot with its pressure, flow, temperature and weight curve](cards/shot/docs/screenshots/card.png)
+<img src="cards/shot/docs/screenshots/card.png" width="420" alt="GLP Shot Card showing a preheated machine, the current profile, live machine tiles and the last shot with its pressure, flow, temperature and weight curve"/>
 
 Minimal configuration — the entity prefix is detected from the `*_machine_status` entity the integration creates:
 
@@ -108,7 +108,7 @@ The card follows the language of the logged-in Home Assistant user, falling back
 
 The GLP Order Card ships inside this integration the same way and is registered automatically as a dashboard resource on setup. Add a card with `type: custom:glp-order-card` to your dashboard after installing this integration. The source lives in [`cards/order/`](cards/order/).
 
-![GLP Order Card showing the drink menu, a selected bean-library variant with its taste notes, origin and process, and the order button](cards/order/docs/screenshots/card.png)
+<img src="cards/order/docs/screenshots/card.png" width="360" alt="GLP Order Card showing the drink menu, a selected bean-library variant with its taste notes, origin and process, and the order button"/>
 
 Minimal configuration — no options are needed in a standard Home Assistant setup:
 

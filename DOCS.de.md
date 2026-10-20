@@ -33,7 +33,7 @@ Die Integration testet die Verbindung direkt beim Einrichten.
 
 Die GLP Shot Card ist Teil dieser Integration und wird beim Einrichten automatisch als Dashboard-Ressource registriert — keine separate HACS-Installation oder manuelle Ressourcenkonfiguration nötig. Einfach eine Karte mit `type: custom:glp-card` zum Dashboard hinzufügen, nachdem diese Integration installiert ist. Der Quellcode liegt in [`cards/shot/`](cards/shot/).
 
-![GLP Shot Card mit vorgeheizter Maschine, aktuellem Profil, Live-Kacheln und dem letzten Shot samt Druck-, Flow-, Temperatur- und Gewichtskurve](cards/shot/docs/screenshots/card.png)
+<img src="cards/shot/docs/screenshots/card.png" width="420" alt="GLP Shot Card mit vorgeheizter Maschine, aktuellem Profil, Live-Kacheln und dem letzten Shot samt Druck-, Flow-, Temperatur- und Gewichtskurve"/>
 
 Minimale Konfiguration — das Entity-Präfix wird aus dem `*_machine_status`-Entity erkannt, das die Integration anlegt:
 
@@ -108,7 +108,7 @@ Die Karte folgt der Sprache des angemeldeten Home-Assistant-Benutzers und fällt
 
 Die GLP Order Card ist auf dieselbe Weise Teil dieser Integration und wird beim Einrichten automatisch als Dashboard-Ressource registriert. Einfach eine Karte mit `type: custom:glp-order-card` zum Dashboard hinzufügen, nachdem diese Integration installiert ist. Der Quellcode liegt in [`cards/order/`](cards/order/).
 
-![GLP Order Card mit Getränkemenü, einer gewählten Bohnen-Variante samt Geschmacksnoten, Herkunft und Aufbereitung und dem Bestell-Button](cards/order/docs/screenshots/card.png)
+<img src="cards/order/docs/screenshots/card.png" width="360" alt="GLP Order Card mit Getränkemenü, einer gewählten Bohnen-Variante samt Geschmacksnoten, Herkunft und Aufbereitung und dem Bestell-Button"/>
 
 Minimale Konfiguration — in einem Standard-Home-Assistant-Setup sind keine Optionen nötig:
 
