@@ -218,9 +218,13 @@ export class GlpSheet {
   private _historyPushed = false;
   private _cleanup: Array<() => void> = [];
   private _dragCleanup: Array<() => void> = [];
-  // A close that is still sliding out, if any. open() settles it first, so a
-  // re-open can never be wiped by the previous close's transition timer.
-  private _pendingClose: (() => void) | null = null;
+  // A close that is still sliding out, if any, taking whether it should trim
+  // the history entry. open() settles it first, so a re-open can never be
+  // wiped by the previous close's transition timer.
+  private _pendingClose: ((trimHistory: boolean) => void) | null = null;
+  // Bumped on every open, so a slide-out timer from an earlier close cannot
+  // touch the DOM of a sheet that was reopened since.
+  private _generation = 0;
 
   constructor(root: HTMLElement | ShadowRoot, options: GlpSheetOptions = {}) {
     this._root = root;
@@ -244,7 +248,11 @@ export class GlpSheet {
       this.refresh();
       return;
     }
-    this._settleClose();
+    // Reopening while the last close is still sliding out keeps its entry:
+    // back() and pushState are both asynchronous, so trimming and re-pushing
+    // here would race and could leave the dashboard off by one entry.
+    const reuseEntry = this._pendingClose !== null && this._historyPushed;
+    this._settleClose(reuseEntry);
     if (!this._root || typeof this._root.appendChild !== 'function') return;
     if (!this._host) {
       this._host = this._doc.createElement('div');
@@ -253,7 +261,8 @@ export class GlpSheet {
     }
     this._open = true;
     this._expanded = false;
-    this._historyPushed = false;
+    this._historyPushed = reuseEntry;
+    this._generation += 1;
     this._render();
     const dialog = this._dialog;
     if (dialog) {
@@ -267,7 +276,7 @@ export class GlpSheet {
     }
     this._playEnter();
     this._listen();
-    this._pushHistory();
+    if (!reuseEntry) this._pushHistory();
   }
 
   close(): void {
@@ -379,22 +388,26 @@ export class GlpSheet {
     // instead of leaving one behind and letting the close call back() too.
     this._detachDrag();
     this._settleClose();
-    const finish = (): void => {
-      if (this._pendingClose !== finish) return;
-      this._finishClose(trimHistory);
+    let pending = true;
+    const finish = (trim: boolean): void => {
+      if (!pending) return;
+      pending = false;
       this._pendingClose = null;
+      this._finishClose(trim);
     };
     this._pendingClose = finish;
-    this._animateOut(finish);
+    this._animateOut(() => finish(trimHistory));
   }
 
   // Immediately completes a close that is still sliding out, so its timer
-  // cannot tear down a sheet that was reopened in the meantime.
-  private _settleClose(): void {
+  // cannot tear down a sheet that was reopened in the meantime. With
+  // `reuseHistory` the entry the closing sheet still owns is kept for the
+  // re-open instead of being trimmed.
+  private _settleClose(reuseHistory = false): void {
     const pending = this._pendingClose;
     if (!pending) return;
-    pending();
     this._pendingClose = null;
+    pending(!reuseHistory);
   }
 
   private _finishClose(trimHistory: boolean): void {
@@ -432,6 +445,7 @@ export class GlpSheet {
     const startY = Math.max(0, _translateY(panel));
     const distance = Math.max(1, height - startY);
     const duration = Math.max(SHEET_OUT_MIN_MS, Math.round(SHEET_OUT_MS * (distance / Math.max(1, height))));
+    const generation = this._generation;
     panel.style.transition = 'none';
     if (height > 0) panel.style.height = `${Math.round(height)}px`;
     panel.style.transform = startY > 0 ? `translateY(${Math.round(startY)}px)` : '';
@@ -443,7 +457,7 @@ export class GlpSheet {
       finished = true;
       if (timer) clearTimeout(timer);
       panel.removeEventListener('transitionend', onEnd);
-      this._resetPanelStyles();
+      if (generation === this._generation) this._resetPanelStyles();
       done();
     };
     const onEnd = (e: Event): void => { if (e.target === panel) finish(); };

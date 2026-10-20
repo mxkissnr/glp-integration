@@ -30,14 +30,18 @@ Object.defineProperty(globalThis, 'customElements', {
 Object.defineProperty(globalThis, 'navigator', {
   value: window.navigator, configurable: true, writable: true,
 });
-// Pin the phone/desktop breakpoint off: these tests cover the controller's
-// state machine, not the drag gesture, and a non-phone window keeps every
-// close synchronous (no slide-out timer between the call and its assertions).
+// The phone/desktop breakpoint, off by default: these tests cover the
+// controller's state machine, not the drag gesture, and a non-phone window
+// keeps every close synchronous (no slide-out timer between the call and its
+// assertions). One test opts into phone mode to exercise that slide-out.
+let phoneMode = false;
 Object.defineProperty(window, 'matchMedia', {
   configurable: true,
   writable: true,
   value: (query) => ({
-    matches: false, media: query, onchange: null,
+    matches: phoneMode && query.includes('max-width: 899px'),
+    media: query,
+    onchange: null,
     addEventListener() {}, removeEventListener() {},
     addListener() {}, removeListener() {}, dispatchEvent() { return false; },
   }),
@@ -361,6 +365,31 @@ test('reopening works, keeps one history entry and does not double listeners', (
   assert.equal(closed, 2);
   assert.equal(sheet.isOpen, false);
   assert.equal(history.back, 1, 'reopen must not add a back() of its own here');
+});
+
+test('reopening mid-slide-out keeps the one history entry instead of racing back()', (t) => {
+  const history = spyHistory();
+  spyShowModal();
+  const root = newRoot(t);
+  const sheet = makeSheet(t, root);
+  phoneMode = true;
+  t.after(() => { phoneMode = false; });
+
+  sheet.open(content('First'));
+  assert.equal(history.push, 1);
+  // On a phone the close animates, so the entry is only removed at the end.
+  sheet.close();
+  assert.equal(history.back, 0, 'the slide-out has not finished yet');
+
+  // Reopening before it finishes must not trim-and-re-push: back() and
+  // pushState are asynchronous, so that would leave the dashboard off by one.
+  sheet.open(content('Second'));
+  assert.equal(sheet.isOpen, true);
+  assert.equal(root.querySelector('.glp-sheet-title').textContent, 'Second');
+  assert.equal(history.push, 1, 'the kept entry is reused');
+  assert.equal(root.querySelector('dialog').hasAttribute('open'), true);
+
+  sheet.close();
 });
 
 test('opening while open refreshes instead of stacking a second entry', (t) => {
