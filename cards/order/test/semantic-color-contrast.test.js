@@ -2,8 +2,8 @@
 // --glp-ok/--glp-warn/--glp-err (by --glp-bg luminance) and --glp-accent-text
 // (by the DARKER of --glp-accent-start/--glp-accent-end's luminance,
 // independently — see #62's machine colour theme) — not just that the
-// method exists. Loads the real glp-order-card.js through the shared
-// test/helpers/load-card.cjs harness with a minimal fake DOM (style objects
+// method exists. Loads the real class from src/glp-order-card.ts through the
+// shared test/helpers/load-card.cjs harness with a minimal fake DOM (style objects
 // backed by a plain Map, no real CSS engine) sufficient to drive the method
 // end-to-end:
 // getComputedStyle(this).getPropertyValue('--glp-bg') reads back a

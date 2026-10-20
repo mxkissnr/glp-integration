@@ -1,7 +1,7 @@
-// Machine colour theme config tests (#62). Loads the real glp-order-card.js
-// through the shared test/helpers/load-card.cjs harness so _resolveTheme()/
-// _applyThemeVars()/_machineGlyphHtml() can be exercised directly against the
-// real, shipped code — not a re-implementation.
+// Machine colour theme config tests (#62). Loads the real class from
+// src/glp-order-card.ts through the shared test/helpers/load-card.cjs harness
+// so _resolveTheme()/_applyThemeVars()/_machineGlyphHtml() can be exercised
+// directly against the real, shipped code — not a re-implementation.
 'use strict';
 
 const test = require('node:test');

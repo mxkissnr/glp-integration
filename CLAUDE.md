@@ -57,7 +57,7 @@ than patching it after installs are already affected.
 - **Lint:** `ruff check .` (config in `pyproject.toml`: `target-version = "py313"`,
   `line-length = 120`, rule sets `E, F, I, UP, B`). Both are enforced in CI
   (`.github/workflows/validate.yml`), alongside HACS, Hassfest and the "Cards" job
-  (lint, typecheck, tests and bundle check for `cards/`).
+  (lint, typecheck, tests and bundle check for `cards/` — see `cards/CLAUDE.md`).
 - Add a regression test for every bug fix, following the existing pattern in
   `tests/` (one `test_*.py` per feature/fix area, e.g.
   `test_sensor_suggested_object_id.py`, `test_orders_api_path_traversal.py`).

@@ -13,6 +13,7 @@
 - **After the app gets a new API token, for example after a restore, the integration picks it up by itself instead of failing until Home Assistant restarts, and failed controls show a readable error.** Refs #235
 
 ### Documentation
+- **The contributor and security docs now cover the bundled cards and how to test them.** Refs #256
 - **The documentation now describes the Machine Status error state, the real shot-completed event fields, the settings poll and the current licence wording.** Refs #240
 - **The integration documentation now covers both bundled cards, their options and languages.** Refs #256
 

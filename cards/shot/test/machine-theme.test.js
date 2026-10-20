@@ -1,6 +1,6 @@
 // Per-machine colour theme config tests (#87). Card loaded via the shared
-// test helper (test/helpers/load-card.cjs), which evaluates the real
-// glp-card.js and exposes GlpCard so _resolveMachineTheme()/
+// test helper (test/helpers/load-card.cjs), which imports src/glp-card.ts and
+// returns its exported GlpCard class, so _resolveMachineTheme()/
 // _applyMachineTheme() can be exercised directly, without a full
 // custom-element/shadow-DOM harness.
 'use strict';
@@ -28,10 +28,9 @@ function makeInstance(config, hass) {
   return inst;
 }
 
-// THEME_PRESETS/the vm sandbox live in a separate realm from this test file,
-// so a plain object literal here is never reference-equal to one returned
-// from across the realm boundary (assert.deepEqual's prototype check fails
-// even when the values match) — compare the two fields directly instead.
+// Compare the two fields directly instead of deep-equal on the returned
+// preset object: the assertion stays readable and does not depend on the
+// shape THEME_PRESETS happens to carry.
 function assertTheme(result, a, b) {
   assert.equal(result.a, a);
   assert.equal(result.b, b);

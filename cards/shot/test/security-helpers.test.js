@@ -1,9 +1,9 @@
 // Card loaded via the shared test helper (test/helpers/load-card.cjs), which
-// evaluates the real glp-card.js in a vm sandbox — so these tests exercise the
-// shipped esc()/safeUrl() function declarations, not a re-implementation. The
-// helper exposes them explicitly because glp-card.js is wrapped in an IIFE
-// (#141), so they don't auto-attach to the sandbox global. glp-card.js stays a
-// single, build-step-free file; nothing here changes how it loads in HA.
+// imports src/glp-card.ts directly — so these tests exercise the shipped
+// esc()/safeUrl() implementations, not a re-implementation. The helper returns
+// them through its `expose` option because the module only exports the class
+// and its public helpers; the bundle served to Home Assistant is built from
+// these sources by `npm run build`.
 'use strict';
 
 const test = require('node:test');

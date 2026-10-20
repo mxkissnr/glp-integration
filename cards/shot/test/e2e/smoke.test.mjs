@@ -1,10 +1,10 @@
 // Minimal Playwright E2E smoke test. Reuses the static-server harness from
 // scripts/e2e-harness.mts (shared with scripts/screenshot.mts) to render the
-// real glp-card.js in a headless Chromium tab -- not a vm sandbox -- so it
-// can exercise real custom-element lifecycle, shadow DOM and click
-// event wiring that vm.runInContext-based unit tests structurally can't
-// reach. Mirrors glp-order-card's test/e2e/smoke.test.mjs (same harness
-// shape, same npm test auto-discovery via test/**/*.test.mjs).
+// real glp-card.js in a headless Chromium tab -- unlike the unit suites, which
+// import src/ into the Node process -- so it can exercise real custom-element
+// lifecycle, shadow DOM and click event wiring that imported-source unit tests
+// structurally can't reach. Mirrors the Order Card's test/e2e/smoke.test.mjs
+// (same harness shape, same npm test auto-discovery via test/**/*.test.mjs).
 //
 // Covers three things pure unit tests can't: (1) the card actually mounts
 // and renders real DOM in a browser, (2) a switch entity going

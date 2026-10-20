@@ -15,7 +15,7 @@
 // override wins over the stylesheet declaration; unresolved vars fall
 // through to their var(--x, fallback) fallback) to prove the derivation
 // chain resolves the way a real browser's cascade would. It operates on the
-// real GLP-TOKENS v1 text extracted straight out of glp-card.js, so a
+// real GLP-TOKENS v1 text read straight out of cards/shared/tokens.ts, so a
 // regression in the actual shipped CSS (not a hand-copied stand-in) fails
 // this test.
 'use strict';

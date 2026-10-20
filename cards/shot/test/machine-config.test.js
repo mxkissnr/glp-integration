@@ -1,7 +1,6 @@
 // Multi-machine `machine` config option tests (#50). The card is loaded via
-// the shared test helper (test/helpers/load-card.cjs), which evaluates the
-// real glp-card.js in a vm sandbox and exposes the GlpCard class (a top-level
-// `class` declaration doesn't become a context property on its own) so
+// the shared test helper (test/helpers/load-card.cjs), which imports
+// src/glp-card.ts and returns its exported GlpCard class, so
 // _resolvePrefix()/_switchStorageKey() can be exercised directly without a
 // full custom-element/shadow-DOM harness.
 'use strict';

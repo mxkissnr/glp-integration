@@ -10,8 +10,9 @@ Closes #
 
 - [ ] Issue linked above
 - [ ] `CHANGELOG.md` updated
-- [ ] Version bumped in `manifest.json`
+- [ ] Version bumped in `manifest.json` (card changes: `GLP_CARD_VERSION` / `GLP_ORDER_CARD_VERSION` are only bumped in a release)
 - [ ] README updated (if new feature or entity added)
+- [ ] Card bundles rebuilt (`cd cards && npm run build`) and committed, if `cards/` changed
 
 ## AI assistance disclosure
 

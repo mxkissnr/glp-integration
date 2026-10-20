@@ -3,8 +3,8 @@
 // (by the DARKER of --glp-accent-start/--glp-accent-end's luminance,
 // independently — #87's per-machine gradient theme) — not just that the
 // method exists. Card loaded via the shared test helper
-// (test/helpers/load-card.cjs), which evaluates the real glp-card.js; the
-// helper's `context` option supplies this suite's extra document/
+// (test/helpers/load-card.cjs), which imports src/glp-card.ts; the helper's
+// `context` option supplies this suite's extra document/
 // getComputedStyle stubs, and makeInstance() adds a minimal style/shadowRoot
 // stub sufficient to drive the method end-to-end without a full custom-
 // element/shadow-DOM constructor. Real color normalization (hex/named-color

@@ -1,6 +1,7 @@
-// Loads the real glp-order-card.js through the shared test/helpers/load-card.cjs
-// harness and exercises the real _menuIconHtml() function shipped in the card,
-// not a re-implementation. Covers #90: the six known DEFAULT_MENU drink ids get
+// Loads the real GlpOrderCard from src/glp-order-card.ts through the shared
+// test/helpers/load-card.cjs harness and exercises the real _menuIconHtml()
+// function shipped in the card, not a re-implementation. Covers #90: the six
+// known DEFAULT_MENU drink ids get
 // a drawn icon, any other id (a user-created menu entry, POST/PUT
 // api/orders/menu) falls back to that entry's own persisted `emoji` field —
 // which stays a stored field, never migrated or rewritten by this change.

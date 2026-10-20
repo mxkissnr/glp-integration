@@ -1,7 +1,7 @@
-// Bean speciality/normal grouping tests (#36). Loads the real
-// glp-order-card.js through the shared test/helpers/load-card.cjs harness,
-// which exposes the GlpOrderCard class via a test-only source patch, so
-// _getVariantsGrouped() can be exercised directly.
+// Bean speciality/normal grouping tests (#36). Loads the real GlpOrderCard
+// class from src/glp-order-card.ts through the shared
+// test/helpers/load-card.cjs harness, so _getVariantsGrouped() can be
+// exercised directly.
 'use strict';
 
 const test = require('node:test');
