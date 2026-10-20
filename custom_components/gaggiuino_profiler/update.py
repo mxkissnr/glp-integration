@@ -85,8 +85,10 @@ class GlpMachineFirmwareUpdate(GlpEntity[GlpDataCoordinator], UpdateEntity):
 
     On a non-Gaggiuino machine (e.g. GaggiMate, no settingsProxy support)
     the add-on's endpoint returns 501; the coordinator fetch already treats
-    that as "no data" (see coordinator.py), so this entity goes unavailable
-    the same way the machine's other Gaggiuino-only entities do.
+    that as "no data" (see coordinator.py), so `installed_version` and
+    `latest_version` stay None and Home Assistant shows the entity as
+    "Unknown". It stays available because the data coordinator's own
+    refresh still succeeds.
     """
 
     _attr_name = "Firmware"

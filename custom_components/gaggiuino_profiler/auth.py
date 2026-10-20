@@ -1,12 +1,12 @@
-"""GLP API token acquisition, shared by all three coordinators and the
-`/api/glp/*` proxy views (#67).
+"""GLP API token acquisition, shared by all four coordinators (data, live,
+machine and settings) and the `/api/glp/*` proxy views (#67).
 
 Previously each coordinator fetched and cached the token itself, and every
 other caller (other coordinators, select.py, orders_api.py, __init__.py's
 service handlers) reached into `GlpDataCoordinator._headers` directly. That
 private attribute was only populated after the data coordinator's first
 successful `_async_update_data()` run, making auth acquisition an implicit
-timing dependency between all three coordinators. `GlpAuth` decouples that:
+timing dependency between all four coordinators. `GlpAuth` decouples that:
 it is constructed once per config entry and lazily fetches+caches the token
 on first use, independent of any particular coordinator's update cycle.
 
@@ -30,11 +30,11 @@ _LOGGER = logging.getLogger(__name__)
 class GlpAuth:
     """Lazily fetches and caches the GLP `X-GLP-Token` auth header.
 
-    Constructed once per config entry and shared across all three
-    coordinators and the `/api/glp/*` proxy views (see `__init__.py`), so
-    the token is fetched independently of any particular coordinator's
-    update cycle and only ever requested once per HA runtime (until the app
-    hands out a new token, see `invalidate()`).
+    Constructed once per config entry and shared across all four coordinators
+    (data, live, machine, settings) and the `/api/glp/*` proxy views (see
+    `__init__.py`), so the token is fetched independently of any particular
+    coordinator's update cycle and only ever requested once per HA runtime
+    (until the app hands out a new token, see `invalidate()`).
     """
 
     def __init__(self, session: aiohttp.ClientSession, url: str) -> None:

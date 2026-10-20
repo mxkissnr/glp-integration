@@ -53,7 +53,7 @@ Include:
 | Coordinators | `coordinator.py` (60 s), `live_coordinator.py` (2 s), `machine_coordinator.py` (5 s) |
 | Platforms | `sensor.py`, `binary_sensor.py`, `select.py` — one file per HA platform |
 | Style | Follows [Home Assistant integration development](https://developers.home-assistant.io/docs/creating_integration_file_structure) conventions |
-| Tests | Test against a real GLP app instance; no mock-based test suite yet |
+| Tests | Run `pytest tests/ -q` (pytest-homeassistant-custom-component, with the GLP app API mocked); add a regression test for every bug fix. Testing against a real app instance is still welcome |
 
 ## Dev setup
 
