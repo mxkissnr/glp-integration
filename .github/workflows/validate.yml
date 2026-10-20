@@ -63,30 +63,59 @@ jobs:
       - name: Run tests
         run: pytest tests/ -q --cov=custom_components/gaggiuino_profiler --cov-report=term-missing --cov-fail-under=88
 
-  card-sync:
-    name: Bundled cards match upstream releases
+  cards:
+    name: Cards
     runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: cards
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
-      - name: Compare bundled cards against latest upstream release
+      - name: Set up Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 24
+          cache: 'npm'
+          cache-dependency-path: cards/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Audit dependencies
+        run: npm audit --audit-level=high
+
+      - name: Install Playwright Chromium
+        # apt-get (triggered by --with-deps) has hung indefinitely before when
+        # the runner's regional Ubuntu mirror was unreachable -- a short
+        # per-attempt timeout + retry lets a single mirror hiccup self-heal
+        # within this run instead of needing a manual rerun.
         run: |
-          set -euo pipefail
-          check() {
-            local repo="$1" bundled_file="$2"
-            local latest card upstream
-            latest=$(curl -fsSL "https://api.github.com/repos/mxkissnr/${repo}/releases/latest" | jq -r '.tag_name')
-            card=$(basename "${bundled_file}")
-            upstream="/tmp/upstream-${card}"
-            curl -fsSL "https://raw.githubusercontent.com/mxkissnr/${repo}/${latest}/${card}" -o "${upstream}"
-            echo "${repo}: bundled ${card} vs release ${latest}"
-            if ! cmp -s "${bundled_file}" "${upstream}"; then
-              echo "::error file=${bundled_file}::${repo} bundled copy differs from release ${latest} — run scripts/sync-to-integration.sh in that repo and re-copy here"
-              # GNU diff has no --stat; --no-index gives that stat summary without needing a repo
-              git diff --no-index --stat -- "${bundled_file}" "${upstream}" || true
-              exit 1
+          for attempt in 1 2 3; do
+            if timeout 300 npx playwright install --with-deps chromium; then
+              exit 0
             fi
-          }
-          check "glp-lovelace-card" "custom_components/gaggiuino_profiler/www/glp-card.js"
-          check "glp-order-card" "custom_components/gaggiuino_profiler/www/glp-order-card.js"
+            echo "Playwright install attempt $attempt/3 failed or timed out, retrying..."
+            sleep 10
+          done
+          echo "::error::Playwright Chromium install failed after 3 attempts"
+          exit 1
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Run tests
+        run: npm run test:coverage
+
+      - name: Build and check the committed bundles
+        # The two bundles under custom_components/gaggiuino_profiler/www/ are
+        # generated from cards/ and committed; a bundle that no longer matches
+        # its source fails here.
+        run: |
+          npm run build
+          git diff --exit-code -- ../custom_components/gaggiuino_profiler/www/ || { echo "::error::The card bundles in custom_components/gaggiuino_profiler/www/ are out of date, run npm run build in cards/ and commit them"; exit 1; }

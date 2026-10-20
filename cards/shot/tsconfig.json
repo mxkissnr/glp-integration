@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "exactOptionalPropertyTypes": true,
+    "noUncheckedIndexedAccess": true,
+    "noEmit": true,
+    "verbatimModuleSyntax": true,
+    "isolatedModules": true,
+    "allowImportingTsExtensions": true,
+    "erasableSyntaxOnly": true,
+    "skipLibCheck": true,
+    // TypeScript 6 only loads the ambient @types packages named here (or via a
+    // "*" wildcard); it no longer auto-includes node_modules/@types. The
+    // Node-run scripts therefore need "node" listed. src/ uses only the DOM lib.
+    "types": ["node"]
+  },
+  "include": ["src/**/*.ts", "scripts/**/*.mts", "eslint.config.mts"]
+}

@@ -2,8 +2,8 @@
 
 Working rules for this repo (mirrors the app repo's rules; full rationale lives in
 `../gaggiuino-local-profiler/CLAUDE.md`), adapted for this repo being a Python HACS
-integration (Home Assistant custom component), not a Node/Vite project — no npm,
-no ESLint, no JS i18n files here.
+integration (Home Assistant custom component). The only Node project is `cards/`
+(the two Lovelace cards, see `cards/CLAUDE.md`).
 
 - **Language**: code/comments/commits/issues/PRs in English. `DOCS.md` English
   (primary), `DOCS.de.md` German (supplementary, same heading structure, always in sync).
@@ -25,11 +25,11 @@ no ESLint, no JS i18n files here.
 
 ## Language rule
 
-Integration code is Python — no hand-written JavaScript or TypeScript. The two
-card bundles under `custom_components/gaggiuino_profiler/www/`
-(`glp-card.js`, `glp-order-card.js`) are build output of the two card repos,
-copied in by their sync scripts and never edited here; fix the card repo and
-re-sync instead. `tests/test_no_handwritten_js.py` enforces this.
+Integration code is Python — no hand-written JavaScript or TypeScript outside
+`cards/`. The two card bundles under `custom_components/gaggiuino_profiler/www/`
+(`glp-card.js`, `glp-order-card.js`) are build output of the sources in `cards/`
+(`cd cards && npm run build`) and are never edited by hand.
+`tests/test_no_handwritten_js.py` enforces this.
 
 ## Regression policy
 
@@ -56,7 +56,8 @@ than patching it after installs are already affected.
   Must be green after every change; a newly-failing test is a stop condition.
 - **Lint:** `ruff check .` (config in `pyproject.toml`: `target-version = "py313"`,
   `line-length = 120`, rule sets `E, F, I, UP, B`). Both are enforced in CI
-  (`.github/workflows/validate.yml`), alongside HACS and Hassfest validation.
+  (`.github/workflows/validate.yml`), alongside HACS, Hassfest and the "Cards" job
+  (lint, typecheck, tests and bundle check for `cards/`).
 - Add a regression test for every bug fix, following the existing pattern in
   `tests/` (one `test_*.py` per feature/fix area, e.g.
   `test_sensor_suggested_object_id.py`, `test_orders_api_path_traversal.py`).

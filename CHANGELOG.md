@@ -1,6 +1,9 @@
 # Changelog
 
 ## [Unreleased]
+### Changed
+- **The Shot Card and the Order Card are now developed in this repository and ship with every integration release.** Refs #256
+
 ### Fixed
 - **Deleting the newest shot no longer fires a shot-completed event, one malformed shot value no longer makes all sensors unavailable, and deleting shots no longer distorts the shot-count statistics.** Refs #237
 - **The options-flow error messages now live under `options.error`, where Home Assistant's translation schema expects them, so the translation files validate again.** Refs #237

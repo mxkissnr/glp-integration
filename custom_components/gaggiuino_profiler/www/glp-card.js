@@ -637,7 +637,7 @@
   // node_modules/lit-html/directives/if-defined.js
   var o7 = /* @__PURE__ */ __name((o8) => o8 ?? A, "o");
 
-  // src/styles.ts
+  // shot/src/styles.ts
   var STYLES = `
   /* GLP-TOKENS v1 — shared contract between glp-card.js and glp-order-card.js, keep byte-identical */
   :host {
@@ -1462,7 +1462,7 @@
   }
 `;
 
-  // src/i18n.ts
+  // shot/src/i18n.ts
   var STRINGS = {
     de: {
       tab_orders: "Bestellungen",
@@ -1889,7 +1889,7 @@
   }
   __name(T2, "T");
 
-  // src/helpers.ts
+  // shot/src/helpers.ts
   function roastAgeDays(str) {
     if (!str || typeof str !== "string") return null;
     let d3 = null;
@@ -1948,7 +1948,7 @@
   };
   var HEX_COLOR_RE = /^#[0-9a-fA-F]{6}$/;
 
-  // src/icons.ts
+  // shot/src/icons.ts
   var MACHINE_BODY = /* @__PURE__ */ __name((id, mini, type = "gaggiuino") => `
     <!-- Seitenwand rechts inkl. Kantenlicht, volle Hoehe -->
     <path d="M72.2 2.3 L100 11 L100 130 L88 153 L72.2 153 Z" fill="url(#${id})"/>
@@ -2089,7 +2089,7 @@
   };
   GLP_ICON_PATHS.descale = '<path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/><path d="M8.3 13.6l1.5 1.7 1.4-2.3 1.5 1.7 1.5-2.3"/>';
 
-  // src/charts.ts
+  // shot/src/charts.ts
   function _scale(arr) {
     return Array.isArray(arr) && arr.length ? arr.map((v2) => v2 / 10) : [];
   }
@@ -2230,7 +2230,7 @@
   }
   __name(metricLineHtml, "metricLineHtml");
 
-  // src/glp-card.ts
+  // shot/src/glp-card.ts
   var GLP_CARD_VERSION = "2.22.0";
   var READY_BY_PENDING_FALLBACK_MS = 6e4;
   var GlpCard = class _GlpCard extends HTMLElement {
@@ -2271,16 +2271,14 @@
       this._pendingReadyByTimer = null;
       this._lastKnownReadyByTargetAt = null;
       this._lastKnownReadyByPlannedAt = null;
-      this.shadowRoot.addEventListener("pointerdown", (e6) => {
+      this.shadowRoot.addEventListener("click", (e6) => {
         if (e6.target.closest('[data-action="toggle-switch"]')) {
-          e6.preventDefault();
           e6.stopPropagation();
           if (this._hass && this._switchEntity)
             this._hass.callService("switch", "toggle", { entity_id: this._switchEntity });
           return;
         }
         if (e6.target.closest('[data-action="set-ready-by"]')) {
-          e6.preventDefault();
           e6.stopPropagation();
           const input = this.shadowRoot.getElementById("glp-readyby-input");
           const target = this._resolveReadyByTarget(input?.value, /* @__PURE__ */ new Date());
@@ -2300,7 +2298,6 @@
           return;
         }
         if (e6.target.closest('[data-action="cancel-ready-by"]')) {
-          e6.preventDefault();
           e6.stopPropagation();
           if (this._hass) {
             this._hass.callService("gaggiuino_profiler", "set_ready_by", {
@@ -2511,7 +2508,6 @@
     _buildOrdersHtml() {
       if (!this._orders.length) return b2`<div class="unavailable">${T2("orders_none")}</div>`;
       const tap = /* @__PURE__ */ __name((fn) => (e6) => {
-        e6.preventDefault();
         e6.stopPropagation();
         fn();
       }, "tap");
@@ -2521,9 +2517,9 @@
         this._render();
       });
       const declineRow = /* @__PURE__ */ __name((id) => b2`<div class="ord-actions"><span class="ord-q">${T2("ord_decline_q")}</span>
-      <button class="ord-btn danger" data-ord-decline-yes=${id} @pointerdown=${tap(() => this._orderAction(id, "decline", {}))}>${/* ICONS.of() emits fixed SVG markup */
+      <button class="ord-btn danger" data-ord-decline-yes=${id} @click=${tap(() => this._orderAction(id, "decline", {}))}>${/* ICONS.of() emits fixed SVG markup */
       o5(ICONS.of("check"))} ${T2("ord_yes")}</button>
-      <button class="ord-btn ghost" data-ord-cancel="1" @pointerdown=${cancel}>${/* ICONS.of() emits fixed SVG markup */
+      <button class="ord-btn ghost" data-ord-cancel="1" @click=${cancel}>${/* ICONS.of() emits fixed SVG markup */
       o5(ICONS.of("close"))}</button></div>`, "declineRow");
       return b2`<div class="ord-list">${this._orders.map((o8) => {
         const label = o8.variant ? `${o8.item} · ${o8.variant}` : o8.item;
@@ -2531,20 +2527,20 @@
         o5(ICONS.of("coffee"))} ${label}</span>${o8.customer ? b2`<span class="ord-who">${o8.customer}</span>` : A}</div>
         ${o8.note ? b2`<div class="ord-note">„${o8.note}"</div>` : A}`;
         if (o8.status === "pending") {
-          const actions2 = this._orderDeclineFor === o8.id ? declineRow(o8.id) : this._orderEtaFor === o8.id ? b2`<div class="ord-actions"><span class="ord-q">${T2("ord_done_in")}</span>${[3, 5, 8, 10].map((m2) => b2`<button class="ord-btn eta" data-ord-accept=${o8.id} data-eta=${m2} @pointerdown=${tap(() => this._orderAction(o8.id, "accept", { eta: m2 }))}>${m2} min</button>`)}<button class="ord-btn ghost" data-ord-cancel="1" @pointerdown=${cancel}>${/* ICONS.of() emits fixed SVG markup */
-          o5(ICONS.of("close"))}</button></div>` : b2`<div class="ord-actions"><button class="ord-btn primary" data-ord-eta=${o8.id} @pointerdown=${tap(() => {
+          const actions2 = this._orderDeclineFor === o8.id ? declineRow(o8.id) : this._orderEtaFor === o8.id ? b2`<div class="ord-actions"><span class="ord-q">${T2("ord_done_in")}</span>${[3, 5, 8, 10].map((m2) => b2`<button class="ord-btn eta" data-ord-accept=${o8.id} data-eta=${m2} @click=${tap(() => this._orderAction(o8.id, "accept", { eta: m2 }))}>${m2} min</button>`)}<button class="ord-btn ghost" data-ord-cancel="1" @click=${cancel}>${/* ICONS.of() emits fixed SVG markup */
+          o5(ICONS.of("close"))}</button></div>` : b2`<div class="ord-actions"><button class="ord-btn primary" data-ord-eta=${o8.id} @click=${tap(() => {
             this._orderEtaFor = o8.id;
             this._render();
           })}>${/* ICONS.of() emits fixed SVG markup */
-          o5(ICONS.of("check"))} ${T2("ord_accept")}</button><button class="ord-btn ghost" data-ord-decline=${o8.id} @pointerdown=${tap(() => {
+          o5(ICONS.of("check"))} ${T2("ord_accept")}</button><button class="ord-btn ghost" data-ord-decline=${o8.id} @click=${tap(() => {
             this._orderDeclineFor = o8.id;
             this._render();
           })}>${T2("ord_decline")}</button></div>`;
           return b2`<div class="ord-row pending">${head}${actions2}</div>`;
         }
         const minsLeft = o8.acceptedAt && o8.eta ? Math.max(0, Math.ceil((o8.acceptedAt + o8.eta * 6e4 - Date.now()) / 6e4)) : null;
-        const actions = this._orderDeclineFor === o8.id ? declineRow(o8.id) : b2`<div class="ord-actions"><button class="ord-btn primary" data-ord-done=${o8.id} @pointerdown=${tap(() => this._orderAction(o8.id, "complete", {}))}>${/* ICONS.of() emits fixed SVG markup */
-        o5(ICONS.of("check"))} ${T2("ord_done")}</button><button class="ord-btn ghost" data-ord-decline=${o8.id} @pointerdown=${tap(() => {
+        const actions = this._orderDeclineFor === o8.id ? declineRow(o8.id) : b2`<div class="ord-actions"><button class="ord-btn primary" data-ord-done=${o8.id} @click=${tap(() => this._orderAction(o8.id, "complete", {}))}>${/* ICONS.of() emits fixed SVG markup */
+        o5(ICONS.of("check"))} ${T2("ord_done")}</button><button class="ord-btn ghost" data-ord-decline=${o8.id} @click=${tap(() => {
           this._orderDeclineFor = o8.id;
           this._render();
         })}>${T2("ord_decline")}</button></div>`;
@@ -2819,10 +2815,9 @@
           shotsSince != null && shotsSince > 0 ? `${shotsSince} Shots` : null
         ].filter(Boolean).join(" · ");
         const confirming = task && this._maintConfirm === task;
-        return b2`<div class="maint-row${confirming ? " confirming" : ""}" data-maint-task=${o7(task || void 0)} role=${o7(task ? "button" : void 0)} @pointerdown=${(e6) => {
+        return b2`<div class="maint-row${confirming ? " confirming" : ""}" data-maint-task=${o7(task || void 0)} role=${o7(task ? "button" : void 0)} @click=${(e6) => {
           if (!task) return;
           if (e6.target.closest("[data-maint-done],[data-maint-cancel]")) return;
-          e6.preventDefault();
           this._maintConfirm = this._maintConfirm === task ? null : task;
           this._render();
         }}>
@@ -2836,16 +2831,14 @@
         <div class="maint-bar-bg"><div class="maint-bar ${cls}" style="width:${pctW}%"></div></div>
         ${confirming ? b2`<div class="maint-confirm">
           <span class="maint-confirm-q">${T2("maint_confirm_q")}</span>
-          <button class="maint-confirm-yes" data-maint-done=${task} @pointerdown=${(e6) => {
-          e6.preventDefault();
+          <button class="maint-confirm-yes" data-maint-done=${task} @click=${(e6) => {
           e6.stopPropagation();
           if (this._hass && task) this._hass.callService("gaggiuino_profiler", "maintenance_done", { task });
           this._maintConfirm = null;
           this._render();
         }}>${/* ICONS.of() emits fixed SVG markup */
         o5(ICONS.of("check"))} ${T2("ord_yes")}</button>
-          <button class="maint-confirm-no" data-maint-cancel="1" @pointerdown=${(e6) => {
-          e6.preventDefault();
+          <button class="maint-confirm-no" data-maint-cancel="1" @click=${(e6) => {
           e6.stopPropagation();
           this._maintConfirm = null;
           this._render();
@@ -3231,18 +3224,15 @@
       const { maintAvailable, ordersTabAvail, showMaint, showOrders, pendingOrders } = vm;
       return maintAvailable || ordersTabAvail ? b2`
       <div class="tab-bar">
-        <button class="tab-btn${!showMaint && !showOrders ? " active" : ""}" data-tab="shot" @pointerdown=${(e6) => {
-        e6.preventDefault();
+        <button class="tab-btn${!showMaint && !showOrders ? " active" : ""}" data-tab="shot" @click=${() => {
         this._selectTab("shot");
       }}>${/* ICONS.of() emits fixed SVG markup */
       o5(ICONS.of("coffee"))} Shot</button>
-        ${ordersTabAvail ? b2`<button class="tab-btn${showOrders ? " active" : ""}" data-tab="orders" @pointerdown=${(e6) => {
-        e6.preventDefault();
+        ${ordersTabAvail ? b2`<button class="tab-btn${showOrders ? " active" : ""}" data-tab="orders" @click=${() => {
         this._selectTab("orders");
       }}>${/* ICONS.of() emits fixed SVG markup */
       o5(ICONS.of("cart"))} ${T2("tab_orders")}${pendingOrders ? b2` <span class="tab-badge">${pendingOrders}</span>` : A}</button>` : A}
-        ${maintAvailable ? b2`<button class="tab-btn${showMaint ? " active" : ""}" data-tab="maint" @pointerdown=${(e6) => {
-        e6.preventDefault();
+        ${maintAvailable ? b2`<button class="tab-btn${showMaint ? " active" : ""}" data-tab="maint" @click=${() => {
         this._selectTab("maint");
       }}>${/* ICONS.of() emits fixed SVG markup */
       o5(ICONS.of("wrench"))} ${T2("tab_maint")}${this._maintAnyDue() ? b2` ${/* ICONS.of() emits fixed SVG markup */
@@ -3267,15 +3257,13 @@
         }
         navHtml = b2`
         <div class="nav-row">
-          <button class="nav-arrow" data-nav="next" ?disabled=${nextDis} @pointerdown=${(e6) => {
+          <button class="nav-arrow" data-nav="next" ?disabled=${nextDis} @click=${(e6) => {
           if (e6.currentTarget.hasAttribute("disabled")) return;
-          e6.preventDefault();
           this._navShot("next");
         }}>‹</button>
           <div class="nav-dots">${dots}</div>
-          <button class="nav-arrow" data-nav="prev" ?disabled=${prevDis} @pointerdown=${(e6) => {
+          <button class="nav-arrow" data-nav="prev" ?disabled=${prevDis} @click=${(e6) => {
           if (e6.currentTarget.hasAttribute("disabled")) return;
-          e6.preventDefault();
           this._navShot("prev");
         }}>›</button>
         </div>${tsLine}`;
@@ -3286,8 +3274,7 @@
       const { brewing, showMaint, profileAvailable, currentProfile, profileSwitching, profileOptions } = vm;
       return !brewing && !showMaint && profileAvailable ? b2`
       <div class="profile-picker">
-        <button class="profile-current-btn${this._profileOpen ? " open" : ""}" data-action="toggle-profile" @pointerdown=${(e6) => {
-        e6.preventDefault();
+        <button class="profile-current-btn${this._profileOpen ? " open" : ""}" data-action="toggle-profile" @click=${(e6) => {
         e6.stopPropagation();
         this._toggleProfilePicker();
       }}>
@@ -3299,8 +3286,7 @@
         </button>
         ${this._profileOpen ? b2`<div class="profile-opts">
           ${profileOptions.map(
-        (p3) => b2`<button class="profile-opt${p3 === currentProfile ? " active" : ""}" data-profile-opt=${p3} @pointerdown=${(e6) => {
-          e6.preventDefault();
+        (p3) => b2`<button class="profile-opt${p3 === currentProfile ? " active" : ""}" data-profile-opt=${p3} @click=${(e6) => {
           e6.stopPropagation();
           this._selectProfile(p3);
         }}>${p3}</button>`

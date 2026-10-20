@@ -584,7 +584,7 @@
   // node_modules/lit-html/directives/if-defined.js
   var o6 = (o7) => o7 ?? A;
 
-  // src/styles.ts
+  // order/src/styles.ts
   var STYLES = `
   /* GLP-TOKENS v1 — shared contract between glp-card.js and glp-order-card.js, keep byte-identical */
   :host {
@@ -825,6 +825,15 @@
     gap: var(--glp-sp-3);
     margin-bottom: var(--glp-sp-4);
   }
+  /* Menu tiles and variant chips are <button>s now (#183) so they are
+     keyboard/screen-reader reachable; these resets keep the tile look the
+     plain <div> had before. */
+  .menu-item, .variant-chip {
+    font: inherit;
+    color: inherit;
+    text-align: inherit;
+    appearance: none;
+  }
   .menu-item {
     background: var(--oc-surface);
     border: 1px solid var(--oc-border);
@@ -946,6 +955,14 @@
   .new-order-btn:hover { border-color: color-mix(in srgb, var(--oc-text) 22%, transparent); color: var(--oc-text); background: color-mix(in srgb, var(--oc-text) 7%, transparent); }
   .loading { color: var(--oc-sub); font-size: var(--glp-fs-2); text-align: center; padding: var(--glp-sp-5) 0; }
 
+  /* Failed order attempt (#183): the selection stays so the customer can retry. */
+  .order-error {
+    color: var(--oc-error, #ff453a);
+    font-size: var(--glp-fs-1);
+    line-height: 1.4;
+    text-align: center;
+  }
+
   /* Variant picker */
   .variant-label { font-size: var(--glp-fs-1); font-weight: 600; color: var(--oc-sub); margin: var(--glp-sp-1) 0 var(--glp-sp-2); }
   .variant-grid { display: flex; flex-wrap: wrap; gap: var(--glp-sp-2); margin-bottom: var(--glp-sp-1); }
@@ -985,7 +1002,7 @@
   }
 `;
 
-  // src/helpers.ts
+  // order/src/helpers.ts
   function _esc(s4) {
     if (s4 == null) return "";
     return String(s4).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
@@ -1027,7 +1044,7 @@
     return typeof s4 === "string" && /^#[0-9a-fA-F]{6}$/.test(s4);
   }
 
-  // src/icons.ts
+  // order/src/icons.ts
   var MACHINE_BODY = (id, mini, type = "gaggiuino") => `
     <!-- Seitenwand rechts inkl. Kantenlicht, volle Hoehe -->
     <path d="M72.2 2.3 L100 11 L100 130 L88 153 L72.2 153 Z" fill="url(#${id})"/>
@@ -1170,7 +1187,7 @@
     return ICONS.of(item?.id) || _esc(item?.emoji);
   }
 
-  // src/i18n.ts
+  // order/src/i18n.ts
   var STRINGS = {
     de: {
       title: "Bestellen",
@@ -1197,7 +1214,10 @@
       new_order: "+ Neue Bestellung",
       loading: "Lade …",
       no_menu: "Noch kein Menü konfiguriert",
-      menu_all: "Alle Getränke"
+      menu_all: "Alle Getränke",
+      order_failed: "Bestellung konnte nicht gesendet werden. Bitte erneut versuchen.",
+      chart_pressure: "Druck",
+      chart_weight: "Gewicht"
     },
     en: {
       title: "Order",
@@ -1224,7 +1244,10 @@
       new_order: "+ New Order",
       loading: "Loading …",
       no_menu: "No menu configured yet",
-      menu_all: "All drinks"
+      menu_all: "All drinks",
+      order_failed: "Order could not be sent. Please try again.",
+      chart_pressure: "Pressure",
+      chart_weight: "Weight"
     },
     it: {
       title: "Ordina",
@@ -1251,7 +1274,10 @@
       new_order: "+ Nuovo ordine",
       loading: "Caricamento …",
       no_menu: "Nessun menu configurato ancora",
-      menu_all: "Tutte le bevande"
+      menu_all: "Tutte le bevande",
+      order_failed: "Impossibile inviare l'ordine. Riprova.",
+      chart_pressure: "Pressione",
+      chart_weight: "Peso"
     },
     fr: {
       title: "Commander",
@@ -1278,7 +1304,10 @@
       new_order: "+ Nouvelle commande",
       loading: "Chargement …",
       no_menu: "Aucun menu configuré pour le moment",
-      menu_all: "Toutes les boissons"
+      menu_all: "Toutes les boissons",
+      order_failed: "La commande n'a pas pu être envoyée. Veuillez réessayer.",
+      chart_pressure: "Pression",
+      chart_weight: "Poids"
     },
     es: {
       title: "Pedir",
@@ -1305,7 +1334,10 @@
       new_order: "+ Nuevo pedido",
       loading: "Cargando …",
       no_menu: "Aún no hay menú configurado",
-      menu_all: "Todas las bebidas"
+      menu_all: "Todas las bebidas",
+      order_failed: "No se pudo enviar el pedido. Inténtalo de nuevo.",
+      chart_pressure: "Presión",
+      chart_weight: "Peso"
     },
     nl: {
       title: "Bestellen",
@@ -1332,7 +1364,10 @@
       new_order: "+ Nieuwe bestelling",
       loading: "Laden …",
       no_menu: "Nog geen menu ingesteld",
-      menu_all: "Alle drankjes"
+      menu_all: "Alle drankjes",
+      order_failed: "Bestelling kon niet worden verzonden. Probeer het opnieuw.",
+      chart_pressure: "Druk",
+      chart_weight: "Gewicht"
     }
   };
   function _s(key, lang, ...args) {
@@ -1341,7 +1376,7 @@
     return typeof val === "function" ? val(...args) : val;
   }
 
-  // src/glp-order-card.ts
+  // order/src/glp-order-card.ts
   var GLP_ORDER_CARD_VERSION = "1.22.0";
   var NEW_BADGE_DAYS_DEFAULT = 7;
   var _glpOrderCardInstanceSeq = 0;
@@ -1361,11 +1396,17 @@
       this._lastShot = null;
       this._pollTimer = null;
       this._submitting = false;
+      this._orderError = null;
       this._queueEta = null;
       this._hassRenderTimer = null;
-      this._lang = navigator.language.slice(0, 2).toLowerCase();
-      if (!STRINGS[this._lang]) this._lang = "en";
+      this._lang = this._normalizeLang(navigator.language);
       this._instanceId = ++_glpOrderCardInstanceSeq;
+    }
+    // First two letters, lower case, falling back to English for a language this
+    // card has no strings for.
+    _normalizeLang(code) {
+      const lang = String(code || "").slice(0, 2).toLowerCase();
+      return STRINGS[lang] ? lang : "en";
     }
     setConfig(config) {
       this._config = {
@@ -1515,6 +1556,7 @@
     set hass(hass) {
       const firstHass = !this._hass;
       this._hass = hass;
+      this._lang = this._normalizeLang(hass?.language);
       if (firstHass && this._menu === null) {
         this._load();
       } else {
@@ -1536,10 +1578,11 @@
     _schedulePoll() {
       if (this._pollTimer) clearTimeout(this._pollTimer);
       const hasActive = this._activeOrder?.status === "pending" || this._activeOrder?.status === "accepted";
-      this._pollTimer = setTimeout(async () => {
+      const timer = setTimeout(async () => {
         await this._loadStatus();
-        this._schedulePoll();
+        if (this.isConnected && this._pollTimer === timer) this._schedulePoll();
       }, hasActive ? 3e3 : 1e4);
+      this._pollTimer = timer;
     }
     _stopPoll() {
       if (this._pollTimer) {
@@ -1616,30 +1659,48 @@
         }
       }
       try {
-        const orders = await this._fetch(`api/orders/mine?haUserId=${encodeURIComponent(haUser.id)}`).then((r4) => r4.json());
+        const res = await this._fetch(`api/orders/mine?haUserId=${encodeURIComponent(haUser.id)}`);
+        if (!res.ok) throw new Error("orders/mine failed");
+        const body = await res.json();
+        if (!Array.isArray(body)) throw new Error("orders/mine returned a non-array body");
+        const orders = body;
         const active = orders.find((o7) => ["pending", "accepted"].includes(o7.status));
         const recent = !active ? orders.find((o7) => ["done", "declined"].includes(o7.status) && o7.id !== this._dismissedOrderId && Date.now() - (o7.completedAt || 0) < 12e4) : null;
         this._activeOrder = active || recent || null;
-        if (this._activeOrder?.status === "done" && !this._lastShot) {
-          try {
-            const shotId = this._activeOrder.shotId;
-            const path = shotId ? `api/shots/${encodeURIComponent(shotId)}` : "api/shots/last";
-            this._lastShot = await this._fetch(path).then((r4) => r4.json());
-          } catch {
+        if (this._activeOrder?.status === "done") {
+          const shotId = this._activeOrder.shotId;
+          if (!shotId) {
             this._lastShot = null;
+          } else if (!this._lastShot) {
+            try {
+              const shotRes = await this._fetch(`api/shots/${encodeURIComponent(shotId)}`);
+              this._lastShot = shotRes.ok ? await shotRes.json() : null;
+            } catch {
+              this._lastShot = null;
+            }
           }
-        } else if (!this._activeOrder || this._activeOrder.status !== "done") {
+        } else {
           this._lastShot = null;
         }
       } catch {
-        this._activeOrder = null;
-        this._lastShot = null;
       }
       this._render();
     }
+    // Companion entity convention from the GaggiMate setup: the machine-status
+    // sensor `sensor.<prefix>machine_status` comes with a
+    // `binary_sensor.<prefix>machine_standby` that glp-lovelace-card's
+    // _isMachineOff() treats as off. A missing entity keeps the old behaviour.
+    _standbyEntity() {
+      const status = this._findMachineStatusEntity();
+      if (!status) return null;
+      return status.replace(/^sensor\./, "binary_sensor.").replace(/_machine_status$/, "_machine_standby");
+    }
     _machineOff() {
+      if (!this._hass) return false;
+      const standby = this._standbyEntity();
+      if (standby && this._hass.states[standby]?.state === "on") return true;
       const entity = this._getSwitchEntity();
-      if (!entity || !this._hass) return false;
+      if (!entity) return false;
       const s4 = this._hass.states[entity];
       return s4?.state === "off" || s4?.state === "unavailable";
     }
@@ -1809,11 +1870,11 @@
         const newBadge = isNew ? b2`<span class="menu-badge menu-badge-new">NEW</span>` : A;
         const trendBadge = m2.trending ? b2`<span class="menu-badge menu-badge-trend">${/* ICONS.of() emits fixed SVG markup */
         o5(ICONS.of("heat"))}</span>` : A;
-        return b2`<div class="menu-item${this._selected === m2.name ? " selected" : ""}" data-item=${m2.name} @click=${() => this._selectItem(m2.name)}>
+        return b2`<button type="button" class="menu-item${this._selected === m2.name ? " selected" : ""}" data-item=${m2.name} @click=${() => this._selectItem(m2.name)}>
         <div class="menu-item-icon">${/* _menuIconHtml() returns a fixed icon or an escaped emoji */
         o5(_menuIconHtml(m2))}</div>
         <div class="menu-item-name">${m2.name}${trendBadge}${newBadge}</div>
-      </div>`;
+      </button>`;
       };
       const trending = visibleMenu.filter((m2) => m2.trending);
       const regular = visibleMenu.filter((m2) => !m2.trending);
@@ -1845,16 +1906,17 @@
           ${itemLabel ? b2`${/* ICONS.of() emits fixed SVG markup */
       o5(ICONS.of("coffee"))} ` : A}${btnLabel}
         </button>
+        ${this._orderError ? b2`<div class="order-error" role="alert">${this._orderError}</div>` : A}
       </div>`;
     }
-    _shotChart(shot) {
+    _shotChart(shot, lang = "en") {
       const dp = shot?.datapoints;
       if (!dp) return "";
       const series = [
-        { key: "pressure", scale: 10, axis: "left", color: "var(--glp-series-pres, #0072b2)", label: "Druck" },
+        { key: "pressure", scale: 10, axis: "left", color: "var(--glp-series-pres, #0072b2)", label: _s("chart_pressure", lang) },
         { key: "temperature", scale: 10, axis: "right", color: "var(--glp-series-temp, #c0392b)", label: "Temp" },
         { key: "weightFlow", scale: 10, axis: "left", color: "var(--glp-series-flow, #c77000)", label: "Flow" },
-        { key: "shotWeight", scale: 10, axis: "right", color: "var(--glp-series-weight, #009e73)", label: "Gewicht" }
+        { key: "shotWeight", scale: 10, axis: "right", color: "var(--glp-series-weight, #009e73)", label: _s("chart_weight", lang) }
       ].map((s4) => ({ ...s4, vals: Array.isArray(dp[s4.key]) ? dp[s4.key].map((v2) => v2 / s4.scale) : [] })).filter((s4) => s4.vals.length >= 4);
       if (!series.length) return "";
       const W = 300, H2 = 72, pad = 2;
@@ -1882,14 +1944,14 @@
     </div>`;
       return svg + legend;
     }
-    _renderShotSummary(shot, _lang) {
+    _renderShotSummary(shot, lang) {
       if (!shot) return A;
       const profile = shot.profile?.name || shot.profileName || "–";
       const dur = shot.duration ? `${(shot.duration / 10).toFixed(0)} s` : null;
       const wtArr = shot.datapoints?.shotWeight || shot.datapoints?.weight;
       const yield_g = Array.isArray(wtArr) && wtArr.length ? `${(wtArr[wtArr.length - 1] / 10).toFixed(1)} g` : null;
       const meta = [dur, yield_g].filter(Boolean).join(" · ");
-      const chart = this._shotChart(shot);
+      const chart = this._shotChart(shot, lang);
       return b2`<div class="shot-summary">
       <div class="shot-summary-profile">${profile}</div>
       ${meta ? b2`<div class="shot-summary-meta">${meta}</div>` : A}
@@ -1946,12 +2008,14 @@
         this._selectedVariant = null;
         this._selectedBeanId = null;
       }
+      this._orderError = null;
       this._render();
     }
     _selectVariant(variant, beanId) {
       const wasSelected = this._selectedVariant === variant;
       this._selectedVariant = wasSelected ? null : variant;
       this._selectedBeanId = wasSelected ? null : beanId != null ? Number(beanId) : null;
+      this._orderError = null;
       this._render();
     }
     _newOrder() {
@@ -1960,12 +2024,13 @@
       this._selected = null;
       this._selectedVariant = null;
       this._selectedBeanId = null;
+      this._orderError = null;
       this._render();
     }
     _getVariants(item) {
       if (!item) return [];
       if (item.useBeans) return (this._activeBeans || []).map((b3) => b3.decaf ? `${b3.name} · Decaf` : b3.name);
-      return item.variants || [];
+      return Array.isArray(item.variants) ? item.variants.filter((v2) => typeof v2 === "string") : [];
     }
     // Second, orthogonal grouping axis on top of _getVariants() (#36): non-bean
     // items (plain item.variants string arrays) have no category concept, so
@@ -1991,7 +2056,7 @@
     }
     _variantChipHtml(v2) {
       const beanId = this._beanIdForLabel(v2);
-      return b2`<div class="variant-chip${this._selectedVariant === v2 ? " selected" : ""}" data-variant=${v2} data-bean-id=${o6(beanId ?? void 0)} @click=${() => this._selectVariant(v2, beanId)}>${v2}</div>`;
+      return b2`<button type="button" class="variant-chip${this._selectedVariant === v2 ? " selected" : ""}" data-variant=${v2} data-bean-id=${o6(beanId ?? void 0)} @click=${() => this._selectVariant(v2, beanId)}>${v2}</button>`;
     }
     // Mirrors the trending/regular section pattern (~line 650): headings shown
     // only when both groups are non-empty — a single-group list (e.g. all beans
@@ -2042,7 +2107,7 @@
       this._submitting = true;
       this._render();
       try {
-        const order = await this._fetch("api/orders", {
+        const res = await this._fetch("api/orders", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -2057,14 +2122,19 @@
             haUserId: haUser.id,
             machine: this._config?.machine || void 0
           })
-        }).then((r4) => r4.json());
-        if (order.id) {
+        });
+        const order = res.ok ? await res.json() : null;
+        if (order?.id) {
           this._activeOrder = order;
+          this._orderError = null;
           this._selected = null;
           this._selectedVariant = null;
           this._selectedBeanId = null;
+        } else {
+          this._orderError = _s("order_failed", this._lang);
         }
       } catch {
+        this._orderError = _s("order_failed", this._lang);
       }
       this._submitting = false;
       this._render();
