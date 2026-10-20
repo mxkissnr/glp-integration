@@ -91,30 +91,9 @@ export interface GrinderEntry {
   task?: string;
 }
 
-// An [r, g, b] triple (0-255) resolved from a CSS colour string.
-export type Rgb = [number, number, number];
-
-// A resolved two-stop accent colour pair, as returned by _appMachineTheme().
-export interface ThemeStops {
-  a: string;
-  b: string;
-}
-
-export interface MachineTheme {
-  preset?: string;
-  a: string;
-  b: string;
-}
-
-// One entry in a *_machine_status entity's `machines[]` attribute, as
-// forwarded verbatim from the app's GET /api/status (gaggiuino-local-profiler#701).
-export interface MachineEntry {
-  id?: string;
-  name?: string;
-  isDefault?: boolean;
-  type?: string;
-  theme?: MachineTheme;
-}
+// The colour and machine-lookup shapes now live in cards/shared/types.ts;
+// re-exported here so every card file keeps importing from './types.ts'.
+export type { Rgb, ThemeStops, MachineTheme, MachineEntry } from '../../shared/types.ts';
 
 export interface CustomCardConfig {
   type: string;
