@@ -167,6 +167,15 @@ function _isInteractiveTarget(target: EventTarget | null): boolean {
     'button, a, input, select, textarea, summary, canvas, [role="slider"], [contenteditable="true"]');
 }
 
+// The translateY an inline transform currently applies, so a close started
+// from a dragged position only slides the remaining distance.
+function _translateY(el: HTMLElement): number {
+  const transform = el.style?.transform;
+  if (!transform || transform === 'none') return 0;
+  const match = /translateY\((-?[\d.]+)px\)/.exec(transform);
+  return match && match[1] ? parseFloat(match[1]) : 0;
+}
+
 function _findTouch(list: TouchList, id: number | null): Touch | null {
   for (let i = 0; i < list.length; i++) {
     const touch = list[i];
@@ -216,7 +225,10 @@ export class GlpSheet {
   constructor(root: HTMLElement | ShadowRoot, options: GlpSheetOptions = {}) {
     this._root = root;
     this._doc = root.ownerDocument ?? document;
-    this._win = (this._doc.defaultView as Window | null) ?? null;
+    // happy-dom (and a detached document) can report a null defaultView; the
+    // global window is the same one in that case.
+    this._win = (this._doc.defaultView as Window | null)
+      ?? (typeof window !== 'undefined' ? window : null);
     this._options = options;
     this._titleId = `glp-sheet-title-${++_sheetSeq}`;
   }
@@ -299,6 +311,8 @@ export class GlpSheet {
     this._dialog = host.querySelector<HTMLDialogElement>('dialog');
     this._panel = host.querySelector<HTMLElement>('.glp-sheet-panel');
     this._bodyEl = host.querySelector<HTMLElement>('.glp-sheet-body');
+    // Attach once per open, on the stable host: a refresh replaces the panel
+    // node, and a drag that started before it must keep working.
     this._attachDrag();
   }
 
@@ -319,8 +333,9 @@ export class GlpSheet {
     const win = this._win;
     if (!win || typeof win.addEventListener !== 'function') return;
     const onPop = (): void => {
-      // This sheet's history entry is already gone, so closing must not call
-      // back() again.
+      // The entry this sheet pushed is already gone, so no close path may call
+      // back() again — including a close that is still sliding out.
+      this._historyPushed = false;
       if (this._open) this._close(false);
     };
     win.addEventListener('popstate', onPop);
@@ -342,7 +357,7 @@ export class GlpSheet {
   private _pushHistory(): void {
     const hist = this._history();
     const push = hist?.pushState;
-    if (typeof push !== 'function') return;
+    if (!hist || typeof push !== 'function') return;
     try {
       // Same URL: this entry exists only to give the phone back gesture
       // something to consume, it must not change the dashboard URL.
@@ -359,7 +374,9 @@ export class GlpSheet {
     if (!this._open) return;
     this._open = false;
     this._expanded = false;
-    this._detachListeners();
+    // The popstate listener stays until the close completes: the back gesture
+    // can still arrive during the slide-out and must claim its own entry
+    // instead of leaving one behind and letting the close call back() too.
     this._detachDrag();
     this._settleClose();
     const finish = (): void => {
@@ -381,6 +398,7 @@ export class GlpSheet {
   }
 
   private _finishClose(trimHistory: boolean): void {
+    this._detachListeners();
     const dialog = this._dialog;
     if (dialog) {
       try { dialog.close(); } catch { dialog.removeAttribute('open'); }
@@ -393,7 +411,7 @@ export class GlpSheet {
     if (trimHistory && hadEntry) {
       const hist = this._history();
       const back = hist?.back;
-      if (typeof back === 'function') back.call(hist);
+      if (hist && typeof back === 'function') back.call(hist);
     }
     const onClose = this._options.onClose;
     if (typeof onClose === 'function') onClose();
@@ -407,7 +425,17 @@ export class GlpSheet {
     if (!panel || !_isPhoneWidth(this._win) || !_motionOk(this._win)) { done(); return; }
     const height = (typeof panel.getBoundingClientRect === 'function' ? panel.getBoundingClientRect().height : 0)
       || panel.offsetHeight || 0;
-    const duration = Math.max(SHEET_OUT_MIN_MS, SHEET_OUT_MS);
+    // The drag may already have moved the panel part-way down; only the rest
+    // of the distance has to animate. The height is pinned first, because a
+    // dragged sheet carries an inline height that would otherwise snap back to
+    // its detent's max-height the moment it is cleared.
+    const startY = Math.max(0, _translateY(panel));
+    const distance = Math.max(1, height - startY);
+    const duration = Math.max(SHEET_OUT_MIN_MS, Math.round(SHEET_OUT_MS * (distance / Math.max(1, height))));
+    panel.style.transition = 'none';
+    if (height > 0) panel.style.height = `${Math.round(height)}px`;
+    panel.style.transform = startY > 0 ? `translateY(${Math.round(startY)}px)` : '';
+    void panel.offsetHeight; // commit the start position before transitioning
     let finished = false;
     let timer: ReturnType<typeof setTimeout> | null = null;
     const finish = (): void => {
@@ -422,7 +450,6 @@ export class GlpSheet {
     panel.addEventListener('transitionend', onEnd);
     panel.style.transition = `transform ${duration}ms ${SHEET_OUT_BEZIER}`;
     panel.style.transform = `translateY(${Math.max(1, height)}px)`;
-    panel.style.height = '';
     if (backdrop) {
       backdrop.style.transition = `opacity ${duration}ms ${SHEET_OUT_BEZIER}`;
       backdrop.style.opacity = '0';
@@ -444,21 +471,32 @@ export class GlpSheet {
     }
   }
 
-  // Settles on a detent after a drag: clears the live height/transform and
-  // lets the data-snap max-height decide the final size.
-  private _settle(expanded: boolean): void {
+  // Settles on a detent after a drag: the destination's max-height (50vh or
+  // 92vh) is applied by data-snap first, then the height animates from where
+  // the finger left it to the measured destination, and the inline styles are
+  // cleared so the detent's own rule owns the size again.
+  private _settle(expanded: boolean, target: number): void {
+    const before = this._panel;
+    const start = before && typeof before.getBoundingClientRect === 'function'
+      ? before.getBoundingClientRect().height
+      : 0;
     this._expanded = expanded;
+    this._render();
     const panel = this._panel;
     if (!panel) return;
     const backdrop = this._host?.querySelector<HTMLElement>('.glp-sheet-backdrop') ?? null;
-    panel.style.transition = `transform ${SPRING_BACK_MS}ms ${SHEET_OUT_BEZIER}, height ${SPRING_BACK_MS}ms ${SHEET_OUT_BEZIER}`;
-    panel.style.transform = '';
-    panel.style.height = '';
+    if (target > 0 && start > 0 && Math.abs(start - target) >= 1) {
+      panel.style.transition = 'none';
+      panel.style.transform = '';
+      panel.style.height = `${Math.round(start)}px`;
+      void panel.offsetHeight; // commit the start height before transitioning
+      panel.style.transition = `height ${SPRING_BACK_MS}ms ${SHEET_OUT_BEZIER}`;
+      panel.style.height = `${Math.round(target)}px`;
+    }
     if (backdrop) {
       backdrop.style.transition = `opacity ${SPRING_BACK_MS}ms ${SHEET_OUT_BEZIER}`;
       backdrop.style.opacity = '';
     }
-    this._render();
     const reset = (): void => { this._resetPanelStyles(); };
     if (this._win && typeof this._win.setTimeout === 'function') this._win.setTimeout(reset, SPRING_BACK_MS + 40);
     else setTimeout(reset, SPRING_BACK_MS + 40);
@@ -476,10 +514,9 @@ export class GlpSheet {
   // browser scroll is only suppressed with preventDefault once the drag
   // starts. Wider viewports get no drag at all, matching the centred dialog.
   private _attachDrag(): void {
-    this._detachDrag();
-    const panel = this._panel;
-    const bodyEl = this._bodyEl;
-    if (!panel || !_isPhoneWidth(this._win) || typeof panel.addEventListener !== 'function') return;
+    const host = this._host;
+    if (this._dragCleanup.length || !host || !_isPhoneWidth(this._win)) return;
+    if (typeof host.addEventListener !== 'function') return;
 
     let active = false;
     let touchId: number | null = null;
@@ -491,17 +528,25 @@ export class GlpSheet {
     let halfH = 0;
     let fullH = 0;
 
-    const panelHeight = (): number => {
-      const rect = typeof panel.getBoundingClientRect === 'function' ? panel.getBoundingClientRect() : null;
-      return (rect?.height || panel.offsetHeight || 0) || 1;
+    // The panel is re-rendered by refresh(), so every handler resolves the
+    // current node instead of closing over the one from _render().
+    const panel = (): HTMLElement | null => this._panel;
+    const backdrop = (): HTMLElement | null =>
+      this._host?.querySelector<HTMLElement>('.glp-sheet-backdrop') ?? null;
+
+    const heightOf = (el: HTMLElement | null): number => {
+      if (!el) return 0;
+      const rect = typeof el.getBoundingClientRect === 'function' ? el.getBoundingClientRect() : null;
+      return rect?.height || el.offsetHeight || 0;
     };
 
     // The two detent heights for this gesture. Half is what the panel is at
     // while collapsed (50vh, or less when the content fits); full additionally
     // counts the body height the half cap is hiding, bounded by 92vh.
     const measure = (): void => {
-      const rect = typeof panel.getBoundingClientRect === 'function' ? panel.getBoundingClientRect() : null;
-      const cur = rect?.height || panel.offsetHeight || 0;
+      const el = panel();
+      const bodyEl = this._bodyEl;
+      const cur = heightOf(el);
       const vh = this._win?.innerHeight || 0;
       const extra = bodyEl ? Math.max(0, bodyEl.scrollHeight - bodyEl.clientHeight) : 0;
       if (this._expanded) {
@@ -513,37 +558,39 @@ export class GlpSheet {
       }
     };
 
-    const backdrop = this._host?.querySelector<HTMLElement>('.glp-sheet-backdrop') ?? null;
-
     const applyTransform = (): void => {
+      const el = panel();
+      if (!el) return;
       const dy = lastDy;
       const delta = Math.max(0, fullH - halfH);
-      panel.style.transition = 'none';
+      el.style.transition = 'none';
       if (dy >= 0) {
         if (this._expanded && delta > 0 && dy < delta) {
           // Full sheet shrinking back toward half.
-          panel.style.height = `${Math.round(fullH - dy)}px`;
-          panel.style.transform = '';
+          el.style.height = `${Math.round(fullH - dy)}px`;
+          el.style.transform = '';
         } else {
           const out = this._expanded ? dy - delta : dy;
-          panel.style.height = delta > 0 ? `${Math.round(halfH)}px` : '';
-          panel.style.transform = out > 0 ? `translateY(${Math.round(out)}px)` : '';
+          el.style.height = delta > 0 ? `${Math.round(halfH)}px` : '';
+          el.style.transform = out > 0 ? `translateY(${Math.round(out)}px)` : '';
         }
       } else {
         const up = -dy;
         if (!this._expanded && delta > 0 && up < delta) {
           // Half sheet growing toward full.
-          panel.style.height = `${Math.round(halfH + up)}px`;
-          panel.style.transform = '';
+          el.style.height = `${Math.round(halfH + up)}px`;
+          el.style.transform = '';
         } else {
           const beyond = !this._expanded && delta > 0 ? up - delta : up;
-          panel.style.height = delta > 0 ? `${Math.round(fullH)}px` : '';
+          el.style.height = delta > 0 ? `${Math.round(fullH)}px` : '';
           const band = rubberBand(beyond);
-          panel.style.transform = band < 0 ? `translateY(${Math.round(band)}px)` : '';
+          el.style.transform = band < 0 ? `translateY(${Math.round(band)}px)` : '';
         }
       }
-      if (backdrop) {
-        backdrop.style.opacity = String(Math.max(0, 1 - Math.max(0, dy) / panelHeight()));
+      const shade = backdrop();
+      if (shade) {
+        const height = heightOf(el) || 1;
+        shade.style.opacity = String(Math.max(0, 1 - Math.max(0, dy) / height));
       }
     };
 
@@ -563,20 +610,23 @@ export class GlpSheet {
 
     const onTouchMove = (e: TouchEvent): void => {
       if (!active || touchId === null) return;
+      const el = panel();
+      if (!el) return;
       const t = _findTouch(e.touches, touchId);
       if (!t) return;
       const dy = t.clientY - startY;
+      const bodyEl = this._bodyEl;
       const scrollTop = bodyEl ? bodyEl.scrollTop : 0;
       if (!dragging) {
         if (interactive) return;
         const fromBody = !!bodyEl && typeof bodyEl.contains === 'function' && bodyEl.contains(e.target as Node);
-        // Downward from scrolled content is a scroll, not a drag; upward from
-        // it just collapses the detent differences rather than rubber-banding.
-        if (fromBody && dy > 0 && !allowsBodyDrag(scrollTop, dy, interactive)) return;
-        if (!fromBody && dy > 0 && !this._expanded && scrollTop > 0) return;
+        // A downward gesture on scrolled content is a scroll, and one that
+        // starts on a control belongs to that control. Upward always drags:
+        // that is how the half sheet reaches full even from its content.
+        if (dy > 0 && (scrollTop > 0 || (fromBody && !allowsBodyDrag(scrollTop, dy, interactive)))) return;
         if (Math.abs(dy) < DRAG_START_SLOP_PX) return;
         dragging = true;
-        panel.style.transition = 'none';
+        el.style.transition = 'none';
       }
       e.preventDefault();
       lastDy = dy;
@@ -604,7 +654,7 @@ export class GlpSheet {
         this._close(true);
         return;
       }
-      this._settle(snap === 'full');
+      this._settle(snap === 'full', snap === 'full' ? fullH : halfH);
     };
 
     const onStart = (e: Event): void => onTouchStart(e as TouchEvent);
@@ -612,15 +662,15 @@ export class GlpSheet {
     const onEnd = (): void => onTouchEnd(false);
     const onCancel = (): void => onTouchEnd(true);
 
-    panel.addEventListener('touchstart', onStart, { passive: true });
-    panel.addEventListener('touchmove', onMove, { passive: false });
-    panel.addEventListener('touchend', onEnd);
-    panel.addEventListener('touchcancel', onCancel);
+    host.addEventListener('touchstart', onStart, { passive: true });
+    host.addEventListener('touchmove', onMove, { passive: false });
+    host.addEventListener('touchend', onEnd);
+    host.addEventListener('touchcancel', onCancel);
     this._dragCleanup.push(() => {
-      panel.removeEventListener('touchstart', onStart);
-      panel.removeEventListener('touchmove', onMove);
-      panel.removeEventListener('touchend', onEnd);
-      panel.removeEventListener('touchcancel', onCancel);
+      host.removeEventListener('touchstart', onStart);
+      host.removeEventListener('touchmove', onMove);
+      host.removeEventListener('touchend', onEnd);
+      host.removeEventListener('touchcancel', onCancel);
     });
   }
 }

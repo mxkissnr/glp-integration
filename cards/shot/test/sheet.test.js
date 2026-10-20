@@ -43,6 +43,12 @@ Object.defineProperty(window, 'matchMedia', {
   }),
 });
 
+// Lit's `html` must come from the same module instance the sheet imported, so
+// it is loaded with a dynamic import (the ESM cache is shared with the sheet's
+// own `import 'lit'`); a second copy would fail Lit's TemplateResult check.
+let html = null;
+test.before(async () => { ({ html } = await import('lit')); });
+
 const {
   dismissDistance,
   recentVelocity,
@@ -214,10 +220,7 @@ function content(title = 'Shot details', bodyText = 'Body text') {
   return { title, body: () => htmlText(bodyText), actions: () => htmlText('Action') };
 }
 
-// The controller only requires a TemplateResult; tests render plain text
-// through Lit's html tag from the same module instance it uses.
 function htmlText(text) {
-  const { html } = require('lit');
   return html`<span class="test-probe">${text}</span>`;
 }
 
@@ -318,6 +321,7 @@ test('refresh() re-renders the body while open', (t) => {
   const sheet = makeSheet(t, root);
   let text = 'first';
   sheet.open({ title: 'Live', body: () => htmlText(text) });
+  const dialog = root.querySelector('dialog');
 
   assert.equal(root.querySelector('.glp-sheet-body').textContent.trim(), 'first');
   text = 'second';
@@ -325,6 +329,10 @@ test('refresh() re-renders the body while open', (t) => {
 
   assert.equal(root.querySelector('.glp-sheet-body').textContent.trim(), 'second');
   assert.equal(sheet.isOpen, true);
+  // Lit patches the existing tree, so the modal dialog must survive a refresh
+  // (a recreated <dialog> would silently drop out of the top layer).
+  assert.equal(root.querySelector('dialog'), dialog, 'the dialog node is reused');
+  assert.equal(dialog.hasAttribute('open'), true);
 });
 
 test('reopening works, keeps one history entry and does not double listeners', (t) => {
