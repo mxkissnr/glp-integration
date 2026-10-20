@@ -2,7 +2,8 @@
 mirroring the app's additive GET /api/status "machines" array added in GLP
 #317. Scope of this round: the coordinator parses and exposes the array
 (coordinator.data["machines"] + the machine_status sensor's "machines"
-attribute) — per-machine HA devices/entities are a follow-up, not built yet.
+attribute). The per-machine HA devices/entities this registry feeds are
+covered in tests/test_multi_machine_devices.py.
 """
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
