@@ -28,4 +28,7 @@ export default [
       ],
     },
   }),
+  // Both this folder and ../shot hold a candidate tsconfig root for the
+  // typescript-eslint parser; pin it to this folder.
+  { languageOptions: { parserOptions: { tsconfigRootDir: import.meta.dirname } } },
 ];
