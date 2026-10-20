@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 ### Changed
+- **The Shot Card's and Order Card's shared CSS tokens, escaping helpers, theme presets and icon geometry now live once in `cards/shared/` instead of as duplicated blocks in both cards; the rendered cards are unchanged.** Refs #256
 - **The Shot Card and the Order Card are now developed in this repository and ship with every integration release.** Refs #256
 
 ### Fixed
