@@ -9,7 +9,10 @@ import shotConfig from '../shot/eslint.config.mts';
 export default [
   ...shotConfig,
   ...tseslint.config({
+    // The sources in this folder; the config file itself is covered by the
+    // Node tooling block reused from the Shot Card.
     files: ['**/*.ts'],
+    ignores: ['eslint.config.mts'],
     extends: [...tseslint.configs.recommended],
     languageOptions: {
       globals: globals.browser,
