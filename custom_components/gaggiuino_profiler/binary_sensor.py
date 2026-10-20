@@ -140,6 +140,10 @@ class IsBrewingSensor(GlpEntity[GlpLiveCoordinator], BinarySensorEntity):
         super().__init__(coordinator, entry, "is_brewing")
 
     @property
+    def suggested_object_id(self) -> str | None:
+        return "brewing"
+
+    @property
     def is_on(self) -> bool | None:
         if self.coordinator.data is None:
             return None
@@ -176,6 +180,10 @@ class PreheatReadySensor(GlpEntity[GlpDataCoordinator], BinarySensorEntity):
         super().__init__(coordinator, entry, "preheat_ready")
 
     @property
+    def suggested_object_id(self) -> str | None:
+        return "preheat_ready"
+
+    @property
     def is_on(self) -> bool | None:
         if self.coordinator.data is None:
             return None
@@ -190,6 +198,10 @@ class MachineStandbySensor(GlpEntity[GlpDataCoordinator], BinarySensorEntity):
 
     def __init__(self, coordinator: GlpDataCoordinator, entry: ConfigEntry) -> None:
         super().__init__(coordinator, entry, "machine_standby")
+
+    @property
+    def suggested_object_id(self) -> str | None:
+        return "machine_standby"
 
     @property
     def is_on(self) -> bool | None:
@@ -207,6 +219,10 @@ class SteamSwitchSensor(GlpEntity[GlpMachineCoordinator], BinarySensorEntity):
 
     def __init__(self, coordinator: GlpMachineCoordinator, entry: ConfigEntry) -> None:
         super().__init__(coordinator, entry, "steam_switch")
+
+    @property
+    def suggested_object_id(self) -> str | None:
+        return "steam_switch"
 
     @property
     def available(self) -> bool:
@@ -266,6 +282,10 @@ class GlpAdditionalMachineReachableSensor(GlpAdditionalMachineEntity[GlpDataCoor
 
     def __init__(self, coordinator: GlpDataCoordinator, entry: ConfigEntry, machine_id: int, machine_name: str) -> None:
         super().__init__(coordinator, entry, machine_id, machine_name, "reachable")
+
+    @property
+    def suggested_object_id(self) -> str | None:
+        return "reachable"
 
     def _machine(self) -> dict | None:
         machines = (self.coordinator.data or {}).get("machines") or []

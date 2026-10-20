@@ -25,6 +25,14 @@ def _ds(arr: list, n: int = 40) -> list:
 # the coordinator just reads it — see lib/score.js in the add-on.
 
 
+def _num(value: object, cast):
+    """Coerce an upstream value, returning None instead of raising (#237)."""
+    try:
+        return cast(value)
+    except (TypeError, ValueError):
+        return None
+
+
 def _parse_ts(value: object) -> datetime | None:
     if value is None:
         return None
@@ -182,20 +190,22 @@ class GlpDataCoordinator(DataUpdateCoordinator):
         pressure = dp.get("pressure") or []
         duration = dp.get("timeInShot") or []
 
-        avg_pressure = round(sum(pressure) / len(pressure) / 10, 2) if pressure else None
-        duration_s   = round(duration[-1] / 10, 1) if duration else None
+        pressure_nums = [v for p in pressure if (v := _num(p, float)) is not None]
+        avg_pressure = round(sum(pressure_nums) / len(pressure_nums) / 10, 2) if pressure_nums else None
+        last_duration = _num(duration[-1], float) if duration else None
+        duration_s   = round(last_duration / 10, 1) if last_duration is not None else None
 
         dose  = ann.get("dose")
         yield_g = None
         ratio   = None
         weight_arr = dp.get("shotWeight") or dp.get("weight") or []
-        if weight_arr:
-            yield_g = round(weight_arr[-1] / 10, 1)
+        last_weight = _num(weight_arr[-1], float) if weight_arr else None
+        if last_weight is not None:
+            yield_g = round(last_weight / 10, 1)
         if dose and yield_g:
-            try:
-                ratio = round(float(yield_g) / float(dose), 2)
-            except (ValueError, ZeroDivisionError):
-                pass
+            dose_f = _num(dose, float)
+            if dose_f:
+                ratio = round(float(yield_g) / dose_f, 2)
 
         current_shot_id = last.get("id")
 
@@ -231,8 +241,8 @@ class GlpDataCoordinator(DataUpdateCoordinator):
             "shot_count":          status.get("shotCount", 0),
             "shots_today":         shots_today,
             "last_shot_id":        current_shot_id,
-            "last_shot_profile":   last.get("profileName") or last.get("profile", {}).get("name"),
-            "last_shot_rating":    int(ann["rating"]) if ann.get("rating") else None,
+            "last_shot_profile":   last.get("profileName") or (last.get("profile") or {}).get("name"),
+            "last_shot_rating":    _num(ann.get("rating"), int),
             "last_shot_date":      _parse_ts(last.get("timestamp")),
             "last_shot_duration":  duration_s,
             "last_shot_pressure":  avg_pressure,
@@ -240,7 +250,7 @@ class GlpDataCoordinator(DataUpdateCoordinator):
             "last_shot_ratio":     ratio,
             "last_shot_coffee":    ann.get("coffee"),
             "last_shot_grinder":   ann.get("grinder"),
-            "last_shot_dose":      float(dose) if dose else None,
+            "last_shot_dose":      _num(dose, float) if dose else None,
             "last_sync":           _parse_ts(status.get("lastSync")),
             "machine_url":         status.get("machineHostname"),
             # Multi-machine registry (#47, mirrors the app's additive
@@ -250,7 +260,14 @@ class GlpDataCoordinator(DataUpdateCoordinator):
             "machines":            status.get("machines") or [],
         }
 
-        if current_shot_id and current_shot_id != self._last_shot_id and self._last_shot_id is not None:
+        previous_shot_id = _num(self._last_shot_id, int)
+        new_shot_id = _num(current_shot_id, int)
+        shot_id_increased = (
+            new_shot_id > previous_shot_id
+            if new_shot_id is not None and previous_shot_id is not None
+            else current_shot_id != self._last_shot_id
+        )
+        if current_shot_id and shot_id_increased and self._last_shot_id is not None:
             self.hass.bus.async_fire(
                 f"{DOMAIN}_shot_completed",
                 {
@@ -347,11 +364,12 @@ class GlpDataCoordinator(DataUpdateCoordinator):
             s_flow = s_dp.get("pumpFlow") or s_dp.get("weightFlow") or []
             s_dose = s_ann.get("dose")
             s_ratio = None
-            if s_wt and s_dose:
-                try:
-                    s_ratio = round(float(s_wt[-1] / 10) / float(s_dose), 2)
-                except (ValueError, ZeroDivisionError):
-                    pass
+            s_weight = _num(s_wt[-1], float) if s_wt else None
+            s_dose_f = _num(s_dose, float) if s_dose else None
+            if s_weight is not None and s_dose_f:
+                s_ratio = round((s_weight / 10) / s_dose_f, 2)
+            s_duration = _num(s_dur[-1], float) if s_dur else None
+            s_pres_nums = [v for p in s_pres if (v := _num(p, float)) is not None]
             # Compact downsampled curves for the Lovelace card chart (max 40 pts each, ×10 ints)
             s_dp_small: dict | None = {
                 k: _ds(v) for k, v in [("p", s_pres), ("t", s_temp), ("w", s_wt), ("f", s_flow)] if v
@@ -364,11 +382,11 @@ class GlpDataCoordinator(DataUpdateCoordinator):
                 "beanId":   s_ann.get("beanId"),
                 "grinder":  s_ann.get("grinder"),
                 "grind":    s_ann.get("grindSetting"),
-                "duration": round(s_dur[-1] / 10, 1) if s_dur else None,
-                "yield_g":  round(s_wt[-1] / 10, 1) if s_wt else None,
+                "duration": round(s_duration / 10, 1) if s_duration is not None else None,
+                "yield_g":  round(s_weight / 10, 1) if s_weight is not None else None,
                 "ratio":    s_ratio,
-                "pressure": round(sum(s_pres) / len(s_pres) / 10, 2) if s_pres else None,
-                "rating":     int(s_ann["rating"]) if s_ann.get("rating") else None,
+                "pressure": round(sum(s_pres_nums) / len(s_pres_nums) / 10, 2) if s_pres_nums else None,
+                "rating":     _num(s_ann.get("rating"), int),
                 "drink_type": drink_lookup.get(s_ann.get("drinkType", "")) or None,
                 # Coerced like every sibling above, but via isinstance rather than a
                 # bare int(): a non-numeric value here would come from a source we do

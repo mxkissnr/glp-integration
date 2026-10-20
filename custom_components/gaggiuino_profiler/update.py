@@ -41,6 +41,10 @@ class GlpUpdateEntity(GlpEntity[GlpDataCoordinator], UpdateEntity):
         super().__init__(coordinator, entry, "update")
 
     @property
+    def suggested_object_id(self) -> str | None:
+        return "update"
+
+    @property
     def installed_version(self) -> str | None:
         if self.coordinator.data is None:
             return None
