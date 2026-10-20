@@ -36,10 +36,11 @@ export default [
   }),
   ...tseslint.config({
     // The card's TypeScript sources (#180): fully typed, so the non-type-checked
-    // recommended set stays enough (no parser project). The GLP-SHARED /
-    // GLP-TOKENS blocks still have to stay byte-identical with the Order Card,
-    // checked by test/token-sync.test.js.
-    files: ['src/**/*.ts'],
+    // recommended set stays enough (no parser project). cards/shared/ is linted
+    // by this same config (see the lint script in ../package.json). The
+    // remaining GLP-SHARED blocks still have to stay byte-identical with the
+    // Order Card, checked by test/token-sync.test.js.
+    files: ['src/**/*.ts', '../shared/**/*.ts'],
     extends: [...tseslint.configs.recommended],
     languageOptions: {
       globals: globals.browser,
