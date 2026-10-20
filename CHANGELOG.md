@@ -15,6 +15,9 @@
 ### Documentation
 - **The documentation now describes the Machine Status error state, the real shot-completed event fields, the settings poll and the current licence wording.** Refs #240
 
+### CI
+- **The "Cards" job now lints `cards/shared/` with the shared blocks' own ESLint config and an explicit `tsconfigRootDir`, so the lint step no longer stops on a parsing error when two candidate TypeScript roots are present.** Refs #256
+
 ## [1.33.1] – 2026-10-18
 ### Fixed
 - **The maintenance_done service with a machine id now resets that machine's counter instead of the default machine's.** Refs #234
