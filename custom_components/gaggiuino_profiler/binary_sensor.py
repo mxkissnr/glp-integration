@@ -285,7 +285,9 @@ class GlpAdditionalMachineReachableSensor(GlpAdditionalMachineEntity[GlpDataCoor
 
     @property
     def suggested_object_id(self) -> str | None:
-        return "reachable"
+        # One entity per additional machine: include the machine id so two
+        # machines cannot suggest the same object id (see #62/#63).
+        return f"machine_{self._machine_id}_reachable"
 
     def _machine(self) -> dict | None:
         machines = (self.coordinator.data or {}).get("machines") or []

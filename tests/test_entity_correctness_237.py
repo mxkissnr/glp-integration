@@ -103,13 +103,24 @@ def test_expected_suggested_object_ids() -> None:
         PreheatReadySensor: "preheat_ready",
         MachineStandbySensor: "machine_standby",
         SteamSwitchSensor: "steam_switch",
-        GlpAdditionalMachineReachableSensor: "reachable",
+        GlpAdditionalMachineReachableSensor: "machine_2_reachable",
         GlpProfileSelect: "profile",
         GlpUpdateEntity: "update",
     }
     by_type = {type(entity): entity for entity in entities}
     for entity_type, object_id in expected.items():
         assert by_type[entity_type].suggested_object_id == object_id
+
+
+def test_additional_machine_suggested_ids_are_unique_per_machine() -> None:
+    entry = _entry()
+    coordinator = _coordinator()
+    first = GlpAdditionalMachineReachableSensor(coordinator, entry, 2, "Machine 2")
+    second = GlpAdditionalMachineReachableSensor(coordinator, entry, 3, "Machine 3")
+
+    assert first.suggested_object_id == "machine_2_reachable"
+    assert second.suggested_object_id == "machine_3_reachable"
+    assert first.suggested_object_id != second.suggested_object_id
 
 
 def _mock_all(aioclient_mock, *, shots: list | None = None) -> None:
