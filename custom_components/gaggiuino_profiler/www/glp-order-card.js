@@ -1193,6 +1193,123 @@ ${TOKENS}
     return ICONS.of(item?.id) || esc(item?.emoji);
   }
 
+  // shared/contrast.ts
+  function rgbOf(host, cssColor) {
+    if (!cssColor) return null;
+    let rgb;
+    try {
+      const probe = document.createElement("span");
+      probe.style.cssText = "display:none";
+      probe.style.color = cssColor;
+      host.shadowRoot.appendChild(probe);
+      rgb = getComputedStyle(probe).color;
+      probe.remove();
+    } catch {
+      return null;
+    }
+    const m2 = rgb && rgb.match(/[\d.]+/g);
+    if (!m2 || m2.length < 3) return null;
+    return m2.slice(0, 3).map(Number);
+  }
+  function luminanceOf(host, cssColor) {
+    const rgb = rgbOf(host, cssColor);
+    if (!rgb) return null;
+    const [r4, g2, b3] = rgb;
+    const lin = (c4) => {
+      c4 /= 255;
+      return c4 <= 0.04045 ? c4 / 12.92 : ((c4 + 0.055) / 1.055) ** 2.4;
+    };
+    return 0.2126 * lin(r4) + 0.7152 * lin(g2) + 0.0722 * lin(b3);
+  }
+  function contrastOf(rgbA, rgbB) {
+    const lum = ([r4, g2, b4]) => {
+      const lin = (c4) => {
+        c4 /= 255;
+        return c4 <= 0.04045 ? c4 / 12.92 : ((c4 + 0.055) / 1.055) ** 2.4;
+      };
+      return 0.2126 * lin(r4) + 0.7152 * lin(g2) + 0.0722 * lin(b4);
+    };
+    const a3 = lum(rgbA), b3 = lum(rgbB);
+    return (Math.max(a3, b3) + 0.05) / (Math.min(a3, b3) + 0.05);
+  }
+  function applySemanticColorContrast(host) {
+    const bgLuminance = luminanceOf(host, getComputedStyle(host).getPropertyValue("--glp-bg").trim());
+    if (bgLuminance != null) {
+      const light = bgLuminance > 0.179;
+      host.style.setProperty("--glp-ok", light ? "#15803d" : "#22c55e");
+      host.style.setProperty("--glp-warn", light ? "#a16207" : "#eab308");
+      host.style.setProperty("--glp-err", light ? "#dc2626" : "#ef4444");
+    }
+    const startLuminance = luminanceOf(host, getComputedStyle(host).getPropertyValue("--glp-accent-start").trim());
+    const endLuminance = luminanceOf(host, getComputedStyle(host).getPropertyValue("--glp-accent-end").trim());
+    const accentLuminance = [startLuminance, endLuminance].filter((v2) => v2 != null).reduce((min, v2) => min == null || v2 < min ? v2 : min, null);
+    if (accentLuminance != null) {
+      host.style.setProperty("--glp-accent-text", accentLuminance > 0.179 ? "#000" : "#fff");
+    }
+    applyAccentLineContrast(host);
+  }
+  function applyAccentLineContrast(host) {
+    const cs = getComputedStyle(host);
+    const bg = rgbOf(host, cs.getPropertyValue("--glp-bg").trim());
+    const text = rgbOf(host, cs.getPropertyValue("--glp-text").trim());
+    const stops = ["--glp-accent-start", "--glp-accent-end"].map((v2) => rgbOf(host, cs.getPropertyValue(v2).trim())).filter(Boolean);
+    if (!bg || !text || !stops.length) return;
+    const weakest = stops.reduce((worst, s4) => contrastOf(s4, bg) < contrastOf(worst, bg) ? s4 : worst, stops[0]);
+    if (contrastOf(weakest, bg) >= 3) {
+      host.style.setProperty("--glp-aline", `rgb(${weakest.join(" ")})`);
+      return;
+    }
+    let out = weakest;
+    for (let t4 = 0.05; t4 <= 1.0001; t4 += 0.05) {
+      const mixed = weakest.map((c4, i6) => Math.round(c4 + (text[i6] - c4) * t4));
+      out = mixed;
+      if (contrastOf(mixed, bg) >= 3) break;
+    }
+    host.style.setProperty("--glp-aline", `rgb(${out.join(" ")})`);
+  }
+
+  // shared/machine.ts
+  function matchMachineStatusEntity(hass, candidates, machine) {
+    const needle = String(machine).toLowerCase();
+    const needleSlug = needle.replace(/\s+/g, "_");
+    return candidates.find((id) => hass.states[id]?.attributes?.friendly_name?.toLowerCase().includes(needle) || id.toLowerCase().includes(needleSlug));
+  }
+  function appMachineEntry(hass, machine) {
+    if (!hass) return null;
+    const statusIds = Object.keys(hass.states).filter((id) => id.endsWith("_machine_status"));
+    let machines = null;
+    for (const id of statusIds) {
+      const list = hass.states[id]?.attributes?.machines;
+      if (Array.isArray(list)) {
+        machines = list;
+        break;
+      }
+    }
+    if (!machines) return null;
+    let entry = null;
+    if (machine) {
+      const needle = String(machine).toLowerCase();
+      entry = machines.find((m2) => String(m2.name || "").toLowerCase() === needle || String(m2.id) === needle);
+    }
+    if (!entry) entry = machines.find((m2) => m2.isDefault) || null;
+    return entry;
+  }
+  function appMachineTheme(entry) {
+    const theme = entry?.theme;
+    if (!theme) return null;
+    if (typeof theme.preset === "string" && Object.prototype.hasOwnProperty.call(THEME_PRESETS, theme.preset)) {
+      return THEME_PRESETS[theme.preset];
+    }
+    if (/^#[0-9a-fA-F]{6}$/.test(theme.a) && /^#[0-9a-fA-F]{6}$/.test(theme.b)) {
+      return { a: theme.a, b: theme.b };
+    }
+    return null;
+  }
+  function appMachineType(entry) {
+    const type = entry?.type;
+    return type === "gaggimate" ? "gaggimate" : "gaggiuino";
+  }
+
   // order/src/i18n.ts
   var STRINGS = {
     de: {
@@ -1427,61 +1544,11 @@ ${TOKENS}
       };
       if (config.glp_token) this._token = String(config.glp_token);
     }
-    // GLP-SHARED:app-theme-lookup v1 — reads this card's own machine's entry
-    // out of `hass` state's `machines[]` array, or null when unavailable (no
-    // app-side sync yet, e.g. this card's zero-config/standalone mode).
-    // glp-integration forwards every machine's attributes verbatim off the
-    // app's GET /api/status `machines[]` (gaggiuino-local-profiler#701): any
-    // `*_machine_status`-suffixed entity carries the WHOLE array (every
-    // machine, not just the default one) as its `machines` attribute, so any
-    // one such entity is enough regardless of which machine this card
-    // instance represents. Matched against `this._config.machine` the same
-    // "name or id" needle way this card's own machine-status-entity matching
-    // works, falling back to the isDefault entry when unconfigured. Shared by
-    // _appMachineTheme() (theme colours) and _appMachineType() (machine body
-    // shape for MACHINE_ICON_MINI, mxkissnr/glp-lovelace-card#127 /
-    // mxkissnr/glp-order-card#97) so both read the one resolved entry instead
-    // of duplicating the lookup. Kept byte-identical between glp-card.js and
-    // glp-order-card.js.
-    _appMachineEntry() {
-      if (!this._hass) return null;
-      const statusIds = Object.keys(this._hass.states).filter((id) => id.endsWith("_machine_status"));
-      let machines = null;
-      for (const id of statusIds) {
-        const list = this._hass.states[id]?.attributes?.machines;
-        if (Array.isArray(list)) {
-          machines = list;
-          break;
-        }
-      }
-      if (!machines) return null;
-      let entry = null;
-      if (this._config?.machine) {
-        const needle = String(this._config.machine).toLowerCase();
-        entry = machines.find((m2) => String(m2.name || "").toLowerCase() === needle || String(m2.id) === needle);
-      }
-      if (!entry) entry = machines.find((m2) => m2.isDefault) || null;
-      return entry;
-    }
+    // The app's own stored per-machine theme (#701), read from hass state by
+    // the shared machine lookup; null when nothing valid is synced.
     _appMachineTheme() {
-      const theme = this._appMachineEntry()?.theme;
-      if (!theme) return null;
-      if (typeof theme.preset === "string" && Object.prototype.hasOwnProperty.call(THEME_PRESETS, theme.preset)) {
-        return THEME_PRESETS[theme.preset];
-      }
-      if (/^#[0-9a-fA-F]{6}$/.test(theme.a) && /^#[0-9a-fA-F]{6}$/.test(theme.b)) {
-        return { a: theme.a, b: theme.b };
-      }
-      return null;
+      return appMachineTheme(appMachineEntry(this._hass, this._config?.machine));
     }
-    // Machine type ('gaggiuino' | 'gaggimate') for MACHINE_BODY/MACHINE_ICON_MINI's
-    // badge shape. Defaults to 'gaggiuino' when unresolved/unrecognized, same
-    // backward-compatible default MACHINE_BODY itself falls back to.
-    _appMachineType() {
-      const type = this._appMachineEntry()?.type;
-      return type === "gaggimate" ? "gaggimate" : "gaggiuino";
-    }
-    // /GLP-SHARED:app-theme-lookup v1
     // Machine colour theme (#62): resolves this card's effective accent theme
     // to concrete {a,b} hex stops, or null if nothing valid is
     // configured/synced. The app's own stored theme (#701, _appMachineTheme())
@@ -1524,7 +1591,7 @@ ${TOKENS}
     // simultaneously) from sharing one SVG gradient id.
     _machineGlyphHtml(sizeClass, idSuffix) {
       const id = `glp-oc-icon-${this._instanceId}-${idSuffix}`;
-      return `<div class="machine-glyph ${sizeClass}">${MACHINE_ICON_MINI(id, this._appMachineType())}</div>`;
+      return `<div class="machine-glyph ${sizeClass}">${MACHINE_ICON_MINI(id, appMachineType(appMachineEntry(this._hass, this._config?.machine)))}</div>`;
     }
     _getBase() {
       const url = this._config?.glp_url;
@@ -1546,9 +1613,7 @@ ${TOKENS}
       if (!this._hass) return null;
       const candidates = Object.keys(this._hass.states).filter((id) => id.endsWith("_machine_status"));
       if (this._config?.machine) {
-        const needle = String(this._config.machine).toLowerCase();
-        const needleSlug = needle.replace(/\s+/g, "_");
-        const matched = candidates.find((id) => this._hass.states[id]?.attributes?.friendly_name?.toLowerCase().includes(needle) || id.toLowerCase().includes(needleSlug));
+        const matched = matchMachineStatusEntity(this._hass, candidates, this._config.machine);
         if (matched) return matched;
       }
       const found = candidates.find((id) => this._hass.states[id]?.attributes?.friendly_name?.toLowerCase().includes("gaggiuino"));
@@ -1710,123 +1775,11 @@ ${TOKENS}
       const s4 = this._hass.states[entity];
       return s4?.state === "off" || s4?.state === "unavailable";
     }
-    /* GLP-SHARED:contrast v1 — kept byte-identical with glp-order-card.js's
-       _luminanceOf()/_applySemanticColorContrast() */
-    // Resolves the relative luminance of a CSS color string by normalizing it
-    // through a scratch element's computed style (handles hex/rgb/named/etc —
-    // whatever the real cascade actually resolved a custom property to).
-    // Returns null if it can't be determined (no DOM, unset value, ...).
-    // Resolves a CSS color string to [r, g, b] (0-255) by normalizing it
-    // through a scratch element's computed style, so hex/rgb/named/color-mix
-    // all work — whatever the real cascade actually produced. Split out of
-    // _luminanceOf() (which now builds on it) because --glp-aline has to
-    // BLEND two resolved colors, not merely compare their luminance.
-    _rgbOf(cssColor) {
-      if (!cssColor) return null;
-      let rgb;
-      try {
-        const probe = document.createElement("span");
-        probe.style.cssText = "display:none";
-        probe.style.color = cssColor;
-        this.shadowRoot.appendChild(probe);
-        rgb = getComputedStyle(probe).color;
-        probe.remove();
-      } catch {
-        return null;
-      }
-      const m2 = rgb && rgb.match(/[\d.]+/g);
-      if (!m2 || m2.length < 3) return null;
-      return m2.slice(0, 3).map(Number);
-    }
-    _luminanceOf(cssColor) {
-      const rgb = this._rgbOf(cssColor);
-      if (!rgb) return null;
-      const [r4, g2, b3] = rgb;
-      const lin = (c4) => {
-        c4 /= 255;
-        return c4 <= 0.04045 ? c4 / 12.92 : ((c4 + 0.055) / 1.055) ** 2.4;
-      };
-      return 0.2126 * lin(r4) + 0.7152 * lin(g2) + 0.0722 * lin(b3);
-    }
-    // Relative-luminance contrast ratio of two [r,g,b] triples, WCAG 2.x.
-    _contrastOf(rgbA, rgbB) {
-      const lum = ([r4, g2, b4]) => {
-        const lin = (c4) => {
-          c4 /= 255;
-          return c4 <= 0.04045 ? c4 / 12.92 : ((c4 + 0.055) / 1.055) ** 2.4;
-        };
-        return 0.2126 * lin(r4) + 0.7152 * lin(g2) + 0.0722 * lin(b4);
-      };
-      const a3 = lum(rgbA), b3 = lum(rgbB);
-      return (Math.max(a3, b3) + 0.05) / (Math.min(a3, b3) + 0.05);
-    }
-    // Picks the contrast-safe --glp-ok/--glp-warn/--glp-err/--glp-accent-text
-    // variants at runtime, each keyed off the LUMINANCE OF THE ACTUAL RESOLVED
-    // COLOR they need to read against — not prefers-color-scheme. OS/browser
-    // color scheme can mismatch the actual active HA theme (dark system +
-    // light HA theme is common), and this card has no data-theme attribute to
-    // key off instead. --glp-ok/--glp-warn/--glp-err key off --glp-bg's
-    // luminance; --glp-accent-text keys off --glp-accent-start/-end's
-    // luminance (the darker of the two, see below) separately (theme darkness
-    // and accent darkness are orthogonal — see the
-    // long comments in the GLP-TOKENS block above for the measured contrast
-    // ratios behind all four). Sets the winning values as an inline style on
-    // the host, which always outranks the plain :host declarations in STYLES
-    // regardless of any stylesheet/media-query state. Called from _render()
-    // right after the shadow DOM (and its :host rules) are rebuilt.
+    // Picks the contrast-safe semantic colour variants and --glp-aline at
+    // runtime from the host's resolved colours; see cards/shared/contrast.ts.
     _applySemanticColorContrast() {
-      const bgLuminance = this._luminanceOf(getComputedStyle(this).getPropertyValue("--glp-bg").trim());
-      if (bgLuminance != null) {
-        const light = bgLuminance > 0.179;
-        this.style.setProperty("--glp-ok", light ? "#15803d" : "#22c55e");
-        this.style.setProperty("--glp-warn", light ? "#a16207" : "#eab308");
-        this.style.setProperty("--glp-err", light ? "#dc2626" : "#ef4444");
-      }
-      const startLuminance = this._luminanceOf(getComputedStyle(this).getPropertyValue("--glp-accent-start").trim());
-      const endLuminance = this._luminanceOf(getComputedStyle(this).getPropertyValue("--glp-accent-end").trim());
-      const accentLuminance = [startLuminance, endLuminance].filter((v2) => v2 != null).reduce((min, v2) => min == null || v2 < min ? v2 : min, null);
-      if (accentLuminance != null) {
-        this.style.setProperty("--glp-accent-text", accentLuminance > 0.179 ? "#000" : "#fff");
-      }
-      this._applyAccentLineContrast();
+      applySemanticColorContrast(this);
     }
-    // Resolves --glp-aline: the accent as a thin line needs 3:1 against the
-    // card's background (WCAG 1.4.11 non-text contrast), which three of the
-    // eight curated machine themes miss on a dark ground (see the --glp-aline
-    // comment in the GLP-TOKENS block for the measured values).
-    //
-    // Uses the DARKER of the two gradient stops as the worst case, matching
-    // --glp-accent-text's reasoning above: a line can be drawn anywhere along
-    // the gradient, so the weakest stop is what has to clear the bar.
-    //
-    // A theme that already passes is left EXACTLY as configured — this must
-    // not quietly recolour the seven themes that were always fine. Only a
-    // failing stop is blended toward --glp-text (the direction that is
-    // guaranteed to increase contrast against the background, since --glp-text
-    // is itself the high-contrast colour for this ground) in 5% steps, and the
-    // first step that clears 3:1 wins. Stepping rather than solving keeps the
-    // result as close to the configured colour as possible: the accent should
-    // still look like the machine's colour, just legible.
-    _applyAccentLineContrast() {
-      const cs = getComputedStyle(this);
-      const bg = this._rgbOf(cs.getPropertyValue("--glp-bg").trim());
-      const text = this._rgbOf(cs.getPropertyValue("--glp-text").trim());
-      const stops = ["--glp-accent-start", "--glp-accent-end"].map((v2) => this._rgbOf(cs.getPropertyValue(v2).trim())).filter(Boolean);
-      if (!bg || !text || !stops.length) return;
-      const weakest = stops.reduce((worst, s4) => this._contrastOf(s4, bg) < this._contrastOf(worst, bg) ? s4 : worst, stops[0]);
-      if (this._contrastOf(weakest, bg) >= 3) {
-        this.style.setProperty("--glp-aline", `rgb(${weakest.join(" ")})`);
-        return;
-      }
-      let out = weakest;
-      for (let t4 = 0.05; t4 <= 1.0001; t4 += 0.05) {
-        const mixed = weakest.map((c4, i6) => Math.round(c4 + (text[i6] - c4) * t4));
-        out = mixed;
-        if (this._contrastOf(mixed, bg) >= 3) break;
-      }
-      this.style.setProperty("--glp-aline", `rgb(${out.join(" ")})`);
-    }
-    /* /GLP-SHARED:contrast v1 */
     _render() {
       if (!this._config) return;
       const lang = this._lang;
