@@ -637,10 +637,8 @@
   // node_modules/lit-html/directives/if-defined.js
   var o7 = /* @__PURE__ */ __name((o8) => o8 ?? A, "o");
 
-  // shot/src/styles.ts
-  var STYLES = `
-  /* GLP-TOKENS v1 — shared contract between glp-card.js and glp-order-card.js, keep byte-identical */
-  :host {
+  // shared/tokens.ts
+  var TOKENS = `  :host {
     --glp-radius:    var(--ha-card-border-radius, 12px);
     --glp-radius-sm: 4px;
     --glp-bg:      var(--ha-card-background, var(--card-background-color, #18181b));
@@ -804,8 +802,11 @@
     --glp-series-flow:   #c77000;
     --glp-series-temp:   #c0392b;
     --glp-series-weight: #009e73;
-  }
-  /* /GLP-TOKENS v1 */
+  }`;
+
+  // shot/src/styles.ts
+  var STYLES = `
+${TOKENS}
 
   /* legacy internal aliases — rest of this file still reads these names;
      hybrid theming happens one level up, in the GLP-TOKENS block above */
@@ -822,9 +823,10 @@
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
-  /* Base sizing for every drawn icon inserted via ICONS.of() (GLP-SHARED:icons
-     v1 above) — 1em locks it to whatever font-size token its container already
-     resolves through, so the same icon dropped into a status line vs. a pill
+  /* Base sizing for every drawn icon inserted via ICONS.of()
+     (cards/shared/icons.ts) — 1em locks it to whatever font-size token its
+     container already resolves through, so the same icon dropped into a
+     status line vs. a pill
      vs. a bean row never needs a second, size-specific copy of this rule.
      currentColor is what lets one icon sit inside a muted label, a semantic
      green pill or an accent underline with no per-context markup.
@@ -1889,6 +1891,33 @@
   }
   __name(T2, "T");
 
+  // shared/helpers.ts
+  function esc(s4) {
+    if (s4 == null) return "";
+    return String(s4).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+  }
+  __name(esc, "esc");
+  function safeUrl(url) {
+    if (!url) return null;
+    try {
+      const u3 = new URL(url);
+      return u3.protocol === "http:" || u3.protocol === "https:" ? u3.href : null;
+    } catch {
+      return null;
+    }
+  }
+  __name(safeUrl, "safeUrl");
+  var THEME_PRESETS = {
+    "amber-americano": { a: "#f59e0b", b: "#f59e0b" },
+    "ruby-ristretto": { a: "#7f1d1d", b: "#7f1d1d" },
+    "copper-cortado": { a: "#c2703d", b: "#e8b4a0" },
+    "twilight-turkish": { a: "#0891b2", b: "#4338ca" },
+    "marbled-macchiato": { a: "#f59e0b", b: "#ec4899" },
+    "ember-espresso": { a: "#dc4a1f", b: "#f5a623" },
+    "mulberry-mocha": { a: "#5b21b6", b: "#db2777" },
+    "frosty-flat-white": { a: "#0f766e", b: "#38bdf8" }
+  };
+
   // shot/src/helpers.ts
   function roastAgeDays(str) {
     if (!str || typeof str !== "string") return null;
@@ -1906,21 +1935,6 @@
     return days >= 0 && days <= 730 ? days : null;
   }
   __name(roastAgeDays, "roastAgeDays");
-  function esc(s4) {
-    if (s4 == null) return "";
-    return String(s4).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
-  }
-  __name(esc, "esc");
-  function safeUrl(url) {
-    if (!url) return null;
-    try {
-      const u3 = new URL(url);
-      return u3.protocol === "http:" || u3.protocol === "https:" ? u3.href : null;
-    } catch {
-      return null;
-    }
-  }
-  __name(safeUrl, "safeUrl");
   function parseTs(val) {
     if (!val && val !== 0) return null;
     if (typeof val === "number") return new Date(val > 1e10 ? val : val * 1e3);
@@ -1936,19 +1950,9 @@
   }
   __name(downsample, "downsample");
   var CC = { pres: "#0072b2", flow: "#c77000", temp: "#c0392b", wt: "#009e73" };
-  var THEME_PRESETS = {
-    "amber-americano": { a: "#f59e0b", b: "#f59e0b" },
-    "ruby-ristretto": { a: "#7f1d1d", b: "#7f1d1d" },
-    "copper-cortado": { a: "#c2703d", b: "#e8b4a0" },
-    "twilight-turkish": { a: "#0891b2", b: "#4338ca" },
-    "marbled-macchiato": { a: "#f59e0b", b: "#ec4899" },
-    "ember-espresso": { a: "#dc4a1f", b: "#f5a623" },
-    "mulberry-mocha": { a: "#5b21b6", b: "#db2777" },
-    "frosty-flat-white": { a: "#0f766e", b: "#38bdf8" }
-  };
   var HEX_COLOR_RE = /^#[0-9a-fA-F]{6}$/;
 
-  // shot/src/icons.ts
+  // shared/icons.ts
   var MACHINE_BODY = /* @__PURE__ */ __name((id, mini, type = "gaggiuino") => `
     <!-- Seitenwand rechts inkl. Kantenlicht, volle Hoehe -->
     <path d="M72.2 2.3 L100 11 L100 130 L88 153 L72.2 153 Z" fill="url(#${id})"/>
@@ -2087,6 +2091,8 @@
     // and an empty string is what makes `ICONS.of(x) || fallback` work.
     of: /* @__PURE__ */ __name((name, cls = "") => ICONS.has(name) ? `<svg class="glp-i${cls ? " " + cls : ""}" viewBox="0 0 24 24" aria-hidden="true" focusable="false">${GLP_ICON_PATHS[name]}</svg>` : "", "of")
   };
+
+  // shot/src/icons.ts
   GLP_ICON_PATHS.descale = '<path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/><path d="M8.3 13.6l1.5 1.7 1.4-2.3 1.5 1.7 1.5-2.3"/>';
 
   // shot/src/charts.ts
