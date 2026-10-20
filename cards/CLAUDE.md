@@ -8,8 +8,8 @@ bundles in `../custom_components/gaggiuino_profiler/www/` are built from them
   (then `git diff` on `www/` must be clean). A newly-failing test is a stop condition.
 - **Versions** live in `shot/src/glp-card.ts` (`GLP_CARD_VERSION`) and
   `order/src/glp-order-card.ts` (`GLP_ORDER_CARD_VERSION`). Never bump outside a release.
-- **Shared blocks** (`GLP-SHARED` / `GLP-TOKENS`) are still duplicated in both cards and must stay
-  byte-identical; `test/token-sync.test.js` in each card compares against the sibling folder.
+- **Shared code** (`GLP-TOKENS` CSS tokens, helpers, icons, colour contrast and machine lookups) lives in
+  `shared/`; both cards import it from there instead of keeping duplicate copies.
 - **XSS**: the cards render HA data into the DOM — always escape/`textContent`, never
   unsanitized `innerHTML` from entity attributes.
 - **Screenshots**: `npm run screenshot:shot` / `npm run screenshot:order` regenerate `docs/screenshots`.
