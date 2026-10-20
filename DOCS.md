@@ -19,6 +19,10 @@ Integrates the [Gaggiuino Local Profiler](https://github.com/mxkissnr/gaggiuino-
 1. Copy the `custom_components/gaggiuino_profiler/` folder into `config/custom_components/`
 2. Restart Home Assistant
 
+### Beta versions
+
+To test upcoming changes, open this integration in HACS, choose the three-dot menu, then *Redownload*, and enable *Show beta versions*. You then get the development build of the integration and both cards. It is for testing only and may be broken. To go back, disable *Show beta versions* and redownload the latest stable version.
+
 ## Setup
 
 1. **Settings → Devices & Services → Add Integration**
