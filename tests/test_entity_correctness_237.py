@@ -36,8 +36,8 @@ from custom_components.gaggiuino_profiler.sensor import (
     SENSORS,
     GlpAdditionalMachineSensor,
     GlpGrinderMaintenanceSensor,
-    GlpMaintenanceSensor,
     GlpMachineSensor,
+    GlpMaintenanceSensor,
     GlpSensor,
 )
 from custom_components.gaggiuino_profiler.switch import SWITCHES, GlpMachineSwitch
