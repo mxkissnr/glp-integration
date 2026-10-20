@@ -80,6 +80,6 @@ method — see the module docstring and #65 before touching it.
 GLP is purely a client of the Gaggiuino machine's own WebSocket/REST API (via the
 add-on) — never a firmware fork. No active firmware changes, no
 embedding/redistributing Gaggiuino's own code or assets in this repo. Gaggiuino's
-firmware is CC-BY-NC 4.0; GLP itself stays GPLv3 and non-commercial. Use
+firmware is CC-BY-NC 4.0; GLP itself is GPL-3.0. Use
 "Gaggiuino" as a name/mark only descriptively ("for Gaggiuino machines"), never
 implying official affiliation.

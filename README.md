@@ -251,7 +251,7 @@ All three services optionally accept a `machine` field (a machine id from the mu
 
 ## 🔔 Event: `gaggiuino_profiler_shot_completed`
 
-Fired automatically after every completed pull. Contains all relevant shot data:
+Fired automatically when a newer shot (higher `id`) appears. Deleting the newest shot does not fire it. Contains all relevant shot data:
 
 ```yaml
 event_type: gaggiuino_profiler_shot_completed
@@ -263,7 +263,7 @@ data:
   dose_g: 18.0
   ratio: 2.34
   avg_pressure: 8.72
-  score: 87
+  rating: 4
   coffee: "Ethiopia Yirgacheffe"
   grinder: "DF64"
 ```
@@ -310,7 +310,8 @@ automation:
 Home Assistant
 ├── GlpDataCoordinator  (60 s, configurable)
 │   ├── GET /api/status    → machine status, shotCount, lastSync, preheat
-│   └── GET /shots.json    → shot data, annotations, datapoints
+│   └── GET /shots.json?limit=10 → shot data, annotations, datapoints
+│                                  (falls back to the full list on apps without `limit`)
 │
 ├── GlpLiveCoordinator  (SSE push, 2 s poll fallback)
 │   ├── GET /api/events (`live-snapshot`) → isLive (brewing state + live datapoints)
@@ -320,8 +321,11 @@ Home Assistant
 │   └── GET /api/machine/status → pressure, temperature, water level,
 │                                  weight, uptime, active profile, steam switch
 │
+├── GlpSettingsCoordinator  (30 s)
+│   └── GET /api/machine/settings?category=<c> → boiler, display, led, scales, system
+│
 └── Event Bus
-    └── gaggiuino_profiler_shot_completed  (on new shot_id)
+    └── gaggiuino_profiler_shot_completed  (only when a newer shot id appears)
 ```
 
 ---
@@ -345,7 +349,7 @@ The diagnostics file contains current coordinator data (no sensitive information
 
 ## License
 
-GPL-3.0 © 2024–2026 mxkissnr — free to use, fork and modify; any derivative work must remain open source under the same license. Commercial use is not permitted.
+GPL-3.0 © 2024–2026 mxkissnr — free to use, fork and modify; any derivative work must remain open source under the same license.
 
 ## Acknowledgements
 
