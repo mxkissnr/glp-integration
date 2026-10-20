@@ -1,6 +1,9 @@
 # Changelog
 
 ## [Unreleased]
+### Added
+- **Development builds of the integration and both cards are published as beta versions in HACS, for anyone who wants to test upcoming changes.** Refs #256
+
 ### Changed
 - **The Shot Card and the Order Card are now developed in this repository and ship with every integration release.** Refs #256
 

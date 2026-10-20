@@ -1,0 +1,62 @@
+name: Dev Pre-release
+
+on:
+  push:
+    branches:
+      - dev
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dev-prerelease
+  cancel-in-progress: false
+
+jobs:
+  prerelease:
+    name: Publish dev pre-release
+    # Gitea Actions also auto-detects .github/workflows — skip there, GitHub-only.
+    if: github.server_url == 'https://github.com'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # gh release create / delete
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Set dev version
+        env:
+          RUN_NUMBER: ${{ github.run_number }}
+        run: |
+          manifest=custom_components/gaggiuino_profiler/manifest.json
+          base=$(jq -r .version "$manifest")
+          version="${base%.*}.$(( ${base##*.} + 1 ))b${RUN_NUMBER}"
+          jq --arg v "$version" '.version = $v' "$manifest" > "$manifest.tmp"
+          mv "$manifest.tmp" "$manifest"
+          echo "TAG=v$version" >> "$GITHUB_ENV"
+
+      - name: Build zip
+        run: |
+          cd custom_components/gaggiuino_profiler
+          zip -r "$GITHUB_WORKSPACE/gaggiuino_profiler.zip" . -x '*__pycache__*'
+
+      # A release created with GITHUB_TOKEN does not trigger release-asset.yml, so the zip is attached here.
+      - name: Create pre-release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          short="${GITHUB_SHA::7}"
+          gh release create "$TAG" gaggiuino_profiler.zip --prerelease --target "$GITHUB_SHA" \
+            --title "$TAG (dev)" \
+            --notes "Development build from \`dev\` at ${short} (${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/commit/${GITHUB_SHA}), for testing only."
+
+      - name: Prune old dev pre-releases
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release list --limit 100 --json tagName,isPrerelease,createdAt \
+            --jq '[.[] | select(.isPrerelease and (.tagName | test("^v.*b[0-9]+$")))] | sort_by(.createdAt) | reverse | .[3:][].tagName' |
+            while read -r old; do
+              gh release delete "$old" --cleanup-tag -y
+            done

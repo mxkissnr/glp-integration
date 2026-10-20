@@ -22,6 +22,10 @@ integration (Home Assistant custom component). The only Node project is `cards/`
   `git tag v<version> && git push origin main && git push origin v<version> && gh release create v<version> ...`
   Afterwards verify `gaggiuino_profiler.zip` is attached to the release (`release-asset.yml`
   uploads it within seconds; HACS installs from it).
+- **Branches**: work goes to `dev` (PRs target `dev`); `main` only receives release merges.
+  Every push to `dev` publishes a pre-release (`v<next patch>b<run>`) via `dev-prerelease.yml`
+  that HACS offers under "Show beta versions". Release PRs dev→main and the main→dev
+  resync use merge commits, not squash.
 
 ## Language rule
 
