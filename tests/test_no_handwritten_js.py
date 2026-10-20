@@ -1,9 +1,9 @@
 """Guard against hand-written JavaScript/TypeScript in this Python-only integration.
 
 The integration code is Python. The two JavaScript bundles under
-``custom_components/gaggiuino_profiler/www/`` are build output of the two card
-repos, copied in by their sync scripts and never edited here. See the
-"Language rule" section in ``CLAUDE.md``.
+``custom_components/gaggiuino_profiler/www/`` are build output of the card
+sources in ``cards/`` and never edited here. See the "Language rule" section in
+``CLAUDE.md``.
 """
 import shutil
 import subprocess
@@ -30,7 +30,11 @@ def _tracked_js_files() -> set[str]:
         text=True,
         check=True,
     )
-    return {line for line in result.stdout.splitlines() if line.endswith(JS_SUFFIXES)}
+    return {
+        line
+        for line in result.stdout.splitlines()
+        if line.endswith(JS_SUFFIXES) and not line.startswith("cards/")
+    }
 
 
 def test_no_handwritten_js() -> None:
@@ -38,9 +42,9 @@ def test_no_handwritten_js() -> None:
     unexpected = tracked - GENERATED_BUNDLES
     missing = GENERATED_BUNDLES - tracked
     assert tracked == GENERATED_BUNDLES, (
-        "This integration is Python only: no hand-written JavaScript or TypeScript. "
+        "The integration is Python only: hand-written JavaScript or TypeScript belongs in cards/ only. "
         f"The only tracked JS/TS files may be the generated card bundles {sorted(GENERATED_BUNDLES)}. "
         f"Unexpected tracked JS/TS file(s): {sorted(unexpected)}. "
         f"Expected bundle(s) no longer tracked: {sorted(missing)}. "
-        "Fix the card repo and re-sync instead; see the 'Language rule' section in CLAUDE.md."
+        "Card code lives in cards/ and the bundles are built from it; see the 'Language rule' section in CLAUDE.md."
     )

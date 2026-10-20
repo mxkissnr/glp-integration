@@ -12,3 +12,6 @@ graphify-out
 *.key
 .DS_Store
 node_modules/
+
+cards/coverage/
+cards/*/coverage/
