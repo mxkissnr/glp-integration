@@ -1591,7 +1591,8 @@ ${TOKENS}
     // simultaneously) from sharing one SVG gradient id.
     _machineGlyphHtml(sizeClass, idSuffix) {
       const id = `glp-oc-icon-${this._instanceId}-${idSuffix}`;
-      return `<div class="machine-glyph ${sizeClass}">${MACHINE_ICON_MINI(id, appMachineType(appMachineEntry(this._hass, this._config?.machine)))}</div>`;
+      const type = appMachineType(appMachineEntry(this._hass, this._config?.machine));
+      return `<div class="machine-glyph ${sizeClass}">${MACHINE_ICON_MINI(id, type)}</div>`;
     }
     _getBase() {
       const url = this._config?.glp_url;

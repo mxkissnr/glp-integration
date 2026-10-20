@@ -1000,6 +1000,7 @@ class GlpCard extends HTMLElement {
 
   _machineOffHtml(vm: ViewModel): TemplateResult {
     const { standbyState, _powerBtn } = vm;
+    const machineType = appMachineType(appMachineEntry(this._hass, this._config?.machine));
     const readyByHtml = this._buildReadyByHtml(vm.readyByTargetAt, vm.readyByPlannedAt);
       const offOrders = this._orders.length > 0 ? html`
         <div style="padding:0 var(--glp-sp-3) var(--glp-sp-3)">
@@ -1011,7 +1012,7 @@ class GlpCard extends HTMLElement {
         <ha-card><div class="card collapsed">
           <div class="header">
             <div class="title">
-              <span class="machine-icon-badge">${/* MACHINE_ICON_MINI() emits fixed SVG geometry, no user input */ unsafeSVG(MACHINE_ICON_MINI(this._iconGradId, appMachineType(appMachineEntry(this._hass, this._config?.machine))))}</span>
+              <span class="machine-icon-badge">${/* MACHINE_ICON_MINI() emits fixed SVG geometry, no user input */ unsafeSVG(MACHINE_ICON_MINI(this._iconGradId, machineType))}</span>
               ${this._config.title}
             </div>
             <div class="header-right">
@@ -1229,6 +1230,7 @@ class GlpCard extends HTMLElement {
     if (!this._hass || !this._config) return;
 
     const vm = this._viewModel();
+    const machineType = appMachineType(appMachineEntry(this._hass, this._config?.machine));
 
     // ── machine off ──────────────────────────────────────────────────────────
     if (vm.machineOff) {
@@ -1246,7 +1248,7 @@ class GlpCard extends HTMLElement {
 
         <div class="header">
           <div class="title">
-            <span class="machine-icon-badge">${/* MACHINE_ICON_MINI() emits fixed SVG geometry, no user input */ unsafeSVG(MACHINE_ICON_MINI(this._iconGradId, appMachineType(appMachineEntry(this._hass, this._config?.machine))))}</span>
+            <span class="machine-icon-badge">${/* MACHINE_ICON_MINI() emits fixed SVG geometry, no user input */ unsafeSVG(MACHINE_ICON_MINI(this._iconGradId, machineType))}</span>
             ${this._config.title}
           </div>
           <div class="header-right">

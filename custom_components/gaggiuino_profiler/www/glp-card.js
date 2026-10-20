@@ -3165,6 +3165,7 @@ ${TOKENS}
     // _viewModel() object) ─────────────────────────────────────────────────────
     _machineOffHtml(vm) {
       const { standbyState, _powerBtn } = vm;
+      const machineType = appMachineType(appMachineEntry(this._hass, this._config?.machine));
       const readyByHtml = this._buildReadyByHtml(vm.readyByTargetAt, vm.readyByPlannedAt);
       const offOrders = this._orders.length > 0 ? b2`
         <div style="padding:0 var(--glp-sp-3) var(--glp-sp-3)">
@@ -3177,7 +3178,7 @@ ${TOKENS}
           <div class="header">
             <div class="title">
               <span class="machine-icon-badge">${/* MACHINE_ICON_MINI() emits fixed SVG geometry, no user input */
-      o6(MACHINE_ICON_MINI(this._iconGradId, appMachineType(appMachineEntry(this._hass, this._config?.machine))))}</span>
+      o6(MACHINE_ICON_MINI(this._iconGradId, machineType))}</span>
               ${this._config.title}
             </div>
             <div class="header-right">
@@ -3403,6 +3404,7 @@ ${TOKENS}
     _render() {
       if (!this._hass || !this._config) return;
       const vm = this._viewModel();
+      const machineType = appMachineType(appMachineEntry(this._hass, this._config?.machine));
       if (vm.machineOff) {
         this._profileOpen = false;
         D(this._machineOffHtml(vm), this.shadowRoot);
@@ -3418,7 +3420,7 @@ ${TOKENS}
         <div class="header">
           <div class="title">
             <span class="machine-icon-badge">${/* MACHINE_ICON_MINI() emits fixed SVG geometry, no user input */
-      o6(MACHINE_ICON_MINI(this._iconGradId, appMachineType(appMachineEntry(this._hass, this._config?.machine))))}</span>
+      o6(MACHINE_ICON_MINI(this._iconGradId, machineType))}</span>
             ${this._config.title}
           </div>
           <div class="header-right">

@@ -145,7 +145,8 @@ class GlpOrderCard extends HTMLElement {
   // simultaneously) from sharing one SVG gradient id.
   _machineGlyphHtml(sizeClass: string, idSuffix: string): string {
     const id = `glp-oc-icon-${this._instanceId}-${idSuffix}`;
-    return `<div class="machine-glyph ${sizeClass}">${MACHINE_ICON_MINI(id, appMachineType(appMachineEntry(this._hass, this._config?.machine)))}</div>`;
+    const type = appMachineType(appMachineEntry(this._hass, this._config?.machine));
+    return `<div class="machine-glyph ${sizeClass}">${MACHINE_ICON_MINI(id, type)}</div>`;
   }
 
   _getBase(): string | null {
