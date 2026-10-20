@@ -29,11 +29,159 @@ Bindet den [Gaggiuino Local Profiler](https://github.com/mxkissnr/gaggiuino-loca
 
 Die Integration testet die Verbindung direkt beim Einrichten.
 
-## Mitgelieferte GLP Shot Card
+## Shot Card
 
-Die [GLP Shot Card](https://github.com/mxkissnr/glp-lovelace-card) (Lovelace-Karte) ist Teil dieser Integration und wird beim Einrichten automatisch als Dashboard-Ressource registriert — keine separate HACS-Installation oder manuelle Ressourcenkonfiguration nötig. Einfach eine Karte mit `type: custom:glp-card` zum Dashboard hinzufügen, nachdem diese Integration installiert ist. Die [GLP Order Card](https://github.com/mxkissnr/glp-order-card) ist auf dieselbe Weise Teil dieser Integration — einfach eine Karte mit `type: custom:glp-order-card` zum Dashboard hinzufügen, nachdem diese Integration installiert ist.
+Die GLP Shot Card ist Teil dieser Integration und wird beim Einrichten automatisch als Dashboard-Ressource registriert — keine separate HACS-Installation oder manuelle Ressourcenkonfiguration nötig. Einfach eine Karte mit `type: custom:glp-card` zum Dashboard hinzufügen, nachdem diese Integration installiert ist. Der Quellcode liegt in [`cards/shot/`](cards/shot/).
 
-Ab dem mitgelieferten Build v2.18.0 übernimmt die Karte bei Multi-Machine-Setups außerdem das konfigurierte Farbthema und Icon der jeweiligen Maschine, sodass der Kartenkopf zur angezeigten Maschine passt.
+<img src="cards/shot/docs/screenshots/card.png" width="420" alt="GLP Shot Card mit vorgeheizter Maschine, aktuellem Profil, Live-Kacheln und dem letzten Shot samt Druck-, Flow-, Temperatur- und Gewichtskurve"/>
+
+Minimale Konfiguration — das Entity-Präfix wird aus dem `*_machine_status`-Entity erkannt, das die Integration anlegt:
+
+```yaml
+type: custom:glp-card
+```
+
+Vollständige Konfiguration:
+
+```yaml
+type: custom:glp-card
+title: Gaggiuino
+entity_prefix: sensor.gaggiuino_local_profiler_
+switch_entity: switch.espresso_plug
+glp_url: http://homeassistant.local:8099
+machine: Kitchen GaggiMate
+theme: ember-espresso
+```
+
+### Optionen der Shot Card
+
+| Option | Beschreibung | Standard |
+|---|---|---|
+| `title` | Titel im Kartenkopf | `Gaggiuino` |
+| `entity_prefix` | Präfix der Entities dieser Integration. Hat Vorrang vor `machine`, wenn beides gesetzt ist. | *(automatisch — aus dem `*_machine_status`-Entity)* |
+| `switch_entity` | Switch-Entity der smarten Steckdose der Maschine. Der Power-Knopf im Kopf schaltet sie, und solange sie `off` oder `unavailable` meldet, zeigt die Karte die Ansicht "Maschine aus". | *(automatisch — aus dem Attribut `switch_entity` des `machine_status`-Sensors)* |
+| `glp_url` | URL der Weboberfläche des GLP-Apps. Ergänzt einen "GLP ↗"-Link in der Fußzeile. | *(keine)* |
+| `machine` | Name oder ID einer Maschine aus der Multi-Machine-Registry des Apps. Trifft das `*_machine_status`-Entity, dessen Name oder Entity-ID darauf verweist, und hält die gemerkte Switch-Entity pro Maschine getrennt, damit sich zwei Karten nicht überschreiben. | *(automatisch — erste Maschine mit "Gaggiuino" im Namen, sonst die erste gefundene)* |
+| `theme` | Eines der acht Farb-Presets weiter unten. Färbt die Akzent-Tokens der Karte und das Maschinen-Icon. | *(keine — `--primary-color` des Home-Assistant-Themes)* |
+| `accent_color` | Eigene, einfarbige Akzentfarbe als `#rrggbb` statt eines Presets. Überschreibt `theme`. Werte, die keine sechsstellige Hex-Farbe sind, werden ignoriert. | *(keine)* |
+| `accent_gradient` | Eigener Verlauf mit zwei Stopps als `["#rrggbb", "#rrggbb"]`. Überschreibt `theme` und `accent_color`. Werte, die keine sechsstelligen Hex-Farben sind, werden ignoriert. | *(keine)* |
+
+### Farbthema pro Maschine
+
+Die Akzentfarbe der Karte lässt sich pro Maschine thematisieren, damit sich mehrere Maschinen auf einem Dashboard gut unterscheiden lassen:
+
+```yaml
+type: custom:glp-card
+theme: twilight-turkish
+```
+
+```yaml
+type: custom:glp-card
+accent_gradient: ["#dc4a1f", "#f5a623"]
+```
+
+Die acht Preset-Schlüssel: `amber-americano`, `ruby-ristretto`, `copper-cortado`, `twilight-turkish`, `marbled-macchiato`, `ember-espresso`, `mulberry-mocha`, `frosty-flat-white`.
+
+Ein im App gesetztes Thema (Einstellungen → Maschinen) wird live aus dem Attribut `machines` des `*_machine_status`-Sensors gelesen und ohne YAML angewendet — es wählt außerdem das Maschinen-Icon für Gaggiuino und GaggiMate. Dieses synchronisierte Thema hat Vorrang vor den YAML-Optionen oben; die Optionen sind der manuelle Override und der Fallback für Installationen ohne App-seitiges Thema. Innerhalb der YAML-Optionen gewinnt `accent_gradient` vor `accent_color`, das wiederum vor `theme` gewinnt.
+
+### Was die Shot Card zeigt
+
+- Status-Punkt der Maschine (online / error / brüht) und die Zeit seit dem letzten Sync
+- Fortschrittsbalken für das Vorheizen mit Countdown und einem "Brühbereit"-Badge, sobald die Maschine warm ist; bei einer GaggiMate wird Standby als aus angezeigt
+- "Brühbereit bis"-Planer, solange die Maschine aus ist — nativer Zeit-Picker mit Setzen und Abbrechen, ein Live-Countdown bis zum automatischen Einschalten und die geplante Zielzeit; eine bereits verstrichene Uhrzeit wird für morgen geplant. Ruft den Service `gaggiuino_profiler.set_ready_by` auf
+- Shot-Navigation — Pfeile und bis zu zehn Punkt-Indikatoren für die letzten Shots aus dem Attribut `recent_shots` des `machine_status`-Sensors, dazu Wischen nach links/rechts auf Touch-Geräten; springt bei einem neuen Shot zurück auf den neuesten
+- Shot-Chart — Druck und Flow auf der linken Achse, Kesseltemperatur und Gewicht auf der rechten Achse, mit Legende der Spitzen- und Endwerte, sowohl für den angezeigten Shot als auch für den laufenden
+- Live-Kacheln, solange die Maschine an ist — Kesseltemperatur mit Zielwert (hervorgehoben beim Aufheizen), Live-Druck und Live-Gewicht der Waage; während eines Shots dieselben Werte als Mini-Stats
+- Profil-Auswahl für `select.*_profile` — bleibt über State-Updates hinweg offen und wird ausgeblendet, wenn das Entity fehlt
+- Tab "Bestellungen", wenn im App offene Barista-Bestellungen liegen, mit Zähler-Badge und Annehmen/Ablehnen/Abschließen
+- Tab "Wartung", wenn die Wartungssensoren existieren — die fünf Wartungsaufgaben plus eine Zeile pro Mühle, jeweils mit Status-Pill, Tagen/Shots seit der letzten Wartung und Fortschrittsbalken; ein Tipp auf eine Aufgabe markiert sie über `gaggiuino_profiler.maintenance_done` als erledigt
+- Dampf-Banner, solange der Dampfschalter an ist, Entkalkungs-Banner, solange die Maschine ihr Entkalkungsprogramm fährt
+- Wasserstand in der Fußzeile mit Warnbanner unter 20 %
+- Letzter Shot: Profil, Getränkeart, Kaffee mit Sorte und Röstdatum-Alter aus der Kaffeebibliothek, Mühle und Mahlgrad, Sterne-Bewertung, Score-Verdict, Brühverhältnis, Dauer, Ausbeute, durchschnittlicher Druck und Brühtemperatur
+- Anzahl der heute gezogenen Shots
+
+### Sprachen der Shot Card
+
+Die Karte folgt der Sprache des angemeldeten Home-Assistant-Benutzers und fällt auf einen sinnvollen Standard zurück, solange Home Assistant noch nicht verfügbar ist. Unterstützt: 🇩🇪 DE, 🇬🇧 EN, 🇮🇹 IT, 🇫🇷 FR, 🇪🇸 ES, 🇳🇱 NL. Jede andere Sprache fällt auf Englisch zurück.
+
+## Order Card
+
+Die GLP Order Card ist auf dieselbe Weise Teil dieser Integration und wird beim Einrichten automatisch als Dashboard-Ressource registriert. Einfach eine Karte mit `type: custom:glp-order-card` zum Dashboard hinzufügen, nachdem diese Integration installiert ist. Der Quellcode liegt in [`cards/order/`](cards/order/).
+
+<img src="cards/order/docs/screenshots/card.png" width="360" alt="GLP Order Card mit Getränkemenü, einer gewählten Bohnen-Variante samt Geschmacksnoten, Herkunft und Aufbereitung und dem Bestell-Button"/>
+
+Minimale Konfiguration — in einem Standard-Home-Assistant-Setup sind keine Optionen nötig:
+
+```yaml
+type: custom:glp-order-card
+```
+
+Vollständige Konfiguration (nur für den direkten Zugriff außerhalb von Home Assistant nötig):
+
+```yaml
+type: custom:glp-order-card
+title: Bestellen
+glp_url: http://homeassistant.local:8099
+switch_entity: switch.espresso_plug
+machine: Kitchen GaggiMate
+theme: ember-espresso
+```
+
+### Optionen der Order Card
+
+| Option | Beschreibung | Standard |
+|---|---|---|
+| `title` | Titel im Kartenkopf | *(lokalisiert — `Bestellen`, `Order`, …)* |
+| `glp_url` | URL des GLP-Apps auf Port 8099. Nur nötig, wenn die Karte außerhalb von Home Assistant verwendet wird oder die Ingress-Erkennung nicht greift. | *(automatisch — HA-Ingress)* |
+| `glp_token` | API-Token des GLP-Apps für den Direkt-URL-Modus, in dem die Karte selbst keinen Token holen kann. | *(keiner)* |
+| `switch_entity` | Switch-Entity der Maschine. Solange sie `off` oder `unavailable` meldet, zeigt die Karte die Ansicht "Maschine aus". | *(automatisch — aus dem Attribut `switch_entity` des `machine_status`-Sensors)* |
+| `machine` | Name oder ID einer Maschine aus der Multi-Machine-Registry des Apps. Legt fest, welches `*_machine_status`-Entity die `switch_entity` liefert, versieht jede Bestellung mit dem Maschinennamen und begrenzt das Maschinen-Thema darauf. | *(automatisch — erste Maschine mit "Gaggiuino" im Namen, sonst die erste gefundene)* |
+| `new_badge_days` | Wie viele Tage ein neu hinzugefügtes Menü-Item sein NEW-Badge behält. | `7` |
+| `theme` | Eines der acht Farb-Presets weiter unten. Färbt den Bestell-Button, die Auswahl-Hervorhebungen und das Maschinen-Icon. | *(keine — `--primary-color` des Home-Assistant-Themes)* |
+| `accent_color` | Eigene, einfarbige Akzentfarbe als `#rrggbb` statt eines Presets. Überschreibt `theme`. Werte, die keine sechsstellige Hex-Farbe sind, werden ignoriert. | *(keine)* |
+| `accent_gradient` | Eigener Verlauf mit zwei Stopps als `["#rrggbb", "#rrggbb"]`. Überschreibt `theme` und `accent_color`. Werte, die keine sechsstelligen Hex-Farben sind, werden ignoriert. | *(keine)* |
+
+### Farbthema pro Maschine
+
+Die Order Card nutzt dieselben acht Presets und dieselbe Rangfolge wie die Shot Card:
+
+```yaml
+type: custom:glp-order-card
+theme: twilight-turkish
+```
+
+```yaml
+type: custom:glp-order-card
+accent_color: "#7f1d1d"
+```
+
+Die Preset-Schlüssel: `amber-americano`, `ruby-ristretto`, `copper-cortado`, `twilight-turkish`, `marbled-macchiato`, `ember-espresso`, `mulberry-mocha`, `frosty-flat-white`.
+
+Ein im App gesetztes Thema (Einstellungen → Maschinen) wird live aus dem Attribut `machines` des `*_machine_status`-Sensors gelesen und gewinnt gegen die YAML-Optionen; die Optionen sind der manuelle Override und der Fallback, wenn das App kein Thema für die Maschine hat. Innerhalb der YAML-Optionen gewinnt `accent_gradient` vor `accent_color`, das wiederum vor `theme` gewinnt.
+
+### Was die Order Card zeigt
+
+- Getränkemenü aus dem Tab **Bestellungen** des Apps — ein Abschnitt "Beliebt" für markierte Getränke, ein NEW-Badge auf Items, die innerhalb von `new_badge_days` hinzugekommen sind, und der Rest unter "Alle Getränke"
+- Bohnen-Varianten aus der Kaffeebibliothek für Getränke, die Bohnen nutzen — nur tatsächlich vorrätige Bohnen, gruppiert in Spezialität und Normal; die Auswahl zeigt Geschmacksnoten, Herkunft (bei Blends die einzelnen Länder), Sorte und Aufbereitung
+- Ein optionales Notizfeld und ein Bestell-Button, der mit dem gewählten Getränk und der Variante beschriftet ist
+- Bestellstatus: wartet auf Bestätigung mit Position in der Warteschlange und geschätzter Zeit, angenommen mit Live-Countdown bis zur Fertigstellung, fertig mit Bestätigung plus dem fertigen Shot samt Kurve, wenn die Bestellung eine Shot-ID trägt, abgelehnt mit Begründung
+- Statt des Menüs die Ansicht "Maschine aus" oder "Bestellungen pausiert", wenn der Barista oder die Maschine das so meldet
+
+### So funktioniert es
+
+1. Die Karte lädt Menü, Bestell-Einstellungen und Warteschlangen-Schätzung aus dem App (`api/orders/menu`, `api/orders/settings`, `api/orders/queue-eta`), innerhalb von Home Assistant über den REST-Proxy der Integration
+2. Bei Getränken, die die Kaffeebibliothek nutzen, kommen die Bohnen-Varianten aus `api/orders/active-beans` — nur tatsächlich vorrätige Bohnen werden angeboten
+3. Der Kunde wählt ein Getränk, optional eine Variante und eine Notiz, und drückt den Bestell-Button
+4. Die Bestellung wird mit dem Namen des angemeldeten Home-Assistant-Benutzers als Kunde abgeschickt
+5. Die Karte fragt den Status der eigenen Bestellung ab — alle 3 Sekunden, solange eine Bestellung wartet oder angenommen ist, sonst alle 10 Sekunden — und aktualisiert sich selbst
+6. Nimmt der Barista die Bestellung an, zeigt die Karte den Countdown bis zur Fertigstellung; ist sie fertig, folgen Bestätigung und Shot-Zusammenfassung
+7. Danach kann der Kunde eine neue Bestellung aufgeben
+
+Der Barista nimmt Bestellungen im Tab **Bestellungen** des Apps an und schließt sie dort ab.
+
+### Sprachen der Order Card
+
+Erkannt aus der Sprache des angemeldeten Home-Assistant-Benutzers, mit der Browser-Locale als Fallback, solange Home Assistant noch nicht verfügbar ist. Es werden nur die ersten zwei Buchstaben des Codes gelesen, regionale Varianten wie `de-CH` und `en-GB` funktionieren also. Unterstützt: 🇩🇪 DE, 🇬🇧 EN, 🇮🇹 IT, 🇫🇷 FR, 🇪🇸 ES, 🇳🇱 NL. Jede andere Sprache fällt auf Englisch zurück.
 
 ## Optionen nach der Einrichtung
 
