@@ -1,12 +1,13 @@
 #!/usr/bin/env node
-// Regenerates docs/screenshots/card.png for the README. Boots a throwaway
-// static file server for this repo's root (an ES module <script src="...">
-// needs http:// — file:// is blocked by module CORS rules in headless
-// Chromium), loads a minimal page that mounts <glp-card> with a realistic
-// mock `hass` object (machine on, profile selected, preheat ready, a recent
-// shot with a full pressure/flow/temp/weight curve, maintenance rows), waits
-// for the card's shadow DOM to render, then screenshots just the card
-// element at 2x scale. Run on demand: `node scripts/screenshot.mts`.
+// Regenerates docs/screenshots/card.png for the README. Boots the throwaway
+// static file server from scripts/e2e-harness.mts, which serves the card
+// folder plus the built bundle from the integration's www/ (an ES module
+// <script src="..."> needs http:// — file:// is blocked by module CORS rules
+// in headless Chromium). It loads a minimal page that mounts <glp-card> with a
+// realistic mock `hass` object (machine on, profile selected, preheat ready, a
+// recent shot with a full pressure/flow/temp/weight curve, maintenance rows),
+// waits for the card's shadow DOM to render, then screenshots just the card
+// element at 2x scale. Run on demand: `npm run screenshot:shot`.
 //
 // Two independent axes (deliberately decoupled — the card's contrast fix for
 // --glp-ok/--glp-warn/--glp-err keys off the ACTUAL resolved --glp-bg via
