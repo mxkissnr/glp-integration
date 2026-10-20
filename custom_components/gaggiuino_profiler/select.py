@@ -79,6 +79,10 @@ class GlpProfileSelect(GlpEntity[GlpDataCoordinator], SelectEntity):
         super().__init__(coordinator, entry, "profile", url=_url)
         self._machine_coordinator = machine_coordinator
 
+    @property
+    def suggested_object_id(self) -> str | None:
+        return "profile"
+
     async def async_added_to_hass(self) -> None:
         await super().async_added_to_hass()
         # CoordinatorEntity only pushes a state update when the coordinator it

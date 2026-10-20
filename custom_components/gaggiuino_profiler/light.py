@@ -73,11 +73,14 @@ class GlpLedLight(GlpEntity[GlpSettingsCoordinator], LightEntity):
         color = self._settings().get("color") or {}
         if not color:
             return None
-        return (
-            int(color.get("R", 0)),
-            int(color.get("G", 0)),
-            int(color.get("B", 0)),
-        )
+        try:
+            return (
+                int(color.get("R", 0)),
+                int(color.get("G", 0)),
+                int(color.get("B", 0)),
+            )
+        except (TypeError, ValueError):
+            return None
 
     @property
     def effect(self) -> str | None:

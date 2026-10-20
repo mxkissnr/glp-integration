@@ -55,7 +55,9 @@ SENSORS: tuple[GlpSensorDescription, ...] = (
         data_key="shot_count",
         name="Shot Count",
         icon="mdi:counter",
-        state_class=SensorStateClass.TOTAL_INCREASING,
+        # Deleting shots lowers the count; with TOTAL_INCREASING HA treats that
+        # as a meter reset and inflates long-term statistics (#237).
+        state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement="shots",
     ),
     GlpSensorDescription(
