@@ -6,6 +6,7 @@
 
 ### Changed
 - **The Shot Card and the Order Card are now developed in this repository and ship with every integration release.** Refs #256
+- **Both cards got a shared bottom sheet that later changes use for pickers and details.** Refs #266
 
 ### Fixed
 - **Deleting the newest shot no longer fires a shot-completed event, one malformed shot value no longer makes all sensors unavailable, and deleting shots no longer distorts the shot-count statistics.** Refs #237

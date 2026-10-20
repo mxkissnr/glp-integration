@@ -17,6 +17,11 @@ bundles in `../custom_components/gaggiuino_profiler/www/` are built from them
   `order/src/glp-order-card.ts` (`GLP_ORDER_CARD_VERSION`). Never bump outside a release.
 - **Shared code** (`GLP-TOKENS` CSS tokens, helpers, icons, colour contrast and machine lookups) lives in
   `shared/`; both cards import it from there instead of keeping duplicate copies.
+- **`shared/sheet.ts`** is the bottom-sheet building block (`GlpSheet` plus `SHEET_STYLES`) for
+  pickers, confirmations and details: a native `<dialog>` opened with `showModal()`, half/full drag
+  detents on phones (under 900px) and a centred dialog above. Each card appends `SHEET_STYLES` to its
+  own stylesheet so the sheet keeps that card's `--glp-*` tokens. Its drag maths is ported from the
+  app's `public-src/components/sheet-swipe.ts`; keep the pure helpers in step when that file changes.
 - **XSS**: the cards render HA data into the DOM — always escape/`textContent`, never
   unsanitized `innerHTML` from entity attributes.
 - **Screenshots**: `npm run screenshot:shot` / `npm run screenshot:order` regenerate `docs/screenshots`.
