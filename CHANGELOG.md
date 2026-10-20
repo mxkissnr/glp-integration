@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 ### Fixed
+- **Deleting the newest shot no longer fires a shot-completed event, one malformed shot value no longer makes all sensors unavailable, and deleting shots no longer distorts the shot-count statistics.** Refs #237
 - **The options-flow error messages now live under `options.error`, where Home Assistant's translation schema expects them, so the translation files validate again.** Refs #237
 - **Adding the integration a second time now stops with a clear message, and changing the app URL in the options checks that the new address answers.** Closes #237
 - **Entities now show as unavailable when the app cannot be reached instead of keeping old values, and changing a machine setting no longer undoes a change made on the machine's screen.** Closes #235

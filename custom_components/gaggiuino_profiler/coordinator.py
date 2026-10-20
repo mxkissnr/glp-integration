@@ -242,7 +242,7 @@ class GlpDataCoordinator(DataUpdateCoordinator):
             "shots_today":         shots_today,
             "last_shot_id":        current_shot_id,
             "last_shot_profile":   last.get("profileName") or (last.get("profile") or {}).get("name"),
-            "last_shot_rating":    _num(ann.get("rating"), int),
+            "last_shot_rating":    _num(ann.get("rating"), int) if ann.get("rating") else None,
             "last_shot_date":      _parse_ts(last.get("timestamp")),
             "last_shot_duration":  duration_s,
             "last_shot_pressure":  avg_pressure,
@@ -386,7 +386,7 @@ class GlpDataCoordinator(DataUpdateCoordinator):
                 "yield_g":  round(s_weight / 10, 1) if s_weight is not None else None,
                 "ratio":    s_ratio,
                 "pressure": round(sum(s_pres_nums) / len(s_pres_nums) / 10, 2) if s_pres_nums else None,
-                "rating":     _num(s_ann.get("rating"), int),
+                "rating":     _num(s_ann.get("rating"), int) if s_ann.get("rating") else None,
                 "drink_type": drink_lookup.get(s_ann.get("drinkType", "")) or None,
                 # Coerced like every sibling above, but via isinstance rather than a
                 # bare int(): a non-numeric value here would come from a source we do
