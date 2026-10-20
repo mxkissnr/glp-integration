@@ -1,9 +1,8 @@
 // Card loaded via the shared test helper (test/helpers/load-card.cjs), which
 // imports src/glp-card.ts directly — so these tests exercise the shipped
-// esc()/safeUrl() implementations, not a re-implementation. The helper returns
-// them through its `expose` option because the module only exports the class
-// and its public helpers; the bundle served to Home Assistant is built from
-// these sources by `npm run build`.
+// esc()/safeUrl() implementations, not a re-implementation. The helper picks
+// the named exports through its `expose` option; the bundle served to Home
+// Assistant is built from these sources by `npm run build`.
 'use strict';
 
 const test = require('node:test');
