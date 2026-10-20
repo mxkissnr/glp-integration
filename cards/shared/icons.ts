@@ -4,9 +4,9 @@
 // (mxkissnr/glp-lovelace-card#87 / mxkissnr/glp-order-card#62), ported
 // faithfully from the Theme Lab mockup the maintainer approved (see
 // ICON-AND-THEMES-SPEC.js in the glp-project workspace) and shared by both
-// cards. `id` is a per-render-instance-unique
-// gradient id (this card can appear more than once on one dashboard — each
-// file's constructor derives its own id under its own name) coloured via
+// cards. `id` is a per-render-instance-unique gradient id (this card can
+// appear more than once on one dashboard — each file's constructor derives
+// its own id under its own name) coloured via
 // --glp-accent-start/-end (the mockup's --acc-a/--acc-b, renamed to this
 // card's own token names); a second, fixed `${id}-steel` gradient colours
 // the drip-tray mesh in silver, independent of the accent theme. `mini`
