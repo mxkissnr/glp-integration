@@ -1,7 +1,7 @@
 // Order->bean attribution id-first resolution (#35, follow-up to
-// gaggiuino-local-profiler#456). Loads the real glp-order-card.js through the
-// shared test/helpers/load-card.cjs harness and exercises _getSelectedBean()
-// directly.
+// gaggiuino-local-profiler#456). Loads the real GlpOrderCard class from
+// src/glp-order-card.ts through the shared test/helpers/load-card.cjs harness
+// and exercises _getSelectedBean() directly.
 'use strict';
 
 const test = require('node:test');

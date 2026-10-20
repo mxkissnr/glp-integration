@@ -1,7 +1,9 @@
 #!/usr/bin/env node
-// Regenerates docs/screenshots/card.png for the README. Boots a throwaway
-// http.createServer serving this repo's root (so glp-order-card.js can be
-// loaded without file:// CORS issues) plus a harness page, spins up a
+// Regenerates docs/screenshots/card.png for the README. Boots the throwaway
+// http.createServer from scripts/e2e-harness.mts, which serves the card's
+// folder plus the built bundle from the integration's www/ (so
+// glp-order-card.js can be loaded without file:// CORS issues) and a harness
+// page, spins up a
 // headless Chromium via Playwright, mocks every api/orders/* endpoint the
 // card fetches on load with realistic demo data (a 5-item menu incl. a
 // bean-library drink, trending/NEW badges, an empty order queue), drives
@@ -24,8 +26,9 @@
 // `--out=<path>` overrides the output file (default docs/screenshots/card.png,
 // or card-light.png when --ha-theme=light).
 //
-// Run: node scripts/screenshot.mts
-// Requires: npm install --save-dev playwright && npx playwright install chromium
+// Run: npm run screenshot:order (from cards/)
+// Requires `npx playwright install chromium` once beforehand — Playwright is
+// already a devDependency of cards/.
 
 import fs from 'node:fs';
 import path from 'node:path';

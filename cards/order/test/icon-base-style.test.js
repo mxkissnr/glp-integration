@@ -1,6 +1,6 @@
 // Guards the base .glp-i rule for the drawn icon set (GLP-SHARED:icons v1).
 //
-// This exists because the rule was missing in glp-card.js when the icons
+// This exists because the rule was missing in glp-order-card.js when the icons
 // first landed, and NOTHING caught it: the icons are stroke-drawn paths with
 // no fill/stroke presentation attributes of their own, so an <svg> without
 // this rule falls back to the SVG default of fill:black + stroke:none and

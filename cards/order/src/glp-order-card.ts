@@ -23,6 +23,8 @@ import type {
   ThemeStops, GroupedVariants, ShotSeries,
 } from './types.ts';
 
+// Bumped only in a release — a feature or fix PR leaves this alone (see
+// cards/CLAUDE.md and the PR template). Logged on startup below.
 const GLP_ORDER_CARD_VERSION = '1.22.0';
 
 // Menu items younger than this show the NEW badge (config: new_badge_days)

@@ -1,9 +1,10 @@
 // Minimal Playwright E2E smoke test (#48). Reuses the static-server/mock-API
 // harness from scripts/e2e-harness.mts (shared with scripts/screenshot.mts)
-// to render the real glp-order-card.js in a headless Chromium tab — not a
-// vm sandbox — so it can exercise real DOM events and timing.
+// to render the real glp-order-card.js in a headless Chromium tab — unlike the
+// unit suites, which import src/ into the Node process — so it can exercise
+// real DOM events and timing.
 //
-// Covers two things pure vm-sandboxed unit tests structurally cannot: (1)
+// Covers two things the imported-source unit tests structurally cannot: (1)
 // that an in-progress selection survives a concurrently-arriving `hass`
 // update (Lit patches the existing DOM in place instead of rebuilding it),
 // and (2) that a switch entity going 'unavailable' (_machineOff(),

@@ -1,8 +1,7 @@
 // Guided metric line + curve draw-in animation gating (#120). Card loaded via
-// the shared test helper (test/helpers/load-card.cjs), which evaluates the real
-// glp-card.js in a vm sandbox and exposes the shipped function/prototype-method
-// declarations (metricLineHtml, GlpCard) directly, without a real shadow
-// DOM/customElements.
+// the shared test helper (test/helpers/load-card.cjs), which imports
+// src/glp-card.ts directly (Node's native type stripping) and exposes the
+// shipped function and class, without a real shadow DOM/customElements.
 'use strict';
 
 const test = require('node:test');

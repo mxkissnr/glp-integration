@@ -17,7 +17,7 @@ Every PR must:
 - **Do one thing** — keep the diff focused; split unrelated changes
 - **Use a Conventional Commits title in English** — `feat:` `fix:` `docs:` `chore:` `refactor:` `test:` `build:`
 - **Explain what and why** in the description, not just what
-- **Pass CI** — ruff, pytest and HACS/Hassfest validation green before requesting review
+- **Pass CI** — ruff, pytest, HACS/Hassfest validation and the card checks (lint, typecheck, tests and bundle diff under `cards/`) green before requesting review
 - **Update `CHANGELOG.md`** for any user-facing change
 - **Update `DOCS.md` and `DOCS.de.md`** together when behaviour or entities change
 - **Disclose AI assistance** — see below
@@ -52,8 +52,30 @@ Include:
 |---|---|
 | Coordinators | `coordinator.py` (60 s), `live_coordinator.py` (2 s), `machine_coordinator.py` (5 s) |
 | Platforms | `sensor.py`, `binary_sensor.py`, `select.py` — one file per HA platform |
+| Cards | TypeScript sources in `cards/shot/src` and `cards/order/src`, shared modules (CSS tokens, helpers, icons, contrast, machine lookups) in `cards/shared`. `npm run build` bundles them into `custom_components/gaggiuino_profiler/www/`, and those bundles are committed — never edit them by hand. See [cards/CLAUDE.md](cards/CLAUDE.md) |
 | Style | Follows [Home Assistant integration development](https://developers.home-assistant.io/docs/creating_integration_file_structure) conventions |
-| Tests | Run `pytest tests/ -q` (pytest-homeassistant-custom-component, with the GLP app API mocked); add a regression test for every bug fix. Testing against a real app instance is still welcome |
+| Tests | Run `pytest tests/ -q` (pytest-homeassistant-custom-component, with the GLP app API mocked); add a regression test for every bug fix. Testing against a real app instance is still welcome. Card changes also need the checks below in `cards/` |
+
+## Card checks
+
+Both cards live in one Node project, `cards/`. From that directory:
+
+```
+npm ci
+npm run lint
+npm run typecheck
+npm run test:coverage
+npm run build
+```
+
+`lint` runs ESLint over `shot/`, `shared/` and `order/`; `typecheck` runs `tsc --noEmit` for both
+cards; `test:coverage` runs the `node --test` suites and enforces 90 % line coverage on `src/`;
+`build` regenerates the two bundles in `custom_components/gaggiuino_profiler/www/`. After a build the
+working tree must stay clean — if a bundle changed, commit it with the source change.
+
+The e2e smoke tests need a Playwright browser (`npx playwright install chromium`) and run with the
+rest of the suite. The README screenshots are regenerated on demand with `npm run screenshot:shot`
+and `npm run screenshot:order`; they are not part of CI.
 
 ## Dev setup
 

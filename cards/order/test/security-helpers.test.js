@@ -1,9 +1,8 @@
-// Loads the real glp-order-card.js through the shared test/helpers/load-card.cjs
-// harness (which stubs only the browser globals it touches at top level:
-// customElements, window, console) and pulls the actual _esc()/_safeUrl()
-// functions out of it — so these tests exercise the shipped code, not a
-// re-implementation. glp-order-card.js stays a single, build-step-free file;
-// nothing here changes how it loads in HA.
+// Loads the real class from src/glp-order-card.ts through the shared
+// test/helpers/load-card.cjs harness (which stubs only the browser globals the
+// module touches at load time: customElements, window, navigator) and pulls
+// the actual _esc()/_safeUrl() functions out of its exports — so these tests
+// exercise the shipped code, not a re-implementation.
 'use strict';
 
 const test = require('node:test');

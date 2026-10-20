@@ -3,9 +3,9 @@
 // flat temperature curve (e.g. 93.0-93.4°C, typical for a real shot) got
 // stretched to fill the full chart height exactly like the pressure curve
 // (0-9 bar), making the curves' relative shapes meaningless when overlaid.
-// Loads the real glp-order-card.js through the shared test/helpers/load-card.cjs
-// harness and calls the real _shotChart() — it doesn't use `this` internally,
-// so it's called detached off the prototype.
+// Loads the real class from src/glp-order-card.ts through the shared
+// test/helpers/load-card.cjs harness and calls the real _shotChart() — it
+// doesn't use `this` internally, so it's called detached off the prototype.
 'use strict';
 
 const test = require('node:test');

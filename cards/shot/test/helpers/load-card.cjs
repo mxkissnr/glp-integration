@@ -3,6 +3,10 @@
 // reachable from the page; the tests instead import them straight from
 // src/glp-card.ts, which Node loads via native type stripping. The module is
 // evaluated once per test process, so every test file calls loadCard() once.
+// `expose` adds named module exports to the result; `context` overrides the
+// browser globals below (the DOM suites pass a happy-dom document).
+// test/deferred-define.test.js keeps its own loader: it must replace the
+// registry the card reads at load time, which this direct import cannot do.
 'use strict';
 
 function loadCard({ expose = [], context = {} } = {}) {

@@ -1,8 +1,8 @@
 // Machine standby tests (#195). Card loaded via the shared test helper
-// (test/helpers/load-card.cjs), which evaluates the real glp-card.js and
-// exposes GlpCard.prototype methods to the test directly, without a real
-// shadow DOM/customElements — covers only the pure-logic decisions made by
-// _isMachineOff() and _isSwitchOff(), not markup.
+// (test/helpers/load-card.cjs), which imports src/glp-card.ts and returns the
+// exported GlpCard class, so its prototype methods are reachable directly,
+// without a real shadow DOM/customElements — covers only the pure-logic
+// decisions made by _isMachineOff() and _isSwitchOff(), not markup.
 'use strict';
 
 const test = require('node:test');

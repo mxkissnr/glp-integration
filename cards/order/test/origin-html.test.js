@@ -1,4 +1,4 @@
-// Loads the real glp-order-card.js through the shared
+// Loads the real GlpOrderCard from src/glp-order-card.ts through the shared
 // test/helpers/load-card.cjs harness and exercises the real _originHtml()
 // function shipped in the card, not a re-implementation. Covers #28: origins[]
 // (blend beans, multiple countries) rendering alongside the legacy
