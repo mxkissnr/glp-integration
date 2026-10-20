@@ -30,24 +30,9 @@ export interface CardConfig {
   new_badge_days?: string | null;
 }
 
-export interface MachineTheme {
-  preset?: string;
-  a: string;
-  b: string;
-}
-
-export interface MachineEntry {
-  id?: string;
-  name?: string;
-  isDefault?: boolean;
-  type?: string;
-  theme?: MachineTheme;
-}
-
-export interface ThemeStops {
-  a: string;
-  b: string;
-}
+// The colour and machine-lookup shapes now live in cards/shared/types.ts;
+// re-exported here so every card file keeps importing from './types.ts'.
+export type { Rgb, ThemeStops, MachineTheme, MachineEntry } from '../../shared/types.ts';
 
 export interface MenuItem {
   name: string;
@@ -108,9 +93,6 @@ export interface ShotSeries {
 export interface QueueEta {
   positions?: Record<string, { position: number; suggestedEta: number }>;
 }
-
-// An [r, g, b] triple (0-255) resolved from a CSS colour string.
-export type Rgb = [number, number, number];
 
 // _getVariantsGrouped() returns either a flat list or the two bean sections.
 // The optional `never` fields let call sites narrow with `if (grouped.flat)`

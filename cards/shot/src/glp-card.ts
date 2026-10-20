@@ -10,10 +10,12 @@ import { STYLES } from './styles.ts';
 import { T, SUPPORTED_LANGS, setLang, getLang } from './i18n.ts';
 import { roastAgeDays, esc, safeUrl, parseTs, THEME_PRESETS, HEX_COLOR_RE } from './helpers.ts';
 import { MACHINE_ICON_MINI, ICONS } from './icons.ts';
+import { applySemanticColorContrast } from '../../shared/contrast.ts';
+import { appMachineEntry, appMachineTheme, appMachineType, matchMachineStatusEntity } from '../../shared/machine.ts';
 import { fmtUptime, buildShotChart, buildLiveChart, chartLegendHtml, metricLineHtml } from './charts.ts';
 import type { TemplateResult } from 'lit';
 import type {
-  Hass, HassStateObject, CardConfig, MachineEntry, ThemeStops, Rgb,
+  Hass, HassStateObject, CardConfig, ThemeStops,
   RecentShot, BaristaOrder, BeanInfo, GrinderEntry,
 } from './types.ts';
 const GLP_CARD_VERSION = '2.22.0';
@@ -530,64 +532,11 @@ class GlpCard extends HTMLElement {
       || localStorage.getItem('glp_switch_entity') || null;
   }
 
-  // GLP-SHARED:app-theme-lookup v1 — reads this card's own machine's entry
-  // out of `hass` state's `machines[]` array, or null when unavailable (no
-  // app-side sync yet, e.g. this card's zero-config/standalone mode).
-  // glp-integration forwards every machine's attributes verbatim off the
-  // app's GET /api/status `machines[]` (gaggiuino-local-profiler#701): any
-  // `*_machine_status`-suffixed entity carries the WHOLE array (every
-  // machine, not just the default one) as its `machines` attribute, so any
-  // one such entity is enough regardless of which machine this card
-  // instance represents. Matched against `this._config.machine` the same
-  // "name or id" needle way this card's own machine-status-entity matching
-  // works, falling back to the isDefault entry when unconfigured. Shared by
-  // _appMachineTheme() (theme colours) and _appMachineType() (machine body
-  // shape for MACHINE_ICON_MINI, mxkissnr/glp-lovelace-card#127 /
-  // mxkissnr/glp-order-card#97) so both read the one resolved entry instead
-  // of duplicating the lookup. Kept byte-identical between glp-card.js and
-  // glp-order-card.js.
-  _appMachineEntry(): MachineEntry | null | undefined {
-    if (!this._hass) return null;
-    const statusIds = Object.keys(this._hass.states).filter(id => id.endsWith('_machine_status'));
-    let machines: MachineEntry[] | null = null;
-    for (const id of statusIds) {
-      const list = this._hass.states[id]?.attributes?.machines;
-      if (Array.isArray(list)) { machines = list; break; }
-    }
-    if (!machines) return null;
-    let entry: MachineEntry | null | undefined = null;
-    if (this._config?.machine) {
-      const needle = String(this._config.machine).toLowerCase();
-      entry = machines.find(m =>
-        String(m.name || '').toLowerCase() === needle || String(m.id) === needle);
-    }
-    if (!entry) entry = machines.find(m => m.isDefault) || null;
-    return entry;
-  }
-
+  // The app's own stored per-machine theme (#701), read from hass state by
+  // the shared machine lookup; null when nothing valid is synced.
   _appMachineTheme(): ThemeStops | null {
-    const theme = this._appMachineEntry()?.theme;
-    if (!theme) return null;
-    if (typeof theme.preset === 'string' && Object.prototype.hasOwnProperty.call(THEME_PRESETS, theme.preset)) {
-      return THEME_PRESETS[theme.preset as keyof typeof THEME_PRESETS];
-    }
-    // Inline literal regex (not each file's own HEX_COLOR_RE/_validHex) so
-    // this shared block stays byte-identical regardless of what either
-    // file's local hex-validation helper happens to be named.
-    if (/^#[0-9a-fA-F]{6}$/.test(theme.a) && /^#[0-9a-fA-F]{6}$/.test(theme.b)) {
-      return { a: theme.a, b: theme.b };
-    }
-    return null;
+    return appMachineTheme(appMachineEntry(this._hass, this._config?.machine));
   }
-
-  // Machine type ('gaggiuino' | 'gaggimate') for MACHINE_BODY/MACHINE_ICON_MINI's
-  // badge shape. Defaults to 'gaggiuino' when unresolved/unrecognized, same
-  // backward-compatible default MACHINE_BODY itself falls back to.
-  _appMachineType(): 'gaggiuino' | 'gaggimate' {
-    const type = this._appMachineEntry()?.type;
-    return type === 'gaggimate' ? 'gaggimate' : 'gaggiuino';
-  }
-  // /GLP-SHARED:app-theme-lookup v1
 
   // Resolves this card's effective theme to a {a,b} hex pair, or null when
   // nothing valid is configured/synced (falls back to the default
@@ -692,17 +641,7 @@ class GlpCard extends HTMLElement {
     if (this._config.entity_prefix) return this._config.entity_prefix;
     const candidates = Object.keys(this._hass!.states).filter(id => id.endsWith('_machine_status'));
     if (this._config?.machine) {
-      // GLP-SHARED:machine-match v1 — needle/needleSlug + find() predicate
-      // kept byte-identical with glp-order-card.js's
-      // _findMachineStatusEntity(); what each side does with `matched`
-      // afterward differs (a prefix here vs the raw entity id there), so
-      // only the predicate itself is shared.
-      const needle = String(this._config.machine).toLowerCase();
-      const needleSlug = needle.replace(/\s+/g, '_');
-      const matched = candidates.find(id =>
-        (this._hass!.states[id]?.attributes?.friendly_name as string)?.toLowerCase().includes(needle) ||
-        id.toLowerCase().includes(needleSlug));
-      // /GLP-SHARED:machine-match v1
+      const matched = matchMachineStatusEntity(this._hass!, candidates, this._config.machine);
       if (matched) return matched.replace(/machine_status$/, '');
     }
     const found = candidates.find(id =>
@@ -816,136 +755,11 @@ class GlpCard extends HTMLElement {
     </div>`;
   }
 
-  /* GLP-SHARED:contrast v1 — kept byte-identical with glp-order-card.js's
-     _luminanceOf()/_applySemanticColorContrast() */
-  // Resolves the relative luminance of a CSS color string by normalizing it
-  // through a scratch element's computed style (handles hex/rgb/named/etc —
-  // whatever the real cascade actually resolved a custom property to).
-  // Returns null if it can't be determined (no DOM, unset value, ...).
-  // Resolves a CSS color string to [r, g, b] (0-255) by normalizing it
-  // through a scratch element's computed style, so hex/rgb/named/color-mix
-  // all work — whatever the real cascade actually produced. Split out of
-  // _luminanceOf() (which now builds on it) because --glp-aline has to
-  // BLEND two resolved colors, not merely compare their luminance.
-  _rgbOf(cssColor: string): Rgb | null {
-    if (!cssColor) return null;
-    let rgb: string | undefined;
-    try {
-      const probe = document.createElement('span');
-      probe.style.cssText = 'display:none';
-      probe.style.color = cssColor;
-      this.shadowRoot!.appendChild(probe);
-      rgb = getComputedStyle(probe).color;
-      probe.remove();
-    } catch { return null; }
-    const m = rgb && rgb.match(/[\d.]+/g);
-    if (!m || m.length < 3) return null;
-    return m.slice(0, 3).map(Number) as Rgb;
+  // Picks the contrast-safe semantic colour variants and --glp-aline at
+  // runtime from the host's resolved colours; see cards/shared/contrast.ts.
+  _applySemanticColorContrast(): void {
+    applySemanticColorContrast(this);
   }
-
-  _luminanceOf(cssColor: string): number | null {
-    const rgb = this._rgbOf(cssColor);
-    if (!rgb) return null;
-    const [r, g, b] = rgb;
-    const lin = (c: number) => { c /= 255; return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4; };
-    return 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
-  }
-
-  // Relative-luminance contrast ratio of two [r,g,b] triples, WCAG 2.x.
-  _contrastOf(rgbA: Rgb, rgbB: Rgb): number {
-    const lum = ([r, g, b]: Rgb) => {
-      const lin = (c: number) => { c /= 255; return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4; };
-      return 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
-    };
-    const a = lum(rgbA), b = lum(rgbB);
-    return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
-  }
-
-  // Picks the contrast-safe --glp-ok/--glp-warn/--glp-err/--glp-accent-text
-  // variants at runtime, each keyed off the LUMINANCE OF THE ACTUAL RESOLVED
-  // COLOR they need to read against — not prefers-color-scheme. OS/browser
-  // color scheme can mismatch the actual active HA theme (dark system +
-  // light HA theme is common), and this card has no data-theme attribute to
-  // key off instead. --glp-ok/--glp-warn/--glp-err key off --glp-bg's
-  // luminance; --glp-accent-text keys off --glp-accent-start/-end's
-  // luminance (the darker of the two, see below) separately (theme darkness
-  // and accent darkness are orthogonal — see the
-  // long comments in the GLP-TOKENS block above for the measured contrast
-  // ratios behind all four). Sets the winning values as an inline style on
-  // the host, which always outranks the plain :host declarations in STYLES
-  // regardless of any stylesheet/media-query state. Called from _render()
-  // right after the shadow DOM (and its :host rules) are rebuilt.
-  _applySemanticColorContrast() {
-    const bgLuminance = this._luminanceOf(getComputedStyle(this).getPropertyValue('--glp-bg').trim());
-    if (bgLuminance != null) {
-      // 0.179 is the standard WCAG "flip point": the background luminance
-      // above which a darker foreground becomes the higher-contrast choice.
-      const light = bgLuminance > 0.179;
-      this.style.setProperty('--glp-ok',   light ? '#15803d' : '#22c55e');
-      this.style.setProperty('--glp-warn', light ? '#a16207' : '#eab308');
-      this.style.setProperty('--glp-err',  light ? '#dc2626' : '#ef4444');
-    }
-    // mxkissnr/glp-lovelace-card#87 / mxkissnr/glp-order-card#62: when a
-    // per-machine gradient theme is active, --glp-accent-start
-    // and --glp-accent-end differ — pick the DARKER (lower-luminance) stop
-    // as the worst case, since text/icon content can sit anywhere across the
-    // gradient. A flat colour (no theme, or a flat custom/preset) has both
-    // stops equal, so this reduces to the original single-value check.
-    const startLuminance = this._luminanceOf(getComputedStyle(this).getPropertyValue('--glp-accent-start').trim());
-    const endLuminance    = this._luminanceOf(getComputedStyle(this).getPropertyValue('--glp-accent-end').trim());
-    const accentLuminance = [startLuminance, endLuminance].filter((v): v is number => v != null)
-      .reduce<number | null>((min, v) => (min == null || v < min ? v : min), null);
-    if (accentLuminance != null) {
-      // Pure #000/#fff at the same 0.179 split is a mathematical guarantee
-      // of >=4.58:1 against ANY accent color (both text colors measure
-      // exactly that at the crossover luminance, and only gain contrast
-      // moving away from it) — no need to check specific theme values here.
-      this.style.setProperty('--glp-accent-text', accentLuminance > 0.179 ? '#000' : '#fff');
-    }
-    this._applyAccentLineContrast();
-  }
-
-  // Resolves --glp-aline: the accent as a thin line needs 3:1 against the
-  // card's background (WCAG 1.4.11 non-text contrast), which three of the
-  // eight curated machine themes miss on a dark ground (see the --glp-aline
-  // comment in the GLP-TOKENS block for the measured values).
-  //
-  // Uses the DARKER of the two gradient stops as the worst case, matching
-  // --glp-accent-text's reasoning above: a line can be drawn anywhere along
-  // the gradient, so the weakest stop is what has to clear the bar.
-  //
-  // A theme that already passes is left EXACTLY as configured — this must
-  // not quietly recolour the seven themes that were always fine. Only a
-  // failing stop is blended toward --glp-text (the direction that is
-  // guaranteed to increase contrast against the background, since --glp-text
-  // is itself the high-contrast colour for this ground) in 5% steps, and the
-  // first step that clears 3:1 wins. Stepping rather than solving keeps the
-  // result as close to the configured colour as possible: the accent should
-  // still look like the machine's colour, just legible.
-  _applyAccentLineContrast(): void {
-    const cs = getComputedStyle(this);
-    const bg = this._rgbOf(cs.getPropertyValue('--glp-bg').trim());
-    const text = this._rgbOf(cs.getPropertyValue('--glp-text').trim());
-    const stops = (['--glp-accent-start', '--glp-accent-end']
-      .map(v => this._rgbOf(cs.getPropertyValue(v).trim()))
-      .filter(Boolean)) as Rgb[];
-    if (!bg || !text || !stops.length) return;
-    // Worst case = the stop with the lowest contrast against the background.
-    const weakest = stops.reduce((worst, s) =>
-      this._contrastOf(s, bg) < this._contrastOf(worst, bg) ? s : worst, stops[0]!);
-    if (this._contrastOf(weakest, bg) >= 3) {
-      this.style.setProperty('--glp-aline', `rgb(${weakest.join(' ')})`);
-      return;
-    }
-    let out = weakest;
-    for (let t = 0.05; t <= 1.0001; t += 0.05) {
-      const mixed = weakest.map((c, i) => Math.round(c + (text[i]! - c) * t)) as Rgb;
-      out = mixed;
-      if (this._contrastOf(mixed, bg) >= 3) break;
-    }
-    this.style.setProperty('--glp-aline', `rgb(${out.join(' ')})`);
-  }
-  /* /GLP-SHARED:contrast v1 */
 
   // #195: the switch-only "off" rule — a configured switch reported `off` or
   // `unavailable`. Drives the power button, whose click toggles the switch, so
@@ -1186,6 +1000,7 @@ class GlpCard extends HTMLElement {
 
   _machineOffHtml(vm: ViewModel): TemplateResult {
     const { standbyState, _powerBtn } = vm;
+    const machineType = appMachineType(appMachineEntry(this._hass, this._config?.machine));
     const readyByHtml = this._buildReadyByHtml(vm.readyByTargetAt, vm.readyByPlannedAt);
       const offOrders = this._orders.length > 0 ? html`
         <div style="padding:0 var(--glp-sp-3) var(--glp-sp-3)">
@@ -1197,7 +1012,7 @@ class GlpCard extends HTMLElement {
         <ha-card><div class="card collapsed">
           <div class="header">
             <div class="title">
-              <span class="machine-icon-badge">${/* MACHINE_ICON_MINI() emits fixed SVG geometry, no user input */ unsafeSVG(MACHINE_ICON_MINI(this._iconGradId, this._appMachineType()))}</span>
+              <span class="machine-icon-badge">${/* MACHINE_ICON_MINI() emits fixed SVG geometry, no user input */ unsafeSVG(MACHINE_ICON_MINI(this._iconGradId, machineType))}</span>
               ${this._config.title}
             </div>
             <div class="header-right">
@@ -1415,6 +1230,7 @@ class GlpCard extends HTMLElement {
     if (!this._hass || !this._config) return;
 
     const vm = this._viewModel();
+    const machineType = appMachineType(appMachineEntry(this._hass, this._config?.machine));
 
     // ── machine off ──────────────────────────────────────────────────────────
     if (vm.machineOff) {
@@ -1432,7 +1248,7 @@ class GlpCard extends HTMLElement {
 
         <div class="header">
           <div class="title">
-            <span class="machine-icon-badge">${/* MACHINE_ICON_MINI() emits fixed SVG geometry, no user input */ unsafeSVG(MACHINE_ICON_MINI(this._iconGradId, this._appMachineType()))}</span>
+            <span class="machine-icon-badge">${/* MACHINE_ICON_MINI() emits fixed SVG geometry, no user input */ unsafeSVG(MACHINE_ICON_MINI(this._iconGradId, machineType))}</span>
             ${this._config.title}
           </div>
           <div class="header-right">

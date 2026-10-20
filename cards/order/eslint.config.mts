@@ -36,9 +36,8 @@ export default [
   }),
   ...tseslint.config({
     // The card's TypeScript sources (#143): fully typed, so the
-    // non-type-checked recommended set stays enough (no parser project). The
-    // GLP-SHARED / GLP-TOKENS blocks still have to stay byte-identical with
-    // the Shot Card, checked by test/token-sync.test.js.
+    // non-type-checked recommended set stays enough (no parser project).
+    // Shared code lives in cards/shared/, imported by both cards.
     files: ['src/**/*.ts'],
     extends: [...tseslint.configs.recommended],
     languageOptions: {
