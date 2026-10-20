@@ -25,19 +25,14 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 
-// esbuild strips the GLP-TOKENS marker comments, so read src/*.ts, not the bundle (#180).
-const SRC = fs.readdirSync(path.join(__dirname, '..', 'src'))
-  .filter((name) => name.endsWith('.ts'))
-  .sort()
-  .map((name) => fs.readFileSync(path.join(__dirname, '..', 'src', name), 'utf8'))
-  .join('\n');
+// The token contract lives once in cards/shared/tokens.ts (#256).
+const TOKENS_SRC = fs.readFileSync(path.join(__dirname, '..', '..', 'shared', 'tokens.ts'), 'utf8');
 
-function extractTokensBlock(src) {
-  const start = src.indexOf('/* GLP-TOKENS v1');
-  const end = src.indexOf('/* /GLP-TOKENS v1 */');
-  assert.notEqual(start, -1, 'GLP-TOKENS v1 block not found');
-  assert.notEqual(end, -1, '/GLP-TOKENS v1 end marker not found');
-  return src.slice(start, end);
+function extractTokensBlock() {
+  const start = TOKENS_SRC.indexOf('export const TOKENS');
+  const end = TOKENS_SRC.lastIndexOf('`');
+  assert.notEqual(start, -1, 'TOKENS export not found in shared/tokens.ts');
+  return TOKENS_SRC.slice(TOKENS_SRC.indexOf('`', start) + 1, end);
 }
 
 function parseDeclarations(blockText) {
@@ -65,7 +60,7 @@ function resolveVar(raw, decls, overrides, seen = new Set()) {
   return '';
 }
 
-const decls = parseDeclarations(extractTokensBlock(SRC));
+const decls = parseDeclarations(extractTokensBlock());
 
 test('--glp-accent falls back to --primary-color\'s default when nothing overrides it', () => {
   assert.equal(resolveVar(decls.get('--glp-accent'), decls, new Map()), '#f59e0b');

@@ -584,10 +584,8 @@
   // node_modules/lit-html/directives/if-defined.js
   var o6 = (o7) => o7 ?? A;
 
-  // order/src/styles.ts
-  var STYLES = `
-  /* GLP-TOKENS v1 — shared contract between glp-card.js and glp-order-card.js, keep byte-identical */
-  :host {
+  // shared/tokens.ts
+  var TOKENS = `  :host {
     --glp-radius:    var(--ha-card-border-radius, 12px);
     --glp-radius-sm: 4px;
     --glp-bg:      var(--ha-card-background, var(--card-background-color, #18181b));
@@ -751,8 +749,11 @@
     --glp-series-flow:   #c77000;
     --glp-series-temp:   #c0392b;
     --glp-series-weight: #009e73;
-  }
-  /* /GLP-TOKENS v1 */
+  }`;
+
+  // order/src/styles.ts
+  var STYLES = `
+${TOKENS}
 
   /* legacy internal aliases — rest of this file still reads these names;
      hybrid theming happens one level up, in the GLP-TOKENS block above.
@@ -774,9 +775,10 @@
     border: none;
     box-shadow: none;
   }
-  /* Base sizing for every drawn icon inserted via ICONS.of() (GLP-SHARED:icons
-     v1 above) — 1em locks it to whatever font-size token its container
-     already resolves through, so a coffee cup dropped into a button label vs.
+  /* Base sizing for every drawn icon inserted via ICONS.of()
+     (cards/shared/icons.ts) — 1em locks it to whatever font-size token its
+     container already resolves through, so a coffee cup dropped into a button
+     label vs.
      a status line vs. a menu tile never needs a second, size-specific copy of
      this rule. currentColor is what lets the same icon sit inside a muted
      label, an accepted-green status line or the accent-filled order button
@@ -1002,26 +1004,12 @@
   }
 `;
 
-  // order/src/helpers.ts
-  function _esc(s4) {
+  // shared/helpers.ts
+  function esc(s4) {
     if (s4 == null) return "";
     return String(s4).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
   }
-  function _originHtml(origins, lang) {
-    return origins.map((o7) => {
-      const raw = o7?.code;
-      if (typeof raw !== "string" || !/^[A-Z]{2}$/.test(raw.trim())) return _esc(raw);
-      const code = raw.trim();
-      let name = code;
-      try {
-        name = new Intl.DisplayNames([lang || "en"], { type: "region" }).of(code) || code;
-      } catch {
-      }
-      const label = _esc(name);
-      return o7.percent != null ? `${label} ${_esc(o7.percent)}%` : label;
-    }).join(" + ");
-  }
-  function _safeUrl(url) {
+  function safeUrl(url) {
     if (!url) return null;
     try {
       const u3 = new URL(url);
@@ -1040,11 +1028,27 @@
     "mulberry-mocha": { a: "#5b21b6", b: "#db2777" },
     "frosty-flat-white": { a: "#0f766e", b: "#38bdf8" }
   };
+
+  // order/src/helpers.ts
+  function _originHtml(origins, lang) {
+    return origins.map((o7) => {
+      const raw = o7?.code;
+      if (typeof raw !== "string" || !/^[A-Z]{2}$/.test(raw.trim())) return esc(raw);
+      const code = raw.trim();
+      let name = code;
+      try {
+        name = new Intl.DisplayNames([lang || "en"], { type: "region" }).of(code) || code;
+      } catch {
+      }
+      const label = esc(name);
+      return o7.percent != null ? `${label} ${esc(o7.percent)}%` : label;
+    }).join(" + ");
+  }
   function _validHex(s4) {
     return typeof s4 === "string" && /^#[0-9a-fA-F]{6}$/.test(s4);
   }
 
-  // order/src/icons.ts
+  // shared/icons.ts
   var MACHINE_BODY = (id, mini, type = "gaggiuino") => `
     <!-- Seitenwand rechts inkl. Kantenlicht, volle Hoehe -->
     <path d="M72.2 2.3 L100 11 L100 130 L88 153 L72.2 153 Z" fill="url(#${id})"/>
@@ -1183,8 +1187,10 @@
     // and an empty string is what makes `ICONS.of(x) || fallback` work.
     of: (name, cls = "") => ICONS.has(name) ? `<svg class="glp-i${cls ? " " + cls : ""}" viewBox="0 0 24 24" aria-hidden="true" focusable="false">${GLP_ICON_PATHS[name]}</svg>` : ""
   };
+
+  // order/src/icons.ts
   function _menuIconHtml(item) {
-    return ICONS.of(item?.id) || _esc(item?.emoji);
+    return ICONS.of(item?.id) || esc(item?.emoji);
   }
 
   // order/src/i18n.ts
@@ -1523,7 +1529,7 @@
     _getBase() {
       const url = this._config?.glp_url;
       if (url) {
-        const safe = _safeUrl(url);
+        const safe = safeUrl(url);
         return safe ? safe.replace(/\/$/, "") : null;
       }
       return window.location.origin + "/api/hassio_ingress/gaggiuino_local_profiler";

@@ -27,6 +27,8 @@ function readSource() {
     .map((name) => fs.readFileSync(path.join(dir, name), 'utf8'))
     .join('\n');
 }
+// The icon set lives once in cards/shared/icons.ts (#256).
+const SHARED_ICONS = fs.readFileSync(path.join(__dirname, '..', '..', 'shared', 'icons.ts'), 'utf8');
 const SRC = readSource();
 
 // Matches the BASE rule only. Anchoring on the line start with nothing but
@@ -54,8 +56,8 @@ test('the base .glp-i rule sets fill:none and stroke:currentColor', () => {
 test('every ICONS path is stroke-drawn, i.e. relies on that base rule', () => {
   // If someone adds a pre-filled icon later, the fill:none above would erase
   // it — that is a real trap, so assert the assumption holds both ways.
-  const block = SRC.slice(SRC.indexOf('const GLP_ICON_PATHS'), SRC.indexOf('// /GLP-SHARED:icons v1'));
-  assert.ok(block.length > 0, 'GLP-SHARED:icons v1 block not found');
+  const block = SHARED_ICONS.slice(SHARED_ICONS.indexOf('const GLP_ICON_PATHS'), SHARED_ICONS.indexOf('\n};', SHARED_ICONS.indexOf('const GLP_ICON_PATHS')));
+  assert.ok(block.length > 0, 'GLP_ICON_PATHS not found in shared/icons.ts');
   assert.ok(!/fill="(?!none)/.test(block),
     'an icon path carries its own fill attribute, which the base fill:none rule will fight');
 });

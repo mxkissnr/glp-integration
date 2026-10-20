@@ -15,6 +15,9 @@
 ### Documentation
 - **The documentation now describes the Machine Status error state, the real shot-completed event fields, the settings poll and the current licence wording.** Refs #240
 
+### CI
+- **The "Cards" job's accent-token and icon checks now read the shared blocks in `cards/shared/`, so they still guard the shipped CSS cascade and the drawn icon set after the blocks moved out of each card's `src/`.** Refs #256
+
 ## [1.33.1] – 2026-10-18
 ### Fixed
 - **The maintenance_done service with a machine id now resets that machine's counter instead of the default machine's.** Refs #234
