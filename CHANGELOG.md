@@ -9,6 +9,9 @@
 - **Live brewing curves and the recent-shots list no longer fill the Home Assistant database, the regular poll fetches only the newest shots, and the backup service no longer times out on large backups.** Closes #236, Closes #242
 - **After the app gets a new API token, for example after a restore, the integration picks it up by itself instead of failing until Home Assistant restarts, and failed controls show a readable error.** Refs #235
 
+### Documentation
+- **The documentation now describes the Machine Status error state, the real shot-completed event fields, the settings poll and the current licence wording.** Refs #240
+
 ## [1.33.1] – 2026-10-18
 ### Fixed
 - **The maintenance_done service with a machine id now resets that machine's counter instead of the default machine's.** Refs #234

@@ -24,4 +24,10 @@ This integration runs locally inside Home Assistant and communicates only with t
 - Entity attribute data (JSON from the app)
 - The HA config entry (stores the app URL)
 
+On Supervisor installs the config flow calls the Supervisor API
+(`http://supervisor/addons` and the add-on info endpoint) to auto-discover
+the app and its host port, authenticating with Home Assistant's own
+Supervisor token. The integration also serves the bundled Lovelace cards
+and the `/api/glp/*` proxy views inside Home Assistant.
+
 Out of scope: vulnerabilities in Home Assistant itself or the GLP app (report those in their respective repositories).
