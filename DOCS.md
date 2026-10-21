@@ -21,7 +21,7 @@ Integrates the [Gaggiuino Local Profiler](https://github.com/mxkissnr/gaggiuino-
 
 ### Beta versions
 
-To test upcoming changes, open this integration in HACS, choose the three-dot menu, then *Redownload*, and enable *Show beta versions*. You then get the development build of the integration and both cards. It is for testing only and may be broken. To go back, disable *Show beta versions* and redownload the latest stable version.
+To test upcoming changes, open this integration in HACS, open the three-dot menu and choose *Redownload*, then expand *Need a different version?* and pick the beta release from the *Release* list (tags like `v1.33.2b1`). Choose *Download* and restart Home Assistant. You then get the development build of the integration and both cards. It is for testing only and may be broken. To go back, open the same dialog and pick the newest stable release.
 
 ## Setup
 

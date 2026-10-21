@@ -21,7 +21,7 @@ Bindet den [Gaggiuino Local Profiler](https://github.com/mxkissnr/gaggiuino-loca
 
 ### Beta-Versionen
 
-Um kommende Änderungen zu testen, diese Integration in HACS öffnen, das Drei-Punkte-Menü wählen, dann *Erneut herunterladen* und *Beta-Versionen anzeigen* aktivieren. Danach erhältst du den Entwicklungsstand der Integration und beider Karten. Er ist nur zum Testen gedacht und kann Fehler enthalten. Zum Zurückwechseln *Beta-Versionen anzeigen* deaktivieren und die neueste stabile Version erneut herunterladen.
+Um kommende Änderungen zu testen, diese Integration in HACS öffnen, das Drei-Punkte-Menü wählen und *Erneut herunterladen* anwählen, dann *Benötigst du eine andere Version?* aufklappen und die Beta-Version aus der Liste *Release* wählen (Tags wie `v1.33.2b1`). *Herunterladen* anwählen und Home Assistant neu starten. Danach erhältst du den Entwicklungsstand der Integration und beider Karten. Er ist nur zum Testen gedacht und kann Fehler enthalten. Zum Zurückwechseln denselben Dialog öffnen und die neueste stabile Version wählen.
 
 ## Einrichtung
 

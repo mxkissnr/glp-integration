@@ -3489,7 +3489,7 @@ ${TOKENS}
     name: "GLP Shot Card",
     description: "Shows the last espresso shot from Gaggiuino Local Profiler",
     preview: false,
-    documentationURL: "https://github.com/mxkissnr/glp-lovelace-card"
+    documentationURL: "https://github.com/mxkissnr/glp-integration/blob/main/DOCS.md#shot-card"
   });
   console.info(
     `%c GLP-CARD %c v${GLP_CARD_VERSION} `,
