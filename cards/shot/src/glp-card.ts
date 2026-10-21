@@ -1310,7 +1310,7 @@ window.customCards.push({
   type: 'glp-card', name: 'GLP Shot Card',
   description: 'Shows the last espresso shot from Gaggiuino Local Profiler',
   preview: false,
-  documentationURL: 'https://github.com/mxkissnr/glp-lovelace-card',
+  documentationURL: 'https://github.com/mxkissnr/glp-integration/blob/main/DOCS.md#shot-card',
 });
 
 console.info(

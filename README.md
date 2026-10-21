@@ -22,7 +22,7 @@
 <p align="center">
   Exposes <a href="https://github.com/mxkissnr/gaggiuino-local-profiler">Gaggiuino Local Profiler</a> as native Home Assistant entities —<br/>
   machine status, shot data, live brewing state and machine sensors, all without cloud.<br/>
-  Ships with the <strong>GLP Shot Card</strong>, a Lovelace dashboard card, auto-registered on setup — no separate install needed.
+  Ships with the <strong>GLP Shot Card</strong> and the <strong>GLP Order Card</strong>, two Lovelace dashboard cards, auto-registered on setup — no separate install needed.
 </p>
 
 <p align="center">

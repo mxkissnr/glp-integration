@@ -2115,7 +2115,7 @@ ${TOKENS}
     name: "GLP Order Card",
     description: "Customer-facing order card for Gaggiuino Local Profiler",
     preview: false,
-    documentationURL: "https://github.com/mxkissnr/glp-order-card"
+    documentationURL: "https://github.com/mxkissnr/glp-integration/blob/main/DOCS.md#order-card"
   });
   console.info(`%c GLP-ORDER-CARD %c v${GLP_ORDER_CARD_VERSION} `, "background:#ff9f0a;color:#000;padding:2px 4px;border-radius:3px 0 0 3px", "background:#111113;color:#ff9f0a;padding:2px 4px;border-radius:0 3px 3px 0");
 })();

@@ -9,6 +9,7 @@
 - **Both cards got a shared bottom sheet that later changes use for pickers and details.** Refs #266
 
 ### Fixed
+- **The documentation link in Home Assistant's card picker now opens the card documentation in this repository instead of the archived card repositories.** Refs #256
 - **Deleting the newest shot no longer fires a shot-completed event, one malformed shot value no longer makes all sensors unavailable, and deleting shots no longer distorts the shot-count statistics.** Refs #237
 - **The options-flow error messages now live under `options.error`, where Home Assistant's translation schema expects them, so the translation files validate again.** Refs #237
 - **Adding the integration a second time now stops with a clear message, and changing the app URL in the options checks that the new address answers.** Closes #237
@@ -17,6 +18,7 @@
 - **After the app gets a new API token, for example after a restore, the integration picks it up by itself instead of failing until Home Assistant restarts, and failed controls show a readable error.** Refs #235
 
 ### Documentation
+- **The beta install steps now match the HACS dialog.** Refs #256
 - **The contributor and security docs now cover the bundled cards and how to test them.** Refs #256
 - **The documentation now describes the Machine Status error state, the real shot-completed event fields, the settings poll and the current licence wording.** Refs #240
 - **The integration documentation now covers both bundled cards, their options and languages.** Refs #256
