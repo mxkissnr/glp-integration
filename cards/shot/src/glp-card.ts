@@ -1065,7 +1065,8 @@ class GlpCard extends HTMLElement {
 
     const _powerBtn = this._switchEntity ? html`
       <button class="power-btn ${switchOff ? 'is-off' : 'is-on'}" data-action="toggle-switch"
-              title=${switchOff ? T('power_on') : T('power_off')}>
+              title=${switchOff ? T('power_on') : T('power_off')}
+              aria-label=${switchOff ? T('power_on') : T('power_off')}>
         <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor">
           <path d="M13 3h-2v10h2V3zm4.83 2.17-1.42 1.42A6.92 6.92 0 0 1 19 12c0 3.87-3.13 7-7 7s-7-3.13-7-7c0-2.28 1.09-4.3 2.58-5.42L6.17 5.17A8.932 8.932 0 0 0 3 12c0 4.97 4.03 9 9 9s9-4.03 9-9A8.932 8.932 0 0 0 17.83 5.17z"/>
         </svg>
@@ -1299,9 +1300,9 @@ class GlpCard extends HTMLElement {
       }
       navHtml = html`
         <div class="nav-row">
-          <button class="nav-arrow" data-nav="next" ?disabled=${nextDis} @click=${(e: Event) => { if ((e.currentTarget as HTMLButtonElement).hasAttribute('disabled')) return; this._navShot('next'); }}>‹</button>
+          <button class="nav-arrow" data-nav="next" ?disabled=${nextDis} aria-label=${T('nav_next')} @click=${(e: Event) => { if ((e.currentTarget as HTMLButtonElement).hasAttribute('disabled')) return; this._navShot('next'); }}>‹</button>
           <div class="nav-dots">${dots}</div>
-          <button class="nav-arrow" data-nav="prev" ?disabled=${prevDis} @click=${(e: Event) => { if ((e.currentTarget as HTMLButtonElement).hasAttribute('disabled')) return; this._navShot('prev'); }}>›</button>
+          <button class="nav-arrow" data-nav="prev" ?disabled=${prevDis} aria-label=${T('nav_prev')} @click=${(e: Event) => { if ((e.currentTarget as HTMLButtonElement).hasAttribute('disabled')) return; this._navShot('prev'); }}>›</button>
         </div>${tsLine}`;
     }
     return navHtml;
