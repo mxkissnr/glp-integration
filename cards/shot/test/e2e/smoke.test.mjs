@@ -83,17 +83,28 @@ function harnessHtml(mockStates) {
 
 async function setUpCard(mockStates, readySelector) {
   const server = await startServer(harnessHtml(mockStates));
-  const { port } = server.address();
-  const browser = await chromium.launch();
-  const page = await browser.newPage();
-  const pageErrors = [];
-  page.on('pageerror', err => pageErrors.push(err));
-  await page.goto(`http://127.0.0.1:${port}/__harness.html`);
-  await page.waitForFunction(sel => {
-    const el = document.querySelector('glp-card');
-    return !!el?.shadowRoot?.querySelector(sel);
-  }, readySelector, { timeout: 10000 });
-  return { server, browser, page, pageErrors };
+  // A browser that cannot launch (or a page that never becomes ready) must not
+  // leak the listening server: node --test would then wait forever, because a
+  // live handle keeps the process alive. Close both and rethrow the original
+  // error so the failing test reports why it could not set up.
+  let browser;
+  try {
+    const { port } = server.address();
+    browser = await chromium.launch();
+    const page = await browser.newPage();
+    const pageErrors = [];
+    page.on('pageerror', err => pageErrors.push(err));
+    await page.goto(`http://127.0.0.1:${port}/__harness.html`);
+    await page.waitForFunction(sel => {
+      const el = document.querySelector('glp-card');
+      return !!el?.shadowRoot?.querySelector(sel);
+    }, readySelector, { timeout: 10000 });
+    return { server, browser, page, pageErrors };
+  } catch (err) {
+    await browser?.close();
+    server.close();
+    throw err;
+  }
 }
 
 async function tearDown({ server, browser }) {
