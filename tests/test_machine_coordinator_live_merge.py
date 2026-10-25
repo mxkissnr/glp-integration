@@ -14,7 +14,10 @@ from custom_components.gaggiuino_profiler.machine_coordinator import GlpMachineC
 URL = "http://glp.example.com"
 
 
-def _make_coordinator(hass) -> GlpMachineCoordinator:
+def _make_coordinator(hass, aioclient_mock) -> GlpMachineCoordinator:
+    # Both machine endpoints are called with the auth token, which the
+    # coordinator resolves first.
+    aioclient_mock.get(f"{URL}/api/token", json={"apiToken": "test-token"})
     session = async_get_clientsession(hass)
     auth = GlpAuth(session, URL)
     return GlpMachineCoordinator(hass, session, URL, auth)
@@ -26,7 +29,7 @@ async def test_merges_sys_state_fields_into_status_data(hass, aioclient_mock) ->
         f"{URL}/api/machine/live",
         json={"sensorSnap": None, "sysState": {"operationMode": 4, "coreVersion": "1.2.3", "timeAlive": 999}},
     )
-    coordinator = _make_coordinator(hass)
+    coordinator = _make_coordinator(hass, aioclient_mock)
 
     data = await coordinator._async_update_data()
 
@@ -42,7 +45,7 @@ async def test_live_fetch_failure_is_best_effort(hass, aioclient_mock) -> None:
     must stay live even if the opmode select alone falls back to unknown."""
     aioclient_mock.get(f"{URL}/api/machine/status", json={"available": True, "pressure": 8.5})
     aioclient_mock.get(f"{URL}/api/machine/live", exc=aiohttp.ClientConnectionError)
-    coordinator = _make_coordinator(hass)
+    coordinator = _make_coordinator(hass, aioclient_mock)
 
     data = await coordinator._async_update_data()
 
@@ -55,7 +58,7 @@ async def test_live_sys_state_null_leaves_status_data_untouched(hass, aioclient_
     add-on's own docs) -- must not crash or write None fields."""
     aioclient_mock.get(f"{URL}/api/machine/status", json={"available": True, "pressure": 8.5})
     aioclient_mock.get(f"{URL}/api/machine/live", json={"sensorSnap": None, "sysState": None})
-    coordinator = _make_coordinator(hass)
+    coordinator = _make_coordinator(hass, aioclient_mock)
 
     data = await coordinator._async_update_data()
 
@@ -64,7 +67,7 @@ async def test_live_sys_state_null_leaves_status_data_untouched(hass, aioclient_
 
 async def test_status_unavailable_returns_empty_dict_without_calling_live(hass, aioclient_mock) -> None:
     aioclient_mock.get(f"{URL}/api/machine/status", json={"available": False})
-    coordinator = _make_coordinator(hass)
+    coordinator = _make_coordinator(hass, aioclient_mock)
 
     data = await coordinator._async_update_data()
 
@@ -73,7 +76,7 @@ async def test_status_unavailable_returns_empty_dict_without_calling_live(hass, 
 
 async def test_status_failure_raises_update_failed(hass, aioclient_mock) -> None:
     aioclient_mock.get(f"{URL}/api/machine/status", status=500)
-    coordinator = _make_coordinator(hass)
+    coordinator = _make_coordinator(hass, aioclient_mock)
 
     with pytest.raises(UpdateFailed):
         await coordinator._async_update_data()

@@ -6,6 +6,7 @@ from pathlib import Path
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.gaggiuino_profiler.const import DOMAIN
+from tests.common import mock_all_coordinator_endpoints
 
 
 async def test_invalid_scheme_rejected(hass, aioclient_mock) -> None:
@@ -56,6 +57,8 @@ async def test_valid_url_but_unreachable_reports_cannot_connect(
 async def test_valid_reachable_url_creates_entry(hass, aioclient_mock) -> None:
     aioclient_mock.get("http://localhost:8099/api/status", status=500)
     aioclient_mock.get("http://glp.example.com/api/status", json={"ok": True})
+    # Creating the entry runs its setup, which polls every coordinator.
+    mock_all_coordinator_endpoints(aioclient_mock, "http://glp.example.com")
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": "user"}, data=None
@@ -70,6 +73,7 @@ async def test_valid_reachable_url_creates_entry(hass, aioclient_mock) -> None:
 async def test_trailing_slash_is_stripped(hass, aioclient_mock) -> None:
     aioclient_mock.get("http://localhost:8099/api/status", status=500)
     aioclient_mock.get("http://glp.example.com/api/status", json={"ok": True})
+    mock_all_coordinator_endpoints(aioclient_mock, "http://glp.example.com")
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": "user"}, data=None

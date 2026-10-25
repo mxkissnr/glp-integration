@@ -7,22 +7,15 @@ switch_entity never reaches the machine_status sensor's attributes.
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from custom_components.gaggiuino_profiler.coordinator import GlpDataCoordinator
+from tests.common import mock_all_coordinator_endpoints
 
 URL = "http://glp.example.com"
 
 
 async def test_status_request_carries_auth_token_header(hass, aioclient_mock) -> None:
-    aioclient_mock.get(f"{URL}/api/token", json={"apiToken": "test-token"})
-    aioclient_mock.get(f"{URL}/api/status", json={"switchEntity": "switch.espresso_plug"})
-    aioclient_mock.get(f"{URL}/shots.json?limit=10", json=[])
-    aioclient_mock.get(f"{URL}/shots.json", json=[])
-    aioclient_mock.get(f"{URL}/api/maintenance", json={})
-    aioclient_mock.get(f"{URL}/api/preheat", json={})
-    aioclient_mock.get(f"{URL}/api/machine/profiles", json={})
-    aioclient_mock.get(f"{URL}/api/menu", json=[])
-    aioclient_mock.get(f"{URL}/api/version", json={})
-    aioclient_mock.get(f"{URL}/api/live/data", json={})
-    aioclient_mock.get(f"{URL}/api/machine/status", json={"available": False})
+    mock_all_coordinator_endpoints(
+        aioclient_mock, URL, status={"switchEntity": "switch.espresso_plug"}
+    )
 
     session = async_get_clientsession(hass)
     coordinator = GlpDataCoordinator(hass, session, URL)
