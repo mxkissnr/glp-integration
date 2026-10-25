@@ -11,6 +11,7 @@
 - **The integration test suite now fails when a test hits an endpoint it did not mock, and several tests check what their names promise.** Refs #238
 
 ### Fixed
+- **With reduced motion switched on the Shot Card no longer animates, the order buttons and badges are easier to read, and screen readers announce the shot arrows and the power button.** Refs #269
 - **A card set to one machine no longer switches another machine on or off, and a machine called "Kitchen" is no longer mixed up with "Kitchen 2".** Refs #269
 - **The Shot Card stops its background requests when it is removed, no longer polls orders when they are switched off, and keeps bean details after a short app restart.** Refs #270
 - **The maintenance row on the Shot Card can now be reached and confirmed with the keyboard.** Refs #267

@@ -1382,10 +1382,15 @@ ${TOKENS}
   .maint-confirm-no svg { width: 11px; height: 11px; }
 
   /* ── orders tab ── */
+  /* Fill is the accent darkened by 15% (#269): white on the raw --glp-err
+     values measures 3.76:1 (dark) / only the light one clears AA — the mix
+     lifts both to >=4.99:1 while keeping the hue. --accent itself is left
+     alone; only these elements use the darkened fill. */
   .tab-badge {
     display: inline-block; min-width: 16px; padding: 0 var(--glp-sp-1); margin-left: var(--glp-sp-1);
     font-size: var(--glp-fs-1); font-weight: 600; line-height: 16px; text-align: center;
-    border-radius: var(--glp-radius-sm); background: var(--accent); color: #fff;
+    border-radius: var(--glp-radius-sm);
+    background: color-mix(in srgb, var(--accent) 85%, #000); color: #fff;
   }
   /* Border diet (#120): accepted rows group via fill only; a pending order
      keeps a border, but as a semantic "needs your attention" state marker
@@ -1409,9 +1414,15 @@ ${TOKENS}
     font-size: var(--glp-fs-1); padding: 6px var(--glp-sp-3); cursor: pointer; min-height: 32px;
     display: inline-flex; align-items: center; gap: 4px;
   }
-  .ord-btn.primary { background: var(--green); color: #06210f; }
+  /* Readable order-button fills (#269): dark ink on the raw --glp-ok light
+     value measured 3.40:1, white on the raw --glp-err dark value 3.76:1.
+     White ink on the fill darkened by 35% (green) / 15% (accent) clears AA
+     for both of each token's two possible values (>=5.01:1 / >=4.99:1)
+     without turning green or red into a different hue; --green and --accent
+     are unchanged, only these buttons mix them darker. */
+  .ord-btn.primary { background: color-mix(in srgb, var(--green) 65%, #000); color: #fff; }
   .ord-btn.eta     { background: color-mix(in srgb, var(--text) 9%, transparent); color: var(--text); }
-  .ord-btn.danger  { background: var(--accent); color: #fff; }
+  .ord-btn.danger  { background: color-mix(in srgb, var(--accent) 85%, #000); color: #fff; }
   .ord-btn.ghost   { background: transparent; border: 1px solid var(--border); color: var(--sub); }
   .ord-btn svg { width: 12px; height: 12px; }
 
@@ -1447,23 +1458,32 @@ ${TOKENS}
     .metric-item.role-result .num { font-size: var(--glp-fs-6); }
   }
 
-  /* ── prefers-reduced-motion (#120) ── previously covered one of the four
-     animated effects in this file (.lm-live-dot only); now complete. Each
-     entry disables the animation AND pins the element to the state the
-     animation would have ended at — for .lm-live-dot/.status-dot.brewing
-     that's just their static (already-defined) base rule, so "animation:
-     none" alone is enough; the nav-dot width/radius is likewise already
-     fixed by .nav-dot.active outside the keyframe. The curve draw-in is the
-     one case where "no animation" would otherwise mean "invisible forever"
-     (stroke-dashoffset stuck at 900, opacity stuck at 0), so those three
-     properties get pinned to their finished values explicitly. */
+  /* ── prefers-reduced-motion (#120, completed for every animation in this
+     file by #269) ── each entry turns the animation off AND pins the element
+     to the state the animation would have ended at, since "no animation"
+     alone can leave an element at its keyframe start.
+       - .lm-live-dot, .status-dot.brewing, .descaling-banner svg and
+         .nav-dot.active.changed all animate opacity/width only, so their
+         static base rule is already the finished state: "animation: none"
+         is enough, and the .nav-dot.active width/radius is fixed outside the
+         keyframes anyway.
+       - the curve draw-in needs its three animated selectors at the SAME
+         specificity the animation rule uses (.glp-anim ...): a bare
+         .glp-curve-line rule loses to .glp-anim .glp-curve-line and the
+         draw-in would still play. Without the animation the line would stay
+         invisible (stroke-dashoffset stuck at 900, opacity stuck at 0), so
+         the finished values are pinned explicitly. */
   @media (prefers-reduced-motion: reduce) {
     .lm-live-dot { animation: none; }
     .status-dot.brewing { animation: none; }
+    .descaling-banner svg { animation: none; }
     .nav-dot.active.changed { animation: none; }
-    .glp-curve-line, .glp-curve-phase, .glp-curve-endpoint { animation: none; }
-    .glp-curve-line { stroke-dashoffset: 0; }
-    .glp-curve-phase, .glp-curve-endpoint { opacity: 1; }
+    .glp-anim .glp-curve-line,
+    .glp-anim .glp-curve-phase,
+    .glp-anim .glp-curve-endpoint { animation: none; }
+    .glp-anim .glp-curve-line { stroke-dashoffset: 0; }
+    .glp-anim .glp-curve-phase,
+    .glp-anim .glp-curve-endpoint { opacity: 1; }
   }
 `;
 
@@ -1501,6 +1521,8 @@ ${TOKENS}
       power_on: "Einschalten",
       power_off: "Ausschalten",
       off_label: "Aus",
+      nav_prev: "Vorheriger Shot",
+      nav_next: "Nächster Shot",
       profile_label: "Profil",
       profile_switching: "wechselt …",
       lm_live: "Maschine live",
@@ -1569,6 +1591,8 @@ ${TOKENS}
       power_on: "Turn on",
       power_off: "Turn off",
       off_label: "Off",
+      nav_prev: "Previous shot",
+      nav_next: "Next shot",
       profile_label: "Profile",
       profile_switching: "switching …",
       lm_live: "Machine live",
@@ -1637,6 +1661,8 @@ ${TOKENS}
       power_on: "Accendi",
       power_off: "Spegni",
       off_label: "Spento",
+      nav_prev: "Shot precedente",
+      nav_next: "Shot successivo",
       profile_label: "Profilo",
       profile_switching: "cambio in corso …",
       lm_live: "Macchina in diretta",
@@ -1705,6 +1731,8 @@ ${TOKENS}
       power_on: "Allumer",
       power_off: "Éteindre",
       off_label: "Éteint",
+      nav_prev: "Shot précédent",
+      nav_next: "Shot suivant",
       profile_label: "Profil",
       profile_switching: "changement …",
       lm_live: "Machine en direct",
@@ -1773,6 +1801,8 @@ ${TOKENS}
       power_on: "Encender",
       power_off: "Apagar",
       off_label: "Apagado",
+      nav_prev: "Shot anterior",
+      nav_next: "Shot siguiente",
       profile_label: "Perfil",
       profile_switching: "cambiando …",
       lm_live: "Máquina en directo",
@@ -1841,6 +1871,8 @@ ${TOKENS}
       power_on: "Inschakelen",
       power_off: "Uitschakelen",
       off_label: "Uit",
+      nav_prev: "Vorige shot",
+      nav_next: "Volgende shot",
       profile_label: "Profiel",
       profile_switching: "wisselt …",
       lm_live: "Machine live",
@@ -3180,7 +3212,8 @@ ${TOKENS}
       this._readyByTargetAt = readyByTargetAt;
       const _powerBtn = this._switchEntity ? b2`
       <button class="power-btn ${switchOff ? "is-off" : "is-on"}" data-action="toggle-switch"
-              title=${switchOff ? T2("power_on") : T2("power_off")}>
+              title=${switchOff ? T2("power_on") : T2("power_off")}
+              aria-label=${switchOff ? T2("power_on") : T2("power_off")}>
         <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor">
           <path d="M13 3h-2v10h2V3zm4.83 2.17-1.42 1.42A6.92 6.92 0 0 1 19 12c0 3.87-3.13 7-7 7s-7-3.13-7-7c0-2.28 1.09-4.3 2.58-5.42L6.17 5.17A8.932 8.932 0 0 0 3 12c0 4.97 4.03 9 9 9s9-4.03 9-9A8.932 8.932 0 0 0 17.83 5.17z"/>
         </svg>
@@ -3420,12 +3453,12 @@ ${TOKENS}
         }
         navHtml = b2`
         <div class="nav-row">
-          <button class="nav-arrow" data-nav="next" ?disabled=${nextDis} @click=${(e6) => {
+          <button class="nav-arrow" data-nav="next" ?disabled=${nextDis} aria-label=${T2("nav_next")} @click=${(e6) => {
           if (e6.currentTarget.hasAttribute("disabled")) return;
           this._navShot("next");
         }}>‹</button>
           <div class="nav-dots">${dots}</div>
-          <button class="nav-arrow" data-nav="prev" ?disabled=${prevDis} @click=${(e6) => {
+          <button class="nav-arrow" data-nav="prev" ?disabled=${prevDis} aria-label=${T2("nav_prev")} @click=${(e6) => {
           if (e6.currentTarget.hasAttribute("disabled")) return;
           this._navShot("prev");
         }}>›</button>
