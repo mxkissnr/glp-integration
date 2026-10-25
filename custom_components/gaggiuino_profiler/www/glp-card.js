@@ -2409,6 +2409,17 @@ ${TOKENS}
       this._pendingReadyByTimer = null;
       this._lastKnownReadyByTargetAt = null;
       this._lastKnownReadyByPlannedAt = null;
+      this._stateKeysStates = null;
+      this._stateKeysCache = null;
+      this._prefixStates = null;
+      this._prefixConfig = null;
+      this._prefixValue = null;
+      this._machineEntryCached = false;
+      this._machineEntryStates = null;
+      this._machineEntryMachine = void 0;
+      this._machineEntryValue = null;
+      this._renderInputs = null;
+      this._contrastKey = null;
       this.shadowRoot.addEventListener("click", (e6) => {
         if (e6.target.closest('[data-action="toggle-switch"]')) {
           e6.stopPropagation();
@@ -2500,6 +2511,7 @@ ${TOKENS}
     // view needs, since disconnectedCallback cleared it.
     connectedCallback() {
       this._startOrdersPoll();
+      this._contrastKey = null;
       if (this._hass) this._render();
     }
     // Every timer this card owns must stop here: a detached card gets no more
@@ -2754,12 +2766,21 @@ ${TOKENS}
     // _appMachineTheme() below) takes precedence over these once available.
     setConfig(config) {
       this._config = { title: "Gaggiuino", ...config };
+      this._prefixStates = null;
+      this._prefixConfig = null;
+      this._prefixValue = null;
+      this._machineEntryCached = false;
+      this._machineEntryStates = null;
+      this._machineEntryMachine = void 0;
+      this._machineEntryValue = null;
+      this._renderInputs = null;
+      this._contrastKey = null;
       this._switchEntity = localStorage.getItem(this._switchStorageKey()) || localStorage.getItem("glp_switch_entity") || null;
     }
     // The app's own stored per-machine theme (#701), read from hass state by
     // the shared machine lookup; null when nothing valid is synced.
     _appMachineTheme() {
-      return appMachineTheme(appMachineEntry(this._hass, this._config?.machine));
+      return appMachineTheme(this._machineEntry());
     }
     // Resolves this card's effective theme to a {a,b} hex pair, or null when
     // nothing valid is configured/synced (falls back to the default
@@ -2811,7 +2832,67 @@ ${TOKENS}
       }
       if (this.isConnected && !this._ordersPoll) this._startOrdersPoll();
       this._loadBeansInfo();
-      this._render();
+      if (this._needsRender()) this._render();
+    }
+    // Every id the card can read: everything under the resolved prefix, the
+    // machine-status entities the app-level machine lookups scan, and the
+    // configured switch. Kept sorted-free because hass.states key order is stable
+    // until an entity is added or removed, which the length/key check catches.
+    _watchedIds(prefix) {
+      const dot = prefix.indexOf(".");
+      const base = dot === -1 ? prefix : prefix.slice(dot + 1);
+      const ids = this._stateKeys().filter((id) => {
+        const d3 = id.indexOf(".");
+        return (d3 === -1 ? id : id.slice(d3 + 1)).startsWith(base) || id.endsWith("_machine_status");
+      });
+      if (this._switchEntity && !ids.includes(this._switchEntity)) ids.push(this._switchEntity);
+      return ids;
+    }
+    // What a render depends on, as cheaply comparable plain values plus the
+    // identity of every state object it read.
+    _renderInputsFor() {
+      const states = this._hass.states;
+      const prefix = this._resolvePrefix();
+      const ids = this._watchedIds(prefix);
+      return {
+        prefix,
+        language: String(this._hass?.language || this._hass?.locale?.language || "de").slice(0, 2).toLowerCase(),
+        theme: this._themeKey(),
+        ids,
+        states: ids.map((id) => states[id]),
+        minute: Math.floor(Date.now() / 6e4)
+      };
+    }
+    // True when this hass push changed something the card shows: an entity of its
+    // own changed object, an entity appeared or disappeared under the prefix, the
+    // prefix/language/theme changed, or the minute rolled over (the ETA countdown
+    // and the relative timestamps are derived from Date.now()). The minute costs
+    // at most one extra render per minute and only when a push arrives at all; no
+    // timer is involved. The first push after setConfig always renders
+    // (`_renderInputs` is cleared there).
+    _needsRender() {
+      if (!this._config) return false;
+      const prev = this._renderInputs;
+      if (!prev) return true;
+      const next = this._renderInputsFor();
+      if (prev.prefix !== next.prefix || prev.language !== next.language || prev.theme !== next.theme) return true;
+      if (prev.minute !== next.minute) return true;
+      if (prev.ids.length !== next.ids.length) return true;
+      for (let i6 = 0; i6 < next.ids.length; i6++) {
+        if (prev.ids[i6] !== next.ids[i6] || prev.states[i6] !== next.states[i6]) return true;
+      }
+      return false;
+    }
+    // The theme inputs the colour-contrast pass reads: HA's selected theme and
+    // dark mode, plus the accent pair _applyMachineTheme() wrote to the host.
+    _themeKey() {
+      const themes = this._hass?.themes;
+      const t5 = this._resolveMachineTheme();
+      return [
+        themes?.selectedTheme ?? themes?.theme ?? "",
+        themes?.darkMode === true ? "dark" : "light",
+        t5 ? `${t5.a}:${t5.b}` : ""
+      ].join("|");
     }
     // ── Bean metadata (via the integration REST proxy, app >= 1.96) ───────────
     async _loadBeansInfo() {
@@ -2850,6 +2931,16 @@ ${TOKENS}
       const title = age != null ? T2("bean_roasted_ago", age) : "";
       return b2`<span class="shot-bean-extra" title=${o7(title || void 0)}>${parts.join(" · ")}</span>`;
     }
+    // hass.states' key list, cached per states object: HA builds a new states map
+    // on every push, so identity is enough to invalidate it.
+    _stateKeys() {
+      const states = this._hass.states;
+      if (this._stateKeysStates !== states || !this._stateKeysCache) {
+        this._stateKeysStates = states;
+        this._stateKeysCache = Object.keys(states);
+      }
+      return this._stateKeysCache;
+    }
     // machine (#50): optional config option naming/slugging a specific
     // machine, for setups with more than one GLP machine device (see the app's
     // multi-machine mode, GLP #317, and glp-integration #47's forthcoming
@@ -2858,17 +2949,46 @@ ${TOKENS}
     // existing "first Gaggiuino-named entity, else any" heuristic — so cards
     // without this option (the vast majority today, single-machine setups)
     // behave exactly as before.
+    //
+    // Scanned on every _s() call (~25 per render), so the result is remembered
+    // alongside the states object and config it was computed from; setConfig()
+    // clears it. The states map only needs re-scanning when an entity is added or
+    // removed, which HA signals by building a new map.
     _resolvePrefix() {
       if (this._config.entity_prefix) return this._config.entity_prefix;
-      const candidates = Object.keys(this._hass.states).filter((id) => id.endsWith("_machine_status"));
+      const states = this._hass.states;
+      if (this._prefixStates === states && this._prefixConfig === this._config && this._prefixValue !== null) {
+        return this._prefixValue;
+      }
+      const candidates = this._stateKeys().filter((id) => id.endsWith("_machine_status"));
+      let prefix = null;
       if (this._config?.machine) {
         const matched = matchMachineStatusEntity(this._hass, candidates, this._config.machine);
-        if (matched) return matched.replace(/machine_status$/, "");
+        if (matched) prefix = matched.replace(/machine_status$/, "");
       }
-      const found = candidates.find((id) => this._hass.states[id]?.attributes?.friendly_name?.toLowerCase().includes("gaggiuino"));
-      if (found) return found.replace(/machine_status$/, "");
-      const fallback = candidates[0];
-      return fallback ? fallback.replace(/machine_status$/, "") : "sensor.gaggiuino_local_profiler_";
+      if (prefix === null) {
+        const found = candidates.find((id) => this._hass.states[id]?.attributes?.friendly_name?.toLowerCase().includes("gaggiuino"));
+        const chosen = found || candidates[0];
+        prefix = chosen ? chosen.replace(/machine_status$/, "") : "sensor.gaggiuino_local_profiler_";
+      }
+      this._prefixStates = states;
+      this._prefixConfig = this._config;
+      this._prefixValue = prefix;
+      return prefix;
+    }
+    // The app's machines[] entry, cached like _resolvePrefix(): appMachineEntry()
+    // rescans every *_machine_status key on each call, and the render asks for it
+    // three times (theme, machine type, header icon).
+    _machineEntry() {
+      const states = this._hass?.states ?? null;
+      if (this._machineEntryCached && this._machineEntryStates === states && this._machineEntryMachine === this._config?.machine) {
+        return this._machineEntryValue;
+      }
+      this._machineEntryCached = true;
+      this._machineEntryStates = states;
+      this._machineEntryMachine = this._config?.machine;
+      this._machineEntryValue = appMachineEntry(this._hass, this._config?.machine);
+      return this._machineEntryValue;
     }
     // Machine-scoped localStorage key (#50) so the switch entity choice for
     // one machine's card doesn't collide with another's on the same
@@ -2986,8 +3106,14 @@ ${TOKENS}
     }
     // Picks the contrast-safe semantic colour variants and --glp-aline at
     // runtime from the host's resolved colours; see cards/shared/contrast.ts.
+    // It appends probe spans and reads getComputedStyle ~10 times, forcing a
+    // style recalculation, but the result only depends on the theme — so it only
+    // re-runs when those inputs changed. cleared in setConfig/connectedCallback.
     _applySemanticColorContrast() {
+      const key = this._themeKey();
+      if (this._contrastKey === key) return;
       applySemanticColorContrast(this);
+      this._contrastKey = key;
     }
     // #195: the switch-only "off" rule — a configured switch reported `off` or
     // `unavailable`. Drives the power button, whose click toggles the switch, so
@@ -3207,7 +3333,7 @@ ${TOKENS}
     // _viewModel() object) ─────────────────────────────────────────────────────
     _machineOffHtml(vm) {
       const { standbyState, _powerBtn } = vm;
-      const machineType = appMachineType(appMachineEntry(this._hass, this._config?.machine));
+      const machineType = appMachineType(this._machineEntry());
       const readyByHtml = this._buildReadyByHtml(vm.readyByTargetAt, vm.readyByPlannedAt);
       const offOrders = this._orders.length > 0 ? b2`
         <div style="padding:0 var(--glp-sp-3) var(--glp-sp-3)">
@@ -3446,13 +3572,14 @@ ${TOKENS}
     _render() {
       if (!this._hass || !this._config) return;
       const vm = this._viewModel();
-      const machineType = appMachineType(appMachineEntry(this._hass, this._config?.machine));
+      const machineType = appMachineType(this._machineEntry());
       if (vm.machineOff) {
         this._profileOpen = false;
         D(this._machineOffHtml(vm), this.shadowRoot);
         this._applyMachineTheme();
         this._applySemanticColorContrast();
         this._startReadyByTicker();
+        this._renderInputs = this._renderInputsFor();
         return;
       }
       D(b2`
@@ -3514,6 +3641,7 @@ ${TOKENS}
       this._applyMachineTheme();
       this._applySemanticColorContrast();
       this._startUptimeTicker();
+      this._renderInputs = this._renderInputsFor();
     }
     getCardSize() {
       return 3;
