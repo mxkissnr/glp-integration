@@ -113,6 +113,7 @@ test('a removed card clears every timer it owns and stops requesting (#270)', as
   assert.ok(running._ordersPoll, 'the attached card polls orders');
   assert.ok(running._uptimeTimer, 'the attached card runs its uptime ticker');
   running.remove();
+  await flush();
   assertNoTimers(running, 'after the machine-on card is removed from the DOM');
 
   // Machine off: the render arms the ready-by ticker and the ready-by picker.
@@ -134,6 +135,7 @@ test('a removed card clears every timer it owns and stops requesting (#270)', as
 
   const callsBeforeRemoval = fetchWithAuth.paths.length;
   card.remove();
+  await flush();
   assertNoTimers(card, 'after the card is removed from the DOM');
 
   // Nothing the card owns may fire again, however far the clock advances.
@@ -151,6 +153,7 @@ test('a removed card clears the orders retry it armed before the proxy was ready
   assert.ok(card._ordersRetry, 'a card without the proxy schedules a retry');
 
   card.remove();
+  await flush();
   assertNoTimers(card, 'after removal');
 
   t.mock.timers.tick(10000);
@@ -187,6 +190,7 @@ test('re-attaching the card restarts the orders poll (#270)', async (t) => {
   assert.equal(fetchWithAuth.ordersCalls(), 1);
 
   card.remove();
+  await flush();
   assert.equal(card._ordersPoll, null);
 
   window.document.body.appendChild(card);   // dashboard edit mode, view switch
@@ -200,6 +204,7 @@ test('re-attaching the card restarts the orders poll (#270)', async (t) => {
   assert.equal(fetchWithAuth.ordersCalls(), 3);
 
   card.remove();
+  await flush();
   assertNoTimers(card, 'after the second removal');
 });
 
