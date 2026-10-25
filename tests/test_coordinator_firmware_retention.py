@@ -8,20 +8,9 @@ from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.gaggiuino_profiler.const import DOMAIN
 from custom_components.gaggiuino_profiler.coordinator import GlpDataCoordinator
+from tests.common import mock_all_coordinator_endpoints
 
 URL = "http://glp.example.com"
-
-
-def _mock_core(aioclient_mock) -> None:
-    aioclient_mock.get(f"{URL}/api/status", json={})
-    aioclient_mock.get(f"{URL}/api/token", json={"apiToken": "test-token"})
-    aioclient_mock.get(f"{URL}/shots.json?limit=10", json=[])
-    aioclient_mock.get(f"{URL}/shots.json", json=[])
-    aioclient_mock.get(f"{URL}/api/maintenance", json={})
-    aioclient_mock.get(f"{URL}/api/preheat", json={})
-    aioclient_mock.get(f"{URL}/api/machine/profiles", json={})
-    aioclient_mock.get(f"{URL}/api/menu", json=[])
-    aioclient_mock.get(f"{URL}/api/version", json={})
 
 
 _FW_OK = {
@@ -37,8 +26,7 @@ async def test_firmware_retained_when_endpoint_starts_failing(hass, aioclient_mo
     entry.add_to_hass(hass)
     coordinator = GlpDataCoordinator(hass, async_get_clientsession(hass), URL)
 
-    _mock_core(aioclient_mock)
-    aioclient_mock.get(f"{URL}/api/machine/firmware/version", json=_FW_OK)
+    mock_all_coordinator_endpoints(aioclient_mock, URL, firmware_version=_FW_OK)
     data = await coordinator._async_update_data()
     assert data["firmware_installed"] == "15a737d"
     assert data["firmware_latest"] == "61bd042"
@@ -46,8 +34,7 @@ async def test_firmware_retained_when_endpoint_starts_failing(hass, aioclient_mo
 
     # Machine goes offline -> add-on 502s the firmware endpoint.
     aioclient_mock.clear_requests()
-    _mock_core(aioclient_mock)
-    aioclient_mock.get(f"{URL}/api/machine/firmware/version", status=502)
+    mock_all_coordinator_endpoints(aioclient_mock, URL, statuses={"firmware_version": 502})
     data = await coordinator._async_update_data()
     assert data["firmware_installed"] == "15a737d"
     assert data["firmware_latest"] == "61bd042"
@@ -60,15 +47,14 @@ async def test_firmware_retained_when_installed_missing_from_payload(hass, aiocl
     entry.add_to_hass(hass)
     coordinator = GlpDataCoordinator(hass, async_get_clientsession(hass), URL)
 
-    _mock_core(aioclient_mock)
-    aioclient_mock.get(f"{URL}/api/machine/firmware/version", json=_FW_OK)
+    mock_all_coordinator_endpoints(aioclient_mock, URL, firmware_version=_FW_OK)
     await coordinator._async_update_data()
 
     aioclient_mock.clear_requests()
-    _mock_core(aioclient_mock)
-    aioclient_mock.get(
-        f"{URL}/api/machine/firmware/version",
-        json={"installed": None, "latest": None, "updateAvailable": False},
+    mock_all_coordinator_endpoints(
+        aioclient_mock,
+        URL,
+        firmware_version={"installed": None, "latest": None, "updateAvailable": False},
     )
     data = await coordinator._async_update_data()
     assert data["firmware_installed"] == "15a737d"
@@ -80,8 +66,7 @@ async def test_firmware_stays_none_when_never_seen(hass, aioclient_mock) -> None
     entry.add_to_hass(hass)
     coordinator = GlpDataCoordinator(hass, async_get_clientsession(hass), URL)
 
-    _mock_core(aioclient_mock)
-    aioclient_mock.get(f"{URL}/api/machine/firmware/version", status=502)
+    mock_all_coordinator_endpoints(aioclient_mock, URL, statuses={"firmware_version": 502})
     data = await coordinator._async_update_data()
     assert data["firmware_installed"] is None
     assert data["firmware_latest"] is None

@@ -14,6 +14,7 @@ from pytest_homeassistant_custom_component.test_util.aiohttp import (
 )
 
 from custom_components.gaggiuino_profiler.const import DOMAIN
+from tests.common import mock_all_coordinator_endpoints
 
 URL = "http://glp.example.com"
 
@@ -53,33 +54,35 @@ def _dynamic_get(aioclient_mock, url: str, holder: dict) -> None:
     aioclient_mock.get(url, side_effect=_handler)
 
 
-def _mock_all_coordinator_endpoints(aioclient_mock, url: str, boiler_holder: dict | None = None) -> None:
-    aioclient_mock.get(f"{url}/api/status", json={})
-    aioclient_mock.get(f"{url}/api/token", json={"apiToken": "test-token"})
-    aioclient_mock.get(f"{url}/shots.json?limit=10", json=[])
-    aioclient_mock.get(f"{url}/shots.json", json=[])
-    aioclient_mock.get(f"{url}/api/maintenance", json={})
-    aioclient_mock.get(f"{url}/api/preheat", json={})
-    aioclient_mock.get(f"{url}/api/machine/profiles", json={})
-    aioclient_mock.get(f"{url}/api/menu", json=[])
-    aioclient_mock.get(f"{url}/api/version", json={})
-    aioclient_mock.get(f"{url}/api/live/data", json={})
-    aioclient_mock.get(f"{url}/api/machine/status", json={"available": True, "profileName": "Adaptive"})
-    aioclient_mock.get(
-        f"{url}/api/machine/live",
-        json={"sensorSnap": None, "sysState": {"operationMode": 4, "coreVersion": "1.2.3", "timeAlive": 1000}},
+SETTINGS = {
+    "display": DISPLAY_SETTINGS,
+    "led": LED_SETTINGS,
+    "scales": SCALES_SETTINGS,
+    "system": SYSTEM_SETTINGS,
+}
+
+
+def _register_coordinator_endpoints(aioclient_mock, boiler_holder: dict) -> None:
+    # The boiler category is answered from the holder so a test can change or
+    # break it after setup. aioclient_mock matches the first registration, so
+    # the dynamic one has to go in before the shared set's static default.
+    _dynamic_get(aioclient_mock, f"{URL}/api/machine/settings?category=boiler", boiler_holder)
+    mock_all_coordinator_endpoints(
+        aioclient_mock,
+        URL,
+        machine_status={"available": True, "profileName": "Adaptive"},
+        machine_live={
+            "sensorSnap": None,
+            "sysState": {"operationMode": 4, "coreVersion": "1.2.3", "timeAlive": 1000},
+        },
+        settings=SETTINGS,
     )
-    if boiler_holder is None:
-        boiler_holder = {"response": BOILER_SETTINGS}
-    _dynamic_get(aioclient_mock, f"{url}/api/machine/settings?category=boiler", boiler_holder)
-    aioclient_mock.get(f"{url}/api/machine/settings?category=display", json=DISPLAY_SETTINGS)
-    aioclient_mock.get(f"{url}/api/machine/settings?category=led", json=LED_SETTINGS)
-    aioclient_mock.get(f"{url}/api/machine/settings?category=scales", json=SCALES_SETTINGS)
-    aioclient_mock.get(f"{url}/api/machine/settings?category=system", json=SYSTEM_SETTINGS)
 
 
 async def _setup_entry(hass, aioclient_mock, boiler_holder: dict | None = None):
-    _mock_all_coordinator_endpoints(aioclient_mock, URL, boiler_holder)
+    _register_coordinator_endpoints(
+        aioclient_mock, boiler_holder if boiler_holder is not None else {"response": BOILER_SETTINGS}
+    )
     entry = MockConfigEntry(domain=DOMAIN, data={"url": URL})
     entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(entry.entry_id)

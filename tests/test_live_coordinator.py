@@ -20,7 +20,9 @@ from custom_components.gaggiuino_profiler.live_coordinator import GlpLiveCoordin
 URL = "http://glp.example.com"
 
 
-def _make_coordinator(hass) -> GlpLiveCoordinator:
+def _make_coordinator(hass, aioclient_mock) -> GlpLiveCoordinator:
+    # The REST poll resolves the auth token before /api/live/data.
+    aioclient_mock.get(f"{URL}/api/token", json={"apiToken": "test-token"})
     session = async_get_clientsession(hass)
     auth = GlpAuth(session, URL)
     return GlpLiveCoordinator(hass, session, URL, auth)
@@ -28,7 +30,7 @@ def _make_coordinator(hass) -> GlpLiveCoordinator:
 
 async def test_returns_live_data_on_success(hass, aioclient_mock) -> None:
     aioclient_mock.get(f"{URL}/api/live/data", json={"isLive": True, "profileName": "Adaptive"})
-    coordinator = _make_coordinator(hass)
+    coordinator = _make_coordinator(hass, aioclient_mock)
 
     data = await coordinator._async_update_data()
 
@@ -37,7 +39,7 @@ async def test_returns_live_data_on_success(hass, aioclient_mock) -> None:
 
 async def test_raises_update_failed_on_connection_error(hass, aioclient_mock) -> None:
     aioclient_mock.get(f"{URL}/api/live/data", exc=aiohttp.ClientConnectionError)
-    coordinator = _make_coordinator(hass)
+    coordinator = _make_coordinator(hass, aioclient_mock)
 
     with pytest.raises(UpdateFailed):
         await coordinator._async_update_data()
@@ -45,7 +47,7 @@ async def test_raises_update_failed_on_connection_error(hass, aioclient_mock) ->
 
 async def test_raises_update_failed_on_http_error_status(hass, aioclient_mock) -> None:
     aioclient_mock.get(f"{URL}/api/live/data", status=500)
-    coordinator = _make_coordinator(hass)
+    coordinator = _make_coordinator(hass, aioclient_mock)
 
     with pytest.raises(UpdateFailed):
         await coordinator._async_update_data()
@@ -53,7 +55,7 @@ async def test_raises_update_failed_on_http_error_status(hass, aioclient_mock) -
 
 async def test_raises_update_failed_on_timeout(hass, aioclient_mock) -> None:
     aioclient_mock.get(f"{URL}/api/live/data", exc=TimeoutError)
-    coordinator = _make_coordinator(hass)
+    coordinator = _make_coordinator(hass, aioclient_mock)
 
     with pytest.raises(UpdateFailed):
         await coordinator._async_update_data()
@@ -61,7 +63,7 @@ async def test_raises_update_failed_on_timeout(hass, aioclient_mock) -> None:
 
 async def test_skips_poll_when_sse_recently_delivered_data(hass, aioclient_mock) -> None:
     # No /api/live/data mock registered -- a REST call here would fail the test.
-    coordinator = _make_coordinator(hass)
+    coordinator = _make_coordinator(hass, aioclient_mock)
     coordinator.data = {"isLive": True, "profileName": "SSE-pushed"}
     coordinator._sse_last_event_monotonic = time.monotonic()
 
@@ -72,7 +74,7 @@ async def test_skips_poll_when_sse_recently_delivered_data(hass, aioclient_mock)
 
 async def test_falls_back_to_poll_when_sse_data_is_stale(hass, aioclient_mock) -> None:
     aioclient_mock.get(f"{URL}/api/live/data", json={"isLive": False, "profileName": None})
-    coordinator = _make_coordinator(hass)
+    coordinator = _make_coordinator(hass, aioclient_mock)
     coordinator.data = {"isLive": True, "profileName": "Stale"}
     coordinator._sse_last_event_monotonic = time.monotonic() - 999
 

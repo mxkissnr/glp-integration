@@ -7,8 +7,7 @@ through unchanged.
 
 Scope note: these tests use the `hass` and `strict_aioclient_mock` fixtures
 defined in `tests/conftest.py` and mock the coordinator endpoints through
-`tests.common.mock_all_coordinator_endpoints`, so `conftest.py` itself needs
-no change.
+`tests.common.mock_all_coordinator_endpoints`.
 
 The bundled `www/glp-card.js` is deliberately left untouched — the card's
 standby display is tracked in glp-lovelace-card#195 and the bundle is synced at

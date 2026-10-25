@@ -27,6 +27,7 @@ async def _setup(hass) -> None:
     await hass.async_block_till_done()
 
 
+@pytest.mark.allow_unmatched_requests
 async def test_guard_records_an_endpoint_the_coordinator_swallowed(hass, aioclient_mock) -> None:
     """The data coordinator treats /api/maintenance as best-effort: the
     unmocked URL raises inside it, the exception is swallowed and setup still
@@ -39,6 +40,7 @@ async def test_guard_records_an_endpoint_the_coordinator_swallowed(hass, aioclie
     assert unmatched == [f"GET {URL}/api/maintenance"]
 
 
+@pytest.mark.allow_unmatched_requests
 async def test_guard_fails_the_test_with_the_unmatched_request(hass, aioclient_mock) -> None:
     mock_all_coordinator_endpoints(aioclient_mock, URL, skip=("maintenance",))
 
