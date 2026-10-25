@@ -19,25 +19,16 @@ test_machine_reachable_availability.py.
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.gaggiuino_profiler.const import DOMAIN
+from tests.common import mock_all_coordinator_endpoints
+
+PREHEAT_PAYLOAD = {"temp": 93.5, "targetTemp": 94.0}
 
 
-def _mock_all_coordinator_endpoints(aioclient_mock, url: str, status_json: dict) -> None:
-    aioclient_mock.get(f"{url}/api/status", json=status_json)
-    aioclient_mock.get(f"{url}/api/token", json={"apiToken": "test-token"})
-    aioclient_mock.get(f"{url}/shots.json?limit=10", json=[])
-    aioclient_mock.get(f"{url}/shots.json", json=[])
-    aioclient_mock.get(f"{url}/api/maintenance", json={})
-    aioclient_mock.get(f"{url}/api/preheat", json={"temp": 93.5, "targetTemp": 94.0})
-    aioclient_mock.get(f"{url}/api/machine/profiles", json={})
-    aioclient_mock.get(f"{url}/api/menu", json=[])
-    aioclient_mock.get(f"{url}/api/version", json={})
-    aioclient_mock.get(f"{url}/api/live/data", json={})
-    aioclient_mock.get(f"{url}/api/machine/status", json={"available": False})
-
-
-async def _machine_status(hass, aioclient_mock, status_json: dict) -> str:
+async def _machine_status(hass, strict_aioclient_mock, status_json: dict) -> str:
     url = "http://glp.example.com"
-    _mock_all_coordinator_endpoints(aioclient_mock, url, status_json)
+    mock_all_coordinator_endpoints(
+        strict_aioclient_mock, url, status=status_json, preheat=PREHEAT_PAYLOAD
+    )
     entry = MockConfigEntry(domain=DOMAIN, data={"url": url})
     entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(entry.entry_id)
@@ -47,28 +38,36 @@ async def _machine_status(hass, aioclient_mock, status_json: dict) -> str:
     return state.state
 
 
-async def test_machine_status_error_when_unreachable_without_sync_error(hass, aioclient_mock) -> None:
+async def test_machine_status_error_when_unreachable_without_sync_error(hass, strict_aioclient_mock) -> None:
     """#667: a pure reachability flip (machine off, add-on link itself still
     fine) must alone flip the dot to "error" -- previously stayed "online"
     forever until lastSyncError also happened to change."""
-    assert await _machine_status(hass, aioclient_mock, {"machineReachable": False, "lastSyncError": None}) == "error"
+    status = await _machine_status(
+        hass, strict_aioclient_mock, {"machineReachable": False, "lastSyncError": None}
+    )
+    assert status == "error"
 
 
-async def test_machine_status_online_when_reachable_without_sync_error(hass, aioclient_mock) -> None:
-    assert await _machine_status(hass, aioclient_mock, {"machineReachable": True, "lastSyncError": None}) == "online"
+async def test_machine_status_online_when_reachable_without_sync_error(hass, strict_aioclient_mock) -> None:
+    status = await _machine_status(
+        hass, strict_aioclient_mock, {"machineReachable": True, "lastSyncError": None}
+    )
+    assert status == "online"
 
 
-async def test_machine_status_error_when_reachable_but_sync_error(hass, aioclient_mock) -> None:
+async def test_machine_status_error_when_reachable_but_sync_error(hass, strict_aioclient_mock) -> None:
     """lastSyncError still triggers "error" even while the machine itself is
     reachable -- the add-on's own sync-link health is unchanged as a signal,
     just no longer the only one."""
-    assert (
-        await _machine_status(hass, aioclient_mock, {"machineReachable": True, "lastSyncError": "boom"}) == "error"
+    status = await _machine_status(
+        hass, strict_aioclient_mock, {"machineReachable": True, "lastSyncError": "boom"}
     )
+    assert status == "error"
 
 
-async def test_machine_status_online_when_reachable_key_absent(hass, aioclient_mock) -> None:
+async def test_machine_status_online_when_reachable_key_absent(hass, strict_aioclient_mock) -> None:
     """Backward compat: an add-on version predating #106 (no
     "machineReachable" key at all, i.e. None) must not be misread as
     "unreachable" -- falls back to the old lastSyncError-only behavior."""
-    assert await _machine_status(hass, aioclient_mock, {"lastSyncError": None}) == "online"
+    status = await _machine_status(hass, strict_aioclient_mock, {"lastSyncError": None})
+    assert status == "online"

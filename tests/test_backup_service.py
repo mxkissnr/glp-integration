@@ -9,6 +9,7 @@ import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.gaggiuino_profiler.const import DOMAIN
+from tests.common import mock_all_coordinator_endpoints
 
 BACKUP_PAYLOAD = {
     "glp_backup": True,
@@ -22,27 +23,9 @@ BACKUP_PAYLOAD = {
 }
 
 
-def _mock_all_coordinator_endpoints(aioclient_mock, url: str) -> None:
-    """Mock every endpoint the three coordinators poll on first refresh so
-    async_setup_entry completes and the coordinator lands in hass.data —
-    the backup service handler looks it up from there, same as
-    maintenance_done."""
-    aioclient_mock.get(f"{url}/api/status", json={})
-    aioclient_mock.get(f"{url}/api/token", json={"apiToken": "test-token"})
-    aioclient_mock.get(f"{url}/shots.json?limit=10", json=[])
-    aioclient_mock.get(f"{url}/shots.json", json=[])
-    aioclient_mock.get(f"{url}/api/maintenance", json={})
-    aioclient_mock.get(f"{url}/api/preheat", json={})
-    aioclient_mock.get(f"{url}/api/machine/profiles", json={})
-    aioclient_mock.get(f"{url}/api/menu", json=[])
-    aioclient_mock.get(f"{url}/api/version", json={})
-    aioclient_mock.get(f"{url}/api/live/data", json={})
-    aioclient_mock.get(f"{url}/api/machine/status", json={"available": False})
-
-
-async def _setup_entry(hass, aioclient_mock):
+async def _setup_entry(hass, strict_aioclient_mock):
     url = "http://glp.example.com"
-    _mock_all_coordinator_endpoints(aioclient_mock, url)
+    mock_all_coordinator_endpoints(strict_aioclient_mock, url)
     entry = MockConfigEntry(domain=DOMAIN, data={"url": url})
     entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(entry.entry_id)
@@ -50,9 +33,9 @@ async def _setup_entry(hass, aioclient_mock):
     return entry, url
 
 
-async def test_backup_writes_file_and_fires_event(hass, aioclient_mock) -> None:
-    entry, url = await _setup_entry(hass, aioclient_mock)
-    aioclient_mock.get(f"{url}/api/backup", json=BACKUP_PAYLOAD)
+async def test_backup_writes_file_and_fires_event(hass, strict_aioclient_mock) -> None:
+    entry, url = await _setup_entry(hass, strict_aioclient_mock)
+    strict_aioclient_mock.get(f"{url}/api/backup", json=BACKUP_PAYLOAD)
 
     events = []
     hass.bus.async_listen(f"{DOMAIN}_backup_created", lambda e: events.append(e))
@@ -73,9 +56,9 @@ async def test_backup_writes_file_and_fires_event(hass, aioclient_mock) -> None:
     assert os.path.dirname(path) == backup_dir
 
 
-async def test_backup_failure_does_not_fire_event(hass, aioclient_mock) -> None:
-    entry, url = await _setup_entry(hass, aioclient_mock)
-    aioclient_mock.get(f"{url}/api/backup", status=500)
+async def test_backup_failure_does_not_fire_event(hass, strict_aioclient_mock) -> None:
+    entry, url = await _setup_entry(hass, strict_aioclient_mock)
+    strict_aioclient_mock.get(f"{url}/api/backup", status=500)
 
     events = []
     hass.bus.async_listen(f"{DOMAIN}_backup_created", lambda e: events.append(e))
@@ -92,15 +75,15 @@ async def test_backup_failure_does_not_fire_event(hass, aioclient_mock) -> None:
     assert events == []
 
 
-async def test_backup_streams_large_body_to_file(hass, aioclient_mock) -> None:
-    entry, url = await _setup_entry(hass, aioclient_mock)
+async def test_backup_streams_large_body_to_file(hass, strict_aioclient_mock) -> None:
+    entry, url = await _setup_entry(hass, strict_aioclient_mock)
     large_payload = {
         "glp_backup": True,
         "shots": [{"id": i, "blob": "x" * 20000} for i in range(300)],
     }
     body = json.dumps(large_payload)
     assert len(body) > 5 * 1024 * 1024
-    aioclient_mock.get(f"{url}/api/backup", text=body)
+    strict_aioclient_mock.get(f"{url}/api/backup", text=body)
 
     events = []
     hass.bus.async_listen(f"{DOMAIN}_backup_created", lambda e: events.append(e))

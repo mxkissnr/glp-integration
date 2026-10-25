@@ -9,6 +9,7 @@ from homeassistant.helpers import entity_registry as er
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.gaggiuino_profiler.const import DOMAIN
+from tests.common import mock_all_coordinator_endpoints
 
 MACHINES_TWO = [
     {
@@ -34,23 +35,9 @@ MACHINES_TWO = [
 ]
 
 
-def _mock_all_coordinator_endpoints(aioclient_mock, url: str, status_json: dict) -> None:
-    aioclient_mock.get(f"{url}/api/status", json=status_json)
-    aioclient_mock.get(f"{url}/api/token", json={"apiToken": "test-token"})
-    aioclient_mock.get(f"{url}/shots.json?limit=10", json=[])
-    aioclient_mock.get(f"{url}/shots.json", json=[])
-    aioclient_mock.get(f"{url}/api/maintenance", json={})
-    aioclient_mock.get(f"{url}/api/preheat", json={})
-    aioclient_mock.get(f"{url}/api/machine/profiles", json={})
-    aioclient_mock.get(f"{url}/api/menu", json=[])
-    aioclient_mock.get(f"{url}/api/version", json={})
-    aioclient_mock.get(f"{url}/api/live/data", json={})
-    aioclient_mock.get(f"{url}/api/machine/status", json={"available": False})
-
-
-async def _setup_entry(hass, aioclient_mock):
+async def _setup_entry(hass, strict_aioclient_mock):
     url = "http://glp.example.com"
-    _mock_all_coordinator_endpoints(aioclient_mock, url, {"machines": MACHINES_TWO})
+    mock_all_coordinator_endpoints(strict_aioclient_mock, url, status={"machines": MACHINES_TWO})
     entry = MockConfigEntry(domain=DOMAIN, data={"url": url})
     entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(entry.entry_id)
@@ -58,8 +45,8 @@ async def _setup_entry(hass, aioclient_mock):
     return entry, url
 
 
-async def test_additional_machine_status_sensor_exposes_its_theme(hass, aioclient_mock) -> None:
-    await _setup_entry(hass, aioclient_mock)
+async def test_additional_machine_status_sensor_exposes_its_theme(hass, strict_aioclient_mock) -> None:
+    await _setup_entry(hass, strict_aioclient_mock)
 
     registry = er.async_get(hass)
     entity_id = next(
@@ -74,12 +61,14 @@ async def test_additional_machine_status_sensor_exposes_its_theme(hass, aioclien
     assert state.attributes.get("type") == "gaggimate"
 
 
-async def test_default_machine_machine_status_sensor_still_forwards_full_machines_list(hass, aioclient_mock) -> None:
+async def test_default_machine_machine_status_sensor_still_forwards_full_machines_list(
+    hass, strict_aioclient_mock
+) -> None:
     """Unchanged pre-existing behavior (#47/#48): the default machine's
     machine_status sensor forwards the whole machines[] array verbatim,
     which already includes theme once the app returns it -- no code change
     needed on that entity for this to work."""
-    await _setup_entry(hass, aioclient_mock)
+    await _setup_entry(hass, strict_aioclient_mock)
 
     state = hass.states.get("sensor.gaggiuino_local_profiler_machine_status")
     assert state is not None
