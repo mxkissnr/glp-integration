@@ -18,11 +18,21 @@ export interface HassUser {
   id: string;
 }
 
+// Home Assistant's active frontend theme, as the card reads it: the contrast
+// pass depends on the theme's colours, so a theme or dark-mode switch is a
+// reason to re-run it.
+export interface HassThemes {
+  selectedTheme?: string | null;
+  theme?: string | null;
+  darkMode?: boolean;
+}
+
 export interface Hass {
   states: Record<string, HassStateObject>;
   language?: string;
   locale?: HassLocale;
   user?: HassUser;
+  themes?: HassThemes;
   callService?: (domain: string, service: string, data?: Record<string, unknown>) => unknown;
   fetchWithAuth?: (path: string, init?: RequestInit) => Promise<Response>;
 }

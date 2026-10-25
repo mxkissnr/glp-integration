@@ -15,7 +15,7 @@ import { appMachineEntry, appMachineTheme, appMachineType, matchMachineStatusEnt
 import { fmtUptime, buildShotChart, buildLiveChart, chartLegendHtml, metricLineHtml } from './charts.ts';
 import type { TemplateResult } from 'lit';
 import type {
-  Hass, HassStateObject, CardConfig, ThemeStops,
+  Hass, HassStateObject, CardConfig, ThemeStops, MachineEntry,
   RecentShot, BaristaOrder, BeanInfo, GrinderEntry,
 } from './types.ts';
 // Bumped only in a release — a feature or fix PR leaves this alone (see
@@ -111,6 +111,19 @@ interface ViewModel {
   verdictWord: string;
 }
 
+// What a render actually depended on: the resolved prefix, the language and
+// theme, and the identity of every state object the card reads. HA replaces a
+// state object only when that entity changes, so comparing a fresh snapshot
+// with the last render's tells the `hass` setter whether a push concerns this
+// card at all (see _needsRender()).
+interface RenderInputs {
+  prefix: string;
+  language: string;
+  theme: string;
+  ids: string[];
+  states: (HassStateObject | undefined)[];
+}
+
 // ─── card ──────────────────────────────────────────────────────────────────────
 
 class GlpCard extends HTMLElement {
@@ -152,6 +165,19 @@ class GlpCard extends HTMLElement {
   declare _pendingReadyByTimer: ReturnType<typeof setTimeout> | null;
   declare _lastKnownReadyByTargetAt: Date | null;
   declare _lastKnownReadyByPlannedAt: Date | null;
+  // Caches for the whole-map scans (_stateKeys, _resolvePrefix) and for the
+  // render/contrast gating; all keyed on the hass.states object they came from.
+  declare _stateKeysStates: Record<string, HassStateObject> | null;
+  declare _stateKeysCache: string[] | null;
+  declare _prefixStates: Record<string, HassStateObject> | null;
+  declare _prefixConfig: CardConfig | null;
+  declare _prefixValue: string | null;
+  declare _machineEntryCached: boolean;
+  declare _machineEntryStates: Record<string, HassStateObject> | null;
+  declare _machineEntryMachine: string | null | undefined;
+  declare _machineEntryValue: MachineEntry | null | undefined;
+  declare _renderInputs: RenderInputs | null;
+  declare _contrastKey: string | null;
 
   constructor() {
     super();
@@ -207,6 +233,17 @@ class GlpCard extends HTMLElement {
     // blip, not a real "nothing scheduled" signal — see _readReadyBy().
     this._lastKnownReadyByTargetAt = null;
     this._lastKnownReadyByPlannedAt = null;
+    this._stateKeysStates = null;
+    this._stateKeysCache = null;
+    this._prefixStates = null;
+    this._prefixConfig = null;
+    this._prefixValue = null;
+    this._machineEntryCached = false;
+    this._machineEntryStates = null;
+    this._machineEntryMachine = undefined;
+    this._machineEntryValue = null;
+    this._renderInputs = null;
+    this._contrastKey = null;
 
     // Delegated power-button/ready-by handlers on shadowRoot — attached once
     // here (Lit patches the shadow DOM in place, so the host listener
@@ -303,6 +340,8 @@ class GlpCard extends HTMLElement {
   // view needs, since disconnectedCallback cleared it.
   connectedCallback(): void {
     this._startOrdersPoll();
+    // A re-attached card has fresh DOM, so the contrast pass must run again.
+    this._contrastKey = null;
     if (this._hass) this._render();
   }
 
@@ -567,6 +606,18 @@ class GlpCard extends HTMLElement {
   // _appMachineTheme() below) takes precedence over these once available.
   setConfig(config: CardConfig): void {
     this._config = { title: 'Gaggiuino', ...config };
+    // New config can change the prefix, the language-independent theme or the
+    // switch entity, so nothing cached from the previous config may survive;
+    // clearing the render inputs also makes the next hass render unconditionally.
+    this._prefixStates = null;
+    this._prefixConfig = null;
+    this._prefixValue = null;
+    this._machineEntryCached = false;
+    this._machineEntryStates = null;
+    this._machineEntryMachine = undefined;
+    this._machineEntryValue = null;
+    this._renderInputs = null;
+    this._contrastKey = null;
     // Re-resolve the switch entity from the machine-scoped storage key now
     // that `machine` (if any) is known — the constructor ran before
     // setConfig() and could only read the unscoped global key.
@@ -577,7 +628,7 @@ class GlpCard extends HTMLElement {
   // The app's own stored per-machine theme (#701), read from hass state by
   // the shared machine lookup; null when nothing valid is synced.
   _appMachineTheme(): ThemeStops | null {
-    return appMachineTheme(appMachineEntry(this._hass, this._config?.machine));
+    return appMachineTheme(this._machineEntry());
   }
 
   // Resolves this card's effective theme to a {a,b} hex pair, or null when
@@ -632,7 +683,74 @@ class GlpCard extends HTMLElement {
     // not use it to arm a poll disconnectedCallback has already cleaned up.
     if (this.isConnected && !this._ordersPoll) this._startOrdersPoll();
     this._loadBeansInfo();
-    this._render();
+    // HA pushes on every state change of ANY entity, so rendering unconditionally
+    // repainted this card many times a second for changes it never shows. HA
+    // replaces a state object only when that entity changes, so comparing object
+    // identity tells whether this push touches anything the last render read.
+    if (this._needsRender()) this._render();
+  }
+
+  // Every id the card can read: everything under the resolved prefix, the
+  // machine-status entities the app-level machine lookups scan, and the
+  // configured switch. Kept sorted-free because hass.states key order is stable
+  // until an entity is added or removed, which the length/key check catches.
+  _watchedIds(prefix: string): string[] {
+    // The card reads the same machine slug in several domains (sensor.,
+    // binary_sensor., select.), so match on the object id after the domain.
+    const dot = prefix.indexOf('.');
+    const base = dot === -1 ? prefix : prefix.slice(dot + 1);
+    const ids = this._stateKeys().filter(id => {
+      const d = id.indexOf('.');
+      return (d === -1 ? id : id.slice(d + 1)).startsWith(base) || id.endsWith('_machine_status');
+    });
+    if (this._switchEntity && !ids.includes(this._switchEntity)) ids.push(this._switchEntity);
+    return ids;
+  }
+
+  // What a render depends on, as cheaply comparable plain values plus the
+  // identity of every state object it read.
+  _renderInputsFor(): RenderInputs {
+    const states = this._hass!.states;
+    const prefix = this._resolvePrefix();
+    const ids = this._watchedIds(prefix);
+    return {
+      prefix,
+      language: String(this._hass?.language || this._hass?.locale?.language || 'de').slice(0, 2).toLowerCase(),
+      theme: this._themeKey(),
+      ids,
+      states: ids.map(id => states[id]),
+    };
+  }
+
+  // True when this hass push changed something the card shows: an entity of its
+  // own changed object, an entity appeared or disappeared under the prefix, or
+  // the prefix/language/theme changed. The first push after setConfig always
+  // renders (`_renderInputs` is cleared there).
+  _needsRender(): boolean {
+    // Without a config _render() cannot paint at all, and no snapshot exists to
+    // compare against (HA calls setConfig() before the first hass push).
+    if (!this._config) return false;
+    const prev = this._renderInputs;
+    if (!prev) return true;
+    const next = this._renderInputsFor();
+    if (prev.prefix !== next.prefix || prev.language !== next.language || prev.theme !== next.theme) return true;
+    if (prev.ids.length !== next.ids.length) return true;
+    for (let i = 0; i < next.ids.length; i++) {
+      if (prev.ids[i] !== next.ids[i] || prev.states[i] !== next.states[i]) return true;
+    }
+    return false;
+  }
+
+  // The theme inputs the colour-contrast pass reads: HA's selected theme and
+  // dark mode, plus the accent pair _applyMachineTheme() wrote to the host.
+  _themeKey(): string {
+    const themes = this._hass?.themes;
+    const t = this._resolveMachineTheme();
+    return [
+      themes?.selectedTheme ?? themes?.theme ?? '',
+      themes?.darkMode === true ? 'dark' : 'light',
+      t ? `${t.a}:${t.b}` : '',
+    ].join('|');
   }
 
   // ── Bean metadata (via the integration REST proxy, app >= 1.96) ───────────
@@ -678,6 +796,17 @@ class GlpCard extends HTMLElement {
     return html`<span class="shot-bean-extra" title=${ifDefined(title || undefined)}>${parts.join(' · ')}</span>`;
   }
 
+  // hass.states' key list, cached per states object: HA builds a new states map
+  // on every push, so identity is enough to invalidate it.
+  _stateKeys(): string[] {
+    const states = this._hass!.states;
+    if (this._stateKeysStates !== states || !this._stateKeysCache) {
+      this._stateKeysStates = states;
+      this._stateKeysCache = Object.keys(states);
+    }
+    return this._stateKeysCache!;
+  }
+
   // machine (#50): optional config option naming/slugging a specific
   // machine, for setups with more than one GLP machine device (see the app's
   // multi-machine mode, GLP #317, and glp-integration #47's forthcoming
@@ -686,18 +815,49 @@ class GlpCard extends HTMLElement {
   // existing "first Gaggiuino-named entity, else any" heuristic — so cards
   // without this option (the vast majority today, single-machine setups)
   // behave exactly as before.
+  //
+  // Scanned on every _s() call (~25 per render), so the result is remembered
+  // alongside the states object and config it was computed from; setConfig()
+  // clears it. The states map only needs re-scanning when an entity is added or
+  // removed, which HA signals by building a new map.
   _resolvePrefix(): string {
     if (this._config.entity_prefix) return this._config.entity_prefix;
-    const candidates = Object.keys(this._hass!.states).filter(id => id.endsWith('_machine_status'));
+    const states = this._hass!.states;
+    if (this._prefixStates === states && this._prefixConfig === this._config && this._prefixValue !== null) {
+      return this._prefixValue;
+    }
+    const candidates = this._stateKeys().filter(id => id.endsWith('_machine_status'));
+    let prefix: string | null = null;
     if (this._config?.machine) {
       const matched = matchMachineStatusEntity(this._hass!, candidates, this._config.machine);
-      if (matched) return matched.replace(/machine_status$/, '');
+      if (matched) prefix = matched.replace(/machine_status$/, '');
     }
-    const found = candidates.find(id =>
-      (this._hass!.states[id]?.attributes?.friendly_name as string)?.toLowerCase().includes('gaggiuino'));
-    if (found) return found.replace(/machine_status$/, '');
-    const fallback = candidates[0];
-    return fallback ? fallback.replace(/machine_status$/, '') : 'sensor.gaggiuino_local_profiler_';
+    if (prefix === null) {
+      const found = candidates.find(id =>
+        (this._hass!.states[id]?.attributes?.friendly_name as string)?.toLowerCase().includes('gaggiuino'));
+      const chosen = found || candidates[0];
+      prefix = chosen ? chosen.replace(/machine_status$/, '') : 'sensor.gaggiuino_local_profiler_';
+    }
+    this._prefixStates = states;
+    this._prefixConfig = this._config;
+    this._prefixValue = prefix;
+    return prefix;
+  }
+
+  // The app's machines[] entry, cached like _resolvePrefix(): appMachineEntry()
+  // rescans every *_machine_status key on each call, and the render asks for it
+  // three times (theme, machine type, header icon).
+  _machineEntry(): MachineEntry | null | undefined {
+    const states = this._hass?.states ?? null;
+    if (this._machineEntryCached && this._machineEntryStates === states &&
+        this._machineEntryMachine === this._config?.machine) {
+      return this._machineEntryValue;
+    }
+    this._machineEntryCached = true;
+    this._machineEntryStates = states;
+    this._machineEntryMachine = this._config?.machine;
+    this._machineEntryValue = appMachineEntry(this._hass, this._config?.machine);
+    return this._machineEntryValue;
   }
 
   // Machine-scoped localStorage key (#50) so the switch entity choice for
@@ -819,8 +979,14 @@ class GlpCard extends HTMLElement {
 
   // Picks the contrast-safe semantic colour variants and --glp-aline at
   // runtime from the host's resolved colours; see cards/shared/contrast.ts.
+  // It appends probe spans and reads getComputedStyle ~10 times, forcing a
+  // style recalculation, but the result only depends on the theme — so it only
+  // re-runs when those inputs changed. cleared in setConfig/connectedCallback.
   _applySemanticColorContrast(): void {
+    const key = this._themeKey();
+    if (this._contrastKey === key) return;
     applySemanticColorContrast(this);
+    this._contrastKey = key;
   }
 
   // #195: the switch-only "off" rule — a configured switch reported `off` or
@@ -1062,7 +1228,7 @@ class GlpCard extends HTMLElement {
 
   _machineOffHtml(vm: ViewModel): TemplateResult {
     const { standbyState, _powerBtn } = vm;
-    const machineType = appMachineType(appMachineEntry(this._hass, this._config?.machine));
+    const machineType = appMachineType(this._machineEntry());
     const readyByHtml = this._buildReadyByHtml(vm.readyByTargetAt, vm.readyByPlannedAt);
       const offOrders = this._orders.length > 0 ? html`
         <div style="padding:0 var(--glp-sp-3) var(--glp-sp-3)">
@@ -1292,7 +1458,7 @@ class GlpCard extends HTMLElement {
     if (!this._hass || !this._config) return;
 
     const vm = this._viewModel();
-    const machineType = appMachineType(appMachineEntry(this._hass, this._config?.machine));
+    const machineType = appMachineType(this._machineEntry());
 
     // ── machine off ──────────────────────────────────────────────────────────
     if (vm.machineOff) {
@@ -1301,6 +1467,7 @@ class GlpCard extends HTMLElement {
       this._applyMachineTheme();
       this._applySemanticColorContrast();
       this._startReadyByTicker();
+      this._renderInputs = this._renderInputsFor();
       return;
     }
 
@@ -1354,6 +1521,9 @@ class GlpCard extends HTMLElement {
     this._applyMachineTheme();
     this._applySemanticColorContrast();
     this._startUptimeTicker();
+    // Remembered from what this render actually read, so the next hass push can
+    // compare object identity instead of repainting blindly.
+    this._renderInputs = this._renderInputsFor();
   }
 
   getCardSize(): number { return 3; }
