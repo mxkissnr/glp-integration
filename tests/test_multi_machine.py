@@ -8,6 +8,7 @@ covered in tests/test_multi_machine_devices.py.
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.gaggiuino_profiler.const import DOMAIN
+from tests.common import mock_all_coordinator_endpoints
 
 MACHINES_PAYLOAD = [
     {
@@ -31,23 +32,9 @@ MACHINES_PAYLOAD = [
 ]
 
 
-def _mock_all_coordinator_endpoints(aioclient_mock, url: str, status_json: dict) -> None:
-    aioclient_mock.get(f"{url}/api/status", json=status_json)
-    aioclient_mock.get(f"{url}/api/token", json={"apiToken": "test-token"})
-    aioclient_mock.get(f"{url}/shots.json?limit=10", json=[])
-    aioclient_mock.get(f"{url}/shots.json", json=[])
-    aioclient_mock.get(f"{url}/api/maintenance", json={})
-    aioclient_mock.get(f"{url}/api/preheat", json={})
-    aioclient_mock.get(f"{url}/api/machine/profiles", json={})
-    aioclient_mock.get(f"{url}/api/menu", json=[])
-    aioclient_mock.get(f"{url}/api/version", json={})
-    aioclient_mock.get(f"{url}/api/live/data", json={})
-    aioclient_mock.get(f"{url}/api/machine/status", json={"available": False})
-
-
-async def _setup_entry(hass, aioclient_mock, status_json: dict):
+async def _setup_entry(hass, strict_aioclient_mock, status_json: dict):
     url = "http://glp.example.com"
-    _mock_all_coordinator_endpoints(aioclient_mock, url, status_json)
+    _mock_all_coordinator_endpoints(strict_aioclient_mock, url, status=status_json)
     entry = MockConfigEntry(domain=DOMAIN, data={"url": url})
     entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(entry.entry_id)
@@ -55,22 +42,22 @@ async def _setup_entry(hass, aioclient_mock, status_json: dict):
     return entry, url
 
 
-async def test_coordinator_exposes_machines_array(hass, aioclient_mock) -> None:
-    entry, url = await _setup_entry(hass, aioclient_mock, {"machines": MACHINES_PAYLOAD})
+async def test_coordinator_exposes_machines_array(hass, strict_aioclient_mock) -> None:
+    entry, url = await _setup_entry(hass, strict_aioclient_mock, {"machines": MACHINES_PAYLOAD})
     coordinator = hass.data[DOMAIN][entry.entry_id]["data"]
     assert coordinator.data["machines"] == MACHINES_PAYLOAD
 
 
-async def test_coordinator_defaults_to_empty_machines_list_when_absent(hass, aioclient_mock) -> None:
+async def test_coordinator_defaults_to_empty_machines_list_when_absent(hass, strict_aioclient_mock) -> None:
     """Backward compat: an app instance running an app version older than
     GLP #317 (no "machines" key in /api/status at all) must not break setup."""
-    entry, url = await _setup_entry(hass, aioclient_mock, {})
+    entry, url = await _setup_entry(hass, strict_aioclient_mock, {})
     coordinator = hass.data[DOMAIN][entry.entry_id]["data"]
     assert coordinator.data["machines"] == []
 
 
-async def test_machine_status_sensor_exposes_machines_attribute(hass, aioclient_mock) -> None:
-    entry, url = await _setup_entry(hass, aioclient_mock, {"machines": MACHINES_PAYLOAD})
+async def test_machine_status_sensor_exposes_machines_attribute(hass, strict_aioclient_mock) -> None:
+    entry, url = await _setup_entry(hass, strict_aioclient_mock, {"machines": MACHINES_PAYLOAD})
     # Look up the machine_status entity via the entity registry instead of
     # guessing the entity_id from the title (has_entity_name device naming).
     from homeassistant.helpers import entity_registry as er
@@ -84,8 +71,8 @@ async def test_machine_status_sensor_exposes_machines_attribute(hass, aioclient_
     assert state.attributes.get("machines") == MACHINES_PAYLOAD
 
 
-async def test_machine_status_sensor_omits_machines_attribute_when_empty(hass, aioclient_mock) -> None:
-    entry, url = await _setup_entry(hass, aioclient_mock, {})
+async def test_machine_status_sensor_omits_machines_attribute_when_empty(hass, strict_aioclient_mock) -> None:
+    entry, url = await _setup_entry(hass, strict_aioclient_mock, {})
     from homeassistant.helpers import entity_registry as er
     registry = er.async_get(hass)
     entity_id = next(
