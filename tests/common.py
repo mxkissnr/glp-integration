@@ -63,14 +63,16 @@ def mock_all_coordinator_endpoints(
     settings: dict[str, Any] | None = None,
     events: Any = None,
     skip: tuple[str, ...] = (),
+    statuses: dict[str, int] | None = None,
 ) -> None:
     """Mock every endpoint the coordinators poll, with optional overrides.
 
     Each keyword replaces the JSON body of the endpoint named after it
     (`machine_status={"available": True}`), `settings` maps a settings
-    category to its payload (`settings={"boiler": {...}}`), and `skip` names
+    category to its payload (`settings={"boiler": {...}}`), `skip` names
     endpoints to leave unmocked -- for tests that assert what happens when an
-    endpoint is missing.
+    endpoint is missing -- and `statuses` maps an endpoint name to the HTTP
+    status to fail it with (`statuses={"maintenance": 500}`).
 
     `None` means "use the default", which is what the endpoint returns on a
     machine with no data: an empty object/list, a token of `test-token`, an
@@ -81,6 +83,10 @@ def mock_all_coordinator_endpoints(
     unknown = set(skip) - set(_FIXED_ENDPOINTS)
     if unknown:
         raise ValueError(f"unknown endpoint(s) in skip: {sorted(unknown)}")
+    unknown = set(statuses or {}) - set(_FIXED_ENDPOINTS)
+    if unknown:
+        raise ValueError(f"unknown endpoint(s) in statuses: {sorted(unknown)}")
+    error_statuses = {name: code for name, code in (statuses or {}).items() if code >= 400}
 
     payloads: dict[str, Any] = {
         "status": {} if status is None else status,
@@ -133,6 +139,8 @@ def mock_all_coordinator_endpoints(
     for endpoint, method, target, kwargs in registrations:
         if endpoint in skip:
             continue
+        if endpoint in error_statuses:
+            kwargs = {"status": error_statuses[endpoint]}
         getattr(aioclient_mock, method)(target, **kwargs)
 
 
