@@ -107,3 +107,72 @@ test('the card source binds no pointerdown handler', () => {
   const src = readFileSync(path.join(__dirname, '..', 'src', 'glp-card.ts'), 'utf8');
   assert.ok(!src.includes('pointerdown'), 'src/glp-card.ts must not reference pointerdown');
 });
+
+// #267: the maintenance row with a confirm flow is the card's only action that
+// is not a native <button> — it carries role="button", so it must also be
+// reachable with Tab and operable with Enter/Space. A grinder status row has
+// no confirm flow behind it (no `task`) and must stay out of the tab order.
+function maintCard(h) {
+  const card = makeCard(h);
+  card._activeTab = 'maint';
+  card._render();
+  return card;
+}
+
+function maintHass() {
+  const h = hass();
+  h.states[`${P}maintenance_grinders`] = {
+    state: 'ok',
+    attributes: { Niche: { status: 'ok', pct: 0.5, days_since: 2, shots_since: 3 } },
+  };
+  return h;
+}
+
+function keydown(el, key) {
+  const ev = new window.KeyboardEvent('keydown', { key, bubbles: true, cancelable: true, composed: true });
+  el.dispatchEvent(ev);
+  return ev;
+}
+
+test('a maintenance row with a task is in the tab order', () => {
+  const card = maintCard(maintHass());
+  const row = card.shadowRoot.querySelector('.maint-row[data-maint-task="backflush"]');
+  assert.ok(row, 'the backflush row is rendered');
+  assert.equal(row.getAttribute('tabindex'), '0', 'the actionable row is keyboard reachable');
+  assert.equal(row.getAttribute('role'), 'button');
+});
+
+test('Enter on a maintenance row opens the confirmation', () => {
+  const card = maintCard(maintHass());
+  const row = card.shadowRoot.querySelector('.maint-row[data-maint-task="backflush"]');
+
+  keydown(row, 'Enter');
+
+  assert.equal(card._maintConfirm, 'backflush', 'the confirm flow opens from the keyboard');
+  assert.ok(card.shadowRoot.querySelector('.maint-confirm'), 'the confirmation is rendered');
+});
+
+test('Space on a maintenance row opens the confirmation and prevents page scroll', () => {
+  const card = maintCard(maintHass());
+  const row = card.shadowRoot.querySelector('.maint-row[data-maint-task="backflush"]');
+
+  const ev = keydown(row, ' ');
+
+  assert.equal(card._maintConfirm, 'backflush', 'Space activates the row');
+  assert.ok(card.shadowRoot.querySelector('.maint-confirm'), 'the confirmation is rendered');
+  assert.equal(ev.defaultPrevented, true, 'Space must not scroll the page');
+});
+
+test('a maintenance row without a task is not focusable', () => {
+  const card = maintCard(maintHass());
+  const rows = [...card.shadowRoot.querySelectorAll('.maint-row')];
+  const grinderRow = rows.find(r => !r.hasAttribute('data-maint-task'));
+  assert.ok(grinderRow, 'the grinder row renders without a task');
+
+  assert.equal(grinderRow.hasAttribute('tabindex'), false, 'a static row stays out of the tab order');
+  assert.equal(grinderRow.hasAttribute('role'), false, 'a static row is not announced as a button');
+
+  const ev = keydown(grinderRow, 'Enter');
+  assert.equal(card._maintConfirm, null, 'a static row does not open a confirmation');
+  assert.equal(ev.defaultPrevented, false);
+});

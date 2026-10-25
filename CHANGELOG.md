@@ -10,6 +10,7 @@
 - **The integration test suite now fails when a test hits an endpoint it did not mock, and several tests check what their names promise.** Refs #238
 
 ### Fixed
+- **The maintenance row on the Shot Card can now be reached and confirmed with the keyboard.** Refs #267
 - **The Order Card no longer asks the app for an API token when it is pointed at a URL directly; that request only ever failed, so the card now relies on the token from the dashboard configuration.** Refs #276
 - **The documentation link in Home Assistant's card picker now opens the card documentation in this repository instead of the archived card repositories.** Refs #256
 - **Deleting the newest shot no longer fires a shot-completed event, one malformed shot value no longer makes all sensors unavailable, and deleting shots no longer distorts the shot-count statistics.** Refs #237
