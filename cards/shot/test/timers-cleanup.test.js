@@ -251,19 +251,27 @@ test('a 503 from the orders endpoint keeps the poll running (#270)', async (t) =
 
 // ── beans info: only a 404 disables it ─────────────────────────────────────
 
-test('a 503 from beans-info keeps bean details available, and a later 200 loads them (#270)', async () => {
-  let answer = statusOnly(503);
-  const fetchWithAuth = recordingFetch(() => answer);
+test('a 503 from beans-info keeps bean details available, and a later 200 loads them (#270)', async (t) => {
+  // Only Date is faked, so the cache window can be crossed without waiting
+  // for it; `now` keeps Date.now() away from 0, which the cache check reads
+  // as "never loaded".
+  t.mock.timers.enable({ apis: ['Date'], now: 1_800_000_000_000 });
+  let attempts = 0;
+  const fetchWithAuth = recordingFetch(() => {
+    attempts += 1;
+    return attempts === 1
+      ? statusOnly(503)
+      : okJson([{ id: 7, name: 'Kenya Nyeri', variety: 'SL28', roastDate: null }]);
+  });
   const card = makeCard(offHass(fetchWithAuth));
 
   await card._loadBeansInfo();
   assert.equal(card._beansInfoUnavailable, false, 'a transient error must not switch bean info off');
   assert.equal(card._beansInfo, null);
 
-  // Still not disabled once the cache window has passed; the next attempt
-  // succeeds and fills both lookups.
-  answer = okJson([{ id: 7, name: 'Kenya Nyeri', variety: 'SL28', roastDate: null }]);
-  card._beansInfoAt = Date.now() - 300001;
+  // Once the cache window has passed the next attempt runs again and fills
+  // both lookups — the card is not left without bean details.
+  t.mock.timers.tick(300001);
   await card._loadBeansInfo();
 
   assert.equal(card._beansInfoUnavailable, false);
@@ -272,7 +280,8 @@ test('a 503 from beans-info keeps bean details available, and a later 200 loads 
   assert.equal(fetchWithAuth.paths.filter(p => p === '/api/glp/library/beans-info').length, 2);
 });
 
-test('a 404 from beans-info disables the feature for this card (#270)', async () => {
+test('a 404 from beans-info disables the feature for this card (#270)', async (t) => {
+  t.mock.timers.enable({ apis: ['Date'], now: 1_800_000_000_000 });
   const fetchWithAuth = recordingFetch(() => statusOnly(404));
   const card = makeCard(offHass(fetchWithAuth));
 
@@ -280,7 +289,7 @@ test('a 404 from beans-info disables the feature for this card (#270)', async ()
   assert.equal(card._beansInfoUnavailable, true, 'a 404 means the proxy or app is too old');
 
   // Disabled means no further requests, even after the cache window.
-  card._beansInfoAt = Date.now() - 300001;
+  t.mock.timers.tick(300001);
   await card._loadBeansInfo();
   assert.equal(fetchWithAuth.paths.filter(p => p === '/api/glp/library/beans-info').length, 1);
 });
