@@ -27,6 +27,7 @@
 - **Card test tooling updated to a patched happy-dom release.** Refs #283
 
 ### CI
+- **Integration releases are now announced in the GLP Discord, titled "GLP Integration" to tell them apart from app releases.** Refs #285
 - **The "Cards" job's accent-token and icon checks now read the shared blocks in `cards/shared/`, so they still guard the shipped CSS cascade and the drawn icon set after the blocks moved out of each card's `src/`.** Refs #256
 - **Both cards now share one copy of their colour-contrast and machine-lookup code instead of two copies kept in sync by a test.** Refs #256
 
