@@ -1366,6 +1366,9 @@ ${TOKENS}
   .section-label, .maint-section-label { font-size: var(--glp-fs-1); color: var(--sub); font-weight: 600; margin-top: var(--glp-sp-1); }
   .maint-row[role="button"] { cursor: pointer; transition: border-color .15s, background .15s; }
   .maint-row[role="button"]:hover { border-color: color-mix(in srgb, var(--text) 16%, transparent); }
+  /* The row is reachable with Tab (#267); the outline is the same accent-as-
+     thin-line token the order card uses for its focus ring. */
+  .maint-row[role="button"]:focus-visible { outline: 2px solid var(--glp-aline); outline-offset: 2px; }
   .maint-row.confirming { border: 1px solid color-mix(in srgb, var(--amber) 40%, transparent); background: color-mix(in srgb, var(--amber) 6%, transparent); }
   .maint-confirm { display: flex; align-items: center; gap: var(--glp-sp-2); margin-top: var(--glp-sp-1); }
   .maint-confirm-q { flex: 1; font-size: var(--glp-fs-1); color: var(--sub); }
@@ -2895,11 +2898,21 @@ ${TOKENS}
           shotsSince != null && shotsSince > 0 ? `${shotsSince} Shots` : null
         ].filter(Boolean).join(" · ");
         const confirming = task && this._maintConfirm === task;
-        return b2`<div class="maint-row${confirming ? " confirming" : ""}" data-maint-task=${o7(task || void 0)} role=${o7(task ? "button" : void 0)} @click=${(e6) => {
+        const toggleConfirm = /* @__PURE__ */ __name((taskId) => {
+          this._maintConfirm = this._maintConfirm === taskId ? null : taskId;
+          this._render();
+        }, "toggleConfirm");
+        return b2`<div class="maint-row${confirming ? " confirming" : ""}" data-maint-task=${o7(task || void 0)} role=${o7(task ? "button" : void 0)} tabindex=${o7(task ? "0" : void 0)} @click=${(e6) => {
           if (!task) return;
           if (e6.target.closest("[data-maint-done],[data-maint-cancel]")) return;
-          this._maintConfirm = this._maintConfirm === task ? null : task;
-          this._render();
+          toggleConfirm(task);
+        }} @keydown=${(e6) => {
+          if (!task) return;
+          const key = e6.key;
+          if (key !== "Enter" && key !== " ") return;
+          if (e6.target.closest("[data-maint-done],[data-maint-cancel]")) return;
+          e6.preventDefault();
+          toggleConfirm(task);
         }}>
         <div class="maint-row-top">
           ${/* ICONS.of() emits fixed SVG markup */
