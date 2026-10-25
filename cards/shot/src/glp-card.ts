@@ -719,11 +719,24 @@ class GlpCard extends HTMLElement {
         shotsSince != null && shotsSince > 0 ? `${shotsSince} Shots` : null,
       ].filter(Boolean).join(' · ');
       const confirming = task && this._maintConfirm === task;
-      return html`<div class="maint-row${confirming ? ' confirming' : ''}" data-maint-task=${ifDefined(task || undefined)} role=${ifDefined(task ? 'button' : undefined)} @click=${(e: Event) => {
-        if (!task) return;
-        if ((e.target as Element).closest('[data-maint-done],[data-maint-cancel]')) return;
+      // One toggle shared by the mouse and keyboard paths, so both keep the
+      // same confirm flow (#267).
+      const toggleConfirm = () => {
         this._maintConfirm = this._maintConfirm === task ? null : task;
         this._render();
+      };
+      return html`<div class="maint-row${confirming ? ' confirming' : ''}" data-maint-task=${ifDefined(task || undefined)} role=${ifDefined(task ? 'button' : undefined)} tabindex=${ifDefined(task ? '0' : undefined)} @click=${(e: Event) => {
+        if (!task) return;
+        if ((e.target as Element).closest('[data-maint-done],[data-maint-cancel]')) return;
+        toggleConfirm();
+      }} @keydown=${(e: Event) => {
+        if (!task) return;
+        const key = (e as KeyboardEvent).key;
+        if (key !== 'Enter' && key !== ' ') return;
+        // A key press inside the confirm buttons is theirs, not the row's.
+        if ((e.target as Element).closest('[data-maint-done],[data-maint-cancel]')) return;
+        e.preventDefault();   // Space would scroll the page
+        toggleConfirm();
       }}>
         <div class="maint-row-top">
           ${/* ICONS.of() emits fixed SVG markup */ unsafeHTML(ICONS.of(icon))}
