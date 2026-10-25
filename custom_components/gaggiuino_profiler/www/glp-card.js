@@ -2179,9 +2179,25 @@ ${TOKENS}
   __name(applyAccentLineContrast, "applyAccentLineContrast");
 
   // shared/machine.ts
+  function hasExactStatusId(id, needleSlug) {
+    const lower = id.toLowerCase();
+    const suffix = `${needleSlug}_machine_status`;
+    if (!lower.endsWith(suffix)) return false;
+    if (lower.length === suffix.length) return true;
+    const boundary = lower[lower.length - suffix.length - 1];
+    return boundary === "." || boundary === "_";
+  }
+  __name(hasExactStatusId, "hasExactStatusId");
+  function hasExactFriendlyName(id, hass, needle) {
+    const friendly = String(hass.states[id]?.attributes?.friendly_name ?? "").toLowerCase();
+    return friendly === needle || friendly === `${needle} machine status`;
+  }
+  __name(hasExactFriendlyName, "hasExactFriendlyName");
   function matchMachineStatusEntity(hass, candidates, machine) {
     const needle = String(machine).toLowerCase();
     const needleSlug = needle.replace(/\s+/g, "_");
+    const exact = candidates.find((id) => hasExactStatusId(id, needleSlug) || hasExactFriendlyName(id, hass, needle));
+    if (exact) return exact;
     return candidates.find((id) => hass.states[id]?.attributes?.friendly_name?.toLowerCase().includes(needle) || id.toLowerCase().includes(needleSlug));
   }
   __name(matchMachineStatusEntity, "matchMachineStatusEntity");
@@ -2400,7 +2416,7 @@ ${TOKENS}
       this._beansInfoUnavailable = false;
       this._orderEtaFor = null;
       this._orderDeclineFor = null;
-      this._switchEntity = localStorage.getItem("glp_switch_entity") || null;
+      this._switchEntity = this._readSwitchEntity();
       this._iconGradId = `glp-icon-${Math.random().toString(36).slice(2, 10)}`;
       this._readyByTimer = null;
       this._readyByPlannedAt = null;
@@ -2775,7 +2791,7 @@ ${TOKENS}
       this._machineEntryValue = null;
       this._renderInputs = null;
       this._contrastKey = null;
-      this._switchEntity = localStorage.getItem(this._switchStorageKey()) || localStorage.getItem("glp_switch_entity") || null;
+      this._switchEntity = this._readSwitchEntity();
     }
     // The app's own stored per-machine theme (#701), read from hass state by
     // the shared machine lookup; null when nothing valid is synced.
@@ -2995,9 +3011,21 @@ ${TOKENS}
     // dashboard. Falls back to the original global key when `machine` isn't
     // configured — unchanged behavior for existing single-machine cards.
     _switchStorageKey() {
+      return `glp_switch_entity${this._machineSwitchKeySuffix()}`;
+    }
+    _machineSwitchKeySuffix() {
       const machine = this._config?.machine;
-      if (!machine) return "glp_switch_entity";
-      return `glp_switch_entity_${String(machine).toLowerCase().replace(/\s+/g, "_")}`;
+      return machine ? `_${String(machine).toLowerCase().replace(/\s+/g, "_")}` : "";
+    }
+    // A card configured for one machine never adopts the unscoped global key:
+    // that key is shared by every card on the dashboard, so it may hold another
+    // machine's switch, and toggling it would power the wrong machine. Cards
+    // without `machine` keep reading the global key as before.
+    _readSwitchEntity() {
+      const scoped = localStorage.getItem(this._switchStorageKey());
+      if (scoped) return scoped;
+      if (this._config?.machine) return null;
+      return localStorage.getItem("glp_switch_entity") || null;
     }
     _s(suffix) {
       return this._hass.states[this._resolvePrefix() + suffix];

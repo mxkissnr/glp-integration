@@ -1269,9 +1269,23 @@ ${TOKENS}
   }
 
   // shared/machine.ts
+  function hasExactStatusId(id, needleSlug) {
+    const lower = id.toLowerCase();
+    const suffix = `${needleSlug}_machine_status`;
+    if (!lower.endsWith(suffix)) return false;
+    if (lower.length === suffix.length) return true;
+    const boundary = lower[lower.length - suffix.length - 1];
+    return boundary === "." || boundary === "_";
+  }
+  function hasExactFriendlyName(id, hass, needle) {
+    const friendly = String(hass.states[id]?.attributes?.friendly_name ?? "").toLowerCase();
+    return friendly === needle || friendly === `${needle} machine status`;
+  }
   function matchMachineStatusEntity(hass, candidates, machine) {
     const needle = String(machine).toLowerCase();
     const needleSlug = needle.replace(/\s+/g, "_");
+    const exact = candidates.find((id) => hasExactStatusId(id, needleSlug) || hasExactFriendlyName(id, hass, needle));
+    if (exact) return exact;
     return candidates.find((id) => hass.states[id]?.attributes?.friendly_name?.toLowerCase().includes(needle) || id.toLowerCase().includes(needleSlug));
   }
   function appMachineEntry(hass, machine) {
