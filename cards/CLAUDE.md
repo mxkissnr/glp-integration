@@ -13,6 +13,10 @@ bundles in `../custom_components/gaggiuino_profiler/www/` are built from them
   the committed bundle in `node:vm`, because it must replace the registry the card reads at load
   time. `test/e2e/*.test.mjs` needs `npx playwright install chromium` and drives the real bundle
   in headless Chromium via `scripts/e2e-harness.mts`.
+- **Test DOM**: the DOM suites build one `new Window()` per file from `happy-dom`, then pass its
+  document and globals to `loadCard()`; nothing in them needs a real browser. happy-dom 21 turned
+  external CSS and iframe loading off by default (SSRF hardening) and the suites load neither, so
+  leave it off — do not re-enable it with `enableCSSFileLoading` / `enableIframePageLoading`.
 - **Versions** live in `shot/src/glp-card.ts` (`GLP_CARD_VERSION`) and
   `order/src/glp-order-card.ts` (`GLP_ORDER_CARD_VERSION`). Never bump outside a release.
 - **Shared code** (`GLP-TOKENS` CSS tokens, helpers, icons, colour contrast and machine lookups) lives in
