@@ -17,8 +17,11 @@ _FW = {"installed": "15a737d", "latest": "61bd042", "updateAvailable": True,
 
 
 async def _setup(hass, strict_aioclient_mock, status_json, firmware=_FW):
-    firmware_kwargs = {"statuses": {"firmware_version": 502}} if firmware is None else {"firmware_version": firmware}
-    mock_all_coordinator_endpoints(strict_aioclient_mock, URL, status=status_json, **firmware_kwargs)
+    # The add-on 502s the firmware endpoint while the machine is unreachable.
+    firmware_args = (
+        {"statuses": {"firmware_version": 502}} if firmware is None else {"firmware_version": firmware}
+    )
+    mock_all_coordinator_endpoints(strict_aioclient_mock, URL, status=status_json, **firmware_args)
     entry = MockConfigEntry(domain=DOMAIN, data={"url": URL})
     entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(entry.entry_id)
