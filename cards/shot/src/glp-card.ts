@@ -135,6 +135,8 @@ class GlpCard extends HTMLElement {
   declare _orders: BaristaOrder[];
   declare _ordersSig: string | null;
   declare _ordersPoll: ReturnType<typeof setInterval> | null;
+  declare _ordersRetry: ReturnType<typeof setTimeout> | null;
+  declare _ordersOff: boolean;
   declare _beansInfo: Map<string, BeanInfo> | null;
   declare _beansInfoById: Map<number, BeanInfo> | null;
   declare _beansInfoAt: number;
@@ -170,12 +172,17 @@ class GlpCard extends HTMLElement {
     this._lastChartShotKey = null;
     this._activeTab    = 'shot';
     this._pendingProfile = null;
+    this._pendingProfileTimer = null;
     this._maintConfirm = null;
     this._machineOnSince = null;
     this._uptimeTimer = null;
     this._orders = [];
     this._ordersSig = null;
     this._ordersPoll = null;
+    this._ordersRetry = null;
+    // Set when the orders endpoint answers 404: the feature is off in the
+    // app, so this card instance stops asking until it is re-created.
+    this._ordersOff = false;
     this._beansInfo = null;
     this._beansInfoById = null;
     this._beansInfoAt = 0;
@@ -270,7 +277,7 @@ class GlpCard extends HTMLElement {
   }
 
   _startUptimeTicker(): void {
-    if (this._uptimeTimer) return;
+    if (this._uptimeTimer || !this.isConnected) return;
     this._uptimeTimer = setInterval(() => {
       // This span's text must stay a property binding (`.textContent=`) in
       // the template, never a Lit child part (`>${...}<`): overwriting
@@ -282,7 +289,7 @@ class GlpCard extends HTMLElement {
   }
 
   _startReadyByTicker(): void {
-    if (this._readyByTimer) return;
+    if (this._readyByTimer || !this.isConnected) return;
     this._readyByTimer = setInterval(() => {
       // Same property-binding requirement as the uptime ticker above (#180).
       const el = this.shadowRoot!.getElementById('glp-readyby-countdown');
@@ -290,12 +297,27 @@ class GlpCard extends HTMLElement {
     }, 1000);
   }
 
-  connectedCallback(): void { this._startOrdersPoll(); }
+  // Restarts the orders poll when the card is re-attached (dashboard edit
+  // mode, view switch): hass stops arriving, and the setter only starts a
+  // poll while connected. The render puts back whichever ticker the current
+  // view needs, since disconnectedCallback cleared it.
+  connectedCallback(): void {
+    this._startOrdersPoll();
+    if (this._hass) this._render();
+  }
 
+  // Every timer this card owns must stop here: a detached card gets no more
+  // hass pushes, so nothing else would ever clear them.
   disconnectedCallback(): void {
-    if (this._uptimeTimer) { clearInterval(this._uptimeTimer as ReturnType<typeof setInterval>); this._uptimeTimer = null; }
-    if (this._ordersPoll) { clearInterval(this._ordersPoll as ReturnType<typeof setInterval>); this._ordersPoll = null; }
-    if (this._readyByTimer) { clearInterval(this._readyByTimer as ReturnType<typeof setInterval>); this._readyByTimer = null; }
+    if (this._uptimeTimer) clearInterval(this._uptimeTimer as ReturnType<typeof setInterval>);
+    this._uptimeTimer = null;
+    this._stopOrdersPoll();               // interval plus the proxy retry
+    if (this._readyByTimer) clearInterval(this._readyByTimer as ReturnType<typeof setInterval>);
+    this._readyByTimer = null;
+    if (this._pendingProfileTimer) clearTimeout(this._pendingProfileTimer as ReturnType<typeof setTimeout>);
+    this._pendingProfileTimer = null;
+    if (this._pendingReadyByTimer) clearTimeout(this._pendingReadyByTimer as ReturnType<typeof setTimeout>);
+    this._pendingReadyByTimer = null;
   }
 
   // ── ready-by preheat scheduler (#61) ───────────────────────────────────────
@@ -412,9 +434,24 @@ class GlpCard extends HTMLElement {
 
   // ── Barista orders (via the integration REST proxy) ───────────────────────
   _startOrdersPoll(): void {
-    if (this._ordersPoll || !this._hass?.fetchWithAuth) { if (!this._ordersPoll) setTimeout(() => this._startOrdersPoll(), 1500); return; }
+    const hass = this._hass;
+    // Nothing may arm a timer on a detached card: nothing would ever clear it
+    // and its requests would keep running behind a removed dashboard card.
+    if (this._ordersPoll || !this.isConnected || this._ordersOff || !hass) return;
+    if (!hass.fetchWithAuth) {
+      // The integration's proxy is not available yet; the next hass push
+      // calls back in here, and this retry covers a push that never comes.
+      if (!this._ordersRetry)
+        this._ordersRetry = setTimeout(() => { this._ordersRetry = null; this._startOrdersPoll(); }, 1500);
+      return;
+    }
     this._fetchOrders(true);
     this._ordersPoll = setInterval(() => this._fetchOrders(false), 6000);
+  }
+
+  _stopOrdersPoll(): void {
+    if (this._ordersPoll) { clearInterval(this._ordersPoll as ReturnType<typeof setInterval>); this._ordersPoll = null; }
+    if (this._ordersRetry) { clearTimeout(this._ordersRetry as ReturnType<typeof setTimeout>); this._ordersRetry = null; }
   }
 
   async _fetchOrders(force: boolean): Promise<void> {
@@ -422,6 +459,9 @@ class GlpCard extends HTMLElement {
     let list;
     try {
       const r = await this._hass.fetchWithAuth('/api/glp/orders');
+      // 404: the orders feature is switched off in the app (or the proxy is
+      // too old). Polling would only ever answer 404, so stop for this card.
+      if (r.status === 404) { this._ordersOff = true; this._stopOrdersPoll(); return; }
       if (!r.ok) return;
       list = await r.json();
     } catch { return; }
@@ -588,7 +628,9 @@ class GlpCard extends HTMLElement {
   set hass(hass: Hass) {
     this._hass = hass;
     { const l = String(hass?.language || hass?.locale?.language || 'de').slice(0, 2).toLowerCase(); setLang(SUPPORTED_LANGS.includes(l) ? l : 'en'); }
-    if (!this._ordersPoll) this._startOrdersPoll();
+    // A detached card gets one last hass push when its view goes away; it must
+    // not use it to arm a poll disconnectedCallback has already cleaned up.
+    if (this.isConnected && !this._ordersPoll) this._startOrdersPoll();
     this._loadBeansInfo();
     this._render();
   }
@@ -601,7 +643,12 @@ class GlpCard extends HTMLElement {
     this._beansInfoAt = Date.now();
     try {
       const r = await this._hass.fetchWithAuth('/api/glp/library/beans-info');
-      if (!r.ok) { this._beansInfoUnavailable = true; return; }
+      // Only a 404 means the feature is really gone (proxy/app too old). A
+      // 502/503 during an app restart is transient: keep the feature on and
+      // retry after the cache window instead of hiding bean info until the
+      // page is reloaded.
+      if (r.status === 404) { this._beansInfoUnavailable = true; return; }
+      if (!r.ok) return;
       const list = await r.json();
       const beans = Array.isArray(list) ? list : [];
       this._beansInfoById = new Map(beans.filter(b => b.id != null).map(b => [b.id, b]));
