@@ -34,6 +34,7 @@ from custom_components.gaggiuino_profiler.sensor import (
     MAINTENANCE_SENSORS,
     SENSORS,
 )
+from tests.common import mock_all_coordinator_endpoints
 
 MACHINES_ONE = [
     {
@@ -48,23 +49,9 @@ MACHINES_ONE = [
 ]
 
 
-def _mock_all_coordinator_endpoints(aioclient_mock, url: str, status_json: dict) -> None:
-    aioclient_mock.get(f"{url}/api/status", json=status_json)
-    aioclient_mock.get(f"{url}/api/token", json={"apiToken": "test-token"})
-    aioclient_mock.get(f"{url}/shots.json?limit=10", json=[])
-    aioclient_mock.get(f"{url}/shots.json", json=[])
-    aioclient_mock.get(f"{url}/api/maintenance", json={})
-    aioclient_mock.get(f"{url}/api/preheat", json={})
-    aioclient_mock.get(f"{url}/api/machine/profiles", json={})
-    aioclient_mock.get(f"{url}/api/menu", json=[])
-    aioclient_mock.get(f"{url}/api/version", json={})
-    aioclient_mock.get(f"{url}/api/live/data", json={})
-    aioclient_mock.get(f"{url}/api/machine/status", json={"available": False})
-
-
-async def _setup_entry(hass, aioclient_mock):
+async def _setup_entry(hass, strict_aioclient_mock):
     url = "http://glp.example.com"
-    _mock_all_coordinator_endpoints(aioclient_mock, url, {"machines": MACHINES_ONE})
+    mock_all_coordinator_endpoints(strict_aioclient_mock, url, status={"machines": MACHINES_ONE})
     entry = MockConfigEntry(domain=DOMAIN, data={"url": url})
     entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(entry.entry_id)
@@ -81,21 +68,21 @@ def _expected_entity_id(key: str) -> str:
     return f"sensor.gaggiuino_local_profiler_{key}"
 
 
-async def test_glp_sensor_entity_id_matches_key(hass, aioclient_mock) -> None:
+async def test_glp_sensor_entity_id_matches_key(hass, strict_aioclient_mock) -> None:
     """Every GlpSensor (SENSORS tuple) must land on entity_id derived from
     its stable `key`, not whatever `name` slugifies to."""
-    entry, _ = await _setup_entry(hass, aioclient_mock)
+    entry, _ = await _setup_entry(hass, strict_aioclient_mock)
     for description in SENSORS:
         entry_reg = _entity_by_unique_id(hass, f"{entry.entry_id}_{description.key}")
         assert entry_reg is not None, f"missing entity for key={description.key}"
         assert entry_reg.entity_id == _expected_entity_id(description.key)
 
 
-async def test_preheat_ready_by_sensors_get_the_expected_entity_id(hass, aioclient_mock) -> None:
+async def test_preheat_ready_by_sensors_get_the_expected_entity_id(hass, strict_aioclient_mock) -> None:
     """Regression test for #62: on first creation (no collision), the new
     preheat sensors from #59/#60 must land on the exact entity_id the
     lovelace card hardcodes -- not a mangled/prefixed variant."""
-    entry, _ = await _setup_entry(hass, aioclient_mock)
+    entry, _ = await _setup_entry(hass, strict_aioclient_mock)
 
     ready_by = _entity_by_unique_id(hass, f"{entry.entry_id}_preheat_ready_by_target_at")
     assert ready_by is not None
@@ -106,30 +93,30 @@ async def test_preheat_ready_by_sensors_get_the_expected_entity_id(hass, aioclie
     assert switch_on.entity_id == "sensor.gaggiuino_local_profiler_preheat_planned_switch_on_at"
 
 
-async def test_maintenance_sensor_entity_id_matches_key(hass, aioclient_mock) -> None:
-    entry, _ = await _setup_entry(hass, aioclient_mock)
+async def test_maintenance_sensor_entity_id_matches_key(hass, strict_aioclient_mock) -> None:
+    entry, _ = await _setup_entry(hass, strict_aioclient_mock)
     for description in MAINTENANCE_SENSORS:
         entry_reg = _entity_by_unique_id(hass, f"{entry.entry_id}_{description.key}")
         assert entry_reg is not None, f"missing entity for key={description.key}"
         assert entry_reg.entity_id == _expected_entity_id(description.key)
 
 
-async def test_grinder_maintenance_sensor_entity_id(hass, aioclient_mock) -> None:
-    entry, _ = await _setup_entry(hass, aioclient_mock)
+async def test_grinder_maintenance_sensor_entity_id(hass, strict_aioclient_mock) -> None:
+    entry, _ = await _setup_entry(hass, strict_aioclient_mock)
     entry_reg = _entity_by_unique_id(hass, f"{entry.entry_id}_maint_grinders")
     assert entry_reg is not None
     assert entry_reg.entity_id == "sensor.gaggiuino_local_profiler_maint_grinders"
 
 
-async def test_machine_sensor_entity_id_matches_key(hass, aioclient_mock) -> None:
-    entry, _ = await _setup_entry(hass, aioclient_mock)
+async def test_machine_sensor_entity_id_matches_key(hass, strict_aioclient_mock) -> None:
+    entry, _ = await _setup_entry(hass, strict_aioclient_mock)
     for description in MACHINE_SENSORS:
         entry_reg = _entity_by_unique_id(hass, f"{entry.entry_id}_{description.key}")
         assert entry_reg is not None, f"missing entity for key={description.key}"
         assert entry_reg.entity_id == _expected_entity_id(description.key)
 
 
-async def test_suggested_object_id_does_not_rename_an_already_registered_entity(hass, aioclient_mock) -> None:
+async def test_suggested_object_id_does_not_rename_an_already_registered_entity(hass, strict_aioclient_mock) -> None:
     """Confirms the safety claim for existing installs: pre-registering an
     entity under a collision-mangled entity_id (simulating what happened on
     a real instance before this fix existed) and then loading the config
@@ -153,7 +140,7 @@ async def test_suggested_object_id_does_not_rename_an_already_registered_entity(
     )
     assert registry.async_get_entity_id("sensor", DOMAIN, unique_id) == mangled_entity_id
 
-    _mock_all_coordinator_endpoints(aioclient_mock, url, {"machines": MACHINES_ONE})
+    mock_all_coordinator_endpoints(strict_aioclient_mock, url, status={"machines": MACHINES_ONE})
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 

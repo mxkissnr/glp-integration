@@ -43,7 +43,7 @@ MACHINES_TWO = MACHINES_ONE + [
 
 async def _setup_entry(hass, strict_aioclient_mock, status_json: dict):
     url = "http://glp.example.com"
-    _mock_all_coordinator_endpoints(strict_aioclient_mock, url, status=status_json)
+    mock_all_coordinator_endpoints(strict_aioclient_mock, url, status=status_json)
     entry = MockConfigEntry(domain=DOMAIN, data={"url": url})
     entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(entry.entry_id)
