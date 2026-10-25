@@ -7,6 +7,7 @@
 ### Changed
 - **The Shot Card and the Order Card are now developed in this repository and ship with every integration release.** Refs #256
 - **Both cards got a shared bottom sheet that later changes use for pickers and details.** Refs #266
+- **The integration test suite now fails when a test hits an endpoint it did not mock, and several tests check what their names promise.** Refs #238
 
 ### Fixed
 - **The maintenance row on the Shot Card can now be reached and confirmed with the keyboard.** Refs #267
