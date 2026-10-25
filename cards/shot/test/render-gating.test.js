@@ -75,17 +75,38 @@ function stopTickers(card) {
   }
 }
 
+// Pins Date.now() for the duration of `fn` and always restores the real clock.
+// The card reads the wall clock at render time (order ETA, relative timestamps),
+// so the render-input snapshot carries the current minute; these tests move it
+// explicitly instead of waiting for a real minute to pass.
+function withClock(nowMs, fn) {
+  const realNow = Date.now;
+  Date.now = () => nowMs;
+  try {
+    return fn();
+  } finally {
+    Date.now = realNow;
+  }
+}
+
+const MINUTE = 60000;
+const T0 = Date.UTC(2026, 0, 2, 12, 0, 0);
+
 test('a hass push that only changes an unrelated entity does not render', () => {
-  const states = cardStates();
-  const card = makeCard(states);
-  card._render();                       // prime the render-input snapshot
-  const rendered = spyOnRender(card);
+  // Pinned so the pushes cannot straddle a minute boundary and trip the minute
+  // gate below.
+  withClock(T0, () => {
+    const states = cardStates();
+    const card = makeCard(states);
+    card._render();                       // prime the render-input snapshot
+    const rendered = spyOnRender(card);
 
-  card.hass = hass(states, { 'sensor.kitchen_temperature': { state: '21.4' } });
-  card.hass = hass(states, { 'climate.living_room': { state: 'heat' } });
+    card.hass = hass(states, { 'sensor.kitchen_temperature': { state: '21.4' } });
+    card.hass = hass(states, { 'climate.living_room': { state: 'heat' } });
 
-  assert.equal(rendered.count, 0, 'unrelated entities must not repaint the card');
-  stopTickers(card);
+    assert.equal(rendered.count, 0, 'unrelated entities must not repaint the card');
+    stopTickers(card);
+  });
 });
 
 test('a push that changes one of the card\'s own entities renders exactly once', () => {
@@ -187,16 +208,70 @@ test('the contrast pass runs once across renders with the same theme and again a
 });
 
 test('100 unrelated hass pushes cause zero renders', () => {
+  // The clock is pinned so the pushes all land in the same minute: the minute
+  // gate is covered by the two tests below this one.
+  withClock(T0, () => {
+    const states = cardStates();
+    const card = makeCard(states);
+    card._render();
+    const rendered = spyOnRender(card);
+
+    for (let i = 0; i < 100; i++) {
+      card.hass = hass(states, { [`sensor.unrelated_${i}`]: { state: String(i) } });
+    }
+
+    // Before this change every one of those pushes ended in _render() (100).
+    assert.equal(rendered.count, 0, 'unrelated pushes per 100 → 0 renders');
+    stopTickers(card);
+  });
+});
+
+test('unrelated pushes within the same minute cause zero renders', () => {
   const states = cardStates();
-  const card = makeCard(states);
-  card._render();
-  const rendered = spyOnRender(card);
+  const { card, rendered } = withClock(T0, () => {
+    const card = makeCard(states);
+    card._render();
+    return { card, rendered: spyOnRender(card) };
+  });
 
-  for (let i = 0; i < 100; i++) {
-    card.hass = hass(states, { [`sensor.unrelated_${i}`]: { state: String(i) } });
-  }
+  // Same minute, different unrelated entities: the render inputs are identical,
+  // so neither push may repaint the card.
+  withClock(T0 + 1, () => {
+    card.hass = hass(states, { 'sensor.kitchen_temperature': { state: '21.4' } });
+  });
+  withClock(T0 + MINUTE - 1, () => {
+    card.hass = hass(states, { 'climate.living_room': { state: 'heat' } });
+  });
 
-  // Before this change every one of those pushes ended in _render() (100).
-  assert.equal(rendered.count, 0, 'unrelated pushes per 100 → 0 renders');
+  assert.equal(rendered.count, 0, 'pushes in the same minute must not repaint the card');
+  stopTickers(card);
+});
+
+test('the first unrelated push after the minute changes renders exactly once', () => {
+  const states = cardStates();
+  const { card, rendered } = withClock(T0, () => {
+    const card = makeCard(states);
+    card._render();
+    return { card, rendered: spyOnRender(card) };
+  });
+
+  // A new minute means the ETA countdown and the relative timestamps the card
+  // computed at render time are stale, so one repaint is due.
+  withClock(T0 + MINUTE, () => {
+    card.hass = hass(states, { 'sensor.kitchen_temperature': { state: '21.4' } });
+  });
+  assert.equal(rendered.count, 1, 'the minute rollover repaints once');
+
+  // Further pushes in that same new minute must not add renders.
+  withClock(T0 + MINUTE + 1, () => {
+    card.hass = hass(states, { 'climate.living_room': { state: 'heat' } });
+  });
+  assert.equal(rendered.count, 1, 'later pushes in the same minute must not repaint again');
+
+  // ...and the next minute repaints once more.
+  withClock(T0 + 2 * MINUTE, () => {
+    card.hass = hass(states, { 'climate.living_room': { state: 'cool' } });
+  });
+  assert.equal(rendered.count, 2, 'each further minute repaints at most once');
   stopTickers(card);
 });

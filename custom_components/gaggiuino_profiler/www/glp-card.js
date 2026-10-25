@@ -2859,19 +2859,24 @@ ${TOKENS}
         language: String(this._hass?.language || this._hass?.locale?.language || "de").slice(0, 2).toLowerCase(),
         theme: this._themeKey(),
         ids,
-        states: ids.map((id) => states[id])
+        states: ids.map((id) => states[id]),
+        minute: Math.floor(Date.now() / 6e4)
       };
     }
     // True when this hass push changed something the card shows: an entity of its
-    // own changed object, an entity appeared or disappeared under the prefix, or
-    // the prefix/language/theme changed. The first push after setConfig always
-    // renders (`_renderInputs` is cleared there).
+    // own changed object, an entity appeared or disappeared under the prefix, the
+    // prefix/language/theme changed, or the minute rolled over (the ETA countdown
+    // and the relative timestamps are derived from Date.now()). The minute costs
+    // at most one extra render per minute and only when a push arrives at all; no
+    // timer is involved. The first push after setConfig always renders
+    // (`_renderInputs` is cleared there).
     _needsRender() {
       if (!this._config) return false;
       const prev = this._renderInputs;
       if (!prev) return true;
       const next = this._renderInputsFor();
       if (prev.prefix !== next.prefix || prev.language !== next.language || prev.theme !== next.theme) return true;
+      if (prev.minute !== next.minute) return true;
       if (prev.ids.length !== next.ids.length) return true;
       for (let i6 = 0; i6 < next.ids.length; i6++) {
         if (prev.ids[i6] !== next.ids[i6] || prev.states[i6] !== next.states[i6]) return true;

@@ -112,16 +112,20 @@ interface ViewModel {
 }
 
 // What a render actually depended on: the resolved prefix, the language and
-// theme, and the identity of every state object the card reads. HA replaces a
-// state object only when that entity changes, so comparing a fresh snapshot
-// with the last render's tells the `hass` setter whether a push concerns this
-// card at all (see _needsRender()).
+// theme, the identity of every state object the card reads, and the wall-clock
+// minute. HA replaces a state object only when that entity changes, so comparing
+// a fresh snapshot with the last render's tells the `hass` setter whether a push
+// concerns this card at all (see _needsRender()). The minute is in there because
+// two texts are derived from Date.now() at render time — the order ETA countdown
+// and the "last sync N min ago" line — so without it they freeze as long as no
+// watched entity changes.
 interface RenderInputs {
   prefix: string;
   language: string;
   theme: string;
   ids: string[];
   states: (HassStateObject | undefined)[];
+  minute: number;
 }
 
 // ─── card ──────────────────────────────────────────────────────────────────────
@@ -719,13 +723,17 @@ class GlpCard extends HTMLElement {
       theme: this._themeKey(),
       ids,
       states: ids.map(id => states[id]),
+      minute: Math.floor(Date.now() / 60000),
     };
   }
 
   // True when this hass push changed something the card shows: an entity of its
-  // own changed object, an entity appeared or disappeared under the prefix, or
-  // the prefix/language/theme changed. The first push after setConfig always
-  // renders (`_renderInputs` is cleared there).
+  // own changed object, an entity appeared or disappeared under the prefix, the
+  // prefix/language/theme changed, or the minute rolled over (the ETA countdown
+  // and the relative timestamps are derived from Date.now()). The minute costs
+  // at most one extra render per minute and only when a push arrives at all; no
+  // timer is involved. The first push after setConfig always renders
+  // (`_renderInputs` is cleared there).
   _needsRender(): boolean {
     // Without a config _render() cannot paint at all, and no snapshot exists to
     // compare against (HA calls setConfig() before the first hass push).
@@ -734,6 +742,7 @@ class GlpCard extends HTMLElement {
     if (!prev) return true;
     const next = this._renderInputsFor();
     if (prev.prefix !== next.prefix || prev.language !== next.language || prev.theme !== next.theme) return true;
+    if (prev.minute !== next.minute) return true;
     if (prev.ids.length !== next.ids.length) return true;
     for (let i = 0; i < next.ids.length; i++) {
       if (prev.ids[i] !== next.ids[i] || prev.states[i] !== next.states[i]) return true;
