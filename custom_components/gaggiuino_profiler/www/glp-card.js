@@ -2385,12 +2385,15 @@ ${TOKENS}
       this._lastChartShotKey = null;
       this._activeTab = "shot";
       this._pendingProfile = null;
+      this._pendingProfileTimer = null;
       this._maintConfirm = null;
       this._machineOnSince = null;
       this._uptimeTimer = null;
       this._orders = [];
       this._ordersSig = null;
       this._ordersPoll = null;
+      this._ordersRetry = null;
+      this._ordersOff = false;
       this._beansInfo = null;
       this._beansInfoById = null;
       this._beansInfoAt = 0;
@@ -2478,35 +2481,39 @@ ${TOKENS}
       }
     }
     _startUptimeTicker() {
-      if (this._uptimeTimer) return;
+      if (this._uptimeTimer || !this.isConnected) return;
       this._uptimeTimer = setInterval(() => {
         const el = this.shadowRoot.getElementById("glp-uptime-text");
         if (el && this._machineOnSince) el.textContent = fmtUptime(Date.now() - this._machineOnSince);
       }, 1e3);
     }
     _startReadyByTicker() {
-      if (this._readyByTimer) return;
+      if (this._readyByTimer || !this.isConnected) return;
       this._readyByTimer = setInterval(() => {
         const el = this.shadowRoot.getElementById("glp-readyby-countdown");
         if (el) el.textContent = this._readyByCountdownText(this._readyByPlannedAt, this._readyByTargetAt);
       }, 1e3);
     }
+    // Restarts the orders poll when the card is re-attached (dashboard edit
+    // mode, view switch): hass stops arriving, and the setter only starts a
+    // poll while connected. The render puts back whichever ticker the current
+    // view needs, since disconnectedCallback cleared it.
     connectedCallback() {
       this._startOrdersPoll();
+      if (this._hass) this._render();
     }
+    // Every timer this card owns must stop here: a detached card gets no more
+    // hass pushes, so nothing else would ever clear them.
     disconnectedCallback() {
-      if (this._uptimeTimer) {
-        clearInterval(this._uptimeTimer);
-        this._uptimeTimer = null;
-      }
-      if (this._ordersPoll) {
-        clearInterval(this._ordersPoll);
-        this._ordersPoll = null;
-      }
-      if (this._readyByTimer) {
-        clearInterval(this._readyByTimer);
-        this._readyByTimer = null;
-      }
+      if (this._uptimeTimer) clearInterval(this._uptimeTimer);
+      this._uptimeTimer = null;
+      this._stopOrdersPoll();
+      if (this._readyByTimer) clearInterval(this._readyByTimer);
+      this._readyByTimer = null;
+      if (this._pendingProfileTimer) clearTimeout(this._pendingProfileTimer);
+      this._pendingProfileTimer = null;
+      if (this._pendingReadyByTimer) clearTimeout(this._pendingReadyByTimer);
+      this._pendingReadyByTimer = null;
     }
     // ── ready-by preheat scheduler (#61) ───────────────────────────────────────
     // Reads sensor.<prefix>preheat_ready_by_target_at / _planned_switch_on_at
@@ -2602,18 +2609,39 @@ ${TOKENS}
     }
     // ── Barista orders (via the integration REST proxy) ───────────────────────
     _startOrdersPoll() {
-      if (this._ordersPoll || !this._hass?.fetchWithAuth) {
-        if (!this._ordersPoll) setTimeout(() => this._startOrdersPoll(), 1500);
+      const hass = this._hass;
+      if (this._ordersPoll || !this.isConnected || this._ordersOff || !hass) return;
+      if (!hass.fetchWithAuth) {
+        if (!this._ordersRetry)
+          this._ordersRetry = setTimeout(() => {
+            this._ordersRetry = null;
+            this._startOrdersPoll();
+          }, 1500);
         return;
       }
       this._fetchOrders(true);
       this._ordersPoll = setInterval(() => this._fetchOrders(false), 6e3);
+    }
+    _stopOrdersPoll() {
+      if (this._ordersPoll) {
+        clearInterval(this._ordersPoll);
+        this._ordersPoll = null;
+      }
+      if (this._ordersRetry) {
+        clearTimeout(this._ordersRetry);
+        this._ordersRetry = null;
+      }
     }
     async _fetchOrders(force) {
       if (!this._hass?.fetchWithAuth) return;
       let list;
       try {
         const r4 = await this._hass.fetchWithAuth("/api/glp/orders");
+        if (r4.status === 404) {
+          this._ordersOff = true;
+          this._stopOrdersPoll();
+          return;
+        }
         if (!r4.ok) return;
         list = await r4.json();
       } catch {
@@ -2781,7 +2809,7 @@ ${TOKENS}
         const l3 = String(hass?.language || hass?.locale?.language || "de").slice(0, 2).toLowerCase();
         setLang(SUPPORTED_LANGS.includes(l3) ? l3 : "en");
       }
-      if (!this._ordersPoll) this._startOrdersPoll();
+      if (this.isConnected && !this._ordersPoll) this._startOrdersPoll();
       this._loadBeansInfo();
       this._render();
     }
@@ -2793,10 +2821,11 @@ ${TOKENS}
       this._beansInfoAt = Date.now();
       try {
         const r4 = await this._hass.fetchWithAuth("/api/glp/library/beans-info");
-        if (!r4.ok) {
+        if (r4.status === 404) {
           this._beansInfoUnavailable = true;
           return;
         }
+        if (!r4.ok) return;
         const list = await r4.json();
         const beans = Array.isArray(list) ? list : [];
         this._beansInfoById = new Map(beans.filter((b3) => b3.id != null).map((b3) => [b3.id, b3]));
