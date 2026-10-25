@@ -10,6 +10,7 @@ from homeassistant.exceptions import ServiceValidationError
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.gaggiuino_profiler.const import DOMAIN
+from tests.common import mock_all_coordinator_endpoints
 
 TRAVERSAL_TASKS = [
     "../../etc/passwd",
@@ -23,26 +24,9 @@ TRAVERSAL_TASKS = [
 VALID_TASKS = ["descaling", "backflush", "grouphead", "gaskets", "waterfilter", "grinder_left"]
 
 
-def _mock_all_coordinator_endpoints(aioclient_mock, url: str) -> None:
-    """Mock every endpoint the three coordinators poll on first refresh so
-    async_setup_entry completes and the coordinator lands in hass.data --
-    same fixture as test_backup_service.py's _setup_entry."""
-    aioclient_mock.get(f"{url}/api/status", json={})
-    aioclient_mock.get(f"{url}/api/token", json={"apiToken": "test-token"})
-    aioclient_mock.get(f"{url}/shots.json?limit=10", json=[])
-    aioclient_mock.get(f"{url}/shots.json", json=[])
-    aioclient_mock.get(f"{url}/api/maintenance", json={})
-    aioclient_mock.get(f"{url}/api/preheat", json={})
-    aioclient_mock.get(f"{url}/api/machine/profiles", json={})
-    aioclient_mock.get(f"{url}/api/menu", json=[])
-    aioclient_mock.get(f"{url}/api/version", json={})
-    aioclient_mock.get(f"{url}/api/live/data", json={})
-    aioclient_mock.get(f"{url}/api/machine/status", json={"available": False})
-
-
 async def _setup_entry(hass, aioclient_mock):
     url = "http://glp.example.com"
-    _mock_all_coordinator_endpoints(aioclient_mock, url)
+    mock_all_coordinator_endpoints(aioclient_mock, url)
     entry = MockConfigEntry(domain=DOMAIN, data={"url": url})
     entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(entry.entry_id)
@@ -51,8 +35,8 @@ async def _setup_entry(hass, aioclient_mock):
 
 
 @pytest.mark.parametrize("task", TRAVERSAL_TASKS)
-async def test_maintenance_done_rejects_disallowed_task(hass, aioclient_mock, task) -> None:
-    entry, url = await _setup_entry(hass, aioclient_mock)
+async def test_maintenance_done_rejects_disallowed_task(hass, strict_aioclient_mock, task) -> None:
+    entry, url = await _setup_entry(hass, strict_aioclient_mock)
     # No /api/maintenance/.../done mock registered -- if the handler ever
     # reached the HTTP call with a disallowed task, aioclient_mock would
     # raise for the unmocked URL, failing the test for a different reason
@@ -64,12 +48,26 @@ async def test_maintenance_done_rejects_disallowed_task(hass, aioclient_mock, ta
         )
 
 
+def _post_calls_to(aioclient_mock, path: str):
+    return [
+        call for call in aioclient_mock.mock_calls
+        if call[0].lower() == "post" and str(call[1]).split("?")[0].endswith(path)
+    ]
+
+
 @pytest.mark.parametrize("task", VALID_TASKS)
-async def test_maintenance_done_allows_documented_task(hass, aioclient_mock, task) -> None:
-    entry, url = await _setup_entry(hass, aioclient_mock)
-    aioclient_mock.post(f"{url}/api/maintenance/{task}/done", json={})
+async def test_maintenance_done_allows_documented_task(hass, strict_aioclient_mock, task) -> None:
+    entry, url = await _setup_entry(hass, strict_aioclient_mock)
+    strict_aioclient_mock.post(f"{url}/api/maintenance/{task}/done", json={})
 
     await hass.services.async_call(DOMAIN, "maintenance_done", {"task": task}, blocking=True)
     await hass.async_block_till_done()
 
-    assert aioclient_mock.call_count >= 1
+    # The service must POST exactly once, to the documented task's own
+    # endpoint -- asserting a call count would also be satisfied by the
+    # coordinator polling done during setup.
+    calls = _post_calls_to(strict_aioclient_mock, f"/api/maintenance/{task}/done")
+    assert len(calls) == 1
+    _, called_url, body, _ = calls[0]
+    assert str(called_url) == f"{url}/api/maintenance/{task}/done"
+    assert body is None  # a plain trigger POST, no payload

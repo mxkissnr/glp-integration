@@ -7,6 +7,7 @@
 ### Changed
 - **The Shot Card and the Order Card are now developed in this repository and ship with every integration release.** Refs #256
 - **Both cards got a shared bottom sheet that later changes use for pickers and details.** Refs #266
+- **The integration test suite now fails when a test hits an endpoint it did not mock, and several tests check what their names promise.** Refs #238
 
 ### Fixed
 - **The Order Card no longer asks the app for an API token when it is pointed at a URL directly; that request only ever failed, so the card now relies on the token from the dashboard configuration.** Refs #276
