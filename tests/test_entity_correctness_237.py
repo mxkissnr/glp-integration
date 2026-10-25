@@ -42,6 +42,7 @@ from custom_components.gaggiuino_profiler.sensor import (
 )
 from custom_components.gaggiuino_profiler.switch import SWITCHES, GlpMachineSwitch
 from custom_components.gaggiuino_profiler.update import GlpMachineFirmwareUpdate, GlpUpdateEntity
+from tests.common import mock_all_coordinator_endpoints
 
 URL = "http://glp.example.com"
 
@@ -123,48 +124,35 @@ def test_additional_machine_suggested_ids_are_unique_per_machine() -> None:
     assert first.suggested_object_id != second.suggested_object_id
 
 
-def _mock_all(aioclient_mock, *, shots: list | None = None) -> None:
-    shots = shots if shots is not None else []
-    aioclient_mock.get(f"{URL}/api/status", json={})
-    aioclient_mock.get(f"{URL}/api/token", json={"apiToken": "test-token"})
-    aioclient_mock.get(f"{URL}/shots.json?limit=10", json=shots)
-    aioclient_mock.get(f"{URL}/shots.json", json=shots)
-    aioclient_mock.get(f"{URL}/api/maintenance", json={})
-    aioclient_mock.get(f"{URL}/api/preheat", json={})
-    aioclient_mock.get(f"{URL}/api/machine/profiles", json={})
-    aioclient_mock.get(f"{URL}/api/menu", json=[])
-    aioclient_mock.get(f"{URL}/api/version", json={})
-    aioclient_mock.get(f"{URL}/api/machine/firmware/version", json={})
-
-
-async def test_deleting_newest_shot_fires_no_event_but_higher_id_does(hass, aioclient_mock) -> None:
+async def test_deleting_newest_shot_fires_no_event_but_higher_id_does(hass, strict_aioclient_mock) -> None:
     events: list[dict] = []
     hass.bus.async_listen(f"{DOMAIN}_shot_completed", lambda event: events.append(event.data))
     coordinator = GlpDataCoordinator(hass, async_get_clientsession(hass), URL)
 
-    _mock_all(aioclient_mock, shots=[{"id": 1}, {"id": 2}])
+    mock_all_coordinator_endpoints(strict_aioclient_mock, URL, shots=[{"id": 1}, {"id": 2}])
     await coordinator._async_update_data()
     await hass.async_block_till_done()
     assert events == []  # first refresh never fires
 
     # Deleting the newest shot must not fire an event for the older one.
-    aioclient_mock.clear_requests()
-    _mock_all(aioclient_mock, shots=[{"id": 1}])
+    strict_aioclient_mock.clear_requests()
+    mock_all_coordinator_endpoints(strict_aioclient_mock, URL, shots=[{"id": 1}])
     await coordinator._async_update_data()
     await hass.async_block_till_done()
     assert events == []
 
     # A genuinely new shot (higher id) still fires.
-    aioclient_mock.clear_requests()
-    _mock_all(aioclient_mock, shots=[{"id": 1}, {"id": 2}, {"id": 3}])
+    strict_aioclient_mock.clear_requests()
+    mock_all_coordinator_endpoints(strict_aioclient_mock, URL, shots=[{"id": 1}, {"id": 2}, {"id": 3}])
     await coordinator._async_update_data()
     await hass.async_block_till_done()
     assert [event["shot_id"] for event in events] == [3]
 
 
-async def test_refresh_survives_malformed_shot_values(hass, aioclient_mock) -> None:
-    _mock_all(
-        aioclient_mock,
+async def test_refresh_survives_malformed_shot_values(hass, strict_aioclient_mock) -> None:
+    mock_all_coordinator_endpoints(
+        strict_aioclient_mock,
+        URL,
         shots=[
             {
                 "id": 1,
