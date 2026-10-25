@@ -208,6 +208,7 @@ const { GlpCard } = loadCard({
     localStorage: window.localStorage,
   },
 });
+assert.equal(typeof GlpCard, 'function', 'the card must register in the happy-dom window');
 
 const P = 'sensor.gaggiuino_local_profiler_';
 const S = 'select.gaggiuino_local_profiler_';
