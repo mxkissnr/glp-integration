@@ -219,7 +219,7 @@ class GlpCard extends HTMLElement {
     this._beansInfoUnavailable = false;
     this._orderEtaFor = null;
     this._orderDeclineFor = null;
-    this._switchEntity = localStorage.getItem('glp_switch_entity') || null;
+    this._switchEntity = this._readSwitchEntity();
     // Per-instance-unique SVG gradient id (#87) — a dashboard can render more
     // than one glp-card, and duplicate <linearGradient id> values across
     // instances would make later instances' gradients resolve to an
@@ -624,9 +624,8 @@ class GlpCard extends HTMLElement {
     this._contrastKey = null;
     // Re-resolve the switch entity from the machine-scoped storage key now
     // that `machine` (if any) is known — the constructor ran before
-    // setConfig() and could only read the unscoped global key.
-    this._switchEntity = localStorage.getItem(this._switchStorageKey())
-      || localStorage.getItem('glp_switch_entity') || null;
+    // setConfig() and could not tell whether this card is machine-scoped.
+    this._switchEntity = this._readSwitchEntity();
   }
 
   // The app's own stored per-machine theme (#701), read from hass state by
@@ -874,9 +873,23 @@ class GlpCard extends HTMLElement {
   // dashboard. Falls back to the original global key when `machine` isn't
   // configured — unchanged behavior for existing single-machine cards.
   _switchStorageKey(): string {
+    return `glp_switch_entity${this._machineSwitchKeySuffix()}`;
+  }
+
+  _machineSwitchKeySuffix(): string {
     const machine = this._config?.machine;
-    if (!machine) return 'glp_switch_entity';
-    return `glp_switch_entity_${String(machine).toLowerCase().replace(/\s+/g, '_')}`;
+    return machine ? `_${String(machine).toLowerCase().replace(/\s+/g, '_')}` : '';
+  }
+
+  // A card configured for one machine never adopts the unscoped global key:
+  // that key is shared by every card on the dashboard, so it may hold another
+  // machine's switch, and toggling it would power the wrong machine. Cards
+  // without `machine` keep reading the global key as before.
+  _readSwitchEntity(): string | null {
+    const scoped = localStorage.getItem(this._switchStorageKey());
+    if (scoped) return scoped;
+    if (this._config?.machine) return null;
+    return localStorage.getItem('glp_switch_entity') || null;
   }
 
   _s(suffix: string): HassStateObject | undefined { return this._hass!.states[this._resolvePrefix() + suffix]; }
