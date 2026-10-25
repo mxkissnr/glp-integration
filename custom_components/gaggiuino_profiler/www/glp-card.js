@@ -3011,16 +3011,14 @@ ${TOKENS}
     // dashboard. Falls back to the original global key when `machine` isn't
     // configured — unchanged behavior for existing single-machine cards.
     _switchStorageKey() {
-      return `glp_switch_entity${this._machineSwitchKeySuffix()}`;
-    }
-    _machineSwitchKeySuffix() {
       const machine = this._config?.machine;
-      return machine ? `_${String(machine).toLowerCase().replace(/\s+/g, "_")}` : "";
+      if (!machine) return "glp_switch_entity";
+      return `glp_switch_entity_${String(machine).toLowerCase().replace(/\s+/g, "_")}`;
     }
     // A card configured for one machine never adopts the unscoped global key:
-    // that key is shared by every card on the dashboard, so it may hold another
-    // machine's switch, and toggling it would power the wrong machine. Cards
-    // without `machine` keep reading the global key as before.
+    // every card on the dashboard shares it, so it may hold another machine's
+    // switch and toggling it would power the wrong machine. Cards without
+    // `machine` keep reading the global key as before.
     _readSwitchEntity() {
       const scoped = localStorage.getItem(this._switchStorageKey());
       if (scoped) return scoped;
