@@ -2898,21 +2898,21 @@ ${TOKENS}
           shotsSince != null && shotsSince > 0 ? `${shotsSince} Shots` : null
         ].filter(Boolean).join(" · ");
         const confirming = task && this._maintConfirm === task;
-        const toggleConfirm = /* @__PURE__ */ __name(() => {
-          this._maintConfirm = this._maintConfirm === task ? null : task;
+        const toggleConfirm = /* @__PURE__ */ __name((taskId) => {
+          this._maintConfirm = this._maintConfirm === taskId ? null : taskId;
           this._render();
         }, "toggleConfirm");
         return b2`<div class="maint-row${confirming ? " confirming" : ""}" data-maint-task=${o7(task || void 0)} role=${o7(task ? "button" : void 0)} tabindex=${o7(task ? "0" : void 0)} @click=${(e6) => {
           if (!task) return;
           if (e6.target.closest("[data-maint-done],[data-maint-cancel]")) return;
-          toggleConfirm();
+          toggleConfirm(task);
         }} @keydown=${(e6) => {
           if (!task) return;
           const key = e6.key;
           if (key !== "Enter" && key !== " ") return;
           if (e6.target.closest("[data-maint-done],[data-maint-cancel]")) return;
           e6.preventDefault();
-          toggleConfirm();
+          toggleConfirm(task);
         }}>
         <div class="maint-row-top">
           ${/* ICONS.of() emits fixed SVG markup */
