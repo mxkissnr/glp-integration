@@ -1665,14 +1665,12 @@ ${TOKENS}
     _useIngress() {
       return !this._config?.glp_url;
     }
+    // Direct-URL mode uses the YAML `glp_token` only: the app serves /api/token
+    // to Supervisor-originating requests, never to a browser on the LAN, so
+    // asking for it there only earned a 401. Without a token the app answers
+    // 401 and the existing _load()/_loadStatus() handling shows that.
     async _ensureToken() {
       if (this._useIngress()) return null;
-      if (this._token) return this._token;
-      try {
-        const d3 = await fetch(`${this._getBase()}/api/token`).then((r4) => r4.ok ? r4.json() : {});
-        this._token = d3.apiToken || null;
-      } catch {
-      }
       return this._token;
     }
     async _fetch(path, opts = {}) {

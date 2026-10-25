@@ -231,16 +231,12 @@ class GlpOrderCard extends HTMLElement {
 
   _useIngress() { return !this._config?.glp_url; }
 
+  // Direct-URL mode uses the YAML `glp_token` only: the app serves /api/token
+  // to Supervisor-originating requests, never to a browser on the LAN, so
+  // asking for it there only earned a 401. Without a token the app answers
+  // 401 and the existing _load()/_loadStatus() handling shows that.
   async _ensureToken(): Promise<string | null> {
     if (this._useIngress()) return null; // ingress bypasses token check
-    if (this._token) return this._token;
-    // /api/token is only served to Supervisor-originating requests or already-
-    // authenticated callers. In direct-URL mode the card is browser-originated
-    // (LAN IP) so this call will return 401. Users must set glp_token in YAML.
-    try {
-      const d = await fetch(`${this._getBase()}/api/token`).then(r => r.ok ? r.json() : {}) as { apiToken?: string };
-      this._token = d.apiToken || null;
-    } catch { /* 401 in direct-URL mode is expected; falls back to configured glp_token */ }
     return this._token;
   }
 
