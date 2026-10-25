@@ -120,6 +120,8 @@ Minimale Konfiguration — in einem Standard-Home-Assistant-Setup sind keine Opt
 type: custom:glp-order-card
 ```
 
+Ohne `glp_url` nutzt die Karte den Proxy der Integration, den Home Assistant mit der eigenen Sitzung authentifiziert — dabei wird nirgends ein Token gespeichert. Das ist die empfohlene Einrichtung. `glp_url` (und damit `glp_token`) nur setzen, wenn die Karte das GLP-App direkt erreichen muss, etwa auf einem Dashboard außerhalb von Home Assistant.
+
 Vollständige Konfiguration (nur für den direkten Zugriff außerhalb von Home Assistant nötig):
 
 ```yaml
@@ -137,7 +139,7 @@ theme: ember-espresso
 |---|---|---|
 | `title` | Titel im Kartenkopf | *(lokalisiert — `Bestellen`, `Order`, …)* |
 | `glp_url` | URL des GLP-Apps auf Port 8099. Nur nötig, wenn die Karte außerhalb von Home Assistant verwendet wird oder die Ingress-Erkennung nicht greift. | *(automatisch — HA-Ingress)* |
-| `glp_token` | API-Token des GLP-Apps für den Direkt-URL-Modus, in dem die Karte selbst keinen Token holen kann. | *(keiner)* |
+| `glp_token` | API-Token des GLP-Apps, nur für den Direkt-URL-Modus. Achtung: Jeder Home-Assistant-Benutzer, der das Dashboard öffnen kann, kann ihn im YAML lesen. | *(keiner)* |
 | `switch_entity` | Switch-Entity der Maschine. Solange sie `off` oder `unavailable` meldet, zeigt die Karte die Ansicht "Maschine aus". | *(automatisch — aus dem Attribut `switch_entity` des `machine_status`-Sensors)* |
 | `machine` | Name oder ID einer Maschine aus der Multi-Machine-Registry des Apps. Legt fest, welches `*_machine_status`-Entity die `switch_entity` liefert, versieht jede Bestellung mit dem Maschinennamen und begrenzt das Maschinen-Thema darauf. | *(automatisch — erste Maschine mit "Gaggiuino" im Namen, sonst die erste gefundene)* |
 | `new_badge_days` | Wie viele Tage ein neu hinzugefügtes Menü-Item sein NEW-Badge behält. | `7` |

@@ -9,6 +9,7 @@
 - **Both cards got a shared bottom sheet that later changes use for pickers and details.** Refs #266
 
 ### Fixed
+- **The Order Card no longer asks the app for an API token when it is pointed at a URL directly; that request only ever failed, so the card now relies on the token from the dashboard configuration.** Refs #276
 - **The documentation link in Home Assistant's card picker now opens the card documentation in this repository instead of the archived card repositories.** Refs #256
 - **Deleting the newest shot no longer fires a shot-completed event, one malformed shot value no longer makes all sensors unavailable, and deleting shots no longer distorts the shot-count statistics.** Refs #237
 - **The options-flow error messages now live under `options.error`, where Home Assistant's translation schema expects them, so the translation files validate again.** Refs #237

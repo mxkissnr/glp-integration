@@ -120,6 +120,8 @@ Minimal configuration — no options are needed in a standard Home Assistant set
 type: custom:glp-order-card
 ```
 
+Without `glp_url` the card goes through the integration proxy, which Home Assistant authenticates with your own session — no token is stored anywhere. That is the recommended setup. Only set `glp_url` (and then `glp_token`) when the card has to reach the app directly, for example on a dashboard outside Home Assistant.
+
 Full configuration (only needed for direct access outside Home Assistant):
 
 ```yaml
@@ -137,7 +139,7 @@ theme: ember-espresso
 |---|---|---|
 | `title` | Card header title | *(localised — `Order`, `Bestellen`, …)* |
 | `glp_url` | URL of the GLP app on port 8099. Only needed when the card is used outside Home Assistant or ingress auto-detection doesn't apply. | *(auto — HA ingress)* |
-| `glp_token` | API token of the GLP app, for direct-URL mode where the card cannot fetch one itself. | *(none)* |
+| `glp_token` | API token of the GLP app, only for direct-URL mode. Warning: every Home Assistant user who can open the dashboard can read it in the YAML. | *(none)* |
 | `switch_entity` | Switch entity of the machine. The card shows an "off" view while it reports `off` or `unavailable`. | *(auto — from the `machine_status` sensor's `switch_entity` attribute)* |
 | `machine` | Name or id of one machine from the app's multi-machine registry. Selects which machine's `*_machine_status` entity provides `switch_entity`, tags each placed order with the machine name, and scopes the machine theme. | *(auto — first Gaggiuino-named machine, else the first one found)* |
 | `new_badge_days` | How many days a newly added menu item keeps its NEW badge. | `7` |
