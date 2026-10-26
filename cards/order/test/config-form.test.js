@@ -182,6 +182,14 @@ test('a form config renders like the equivalent YAML config', () => {
   }
 });
 
+test('a gradient typed into the multi-line field becomes the two stops', () => {
+  // The text selector's multiple mode saves one string, the YAML option is a
+  // list; setConfig() splits it so the theme precedence still sees two stops.
+  const card = makeCard({ accent_gradient: '#7f1d1d\n#f59e0b' });
+  assert.deepEqual(card._config.accent_gradient, ['#7f1d1d', '#f59e0b']);
+  assert.deepEqual({ ...card._resolveTheme() }, { a: '#7f1d1d', b: '#f59e0b' });
+});
+
 test('the form\'s minimum of 0 days really switches the NEW badge off', () => {
   const card = makeCard({ new_badge_days: 0 });
   assert.deepEqual(badgedItems(card), []);
