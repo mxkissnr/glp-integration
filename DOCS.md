@@ -147,6 +147,8 @@ theme: ember-espresso
 | `accent_color` | Custom flat accent colour as `#rrggbb`, instead of a preset. Overrides `theme`. Values that aren't a six-digit hex colour are ignored. | *(none)* |
 | `accent_gradient` | Custom two-stop gradient as `["#rrggbb", "#rrggbb"]`. Overrides `theme` and `accent_color`. Values that aren't six-digit hex colours are ignored. | *(none)* |
 
+Every option above can also be set in Home Assistant's visual card editor, which shows the same labels and a short help text under each field. The two direct-URL options sit in an "Advanced / direct URL" section.
+
 ### Machine colour theme
 
 The Order Card uses the same eight presets and the same precedence as the Shot Card:
