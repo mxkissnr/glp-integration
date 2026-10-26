@@ -7,7 +7,7 @@
 // headless Chromium via Playwright, mocks every api/orders/* endpoint the
 // card fetches on load with realistic demo data (a 5-item menu incl. a
 // bean-library drink, trending/NEW badges, an empty order queue), drives
-// the card into a populated "variant selected + bean info shown" state,
+// the card into a populated "variant selected + bean details available" state,
 // and screenshots just the <glp-order-card> element.
 //
 // Two independent axes (deliberately decoupled — the card's contrast fix for
@@ -183,8 +183,8 @@ async function main(): Promise<void> {
   });
 
   // Select the bean-library item + a variant so the demo shows off the
-  // richer UI (variant chips, bean info box, enabled order button) rather
-  // than just the bare menu grid.
+  // richer UI (variant chips, the info button behind the bean details,
+  // enabled order button) rather than just the bare menu grid.
   await page.evaluate(() => {
     const el = document.querySelector('glp-order-card');
     const items = el?.shadowRoot?.querySelectorAll<HTMLElement>('.menu-item');
@@ -200,9 +200,11 @@ async function main(): Promise<void> {
     const chip = el?.shadowRoot?.querySelector<HTMLElement>('.variant-chip');
     chip?.click();
   });
+  // The bean details themselves live in a sheet now (#274), so the chip's
+  // info button is what proves the demo data has them.
   await page.waitForFunction(() => {
     const el = document.querySelector('glp-order-card');
-    return !!el?.shadowRoot?.querySelector('#oc-bean-info');
+    return !!el?.shadowRoot?.querySelector('.bean-info-btn');
   }, { timeout: 5000 });
 
   /* eslint-enable no-undef */
