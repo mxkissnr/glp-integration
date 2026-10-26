@@ -8,6 +8,7 @@
 
 ### Changed
 - **On the Shot Card the profile list and the maintenance confirmation now open in a sheet from the bottom of the screen instead of stretching the card.** Refs #265
+- **The Order Card shows bean details behind a small info button in a sheet, so the menu stays short.** Refs #274
 - **The Shot Card only redraws when its own machine data or the theme changes, which keeps wall tablets and Raspberry Pi kiosks responsive on busy Home Assistant instances.** Refs #270
 - **The Shot Card and the Order Card are now developed in this repository and ship with every integration release.** Refs #256
 - **Both cards got a shared bottom sheet that later changes use for pickers and details.** Refs #266

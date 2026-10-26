@@ -17,10 +17,11 @@ import { MACHINE_ICON_MINI, ICONS, _menuIconHtml } from './icons.ts';
 import { applySemanticColorContrast } from '../../shared/contrast.ts';
 import { appMachineEntry, appMachineTheme, appMachineType, matchMachineStatusEntity } from '../../shared/machine.ts';
 import { haptic, toast } from '../../shared/ha-events.ts';
+import { GlpSheet } from '../../shared/sheet.ts';
 import { STRINGS, _s } from './i18n.ts';
 import type { TemplateResult } from 'lit';
 import type {
-  Hass, CardConfig, MenuItem, Bean, Order, Shot, QueueEta,
+  Hass, CardConfig, MenuItem, Bean, Origin, Order, Shot, QueueEta,
   ThemeStops, GroupedVariants, ShotSeries,
 } from './types.ts';
 
@@ -59,6 +60,10 @@ class GlpOrderCard extends HTMLElement {
   declare _lang: string;
   declare _instanceId: number;
   declare _hass: Hass | null;
+  declare _sheet: GlpSheet | null;
+  // The language the sheet's close label was built with; a language change
+  // (hass.language) rebuilds the sheet rather than keeping a stale label.
+  declare _sheetLang: string | null;
 
   constructor() {
     super();
@@ -80,6 +85,8 @@ class GlpOrderCard extends HTMLElement {
     this._hassRenderTimer = null;
     this._lang = this._normalizeLang(navigator.language);
     this._instanceId = ++_glpOrderCardInstanceSeq;
+    this._sheet = null;
+    this._sheetLang = null;
   }
 
   // First two letters, lower case, falling back to English for a language this
@@ -208,7 +215,12 @@ class GlpOrderCard extends HTMLElement {
   }
 
   connectedCallback() { this._startPoll(); }
-  disconnectedCallback() { this._stopPoll(); }
+  disconnectedCallback() {
+    this._stopPoll();
+    // A sheet left open by a removed card would keep its history entry
+    // behind; close() trims that entry too.
+    if (this._sheet) this._sheet.close();
+  }
 
   _startPoll() {
     this._stopPoll();
@@ -392,7 +404,8 @@ class GlpOrderCard extends HTMLElement {
           </div>
           ${body}
         </div>
-      </ha-card>`, this.shadowRoot!);
+      </ha-card>
+      <div class="glp-sheet-slot"></div>`, this.shadowRoot!);
 
     this._applySemanticColorContrast();
   }
@@ -444,7 +457,6 @@ class GlpOrderCard extends HTMLElement {
       <div id="oc-variants" class=${groupedVariants.flat ? 'variant-grid' : ''}>
         ${this._variantInnerHtml(groupedVariants, lang)}
       </div>` : nothing;
-    const beanInfoSection = this._beanInfoHtml(this._getSelectedBean()!, lang);
     const itemLabel = (this._selected && this._selectedVariant)
       ? `${this._selected} · ${this._selectedVariant}`
       : this._selected || null;
@@ -454,7 +466,7 @@ class GlpOrderCard extends HTMLElement {
     return html`
       <div class="order-form">
         ${trendSection}${regularSection}
-        ${variantSection}${beanInfoSection}
+        ${variantSection}
         <input class="note-input" id="oc-note" placeholder=${_s('note_ph', lang)} maxlength="200">
         <button class="order-btn" id="oc-submit" ?disabled=${!this._selected || this._submitting || needsVariant} @click=${() => this._placeOrder()}>
           ${itemLabel ? html`${/* ICONS.of() emits fixed SVG markup */ unsafeHTML(ICONS.of('coffee'))} ` : nothing}${btnLabel}
@@ -609,7 +621,7 @@ class GlpOrderCard extends HTMLElement {
 
   _getVariants(item: MenuItem | undefined): string[] {
     if (!item) return [];
-    if (item.useBeans) return (this._activeBeans || []).map(b => b.decaf ? `${b.name} · Decaf` : b.name);
+    if (item.useBeans) return (this._activeBeans || []).map(b => this._beanLabel(b));
     return Array.isArray(item.variants)
       ? item.variants.filter((v): v is string => typeof v === 'string')
       : [];
@@ -622,12 +634,25 @@ class GlpOrderCard extends HTMLElement {
   // gaggiuino-local-profiler#505) — untagged/missing beans default to 'normal'.
   _getVariantsGrouped(item: MenuItem | undefined): GroupedVariants {
     if (!item?.useBeans) return { flat: this._getVariants(item) };
-    const label = (b: Bean): string => b.decaf ? `${b.name} · Decaf` : b.name;
     const beans = this._activeBeans || [];
     return {
-      speciality: beans.filter(b => b.category === 'speciality').map(label),
-      normal:     beans.filter(b => b.category !== 'speciality').map(label),
+      speciality: beans.filter(b => b.category === 'speciality').map(b => this._beanLabel(b)),
+      normal:     beans.filter(b => b.category !== 'speciality').map(b => this._beanLabel(b)),
     };
+  }
+
+  // The chip label plus the decaf suffix — the one place the two spellings
+  // are derived, so selection, grouping and the details sheet cannot drift.
+  _beanLabel(bean: Bean): string {
+    return bean.decaf ? `${bean.name} · Decaf` : bean.name;
+  }
+
+  _usesBeans(): boolean {
+    return this._menu?.find(m => m.name === this._selected)?.useBeans === true;
+  }
+
+  _beanForLabel(v: string): Bean | null {
+    return (this._activeBeans || []).find(b => this._beanLabel(b) === v) ?? null;
   }
 
   // Bean-backed variant chips carry the bean's stable id (#35) alongside the
@@ -635,28 +660,73 @@ class GlpOrderCard extends HTMLElement {
   // label alone is ambiguous whenever a bean gets deleted and reimported
   // under the same name (same bug class as gaggiuino-local-profiler#456).
   _beanIdForLabel(v: string): number | null {
-    const bean = (this._activeBeans || []).find(b => (b.decaf ? `${b.name} · Decaf` : b.name) === v);
-    return bean?.id ?? null;
+    return this._beanForLabel(v)?.id ?? null;
   }
 
-  _variantChipHtml(v: string): TemplateResult {
-    const beanId = this._beanIdForLabel(v);
-    return html`<button type="button" class="variant-chip${this._selectedVariant === v ? ' selected' : ''}" data-variant=${v} data-bean-id=${ifDefined(beanId ?? undefined)} @click=${() => this._selectVariant(v, beanId)}>${v}</button>`;
+  // The chip stays a plain select button; a bean with details gets a second,
+  // separate button that opens the details sheet (#274). They sit in one
+  // wrapper so the chip grid keeps its original cell size and wrapping.
+  _variantChipHtml(v: string, lang: string = this._lang): TemplateResult {
+    const bean = this._beanForLabel(v);
+    const beanId = bean?.id ?? null;
+    const chip = html`<button type="button" class="variant-chip${this._selectedVariant === v ? ' selected' : ''}" data-variant=${v} data-bean-id=${ifDefined(beanId ?? undefined)} @click=${() => this._selectVariant(v, beanId)}>${v}</button>`;
+    // Only a bean-backed chip has details to show: a plain drink's variant
+    // could share a name with a bean, but it is not that bean.
+    if (!this._usesBeans() || !bean || !this._beanHasDetails(bean)) return chip;
+    const withDetails: Bean = bean;
+    const label = _s('bean_details', lang) + this._beanLabel(withDetails);
+    return html`<span class="variant-chip-wrap">${chip}<button
+        type="button" class="bean-info-btn"
+        aria-label=${label}
+        @click=${(e: Event) => { e.stopPropagation(); this._openBeanSheet(withDetails, lang); }}>
+        ${/* ICONS.of() emits fixed SVG markup */ unsafeHTML(ICONS.of('info'))}
+      </button></span>`;
+  }
+
+  // The sheet's host element, rendered after the card. It has its own node so
+  // the card's template re-renders (Lit clears everything it committed) never
+  // eject an open sheet from the shadow root.
+  _sheetSlot(): HTMLElement | null {
+    return this.shadowRoot?.querySelector<HTMLElement>('.glp-sheet-slot') ?? null;
+  }
+
+  // One sheet per card, created on first use and mounted into the card's own
+  // shadow root so it inherits this card's --glp-* tokens. A language change
+  // replaces it: the close label is fixed at construction, and the old host is
+  // cleared so the shadow root never holds two close buttons.
+  _sheetFor(lang: string): GlpSheet {
+    const slot = this._sheetSlot();
+    if (this._sheet && this._sheetLang !== lang) {
+      this._sheet.close();
+      this._sheet = null;
+      slot?.replaceChildren();
+    }
+    if (!this._sheet) {
+      this._sheet = new GlpSheet(slot ?? this.shadowRoot!, { closeLabel: _s('sheet_close', lang) });
+      this._sheetLang = lang;
+    }
+    return this._sheet;
+  }
+
+  _openBeanSheet(bean: Bean, lang: string): void {
+    const body = this._beanInfoHtml(bean, lang);
+    if (body === nothing) return;
+    this._sheetFor(lang).open({ title: this._beanLabel(bean), body: () => body });
   }
 
   // Mirrors the trending/regular section pattern (~line 650): headings shown
   // only when both groups are non-empty — a single-group list (e.g. all beans
   // untagged) renders as one plain grid, no noisy "Normal" label.
   _variantInnerHtml(grouped: GroupedVariants, lang: string): TemplateResult {
-    if (grouped.flat) return html`${grouped.flat.map(v => this._variantChipHtml(v))}`;
+    if (grouped.flat) return html`${grouped.flat.map(v => this._variantChipHtml(v, lang))}`;
     const { speciality, normal } = grouped as { speciality: string[]; normal: string[] };
     const showHeadings = speciality.length > 0 && normal.length > 0;
     const specialitySection = speciality.length ? html`
       ${showHeadings ? html`<p class="menu-section-title">${_s('variant_speciality', lang)}</p>` : nothing}
-      <div class="variant-grid">${speciality.map(v => this._variantChipHtml(v))}</div>` : nothing;
+      <div class="variant-grid">${speciality.map(v => this._variantChipHtml(v, lang))}</div>` : nothing;
     const normalSection = normal.length ? html`
       ${showHeadings ? html`<p class="menu-section-title" style="margin-top:var(--glp-sp-3)">${_s('variant_normal', lang)}</p>` : nothing}
-      <div class="variant-grid">${normal.map(v => this._variantChipHtml(v))}</div>` : nothing;
+      <div class="variant-grid">${normal.map(v => this._variantChipHtml(v, lang))}</div>` : nothing;
     return html`${specialitySection}${normalSection}`;
   }
 
@@ -672,14 +742,24 @@ class GlpOrderCard extends HTMLElement {
       const byId = beans.find(b => b.id === this._selectedBeanId);
       if (byId) return byId;
     }
-    return beans.find(b => (b.decaf ? `${b.name} · Decaf` : b.name) === this._selectedVariant) || null;
+    return beans.find(b => this._beanLabel(b) === this._selectedVariant) || null;
+  }
+
+  // The bean data the card receives has no roast date, so the sheet shows
+  // notes, origin, variety and process only.
+  _beanOrigins(bean: Bean): Origin[] {
+    if (Array.isArray(bean.origins) && bean.origins.length) return bean.origins;
+    return bean.origin ? [{ code: bean.origin }] : [];
+  }
+
+  _beanHasDetails(bean: Bean | null): boolean {
+    if (!bean) return false;
+    return !!(bean.notes || this._beanOrigins(bean).length || bean.variety || bean.process);
   }
 
   _beanInfoHtml(bean: Bean, lang: string): TemplateResult | typeof nothing {
-    const origins = Array.isArray(bean?.origins) && bean.origins.length
-      ? bean.origins
-      : (bean?.origin ? [{ code: bean.origin }] : []);
-    if (!bean || (!bean.notes && !origins.length && !bean.variety && !bean.process)) return nothing;
+    if (!this._beanHasDetails(bean)) return nothing;
+    const origins = this._beanOrigins(bean);
     const rows: TemplateResult[] = [];
     if (bean.notes)      rows.push(html`<div class="bean-info-notes">${bean.notes}</div>`);
     if (origins.length)  rows.push(html`<div class="bean-info-row"><span class="bean-info-label">${_s('bean_origin', lang)}</span><span>${/* _originHtml() escapes its own input */ unsafeHTML(_originHtml(origins, lang))}</span></div>`);
