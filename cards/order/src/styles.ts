@@ -1,4 +1,5 @@
 import { TOKENS } from '../../shared/tokens.ts';
+import { SHEET_STYLES } from '../../shared/sheet.ts';
 
 export const STYLES: string = `
 ${TOKENS}
@@ -223,12 +224,27 @@ ${TOKENS}
   }
   .variant-chip:hover { border-color: color-mix(in srgb, var(--oc-text) 20%, transparent); color: var(--oc-text); }
   .variant-chip.selected { border-color: var(--glp-aline); background: color-mix(in srgb, var(--glp-accent) 14%, transparent); color: var(--oc-text); font-weight: 700; }
+  /* A bean chip with details is a chip plus a small info button (#274). The
+     wrapper takes the grid cell the bare chip used to fill, so chips without
+     details keep the exact same size and wrapping; the button hangs off the
+     chip's right edge instead of adding a row. */
+  .variant-chip-wrap { display: inline-flex; align-items: stretch; min-width: 0; }
+  .variant-chip-wrap > .variant-chip { border-top-right-radius: 0; border-bottom-right-radius: 0; }
+  .bean-info-btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 28px; padding: 0; border: 1px solid var(--oc-border); border-left: none;
+    border-radius: 0 var(--glp-radius-sm) var(--glp-radius-sm) 0;
+    background: var(--oc-surface); color: var(--oc-sub);
+    font-size: var(--glp-fs-1); cursor: pointer; transition: all .15s;
+  }
+  .bean-info-btn:hover { color: var(--oc-text); background: color-mix(in srgb, var(--oc-text) 7%, transparent); }
+  .bean-info-btn:focus-visible { outline: 2px solid var(--glp-aline); outline-offset: 1px; }
 
-  /* Bean description info box (shown when a bean variant is selected) — not
+  /* Bean description, rendered as the details sheet's body (#274) — not
      clickable, so it groups through the surface fill alone, no border. */
   .bean-info {
     background: var(--oc-surface);
-    border-radius: var(--glp-radius-sm); padding: var(--glp-sp-2) var(--glp-sp-3); margin: var(--glp-sp-1) 0 var(--glp-sp-2);
+    border-radius: var(--glp-radius-sm); padding: var(--glp-sp-2) var(--glp-sp-3); margin: 0;
     font-size: var(--glp-fs-1); line-height: 1.45; color: var(--oc-sub);
   }
   .bean-info-notes { color: var(--oc-text); font-style: italic; margin-bottom: 3px; }
@@ -243,11 +259,15 @@ ${TOKENS}
      picked off one at a time, so a future addition can't slip through
      unguarded. */
   @media (prefers-reduced-motion: reduce) {
-    .menu-item, .note-input, .order-btn, .new-order-btn, .variant-chip {
+    .menu-item, .note-input, .order-btn, .new-order-btn, .variant-chip, .bean-info-btn {
       transition: none;
     }
     .status-card, .status-card.accepted .status-eta {
       animation: none;
     }
   }
+
+  /* The shared bottom sheet (#274): appended last so its rules win over the
+     card's own, and so it resolves this card's --glp-* tokens. */
+${SHEET_STYLES}
 `;

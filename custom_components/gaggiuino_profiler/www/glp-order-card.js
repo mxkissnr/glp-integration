@@ -751,6 +751,828 @@
     --glp-series-weight: #009e73;
   }`;
 
+  // shared/icons.ts
+  var MACHINE_BODY = (id, mini, type = "gaggiuino") => `
+    <!-- Seitenwand rechts inkl. Kantenlicht, volle Hoehe -->
+    <path d="M72.2 2.3 L100 11 L100 130 L88 153 L72.2 153 Z" fill="url(#${id})"/>
+    <path d="M72.2 2.3 L100 11 L100 130 L88 153 L72.2 153 Z" fill="#000" opacity=".26"/>
+    <path d="M93.2 8.6 L100 11 L100 130 L90 149 L93.2 142 Z" fill="#fff" opacity=".13"/>
+
+    <!-- Frontflaeche Korpus -->
+    <path d="M13 2.4 L72.2 2.3 L72.2 71.9 L10.2 71.9 L10.2 5.2 A2.8 2.8 0 0 1 13 2.4 Z" fill="url(#${id})"/>
+    <path d="M72.2 3 L72.2 71" stroke="#fff" opacity=".22" stroke-width="3"/>
+
+    <!-- Mittelblock: Korpus kragt links darueber, dort ragt der Siebtraeger ins Freie -->
+    <path d="M20 72 L94 72 L94 122 L24 122 Z" fill="#2b2b31"/>
+    <path d="M20 72 L94 72 L94 77 L20.6 77 Z" fill="#000" opacity=".3"/>
+
+    <!-- Bruehgruppe + Siebtraeger (ragt nach links ins Freie) -->
+    <rect x="42" y="71.5" width="16" height="10.5" rx="2.2" fill="#b9bec5"/>
+    ${mini ? "" : '<path d="M47 82 L53 82 L52 87.5 L48 87.5 Z" fill="#8f959d"/>'}
+    <path d="M20.5 91 L45 84" stroke="#26262c" stroke-width="6.6" stroke-linecap="round"/>
+    <circle cx="18.6" cy="91.6" r="5.9" fill="#ded8ca" stroke="#26262c" stroke-width="1.2"/>
+
+    <!-- Dampflanze RECHTS: Gummimanschette oben, Chromrohr nach unten -->
+    <path d="M84.2 72 C85.2 78 84.6 82 84 88" stroke="#26262c" stroke-width="5" stroke-linecap="round"/>
+    <path d="M84 88 C83.5 101 83 115 83.5 130" stroke="#a3a9b1" stroke-width="2.6" stroke-linecap="round"/>
+    ${mini ? "" : '<path d="M21.5 97 L21.5 130" stroke="#9aa0a8" stroke-width="2" stroke-linecap="round"/>'}
+
+    <!-- Tropfschale: silbernes Lochblech in dunklem Rahmen, breiter als der Korpus -->
+    <path d="M17 122 L93 122 L80 134 L0 134 Z" fill="#25252b"/>
+    <path d="M20.5 123.4 L88.5 123.4 L77 132.6 L4 132.6 Z" fill="url(#${id}-steel)"/>
+    ${mini ? "" : `
+    <circle cx="28" cy="126" r="1.5" fill="#4a4a52"/>
+    <circle cx="39" cy="126" r="1.5" fill="#4a4a52"/>
+    <circle cx="50" cy="126" r="1.5" fill="#4a4a52"/>
+    <circle cx="61" cy="126" r="1.5" fill="#4a4a52"/>
+    <circle cx="72" cy="126" r="1.5" fill="#4a4a52"/>
+    <circle cx="21" cy="130.4" r="1.5" fill="#4a4a52"/>
+    <circle cx="32" cy="130.4" r="1.5" fill="#4a4a52"/>
+    <circle cx="43" cy="130.4" r="1.5" fill="#4a4a52"/>
+    <circle cx="54" cy="130.4" r="1.5" fill="#4a4a52"/>
+    <circle cx="65" cy="130.4" r="1.5" fill="#4a4a52"/>`}
+
+    <!-- Sockelfront: senkrecht, rechte Kante trifft die Seitenwand -->
+    <path d="M0 134 L80 134 L84 155 L0 155 Z" fill="#2b2b31"/>
+    <path d="M0 134 L80 134 L80.8 138 L0 138 Z" fill="#fff" opacity=".07"/>
+
+    <!-- Fuesse -->
+    <rect x="4.5" y="155" width="7.5" height="4.4" rx="1.5" fill="#26262c"/>
+    <rect x="66" y="155" width="7.5" height="4.4" rx="1.5" fill="#26262c"/>
+
+    ${type === "gaggimate" ? `
+    <!-- GaggiMate: runder Puck mit Chromgehaeuse ersetzt Wipptasten +
+         Dampfknopf (mxkissnr/glp-lovelace-card#127 / mxkissnr/glp-order-card#97) -->
+    <circle cx="41" cy="24" r="14" fill="#cfd4d9"/>
+    <circle cx="41" cy="24" r="14" fill="none" stroke="#8f959d" stroke-width=".9"/>
+    <circle cx="41" cy="24" r="11.4" fill="#17171b"/>
+    <circle cx="41" cy="24" r="10.2" fill="#0b0d12"/>
+    ${mini ? "" : `
+    <path d="M31.1 14.1 A14 14 0 0 1 45 10.6" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" opacity=".65"/>
+    <path d="M33.4 16.4 A10.7 10.7 0 0 1 48.6 16.4" fill="none" stroke="#e8452a" stroke-width="1.3" stroke-linecap="round" opacity=".9"/>
+    <path d="M42.6 13.4 A10.7 10.7 0 0 1 48.6 16.4" fill="none" stroke="#6aa9d8" stroke-width="1.3" stroke-linecap="round"/>`}` : `
+    <!-- Bedienfeld: 3 Wipptasten -->
+    <rect x="20.5" y="13.6" width="9" height="14.8" rx="2.1" fill="#26262c"/>
+    <rect x="33" y="13.6" width="9" height="14.8" rx="2.1" fill="#26262c"/>
+    <rect x="45.5" y="13.6" width="9" height="14.8" rx="2.1" fill="#26262c"/>
+    ${mini ? "" : `
+    <rect x="21.6" y="14.9" width="6.8" height="5.4" rx="1.4" fill="#fff" opacity=".13"/>
+    <rect x="34.1" y="14.9" width="6.8" height="5.4" rx="1.4" fill="#fff" opacity=".13"/>
+    <rect x="46.6" y="14.9" width="6.8" height="5.4" rx="1.4" fill="#fff" opacity=".13"/>
+    <rect x="23.7" y="31.8" width="2.6" height="2.2" rx=".8" fill="#d9422e"/>
+    <rect x="36.2" y="31.8" width="2.6" height="2.2" rx=".8" fill="#d9422e"/>
+    <rect x="48.7" y="31.8" width="2.6" height="2.2" rx=".8" fill="#d9422e"/>`}
+
+    <!-- Dampfknopf: liegender Zylinder auf der Seitenwand -->
+    <rect x="74" y="23.4" width="9" height="8" fill="#26262c"/>
+    <rect x="80.7" y="20.5" width="17" height="13.6" rx="6.8" fill="#212126"/>
+    <ellipse cx="82.6" cy="27.3" rx="2.4" ry="6.8" fill="#3b3b43"/>
+    ${mini ? "" : '<rect x="81.4" y="23.4" width="1.7" height="7.8" rx=".85" fill="#fff" opacity=".2"/>'}`}`;
+  var MACHINE_ICON_MINI = (id, type = "gaggiuino") => `
+    <svg viewBox="0 0 100 162" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="${id}" x1="6" y1="0" x2="92" y2="145" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stop-color="var(--glp-accent-start)"/>
+          <stop offset="1" stop-color="var(--glp-accent-end)"/>
+        </linearGradient>
+        <linearGradient id="${id}-steel" x1="0" y1="123" x2="0" y2="133" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stop-color="#d3d6db"/>
+          <stop offset="1" stop-color="#9ba1a9"/>
+        </linearGradient>
+      </defs>
+      ${MACHINE_BODY(id, true, type)}
+    </svg>`;
+  var GLP_ICON_PATHS = {
+    // --- drinks -----------------------------------------------------------
+    // One shared demitasse silhouette for the three straight espresso drinks;
+    // they differ only in fill level, which is the honest difference between
+    // them (same basket, same cup, more or less water through it).
+    ristretto: '<path d="M16.5 8.5h1a2.5 2.5 0 0 1 0 5h-1"/><path d="M5 8.5h11.5v5a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4v-5z"/><path d="M6.5 15.2h8.6"/>',
+    espresso: '<path d="M16.5 8.5h1a2.5 2.5 0 0 1 0 5h-1"/><path d="M5 8.5h11.5v5a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4v-5z"/><path d="M5.6 13.2h10.4"/>',
+    lungo: '<path d="M16.5 8.5h1a2.5 2.5 0 0 1 0 5h-1"/><path d="M5 8.5h11.5v5a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4v-5z"/><path d="M5.1 10.6h11.2"/>',
+    // Cappuccino: domed foam cap standing proud of the rim.
+    cappuccino: '<path d="M16.5 8.5h1a2.5 2.5 0 0 1 0 5h-1"/><path d="M5 8.5h11.5v5a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4v-5z"/><path d="M5.4 8.5a5.8 5.8 0 0 1 11 0"/><path d="M5.8 12h10"/>',
+    // Latte macchiato: tall glass, layered.
+    latte: '<path d="M7.5 4.5h9l-1 14a2 2 0 0 1-2 1.8h-3a2 2 0 0 1-2-1.8l-1-14z"/><path d="M7.9 9h8.2M8.2 13h7.6"/>',
+    // Flat white: wide shallow cup, thin microfoam layer, latte-art dot.
+    flat_white: '<path d="M17.5 9.5h1a2.2 2.2 0 0 1 0 4.4h-1"/><path d="M3.5 9.5h14v3.6a4.4 4.4 0 0 1-4.4 4.4H7.9a4.4 4.4 0 0 1-4.4-4.4V9.5z"/><path d="M4.2 12h12.6"/><circle cx="10.5" cy="14.4" r="1.1"/>',
+    // --- state, action, status --------------------------------------------
+    coffee: '<path d="M17 8h1a3 3 0 0 1 0 6h-1M4 8h13v7a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4V8z"/><path d="M8 2v2M12 2v2"/>',
+    check: '<path d="M4.5 12.5 9.5 17.5 19.5 6.5"/>',
+    close: '<path d="M6 6l12 12M18 6 6 18"/>',
+    heat: '<path d="M12 3.5c3 3.2 4.5 5.8 4.5 8a4.5 4.5 0 0 1-9 0c0-2.2 1.5-4.8 4.5-8z"/><path d="M9.5 20.5h5"/>',
+    droplet: '<path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/>',
+    steam: '<path d="M7 20c0-2 1.6-2.4 1.6-4.4S7 12.6 7 10.6"/><path d="M12 20c0-2.4 1.8-2.9 1.8-5.3S12 10.3 12 8"/><path d="M17 20c0-2 1.6-2.4 1.6-4.4S17 12.6 17 10.6"/>',
+    warning: '<path d="M12 4.5 21 19.5H3L12 4.5z"/><path d="M12 10v4"/><circle cx="12" cy="16.8" r="0.6"/>',
+    gear: '<circle cx="12" cy="12" r="3.2"/><path d="M12 3.5v2.2M12 18.3v2.2M20.5 12h-2.2M5.7 12H3.5M18 6l-1.6 1.6M7.6 16.4 6 18M18 18l-1.6-1.6M7.6 7.6 6 6"/>',
+    plug: '<path d="M9 3.5v5M15 3.5v5"/><path d="M6.5 8.5h11v3a5.5 5.5 0 0 1-11 0v-3z"/><path d="M12 17v3.5"/>',
+    cart: '<path d="M3 4.5h2.2l2.3 10.4h9.6l2.1-7.4H6.4"/><circle cx="9" cy="19" r="1.4"/><circle cx="16.5" cy="19" r="1.4"/>',
+    shower: '<path d="M4.5 8.5h15v2.6a3 3 0 0 1-3 3h-9a3 3 0 0 1-3-3V8.5z"/><path d="M8 17.5v2M12 17.5v3M16 17.5v2"/>',
+    wrench: '<path d="M14.7 6.3a4 4 0 0 1-5.4 5.4L4 17l3 3 5.3-5.3a4 4 0 0 1 5.4-5.4l-2.5 2.5-2-2z"/>',
+    refresh: '<path d="M20 12a8 8 0 1 1-2.6-5.9"/><path d="M20 4v4.5h-4.5"/>',
+    circle: '<circle cx="12" cy="12" r="8"/>',
+    // Waiting/queued. An hourglass rather than a clock: a clock reads as "when",
+    // an hourglass as "not yet" — and this marks an order sitting unconfirmed,
+    // not a time of day.
+    hourglass: '<path d="M7 3.5h10M7 20.5h10"/><path d="M8 3.5v3.2c0 1.6 1.2 2.9 4 5.3 2.8-2.4 4-3.7 4-5.3V3.5"/><path d="M8 20.5v-3.2c0-1.6 1.2-2.9 4-5.3 2.8 2.4 4 3.7 4 5.3v3.2"/>',
+    flask: '<path d="M10 3.5v6L5.2 18a2 2 0 0 0 1.7 3h10.2a2 2 0 0 0 1.7-3L14 9.5v-6"/><path d="M9 3.5h6"/><path d="M7.4 14h9.2"/>',
+    // Not a party popper — a small burst, so it still reads at 16px and keeps
+    // the card's tone. Used for the completed-order confirmation.
+    celebrate: '<path d="M12 3v3.5M12 17.5V21M21 12h-3.5M6.5 12H3M18.4 5.6l-2.5 2.5M8.1 15.9l-2.5 2.5M18.4 18.4l-2.5-2.5M8.1 8.1 5.6 5.6"/>',
+    // Replaces the ★/☆ text characters in the rating row. The filled state is a
+    // class on the element, not a second path — it is the same shape either way.
+    star: '<path d="M12 3.8l2.6 5.3 5.9.9-4.2 4.1 1 5.8-5.3-2.8-5.3 2.8 1-5.8L3.5 10l5.9-.9L12 3.8z"/>'
+  };
+  var ICONS = {
+    has: (name) => Object.prototype.hasOwnProperty.call(GLP_ICON_PATHS, name),
+    // Returns '' for an unknown name rather than an empty <svg>: callers fall
+    // back to other content (e.g. a stored emoji on a user-created menu entry),
+    // and an empty string is what makes `ICONS.of(x) || fallback` work.
+    of: (name, cls = "") => ICONS.has(name) ? `<svg class="glp-i${cls ? " " + cls : ""}" viewBox="0 0 24 24" aria-hidden="true" focusable="false">${GLP_ICON_PATHS[name]}</svg>` : ""
+  };
+
+  // shared/sheet.ts
+  var DISMISS_FRACTION = 0.25;
+  var DISMISS_MIN_PX = 80;
+  var DISMISS_VELOCITY_PX_PER_MS = 0.5;
+  var FLICK_WINDOW_MS = 100;
+  var DRAG_START_SLOP_PX = 6;
+  var SPRING_BACK_MS = 200;
+  var RUBBER_BAND_MAX_PX = 24;
+  var RUBBER_BAND_FACTOR = 0.5;
+  var SHEET_OUT_MS = 220;
+  var SHEET_OUT_MIN_MS = 120;
+  var SHEET_OUT_BEZIER = "cubic-bezier(.2,0,0,1)";
+  var HALF_VIEWPORT = 0.5;
+  var FULL_VIEWPORT = 0.92;
+  var SNAP_FRACTION = 0.12;
+  var SNAP_MIN_PX = 40;
+  var SNAP_MAX_PX = 72;
+  function dismissDistance(sheetHeight) {
+    if (!(sheetHeight > 0)) return DISMISS_MIN_PX;
+    return Math.min(sheetHeight * DISMISS_FRACTION, DISMISS_MIN_PX);
+  }
+  function recentVelocity(samples, windowMs = FLICK_WINDOW_MS) {
+    if (samples.length < 2) return 0;
+    const last = samples[samples.length - 1];
+    if (!last) return 0;
+    let first = last;
+    for (let i6 = samples.length - 2; i6 >= 0; i6--) {
+      const sample = samples[i6];
+      if (sample && last.t - sample.t <= windowMs) first = sample;
+      else break;
+    }
+    const dt = last.t - first.t;
+    return dt > 0 ? (last.y - first.y) / dt : 0;
+  }
+  function shouldDismissSheet(dy, sheetHeight, velocityPxPerMs) {
+    if (dy <= 0) return false;
+    if (dy >= dismissDistance(sheetHeight)) return true;
+    return velocityPxPerMs >= DISMISS_VELOCITY_PX_PER_MS;
+  }
+  function rubberBand(up) {
+    if (up <= 0) return 0;
+    return -Math.min(RUBBER_BAND_MAX_PX, up * RUBBER_BAND_FACTOR);
+  }
+  function allowsBodyDrag(scrollTop, dy, interactiveTarget) {
+    return scrollTop <= 0 && dy > 0 && !interactiveTarget;
+  }
+  function snapDistance(sheetHeight) {
+    if (!(sheetHeight > 0)) return SNAP_MIN_PX;
+    return Math.min(Math.max(sheetHeight * SNAP_FRACTION, SNAP_MIN_PX), SNAP_MAX_PX);
+  }
+  function sheetSnap(dy, height, velocity, expanded) {
+    if (dy > 0) {
+      if (shouldDismissSheet(dy, height, velocity)) return "close";
+      return "half";
+    }
+    if (dy < 0) {
+      const promotes = -dy >= snapDistance(height) || -velocity >= DISMISS_VELOCITY_PX_PER_MS;
+      if (!expanded && promotes) return "full";
+      return expanded ? "full" : "half";
+    }
+    return expanded ? "full" : "half";
+  }
+  var _sheetSeq = 0;
+  function _now() {
+    return typeof performance !== "undefined" && typeof performance.now === "function" ? performance.now() : Date.now();
+  }
+  function _isInteractiveTarget(target) {
+    const el = target;
+    return !!el?.closest?.(
+      'button, a, input, select, textarea, summary, canvas, [role="slider"], [contenteditable="true"]'
+    );
+  }
+  function _translateY(el) {
+    const transform = el.style?.transform;
+    if (!transform || transform === "none") return 0;
+    const match = /translateY\((-?[\d.]+)px\)/.exec(transform);
+    return match && match[1] ? parseFloat(match[1]) : 0;
+  }
+  function _findTouch(list, id) {
+    for (let i6 = 0; i6 < list.length; i6++) {
+      const touch = list[i6];
+      if (touch && touch.identifier === id) return touch;
+    }
+    return null;
+  }
+  function _isPhoneWidth(win) {
+    if (!win || typeof win.matchMedia !== "function") return false;
+    try {
+      return win.matchMedia("(max-width: 899px)").matches;
+    } catch {
+      return false;
+    }
+  }
+  function _motionOk(win) {
+    if (!win || typeof win.matchMedia !== "function") return true;
+    try {
+      return !win.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    } catch {
+      return true;
+    }
+  }
+  var GlpSheet = class {
+    _root;
+    _doc;
+    _win;
+    _options;
+    _titleId;
+    _host = null;
+    _dialog = null;
+    _panel = null;
+    _bodyEl = null;
+    _content = null;
+    _open = false;
+    _expanded = false;
+    // True while this sheet still owns a history entry, so a close path can
+    // tell whether back() has to remove one.
+    _historyPushed = false;
+    _cleanup = [];
+    _dragCleanup = [];
+    // A close that is still sliding out, if any, taking whether it should trim
+    // the history entry. open() settles it first, so a re-open can never be
+    // wiped by the previous close's transition timer.
+    _pendingClose = null;
+    // Bumped on every open, so a slide-out timer from an earlier close cannot
+    // touch the DOM of a sheet that was reopened since.
+    _generation = 0;
+    constructor(root, options = {}) {
+      this._root = root;
+      this._doc = root.ownerDocument ?? document;
+      this._win = this._doc.defaultView ?? (typeof window !== "undefined" ? window : null);
+      this._options = options;
+      this._titleId = `glp-sheet-title-${++_sheetSeq}`;
+    }
+    get isOpen() {
+      return this._open;
+    }
+    open(content) {
+      this._content = content;
+      if (this._open) {
+        this.refresh();
+        return;
+      }
+      const reuseEntry = this._pendingClose !== null && this._historyPushed;
+      this._settleClose(reuseEntry);
+      if (!this._root || typeof this._root.appendChild !== "function") return;
+      if (!this._host) {
+        this._host = this._doc.createElement("div");
+        this._host.className = "glp-sheet-host";
+        this._root.appendChild(this._host);
+      }
+      this._open = true;
+      this._expanded = false;
+      this._historyPushed = reuseEntry;
+      this._generation += 1;
+      this._render();
+      const dialog = this._dialog;
+      if (dialog) {
+        if (typeof dialog.showModal === "function") {
+          if (!dialog.open) {
+            try {
+              dialog.showModal();
+            } catch {
+              dialog.setAttribute("open", "");
+            }
+          }
+        } else {
+          dialog.setAttribute("open", "");
+        }
+      }
+      this._playEnter();
+      this._listen();
+      if (!reuseEntry) this._pushHistory();
+    }
+    close() {
+      this._close(true);
+    }
+    // Re-renders body and actions while open, so live data (a shot list, a
+    // picker's selection) updates without closing the sheet.
+    refresh() {
+      if (!this._open) return;
+      this._render();
+    }
+    _render() {
+      const host = this._host;
+      const content = this._content;
+      if (!host || !content) return;
+      const label = this._options.closeLabel ?? "Close";
+      D(b2`
+      <dialog
+        class="glp-sheet"
+        data-snap=${this._expanded ? "full" : "half"}
+        aria-labelledby=${this._titleId}
+        @cancel=${(e6) => {
+        e6.preventDefault();
+        this._close(true);
+      }}
+        @click=${(e6) => {
+        if (e6.target === this._dialog) this._close(true);
+      }}
+      >
+        <div class="glp-sheet-backdrop" @click=${() => this._close(true)}></div>
+        <div class="glp-sheet-panel">
+          <div class="glp-sheet-grab" aria-hidden="true"></div>
+          <div class="glp-sheet-bar">
+            <button class="glp-sheet-close" type="button" aria-label=${label} @click=${() => this._close(true)}>
+              ${/* ICONS.of() emits fixed SVG markup */
+      o5(ICONS.of("close"))}
+            </button>
+            <h2 class="glp-sheet-title" id=${this._titleId}>${content.title}</h2>
+            <div class="glp-sheet-actions">${content.actions ? content.actions() : A}</div>
+          </div>
+          <div class="glp-sheet-body">${content.body()}</div>
+        </div>
+      </dialog>
+    `, host);
+      this._dialog = host.querySelector("dialog");
+      this._panel = host.querySelector(".glp-sheet-panel");
+      this._bodyEl = host.querySelector(".glp-sheet-body");
+      this._attachDrag();
+    }
+    // Restarts the phone slide-in. The dialog node survives across opens, so the
+    // attribute has to be cleared first for the animation to run again.
+    _playEnter() {
+      const dialog = this._dialog;
+      if (!dialog || !_isPhoneWidth(this._win) || !_motionOk(this._win)) return;
+      dialog.removeAttribute("data-entering");
+      dialog.setAttribute("data-entering", "1");
+      const clear = () => {
+        dialog.removeAttribute("data-entering");
+      };
+      if (this._win && typeof this._win.setTimeout === "function") this._win.setTimeout(clear, 280);
+      else setTimeout(clear, 280);
+    }
+    _listen() {
+      this._detachListeners();
+      const win = this._win;
+      if (!win || typeof win.addEventListener !== "function") return;
+      const onPop = () => {
+        this._historyPushed = false;
+        if (this._open) this._close(false);
+      };
+      win.addEventListener("popstate", onPop);
+      this._cleanup.push(() => win.removeEventListener("popstate", onPop));
+    }
+    _detachListeners() {
+      for (const off of this._cleanup) off();
+      this._cleanup = [];
+    }
+    _history() {
+      const fromWin = this._win?.history;
+      if (fromWin) return fromWin;
+      if (typeof history !== "undefined") return history;
+      return null;
+    }
+    _pushHistory() {
+      const hist = this._history();
+      const push = hist?.pushState;
+      if (!hist || typeof push !== "function") return;
+      try {
+        const href = this._win?.location?.href;
+        if (href) push.call(hist, { glpSheet: true }, "", href);
+        else push.call(hist, { glpSheet: true }, "");
+        this._historyPushed = true;
+      } catch {
+        this._historyPushed = false;
+      }
+    }
+    _close(trimHistory) {
+      if (!this._open) return;
+      this._open = false;
+      this._expanded = false;
+      this._detachDrag();
+      this._settleClose();
+      let pending = true;
+      const finish = (trim) => {
+        if (!pending) return;
+        pending = false;
+        this._pendingClose = null;
+        this._finishClose(trim);
+      };
+      this._pendingClose = finish;
+      this._animateOut(() => finish(trimHistory));
+    }
+    // Immediately completes a close that is still sliding out, so its timer
+    // cannot tear down a sheet that was reopened in the meantime. With
+    // `reuseHistory` the entry the closing sheet still owns is kept for the
+    // re-open instead of being trimmed.
+    _settleClose(reuseHistory = false) {
+      const pending = this._pendingClose;
+      if (!pending) return;
+      this._pendingClose = null;
+      pending(!reuseHistory);
+    }
+    _finishClose(trimHistory) {
+      this._detachListeners();
+      const dialog = this._dialog;
+      if (dialog) {
+        try {
+          dialog.close();
+        } catch {
+          dialog.removeAttribute("open");
+        }
+        if (dialog.open) dialog.removeAttribute("open");
+      }
+      const hadEntry = this._historyPushed;
+      this._historyPushed = false;
+      if (trimHistory && hadEntry) {
+        const hist = this._history();
+        const back = hist?.back;
+        if (hist && typeof back === "function") back.call(hist);
+      }
+      const onClose = this._options.onClose;
+      if (typeof onClose === "function") onClose();
+    }
+    // Slides the panel out from wherever the drag left it. Phones with motion
+    // allowed only; everywhere else the close is instant.
+    _animateOut(done) {
+      const panel = this._panel;
+      const backdrop = this._host?.querySelector(".glp-sheet-backdrop") ?? null;
+      if (!panel || !_isPhoneWidth(this._win) || !_motionOk(this._win)) {
+        done();
+        return;
+      }
+      const height = (typeof panel.getBoundingClientRect === "function" ? panel.getBoundingClientRect().height : 0) || panel.offsetHeight || 0;
+      const startY = Math.max(0, _translateY(panel));
+      const distance = Math.max(1, height - startY);
+      const duration = Math.max(SHEET_OUT_MIN_MS, Math.round(SHEET_OUT_MS * (distance / Math.max(1, height))));
+      const generation = this._generation;
+      panel.style.transition = "none";
+      if (height > 0) panel.style.height = `${Math.round(height)}px`;
+      panel.style.transform = startY > 0 ? `translateY(${Math.round(startY)}px)` : "";
+      void panel.offsetHeight;
+      let finished = false;
+      let timer = null;
+      const finish = () => {
+        if (finished) return;
+        finished = true;
+        if (timer) clearTimeout(timer);
+        panel.removeEventListener("transitionend", onEnd);
+        if (generation === this._generation) this._resetPanelStyles();
+        done();
+      };
+      const onEnd = (e6) => {
+        if (e6.target === panel) finish();
+      };
+      panel.addEventListener("transitionend", onEnd);
+      panel.style.transition = `transform ${duration}ms ${SHEET_OUT_BEZIER}`;
+      panel.style.transform = `translateY(${Math.max(1, height)}px)`;
+      if (backdrop) {
+        backdrop.style.transition = `opacity ${duration}ms ${SHEET_OUT_BEZIER}`;
+        backdrop.style.opacity = "0";
+      }
+      timer = setTimeout(finish, duration + 60);
+    }
+    _resetPanelStyles() {
+      const panel = this._panel;
+      if (panel) {
+        panel.style.transition = "";
+        panel.style.transform = "";
+        panel.style.height = "";
+      }
+      const backdrop = this._host?.querySelector(".glp-sheet-backdrop") ?? null;
+      if (backdrop) {
+        backdrop.style.transition = "";
+        backdrop.style.opacity = "";
+      }
+    }
+    // Settles on a detent after a drag: the destination's max-height (50vh or
+    // 92vh) is applied by data-snap first, then the height animates from where
+    // the finger left it to the measured destination, and the inline styles are
+    // cleared so the detent's own rule owns the size again.
+    _settle(expanded, target) {
+      const before = this._panel;
+      const start = before && typeof before.getBoundingClientRect === "function" ? before.getBoundingClientRect().height : 0;
+      this._expanded = expanded;
+      this._render();
+      const panel = this._panel;
+      if (!panel) return;
+      const backdrop = this._host?.querySelector(".glp-sheet-backdrop") ?? null;
+      if (target > 0 && start > 0 && Math.abs(start - target) >= 1) {
+        panel.style.transition = "none";
+        panel.style.transform = "";
+        panel.style.height = `${Math.round(start)}px`;
+        void panel.offsetHeight;
+        panel.style.transition = `height ${SPRING_BACK_MS}ms ${SHEET_OUT_BEZIER}`;
+        panel.style.height = `${Math.round(target)}px`;
+      }
+      if (backdrop) {
+        backdrop.style.transition = `opacity ${SPRING_BACK_MS}ms ${SHEET_OUT_BEZIER}`;
+        backdrop.style.opacity = "";
+      }
+      const reset = () => {
+        this._resetPanelStyles();
+      };
+      if (this._win && typeof this._win.setTimeout === "function") this._win.setTimeout(reset, SPRING_BACK_MS + 40);
+      else setTimeout(reset, SPRING_BACK_MS + 40);
+    }
+    _detachDrag() {
+      for (const off of this._dragCleanup) off();
+      this._dragCleanup = [];
+    }
+    // Touch drag on the sheet: the grab pill, the header and the content all
+    // drag, as long as the content is scrolled to the top, or the sheet is
+    // already expanded (where the next downward gesture must be able to shrink
+    // it). Touch events (not pointer) keep native `pan-y` scrolling working; the
+    // browser scroll is only suppressed with preventDefault once the drag
+    // starts. Wider viewports get no drag at all, matching the centred dialog.
+    _attachDrag() {
+      const host = this._host;
+      if (this._dragCleanup.length || !host || !_isPhoneWidth(this._win)) return;
+      if (typeof host.addEventListener !== "function") return;
+      let active = false;
+      let touchId = null;
+      let startY = 0;
+      let interactive = false;
+      let dragging = false;
+      let lastDy = 0;
+      let samples = [];
+      let halfH = 0;
+      let fullH = 0;
+      const panel = () => this._panel;
+      const backdrop = () => this._host?.querySelector(".glp-sheet-backdrop") ?? null;
+      const heightOf = (el) => {
+        if (!el) return 0;
+        const rect = typeof el.getBoundingClientRect === "function" ? el.getBoundingClientRect() : null;
+        return rect?.height || el.offsetHeight || 0;
+      };
+      const measure = () => {
+        const el = panel();
+        const bodyEl = this._bodyEl;
+        const cur = heightOf(el);
+        const vh = this._win?.innerHeight || 0;
+        const extra = bodyEl ? Math.max(0, bodyEl.scrollHeight - bodyEl.clientHeight) : 0;
+        if (this._expanded) {
+          halfH = Math.min(cur, vh * HALF_VIEWPORT);
+          fullH = cur;
+        } else {
+          halfH = cur;
+          fullH = Math.max(cur, Math.min(cur + extra, vh * FULL_VIEWPORT));
+        }
+      };
+      const applyTransform = () => {
+        const el = panel();
+        if (!el) return;
+        const dy = lastDy;
+        const delta = Math.max(0, fullH - halfH);
+        el.style.transition = "none";
+        if (dy >= 0) {
+          if (this._expanded && delta > 0 && dy < delta) {
+            el.style.height = `${Math.round(fullH - dy)}px`;
+            el.style.transform = "";
+          } else {
+            const out = this._expanded ? dy - delta : dy;
+            el.style.height = delta > 0 ? `${Math.round(halfH)}px` : "";
+            el.style.transform = out > 0 ? `translateY(${Math.round(out)}px)` : "";
+          }
+        } else {
+          const up = -dy;
+          if (!this._expanded && delta > 0 && up < delta) {
+            el.style.height = `${Math.round(halfH + up)}px`;
+            el.style.transform = "";
+          } else {
+            const beyond = !this._expanded && delta > 0 ? up - delta : up;
+            el.style.height = delta > 0 ? `${Math.round(fullH)}px` : "";
+            const band = rubberBand(beyond);
+            el.style.transform = band < 0 ? `translateY(${Math.round(band)}px)` : "";
+          }
+        }
+        const shade = backdrop();
+        if (shade) {
+          const height = heightOf(el) || 1;
+          shade.style.opacity = String(Math.max(0, 1 - Math.max(0, dy) / height));
+        }
+      };
+      const onTouchStart = (e6) => {
+        if (!this._open || e6.touches.length !== 1) return;
+        const t4 = e6.touches[0];
+        if (!t4) return;
+        touchId = t4.identifier;
+        startY = t4.clientY;
+        interactive = _isInteractiveTarget(e6.target);
+        active = true;
+        dragging = false;
+        lastDy = 0;
+        samples = [{ t: _now(), y: 0 }];
+        measure();
+      };
+      const onTouchMove = (e6) => {
+        if (!active || touchId === null) return;
+        const el = panel();
+        if (!el) return;
+        const t4 = _findTouch(e6.touches, touchId);
+        if (!t4) return;
+        const dy = t4.clientY - startY;
+        const bodyEl = this._bodyEl;
+        const scrollTop = bodyEl ? bodyEl.scrollTop : 0;
+        if (!dragging) {
+          if (interactive) return;
+          const fromBody = !!bodyEl && typeof bodyEl.contains === "function" && bodyEl.contains(e6.target);
+          if (dy > 0 && (scrollTop > 0 || fromBody && !allowsBodyDrag(scrollTop, dy, interactive))) return;
+          if (Math.abs(dy) < DRAG_START_SLOP_PX) return;
+          dragging = true;
+          el.style.transition = "none";
+        }
+        e6.preventDefault();
+        lastDy = dy;
+        samples.push({ t: _now(), y: dy });
+        if (samples.length > 40) samples.shift();
+        applyTransform();
+      };
+      const onTouchEnd = (cancelled) => {
+        if (!active) return;
+        active = false;
+        touchId = null;
+        if (!dragging) {
+          this._resetPanelStyles();
+          return;
+        }
+        dragging = false;
+        const dy = lastDy;
+        const velocity = recentVelocity(samples);
+        const at = this._expanded ? fullH : halfH;
+        const snap = cancelled ? this._expanded ? "full" : "half" : sheetSnap(dy, at, velocity, this._expanded);
+        if (snap === "close") {
+          this._close(true);
+          return;
+        }
+        this._settle(snap === "full", snap === "full" ? fullH : halfH);
+      };
+      const onStart = (e6) => onTouchStart(e6);
+      const onMove = (e6) => onTouchMove(e6);
+      const onEnd = () => onTouchEnd(false);
+      const onCancel = () => onTouchEnd(true);
+      host.addEventListener("touchstart", onStart, { passive: true });
+      host.addEventListener("touchmove", onMove, { passive: false });
+      host.addEventListener("touchend", onEnd);
+      host.addEventListener("touchcancel", onCancel);
+      this._dragCleanup.push(() => {
+        host.removeEventListener("touchstart", onStart);
+        host.removeEventListener("touchmove", onMove);
+        host.removeEventListener("touchend", onEnd);
+        host.removeEventListener("touchcancel", onCancel);
+      });
+    }
+  };
+  var SHEET_STYLES = `
+  .glp-sheet {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    max-height: none;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    overflow: hidden;
+    color: var(--glp-text);
+    font-family: var(--paper-font-body1_-_font-family, -apple-system, sans-serif);
+  }
+  .glp-sheet::backdrop { background: transparent; }
+  .glp-sheet-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+  }
+  .glp-sheet-panel {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    background: var(--glp-surface);
+    color: var(--glp-text);
+    border: 1px solid var(--glp-border);
+    border-bottom: none;
+    border-radius: var(--glp-radius) var(--glp-radius) 0 0;
+    box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.35);
+    max-height: 92vh;
+    will-change: transform;
+  }
+  /* Half is the opening detent; full is the panel's own 92vh max-height. */
+  .glp-sheet[data-snap="half"] .glp-sheet-panel { max-height: 50vh; }
+  .glp-sheet-grab {
+    display: block;
+    flex: 0 0 auto;
+    width: 36px;
+    height: 4px;
+    margin: var(--glp-sp-2) auto var(--glp-sp-1);
+    border-radius: 2px;
+    background: var(--glp-border);
+  }
+  .glp-sheet-bar {
+    display: flex;
+    align-items: center;
+    gap: var(--glp-sp-2);
+    flex: 0 0 auto;
+    padding: var(--glp-sp-2) var(--glp-sp-4) var(--glp-sp-3);
+    border-bottom: 1px solid var(--glp-border);
+  }
+  .glp-sheet-title {
+    flex: 1 1 auto;
+    min-width: 0;
+    margin: 0;
+    font-size: var(--glp-fs-4);
+    font-weight: 600;
+    line-height: 1.3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .glp-sheet-close {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: 0;
+    border-radius: var(--glp-radius-sm);
+    background: transparent;
+    color: var(--glp-sub);
+    font-size: var(--glp-fs-4);
+    cursor: pointer;
+  }
+  .glp-sheet-close:hover { color: var(--glp-text); background: var(--glp-border); }
+  .glp-sheet-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--glp-sp-2);
+    flex: 0 0 auto;
+  }
+  .glp-sheet-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: var(--glp-sp-4);
+    font-size: var(--glp-fs-2);
+    line-height: 1.45;
+    touch-action: pan-y;
+  }
+  /* The cards' base .glp-i rule lives in their own stylesheet; the sheet does
+     not assume it, so the close icon still draws as a stroke path here. */
+  .glp-sheet .glp-i {
+    width: 1em;
+    height: 1em;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 1.8;
+    flex-shrink: 0;
+  }
+  /* Phone slide-in, restarted per open by _playEnter(); reduced motion gets
+     no animation at all. */
+  @media (prefers-reduced-motion: no-preference) and (max-width: 899px) {
+    .glp-sheet[data-entering="1"] .glp-sheet-panel { animation: glp-sheet-in 240ms cubic-bezier(.2,0,0,1); }
+    .glp-sheet[data-entering="1"] .glp-sheet-backdrop { animation: glp-sheet-fade 240ms cubic-bezier(.2,0,0,1); }
+  }
+  @keyframes glp-sheet-in { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  @keyframes glp-sheet-fade { from { opacity: 0; } to { opacity: 1; } }
+  /* Wider viewports: a centred dialog, no grab pill and no drag. */
+  @media (min-width: 900px) {
+    .glp-sheet-panel {
+      left: 50%;
+      top: 50%;
+      right: auto;
+      bottom: auto;
+      transform: translate(-50%, -50%);
+      width: min(560px, calc(100vw - 32px));
+      max-height: min(80vh, 720px);
+      border-bottom: 1px solid var(--glp-border);
+      border-radius: var(--glp-radius);
+    }
+    .glp-sheet[data-snap="half"] .glp-sheet-panel { max-height: min(80vh, 720px); }
+    .glp-sheet-grab { display: none; }
+  }
+`;
+
   // order/src/styles.ts
   var STYLES = `
 ${TOKENS}
@@ -975,12 +1797,27 @@ ${TOKENS}
   }
   .variant-chip:hover { border-color: color-mix(in srgb, var(--oc-text) 20%, transparent); color: var(--oc-text); }
   .variant-chip.selected { border-color: var(--glp-aline); background: color-mix(in srgb, var(--glp-accent) 14%, transparent); color: var(--oc-text); font-weight: 700; }
+  /* A bean chip with details is a chip plus a small info button (#274). The
+     wrapper takes the grid cell the bare chip used to fill, so chips without
+     details keep the exact same size and wrapping; the button hangs off the
+     chip's right edge instead of adding a row. */
+  .variant-chip-wrap { display: inline-flex; align-items: stretch; min-width: 0; }
+  .variant-chip-wrap > .variant-chip { border-top-right-radius: 0; border-bottom-right-radius: 0; }
+  .bean-info-btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 28px; padding: 0; border: 1px solid var(--oc-border); border-left: none;
+    border-radius: 0 var(--glp-radius-sm) var(--glp-radius-sm) 0;
+    background: var(--oc-surface); color: var(--oc-sub);
+    font-size: var(--glp-fs-1); cursor: pointer; transition: all .15s;
+  }
+  .bean-info-btn:hover { color: var(--oc-text); background: color-mix(in srgb, var(--oc-text) 7%, transparent); }
+  .bean-info-btn:focus-visible { outline: 2px solid var(--glp-aline); outline-offset: 1px; }
 
-  /* Bean description info box (shown when a bean variant is selected) — not
+  /* Bean description, rendered as the details sheet's body (#274) — not
      clickable, so it groups through the surface fill alone, no border. */
   .bean-info {
     background: var(--oc-surface);
-    border-radius: var(--glp-radius-sm); padding: var(--glp-sp-2) var(--glp-sp-3); margin: var(--glp-sp-1) 0 var(--glp-sp-2);
+    border-radius: var(--glp-radius-sm); padding: var(--glp-sp-2) var(--glp-sp-3); margin: 0;
     font-size: var(--glp-fs-1); line-height: 1.45; color: var(--oc-sub);
   }
   .bean-info-notes { color: var(--oc-text); font-style: italic; margin-bottom: 3px; }
@@ -995,13 +1832,17 @@ ${TOKENS}
      picked off one at a time, so a future addition can't slip through
      unguarded. */
   @media (prefers-reduced-motion: reduce) {
-    .menu-item, .note-input, .order-btn, .new-order-btn, .variant-chip {
+    .menu-item, .note-input, .order-btn, .new-order-btn, .variant-chip, .bean-info-btn {
       transition: none;
     }
     .status-card, .status-card.accepted .status-eta {
       animation: none;
     }
   }
+
+  /* The shared bottom sheet (#274): appended last so its rules win over the
+     card's own, and so it resolves this card's --glp-* tokens. */
+${SHEET_STYLES}
 `;
 
   // shared/helpers.ts
@@ -1048,149 +1889,14 @@ ${TOKENS}
     return typeof s4 === "string" && /^#[0-9a-fA-F]{6}$/.test(s4);
   }
 
-  // shared/icons.ts
-  var MACHINE_BODY = (id, mini, type = "gaggiuino") => `
-    <!-- Seitenwand rechts inkl. Kantenlicht, volle Hoehe -->
-    <path d="M72.2 2.3 L100 11 L100 130 L88 153 L72.2 153 Z" fill="url(#${id})"/>
-    <path d="M72.2 2.3 L100 11 L100 130 L88 153 L72.2 153 Z" fill="#000" opacity=".26"/>
-    <path d="M93.2 8.6 L100 11 L100 130 L90 149 L93.2 142 Z" fill="#fff" opacity=".13"/>
-
-    <!-- Frontflaeche Korpus -->
-    <path d="M13 2.4 L72.2 2.3 L72.2 71.9 L10.2 71.9 L10.2 5.2 A2.8 2.8 0 0 1 13 2.4 Z" fill="url(#${id})"/>
-    <path d="M72.2 3 L72.2 71" stroke="#fff" opacity=".22" stroke-width="3"/>
-
-    <!-- Mittelblock: Korpus kragt links darueber, dort ragt der Siebtraeger ins Freie -->
-    <path d="M20 72 L94 72 L94 122 L24 122 Z" fill="#2b2b31"/>
-    <path d="M20 72 L94 72 L94 77 L20.6 77 Z" fill="#000" opacity=".3"/>
-
-    <!-- Bruehgruppe + Siebtraeger (ragt nach links ins Freie) -->
-    <rect x="42" y="71.5" width="16" height="10.5" rx="2.2" fill="#b9bec5"/>
-    ${mini ? "" : '<path d="M47 82 L53 82 L52 87.5 L48 87.5 Z" fill="#8f959d"/>'}
-    <path d="M20.5 91 L45 84" stroke="#26262c" stroke-width="6.6" stroke-linecap="round"/>
-    <circle cx="18.6" cy="91.6" r="5.9" fill="#ded8ca" stroke="#26262c" stroke-width="1.2"/>
-
-    <!-- Dampflanze RECHTS: Gummimanschette oben, Chromrohr nach unten -->
-    <path d="M84.2 72 C85.2 78 84.6 82 84 88" stroke="#26262c" stroke-width="5" stroke-linecap="round"/>
-    <path d="M84 88 C83.5 101 83 115 83.5 130" stroke="#a3a9b1" stroke-width="2.6" stroke-linecap="round"/>
-    ${mini ? "" : '<path d="M21.5 97 L21.5 130" stroke="#9aa0a8" stroke-width="2" stroke-linecap="round"/>'}
-
-    <!-- Tropfschale: silbernes Lochblech in dunklem Rahmen, breiter als der Korpus -->
-    <path d="M17 122 L93 122 L80 134 L0 134 Z" fill="#25252b"/>
-    <path d="M20.5 123.4 L88.5 123.4 L77 132.6 L4 132.6 Z" fill="url(#${id}-steel)"/>
-    ${mini ? "" : `
-    <circle cx="28" cy="126" r="1.5" fill="#4a4a52"/>
-    <circle cx="39" cy="126" r="1.5" fill="#4a4a52"/>
-    <circle cx="50" cy="126" r="1.5" fill="#4a4a52"/>
-    <circle cx="61" cy="126" r="1.5" fill="#4a4a52"/>
-    <circle cx="72" cy="126" r="1.5" fill="#4a4a52"/>
-    <circle cx="21" cy="130.4" r="1.5" fill="#4a4a52"/>
-    <circle cx="32" cy="130.4" r="1.5" fill="#4a4a52"/>
-    <circle cx="43" cy="130.4" r="1.5" fill="#4a4a52"/>
-    <circle cx="54" cy="130.4" r="1.5" fill="#4a4a52"/>
-    <circle cx="65" cy="130.4" r="1.5" fill="#4a4a52"/>`}
-
-    <!-- Sockelfront: senkrecht, rechte Kante trifft die Seitenwand -->
-    <path d="M0 134 L80 134 L84 155 L0 155 Z" fill="#2b2b31"/>
-    <path d="M0 134 L80 134 L80.8 138 L0 138 Z" fill="#fff" opacity=".07"/>
-
-    <!-- Fuesse -->
-    <rect x="4.5" y="155" width="7.5" height="4.4" rx="1.5" fill="#26262c"/>
-    <rect x="66" y="155" width="7.5" height="4.4" rx="1.5" fill="#26262c"/>
-
-    ${type === "gaggimate" ? `
-    <!-- GaggiMate: runder Puck mit Chromgehaeuse ersetzt Wipptasten +
-         Dampfknopf (mxkissnr/glp-lovelace-card#127 / mxkissnr/glp-order-card#97) -->
-    <circle cx="41" cy="24" r="14" fill="#cfd4d9"/>
-    <circle cx="41" cy="24" r="14" fill="none" stroke="#8f959d" stroke-width=".9"/>
-    <circle cx="41" cy="24" r="11.4" fill="#17171b"/>
-    <circle cx="41" cy="24" r="10.2" fill="#0b0d12"/>
-    ${mini ? "" : `
-    <path d="M31.1 14.1 A14 14 0 0 1 45 10.6" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" opacity=".65"/>
-    <path d="M33.4 16.4 A10.7 10.7 0 0 1 48.6 16.4" fill="none" stroke="#e8452a" stroke-width="1.3" stroke-linecap="round" opacity=".9"/>
-    <path d="M42.6 13.4 A10.7 10.7 0 0 1 48.6 16.4" fill="none" stroke="#6aa9d8" stroke-width="1.3" stroke-linecap="round"/>`}` : `
-    <!-- Bedienfeld: 3 Wipptasten -->
-    <rect x="20.5" y="13.6" width="9" height="14.8" rx="2.1" fill="#26262c"/>
-    <rect x="33" y="13.6" width="9" height="14.8" rx="2.1" fill="#26262c"/>
-    <rect x="45.5" y="13.6" width="9" height="14.8" rx="2.1" fill="#26262c"/>
-    ${mini ? "" : `
-    <rect x="21.6" y="14.9" width="6.8" height="5.4" rx="1.4" fill="#fff" opacity=".13"/>
-    <rect x="34.1" y="14.9" width="6.8" height="5.4" rx="1.4" fill="#fff" opacity=".13"/>
-    <rect x="46.6" y="14.9" width="6.8" height="5.4" rx="1.4" fill="#fff" opacity=".13"/>
-    <rect x="23.7" y="31.8" width="2.6" height="2.2" rx=".8" fill="#d9422e"/>
-    <rect x="36.2" y="31.8" width="2.6" height="2.2" rx=".8" fill="#d9422e"/>
-    <rect x="48.7" y="31.8" width="2.6" height="2.2" rx=".8" fill="#d9422e"/>`}
-
-    <!-- Dampfknopf: liegender Zylinder auf der Seitenwand -->
-    <rect x="74" y="23.4" width="9" height="8" fill="#26262c"/>
-    <rect x="80.7" y="20.5" width="17" height="13.6" rx="6.8" fill="#212126"/>
-    <ellipse cx="82.6" cy="27.3" rx="2.4" ry="6.8" fill="#3b3b43"/>
-    ${mini ? "" : '<rect x="81.4" y="23.4" width="1.7" height="7.8" rx=".85" fill="#fff" opacity=".2"/>'}`}`;
-  var MACHINE_ICON_MINI = (id, type = "gaggiuino") => `
-    <svg viewBox="0 0 100 162" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <linearGradient id="${id}" x1="6" y1="0" x2="92" y2="145" gradientUnits="userSpaceOnUse">
-          <stop offset="0" stop-color="var(--glp-accent-start)"/>
-          <stop offset="1" stop-color="var(--glp-accent-end)"/>
-        </linearGradient>
-        <linearGradient id="${id}-steel" x1="0" y1="123" x2="0" y2="133" gradientUnits="userSpaceOnUse">
-          <stop offset="0" stop-color="#d3d6db"/>
-          <stop offset="1" stop-color="#9ba1a9"/>
-        </linearGradient>
-      </defs>
-      ${MACHINE_BODY(id, true, type)}
-    </svg>`;
-  var GLP_ICON_PATHS = {
-    // --- drinks -----------------------------------------------------------
-    // One shared demitasse silhouette for the three straight espresso drinks;
-    // they differ only in fill level, which is the honest difference between
-    // them (same basket, same cup, more or less water through it).
-    ristretto: '<path d="M16.5 8.5h1a2.5 2.5 0 0 1 0 5h-1"/><path d="M5 8.5h11.5v5a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4v-5z"/><path d="M6.5 15.2h8.6"/>',
-    espresso: '<path d="M16.5 8.5h1a2.5 2.5 0 0 1 0 5h-1"/><path d="M5 8.5h11.5v5a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4v-5z"/><path d="M5.6 13.2h10.4"/>',
-    lungo: '<path d="M16.5 8.5h1a2.5 2.5 0 0 1 0 5h-1"/><path d="M5 8.5h11.5v5a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4v-5z"/><path d="M5.1 10.6h11.2"/>',
-    // Cappuccino: domed foam cap standing proud of the rim.
-    cappuccino: '<path d="M16.5 8.5h1a2.5 2.5 0 0 1 0 5h-1"/><path d="M5 8.5h11.5v5a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4v-5z"/><path d="M5.4 8.5a5.8 5.8 0 0 1 11 0"/><path d="M5.8 12h10"/>',
-    // Latte macchiato: tall glass, layered.
-    latte: '<path d="M7.5 4.5h9l-1 14a2 2 0 0 1-2 1.8h-3a2 2 0 0 1-2-1.8l-1-14z"/><path d="M7.9 9h8.2M8.2 13h7.6"/>',
-    // Flat white: wide shallow cup, thin microfoam layer, latte-art dot.
-    flat_white: '<path d="M17.5 9.5h1a2.2 2.2 0 0 1 0 4.4h-1"/><path d="M3.5 9.5h14v3.6a4.4 4.4 0 0 1-4.4 4.4H7.9a4.4 4.4 0 0 1-4.4-4.4V9.5z"/><path d="M4.2 12h12.6"/><circle cx="10.5" cy="14.4" r="1.1"/>',
-    // --- state, action, status --------------------------------------------
-    coffee: '<path d="M17 8h1a3 3 0 0 1 0 6h-1M4 8h13v7a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4V8z"/><path d="M8 2v2M12 2v2"/>',
-    check: '<path d="M4.5 12.5 9.5 17.5 19.5 6.5"/>',
-    close: '<path d="M6 6l12 12M18 6 6 18"/>',
-    heat: '<path d="M12 3.5c3 3.2 4.5 5.8 4.5 8a4.5 4.5 0 0 1-9 0c0-2.2 1.5-4.8 4.5-8z"/><path d="M9.5 20.5h5"/>',
-    droplet: '<path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/>',
-    steam: '<path d="M7 20c0-2 1.6-2.4 1.6-4.4S7 12.6 7 10.6"/><path d="M12 20c0-2.4 1.8-2.9 1.8-5.3S12 10.3 12 8"/><path d="M17 20c0-2 1.6-2.4 1.6-4.4S17 12.6 17 10.6"/>',
-    warning: '<path d="M12 4.5 21 19.5H3L12 4.5z"/><path d="M12 10v4"/><circle cx="12" cy="16.8" r="0.6"/>',
-    gear: '<circle cx="12" cy="12" r="3.2"/><path d="M12 3.5v2.2M12 18.3v2.2M20.5 12h-2.2M5.7 12H3.5M18 6l-1.6 1.6M7.6 16.4 6 18M18 18l-1.6-1.6M7.6 7.6 6 6"/>',
-    plug: '<path d="M9 3.5v5M15 3.5v5"/><path d="M6.5 8.5h11v3a5.5 5.5 0 0 1-11 0v-3z"/><path d="M12 17v3.5"/>',
-    cart: '<path d="M3 4.5h2.2l2.3 10.4h9.6l2.1-7.4H6.4"/><circle cx="9" cy="19" r="1.4"/><circle cx="16.5" cy="19" r="1.4"/>',
-    shower: '<path d="M4.5 8.5h15v2.6a3 3 0 0 1-3 3h-9a3 3 0 0 1-3-3V8.5z"/><path d="M8 17.5v2M12 17.5v3M16 17.5v2"/>',
-    wrench: '<path d="M14.7 6.3a4 4 0 0 1-5.4 5.4L4 17l3 3 5.3-5.3a4 4 0 0 1 5.4-5.4l-2.5 2.5-2-2z"/>',
-    refresh: '<path d="M20 12a8 8 0 1 1-2.6-5.9"/><path d="M20 4v4.5h-4.5"/>',
-    circle: '<circle cx="12" cy="12" r="8"/>',
-    // Waiting/queued. An hourglass rather than a clock: a clock reads as "when",
-    // an hourglass as "not yet" — and this marks an order sitting unconfirmed,
-    // not a time of day.
-    hourglass: '<path d="M7 3.5h10M7 20.5h10"/><path d="M8 3.5v3.2c0 1.6 1.2 2.9 4 5.3 2.8-2.4 4-3.7 4-5.3V3.5"/><path d="M8 20.5v-3.2c0-1.6 1.2-2.9 4-5.3 2.8 2.4 4 3.7 4 5.3v3.2"/>',
-    flask: '<path d="M10 3.5v6L5.2 18a2 2 0 0 0 1.7 3h10.2a2 2 0 0 0 1.7-3L14 9.5v-6"/><path d="M9 3.5h6"/><path d="M7.4 14h9.2"/>',
-    // Not a party popper — a small burst, so it still reads at 16px and keeps
-    // the card's tone. Used for the completed-order confirmation.
-    celebrate: '<path d="M12 3v3.5M12 17.5V21M21 12h-3.5M6.5 12H3M18.4 5.6l-2.5 2.5M8.1 15.9l-2.5 2.5M18.4 18.4l-2.5-2.5M8.1 8.1 5.6 5.6"/>',
-    // Replaces the ★/☆ text characters in the rating row. The filled state is a
-    // class on the element, not a second path — it is the same shape either way.
-    star: '<path d="M12 3.8l2.6 5.3 5.9.9-4.2 4.1 1 5.8-5.3-2.8-5.3 2.8 1-5.8L3.5 10l5.9-.9L12 3.8z"/>'
-  };
-  var ICONS = {
-    has: (name) => Object.prototype.hasOwnProperty.call(GLP_ICON_PATHS, name),
-    // Returns '' for an unknown name rather than an empty <svg>: callers fall
-    // back to other content (e.g. a stored emoji on a user-created menu entry),
-    // and an empty string is what makes `ICONS.of(x) || fallback` work.
-    of: (name, cls = "") => ICONS.has(name) ? `<svg class="glp-i${cls ? " " + cls : ""}" viewBox="0 0 24 24" aria-hidden="true" focusable="false">${GLP_ICON_PATHS[name]}</svg>` : ""
-  };
-
   // order/src/icons.ts
+  var INFO_ICON = '<circle cx="12" cy="12" r="8"/><path d="M12 11v5"/><circle cx="12" cy="7.7" r="0.6"/>';
+  var ICONS2 = {
+    has: (name) => name === "info" || ICONS.has(name),
+    of: (name, cls = "") => name === "info" ? `<svg class="glp-i${cls ? " " + cls : ""}" viewBox="0 0 24 24" aria-hidden="true" focusable="false">${INFO_ICON}</svg>` : ICONS.of(name, cls)
+  };
   function _menuIconHtml(item) {
-    return ICONS.of(item?.id) || esc(item?.emoji);
+    return ICONS2.of(item?.id) || esc(item?.emoji);
   }
 
   // shared/contrast.ts
@@ -1346,6 +2052,8 @@ ${TOKENS}
       bean_origin: "Herkunft",
       bean_variety: "Varietät",
       bean_process: "Aufbereitung",
+      sheet_close: "Schließen",
+      bean_details: "Bohnendetails: ",
       almost_ready: "Gleich fertig!",
       note_ph: "Notiz (optional) …",
       trending_title: "Beliebt",
@@ -1377,6 +2085,8 @@ ${TOKENS}
       bean_origin: "Origin",
       bean_variety: "Variety",
       bean_process: "Process",
+      sheet_close: "Close",
+      bean_details: "Bean details: ",
       almost_ready: "Almost ready!",
       note_ph: "Note (optional) …",
       trending_title: "Trending",
@@ -1408,6 +2118,8 @@ ${TOKENS}
       bean_origin: "Origine",
       bean_variety: "Varietà",
       bean_process: "Lavorazione",
+      sheet_close: "Chiudi",
+      bean_details: "Dettagli del caffè: ",
       almost_ready: "Quasi pronto!",
       note_ph: "Nota (opzionale) …",
       trending_title: "Di tendenza",
@@ -1439,6 +2151,8 @@ ${TOKENS}
       bean_origin: "Origine",
       bean_variety: "Variété",
       bean_process: "Traitement",
+      sheet_close: "Fermer",
+      bean_details: "Détails du café : ",
       almost_ready: "Presque prêt !",
       note_ph: "Note (facultatif) …",
       trending_title: "Tendances",
@@ -1470,6 +2184,8 @@ ${TOKENS}
       bean_origin: "Origen",
       bean_variety: "Variedad",
       bean_process: "Proceso",
+      sheet_close: "Cerrar",
+      bean_details: "Detalles del café: ",
       almost_ready: "¡Casi listo!",
       note_ph: "Nota (opcional) …",
       trending_title: "Tendencia",
@@ -1501,6 +2217,8 @@ ${TOKENS}
       bean_origin: "Herkomst",
       bean_variety: "Variëteit",
       bean_process: "Verwerking",
+      sheet_close: "Sluiten",
+      bean_details: "Bonedetails: ",
       almost_ready: "Bijna klaar!",
       note_ph: "Notitie (optioneel) …",
       trending_title: "Populair",
@@ -1551,6 +2269,7 @@ ${TOKENS}
       this._hassRenderTimer = null;
       this._lang = this._normalizeLang(navigator.language);
       this._instanceId = ++_glpOrderCardInstanceSeq;
+      this._sheet = null;
     }
     // First two letters, lower case, falling back to English for a language this
     // card has no strings for.
@@ -1668,6 +2387,7 @@ ${TOKENS}
     }
     disconnectedCallback() {
       this._stopPoll();
+      if (this._sheet) this._sheet.close();
     }
     _startPoll() {
       this._stopPoll();
@@ -1854,7 +2574,7 @@ ${TOKENS}
         const isNew = m2.createdAt && now - m2.createdAt < newThreshold;
         const newBadge = isNew ? b2`<span class="menu-badge menu-badge-new">NEW</span>` : A;
         const trendBadge = m2.trending ? b2`<span class="menu-badge menu-badge-trend">${/* ICONS.of() emits fixed SVG markup */
-        o5(ICONS.of("heat"))}</span>` : A;
+        o5(ICONS2.of("heat"))}</span>` : A;
         return b2`<button type="button" class="menu-item${this._selected === m2.name ? " selected" : ""}" data-item=${m2.name} @click=${() => this._selectItem(m2.name)}>
         <div class="menu-item-icon">${/* _menuIconHtml() returns a fixed icon or an escaped emoji */
         o5(_menuIconHtml(m2))}</div>
@@ -1865,7 +2585,7 @@ ${TOKENS}
       const regular = visibleMenu.filter((m2) => !m2.trending);
       const trendSection = trending.length ? b2`
       <p class="menu-section-title">${/* ICONS.of() emits fixed SVG markup */
-      o5(ICONS.of("heat"))} ${_s("trending_title", lang)}</p>
+      o5(ICONS2.of("heat"))} ${_s("trending_title", lang)}</p>
       <div class="menu-grid">${trending.map(renderItem)}</div>` : A;
       const regularSection = regular.length ? b2`
       ${trending.length ? b2`<p class="menu-section-title" style="margin-top:var(--glp-sp-3)">${_s("menu_all", lang)}</p>` : A}
@@ -1879,17 +2599,16 @@ ${TOKENS}
       <div id="oc-variants" class=${groupedVariants.flat ? "variant-grid" : ""}>
         ${this._variantInnerHtml(groupedVariants, lang)}
       </div>` : A;
-      const beanInfoSection = this._beanInfoHtml(this._getSelectedBean(), lang);
       const itemLabel = this._selected && this._selectedVariant ? `${this._selected} · ${this._selectedVariant}` : this._selected || null;
       const btnLabel = itemLabel ? _s("order_btn", lang, itemLabel) : needsVariant ? _s("variant_select", lang) : _s("order_btn_select", lang);
       return b2`
       <div class="order-form">
         ${trendSection}${regularSection}
-        ${variantSection}${beanInfoSection}
+        ${variantSection}
         <input class="note-input" id="oc-note" placeholder=${_s("note_ph", lang)} maxlength="200">
         <button class="order-btn" id="oc-submit" ?disabled=${!this._selected || this._submitting || needsVariant} @click=${() => this._placeOrder()}>
           ${itemLabel ? b2`${/* ICONS.of() emits fixed SVG markup */
-      o5(ICONS.of("coffee"))} ` : A}${btnLabel}
+      o5(ICONS2.of("coffee"))} ` : A}${btnLabel}
         </button>
         ${this._orderError ? b2`<div class="order-error" role="alert">${this._orderError}</div>` : A}
       </div>`;
@@ -1954,7 +2673,7 @@ ${TOKENS}
         const queueLine = qp ? b2`<div class="status-line">${_s("queue_pos", lang, qp.position, qp.suggestedEta)}</div>` : A;
         content = b2`<div class="status-card pending">
         <div class="status-item">${/* ICONS.of() emits fixed SVG markup */
-        o5(ICONS.of("hourglass"))} ${_s("pending", lang, itemLabel)}</div>
+        o5(ICONS2.of("hourglass"))} ${_s("pending", lang, itemLabel)}</div>
         ${machineLine}
         ${queueLine}
       </div>`;
@@ -1963,21 +2682,21 @@ ${TOKENS}
         const minsLeft = Math.max(0, Math.ceil((etaDone - Date.now()) / 6e4));
         content = b2`<div class="status-card accepted">
         <div class="status-item">${/* ICONS.of() emits fixed SVG markup */
-        o5(ICONS.of("coffee"))} ${_s("accepted", lang, itemLabel, minsLeft)}</div>
+        o5(ICONS2.of("coffee"))} ${_s("accepted", lang, itemLabel, minsLeft)}</div>
         ${machineLine}
         <div class="status-eta">${minsLeft === 0 ? b2`${/* ICONS.of() emits fixed SVG markup */
-        o5(ICONS.of("celebrate"))} ${_s("almost_ready", this._lang)}` : `~${minsLeft} min`}</div>
+        o5(ICONS2.of("celebrate"))} ${_s("almost_ready", this._lang)}` : `~${minsLeft} min`}</div>
       </div>`;
       } else if (order.status === "done") {
         const shotHtml = this._renderShotSummary(this._lastShot, lang);
         content = b2`<div class="status-card done">
         <div class="status-done-msg">${/* ICONS.of() emits fixed SVG markup */
-        o5(ICONS.of("check"))} ${_s("done", lang, itemLabel)}</div>
+        o5(ICONS2.of("check"))} ${_s("done", lang, itemLabel)}</div>
       </div>${shotHtml}`;
       } else if (order.status === "declined") {
         content = b2`<div class="status-card declined">
         <div class="status-item">${/* ICONS.of() emits fixed SVG markup */
-        o5(ICONS.of("close"))} ${_s("declined", lang, itemLabel)}</div>
+        o5(ICONS2.of("close"))} ${_s("declined", lang, itemLabel)}</div>
         ${order.declineReason ? b2`<div class="status-decline">${_s("decline_reason", lang, order.declineReason)}</div>` : A}
       </div>`;
       }
@@ -2026,38 +2745,76 @@ ${TOKENS}
     // gaggiuino-local-profiler#505) — untagged/missing beans default to 'normal'.
     _getVariantsGrouped(item) {
       if (!item?.useBeans) return { flat: this._getVariants(item) };
-      const label = (b3) => b3.decaf ? `${b3.name} · Decaf` : b3.name;
       const beans = this._activeBeans || [];
       return {
-        speciality: beans.filter((b3) => b3.category === "speciality").map(label),
-        normal: beans.filter((b3) => b3.category !== "speciality").map(label)
+        speciality: beans.filter((b3) => b3.category === "speciality").map((b3) => this._beanLabel(b3)),
+        normal: beans.filter((b3) => b3.category !== "speciality").map((b3) => this._beanLabel(b3))
       };
+    }
+    // The chip label plus the decaf suffix — the one place the two spellings
+    // are derived, so selection, grouping and the details sheet cannot drift.
+    _beanLabel(bean) {
+      return bean.decaf ? `${bean.name} · Decaf` : bean.name;
+    }
+    _usesBeans() {
+      return this._menu?.find((m2) => m2.name === this._selected)?.useBeans === true;
+    }
+    _beanForLabel(v2) {
+      return (this._activeBeans || []).find((b3) => this._beanLabel(b3) === v2) ?? null;
     }
     // Bean-backed variant chips carry the bean's stable id (#35) alongside the
     // display label, so selection can be tracked and submitted by id — the
     // label alone is ambiguous whenever a bean gets deleted and reimported
     // under the same name (same bug class as gaggiuino-local-profiler#456).
     _beanIdForLabel(v2) {
-      const bean = (this._activeBeans || []).find((b3) => (b3.decaf ? `${b3.name} · Decaf` : b3.name) === v2);
-      return bean?.id ?? null;
+      return this._beanForLabel(v2)?.id ?? null;
     }
-    _variantChipHtml(v2) {
-      const beanId = this._beanIdForLabel(v2);
-      return b2`<button type="button" class="variant-chip${this._selectedVariant === v2 ? " selected" : ""}" data-variant=${v2} data-bean-id=${o6(beanId ?? void 0)} @click=${() => this._selectVariant(v2, beanId)}>${v2}</button>`;
+    // The chip stays a plain select button; a bean with details gets a second,
+    // separate button that opens the details sheet (#274). They sit in one
+    // wrapper so the chip grid keeps its original cell size and wrapping.
+    _variantChipHtml(v2, lang = this._lang) {
+      const bean = this._beanForLabel(v2);
+      const beanId = bean?.id ?? null;
+      const chip = b2`<button type="button" class="variant-chip${this._selectedVariant === v2 ? " selected" : ""}" data-variant=${v2} data-bean-id=${o6(beanId ?? void 0)} @click=${() => this._selectVariant(v2, beanId)}>${v2}</button>`;
+      if (!this._usesBeans() || !bean || !this._beanHasDetails(bean)) return chip;
+      const label = _s("bean_details", lang) + this._beanLabel(bean);
+      return b2`<span class="variant-chip-wrap">${chip}<button
+        type="button" class="bean-info-btn"
+        aria-label=${label}
+        @click=${(e6) => {
+        e6.stopPropagation();
+        this._openBeanSheet(bean, lang);
+      }}>
+        ${/* ICONS.of() emits fixed SVG markup */
+      o5(ICONS2.of("info"))}
+      </button></span>`;
+    }
+    // One sheet per card, created on first use and mounted into the card's own
+    // shadow root so it inherits this card's --glp-* tokens.
+    _sheetFor(lang) {
+      if (!this._sheet) {
+        this._sheet = new GlpSheet(this.shadowRoot, { closeLabel: _s("sheet_close", lang) });
+      }
+      return this._sheet;
+    }
+    _openBeanSheet(bean, lang) {
+      const body = this._beanInfoHtml(bean, lang);
+      if (body === A) return;
+      this._sheetFor(lang).open({ title: this._beanLabel(bean), body: () => body });
     }
     // Mirrors the trending/regular section pattern (~line 650): headings shown
     // only when both groups are non-empty — a single-group list (e.g. all beans
     // untagged) renders as one plain grid, no noisy "Normal" label.
     _variantInnerHtml(grouped, lang) {
-      if (grouped.flat) return b2`${grouped.flat.map((v2) => this._variantChipHtml(v2))}`;
+      if (grouped.flat) return b2`${grouped.flat.map((v2) => this._variantChipHtml(v2, lang))}`;
       const { speciality, normal } = grouped;
       const showHeadings = speciality.length > 0 && normal.length > 0;
       const specialitySection = speciality.length ? b2`
       ${showHeadings ? b2`<p class="menu-section-title">${_s("variant_speciality", lang)}</p>` : A}
-      <div class="variant-grid">${speciality.map((v2) => this._variantChipHtml(v2))}</div>` : A;
+      <div class="variant-grid">${speciality.map((v2) => this._variantChipHtml(v2, lang))}</div>` : A;
       const normalSection = normal.length ? b2`
       ${showHeadings ? b2`<p class="menu-section-title" style="margin-top:var(--glp-sp-3)">${_s("variant_normal", lang)}</p>` : A}
-      <div class="variant-grid">${normal.map((v2) => this._variantChipHtml(v2))}</div>` : A;
+      <div class="variant-grid">${normal.map((v2) => this._variantChipHtml(v2, lang))}</div>` : A;
       return b2`${specialitySection}${normalSection}`;
     }
     // Id-first with a name fallback (#35), mirroring resolveBeanForAnnotation()
@@ -2072,11 +2829,21 @@ ${TOKENS}
         const byId = beans.find((b3) => b3.id === this._selectedBeanId);
         if (byId) return byId;
       }
-      return beans.find((b3) => (b3.decaf ? `${b3.name} · Decaf` : b3.name) === this._selectedVariant) || null;
+      return beans.find((b3) => this._beanLabel(b3) === this._selectedVariant) || null;
+    }
+    // The bean data the card receives has no roast date, so the sheet shows
+    // notes, origin, variety and process only.
+    _beanOrigins(bean) {
+      if (Array.isArray(bean.origins) && bean.origins.length) return bean.origins;
+      return bean.origin ? [{ code: bean.origin }] : [];
+    }
+    _beanHasDetails(bean) {
+      if (!bean) return false;
+      return !!(bean.notes || this._beanOrigins(bean).length || bean.variety || bean.process);
     }
     _beanInfoHtml(bean, lang) {
-      const origins = Array.isArray(bean?.origins) && bean.origins.length ? bean.origins : bean?.origin ? [{ code: bean.origin }] : [];
-      if (!bean || !bean.notes && !origins.length && !bean.variety && !bean.process) return A;
+      if (!this._beanHasDetails(bean)) return A;
+      const origins = this._beanOrigins(bean);
       const rows = [];
       if (bean.notes) rows.push(b2`<div class="bean-info-notes">${bean.notes}</div>`);
       if (origins.length) rows.push(b2`<div class="bean-info-row"><span class="bean-info-label">${_s("bean_origin", lang)}</span><span>${/* _originHtml() escapes its own input */
