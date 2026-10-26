@@ -121,7 +121,10 @@ function renderCard(states) {
 // The card's markup with the stylesheet dropped: the stylesheet's comments may
 // name the glyphs they explain, the rendered card may not.
 function renderedMarkup(card) {
-  return card.shadowRoot.innerHTML.replace(/<style[\s\S]*?<\/style>/g, '');
+  return [...card.shadowRoot.children]
+    .filter(el => el.tagName !== 'STYLE')
+    .map(el => el.outerHTML)
+    .join('');
 }
 
 // ── no text glyph used as an icon ──────────────────────────────────────────
