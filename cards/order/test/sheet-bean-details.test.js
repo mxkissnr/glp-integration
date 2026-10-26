@@ -226,6 +226,19 @@ test('removing the card closes an open sheet', (t) => {
   assert.equal(card._sheet.isOpen, false, 'the sheet does not outlive the card');
 });
 
+test('a bean with only the legacy single origin still gets a sheet', (t) => {
+  const card = makeCardFor(t, {
+    beans: [{ id: 4, name: 'Legacy', origins: [], origin: 'BR' }],
+  });
+  card._render();
+
+  const button = infoButtonFor(card, 'Legacy');
+  assert.ok(button, 'a bean whose only detail is a legacy origin still has details');
+  button.click();
+  assert.match(card.shadowRoot.querySelector('.bean-info-row').textContent, /Brazil/,
+    'the legacy origin code resolves like any other');
+});
+
 test('the sheet follows a card language change', (t) => {
   const card = makeCardFor(t);
   card._render();
