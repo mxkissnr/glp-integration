@@ -1686,6 +1686,9 @@ ${TOKENS}
   .menu-item.selected .menu-item-icon { color: var(--glp-accent); }
   .menu-item-name  { font-size: var(--glp-fs-1); font-weight: 500; color: var(--oc-sub); }
   .menu-item.selected .menu-item-name { color: var(--oc-text); }
+  /* A lone popular drink fills its row instead of leaving half of the
+     two-column grid empty. */
+  .menu-item-full { grid-column: 1 / -1; }
 
   /* Order form */
   .order-form { display: flex; flex-direction: column; gap: var(--glp-sp-3); margin-bottom: var(--glp-sp-1); }
@@ -1709,7 +1712,13 @@ ${TOKENS}
     font-family: inherit; color: var(--glp-accent-text);
     background: linear-gradient(135deg, var(--glp-accent-start), var(--glp-accent-end));
     transition: background .15s, opacity .15s;
+    /* The label names the drink only and must never wrap: the icon keeps its
+       size, the text truncates with an ellipsis, and the full order stays in
+       the button's title and aria-label. */
+    display: flex; align-items: center; justify-content: center; gap: var(--glp-sp-2);
   }
+  .order-btn > svg { flex: 0 0 auto; }
+  .order-btn-label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
   .order-btn:disabled { opacity: .4; cursor: default; background: var(--oc-surface); color: var(--oc-sub); }
   .order-btn:not(:disabled):hover {
     background: linear-gradient(135deg,
@@ -2756,12 +2765,12 @@ ${SHEET_STYLES}
       const badgeDays = parseFloat(String(this._config?.new_badge_days ?? ""));
       const newThreshold = (Number.isFinite(badgeDays) ? badgeDays : NEW_BADGE_DAYS_DEFAULT) * 24 * 60 * 60 * 1e3;
       const now = Date.now();
-      const renderItem = (m2) => {
+      const renderItem = (m2, fullRow = false) => {
         const isNew = m2.createdAt && now - m2.createdAt < newThreshold;
         const newBadge = isNew ? b2`<span class="menu-badge menu-badge-new">NEW</span>` : A;
         const trendBadge = m2.trending ? b2`<span class="menu-badge menu-badge-trend">${/* ICONS.of() emits fixed SVG markup */
         o5(ICONS2.of("heat"))}</span>` : A;
-        return b2`<button type="button" class="menu-item${this._selected === m2.name ? " selected" : ""}" data-item=${m2.name} @click=${() => this._selectItem(m2.name)}>
+        return b2`<button type="button" class="menu-item${fullRow ? " menu-item-full" : ""}${this._selected === m2.name ? " selected" : ""}" data-item=${m2.name} @click=${() => this._selectItem(m2.name)}>
         <div class="menu-item-icon">${/* _menuIconHtml() returns a fixed icon or an escaped emoji */
         o5(_menuIconHtml(m2))}</div>
         <div class="menu-item-name">${m2.name}${trendBadge}${newBadge}</div>
@@ -2772,29 +2781,33 @@ ${SHEET_STYLES}
       const trendSection = trending.length ? b2`
       <p class="menu-section-title">${/* ICONS.of() emits fixed SVG markup */
       o5(ICONS2.of("heat"))} ${_s("trending_title", lang)}</p>
-      <div class="menu-grid">${trending.map(renderItem)}</div>` : A;
+      <div class="menu-grid">${trending.map((m2) => renderItem(m2, trending.length === 1))}</div>` : A;
       const regularSection = regular.length ? b2`
       ${trending.length ? b2`<p class="menu-section-title" style="margin-top:var(--glp-sp-3)">${_s("menu_all", lang)}</p>` : A}
-      <div class="menu-grid">${regular.map(renderItem)}</div>` : A;
+      <div class="menu-grid">${regular.map((m2) => renderItem(m2))}</div>` : A;
       const selectedItem = visibleMenu.find((m2) => m2.name === this._selected);
       const variants = this._getVariants(selectedItem);
       const needsVariant = variants.length > 0 && !this._selectedVariant;
       const groupedVariants = this._getVariantsGrouped(selectedItem);
+      const mergedHeadings = this._hasBothBeanGroups(groupedVariants);
       const variantSection = this._selected && variants.length > 0 ? b2`
-      <p class="variant-label">${_s("variant_label", lang)}</p>
+      ${mergedHeadings ? A : b2`<p class="variant-label">${_s("variant_label", lang)}</p>`}
       <div id="oc-variants" class=${groupedVariants.flat ? "variant-grid" : ""}>
-        ${this._variantInnerHtml(groupedVariants, lang)}
+        ${this._variantInnerHtml(groupedVariants, lang, mergedHeadings)}
       </div>` : A;
-      const itemLabel = this._selected && this._selectedVariant ? `${this._selected} · ${this._selectedVariant}` : this._selected || null;
-      const btnLabel = itemLabel ? _s("order_btn", lang, itemLabel) : needsVariant ? _s("variant_select", lang) : _s("order_btn_select", lang);
+      const fullLabel = this._selected && this._selectedVariant ? `${this._selected} · ${this._selectedVariant}` : null;
+      const btnLabel = this._selected ? _s("order_btn", lang, this._selected) : needsVariant ? _s("variant_select", lang) : _s("order_btn_select", lang);
+      const fullBtnLabel = fullLabel ? _s("order_btn", lang, fullLabel) : void 0;
       return b2`
       <div class="order-form">
         ${trendSection}${regularSection}
         ${variantSection}
         <input class="note-input" id="oc-note" placeholder=${_s("note_ph", lang)} maxlength="200">
-        <button class="order-btn" id="oc-submit" ?disabled=${!this._selected || this._submitting || needsVariant} @click=${() => this._placeOrder()}>
-          ${itemLabel ? b2`${/* ICONS.of() emits fixed SVG markup */
-      o5(ICONS2.of("coffee"))} ` : A}${btnLabel}
+        <button class="order-btn" id="oc-submit" ?disabled=${!this._selected || this._submitting || needsVariant}
+          title=${o6(fullLabel || void 0)} aria-label=${o6(fullBtnLabel)}
+          @click=${() => this._placeOrder()}>
+          ${this._selected ? b2`${/* ICONS.of() emits fixed SVG markup */
+      o5(ICONS2.of("coffee"))}` : A}<span class="order-btn-label">${btnLabel}</span>
         </button>
         ${this._orderError ? b2`<div class="order-error" role="alert">${this._orderError}</div>` : A}
       </div>`;
@@ -2937,6 +2950,13 @@ ${SHEET_STYLES}
         normal: beans.filter((b3) => b3.category !== "speciality").map((b3) => this._beanLabel(b3))
       };
     }
+    // True only when both bean groups are rendered, i.e. exactly the case that
+    // shows group headings at all (#273).
+    _hasBothBeanGroups(grouped) {
+      if (grouped.flat) return false;
+      const { speciality, normal } = grouped;
+      return speciality.length > 0 && normal.length > 0;
+    }
     // The chip label plus the decaf suffix — the one place the two spellings
     // are derived, so selection, grouping and the details sheet cannot drift.
     _beanLabel(bean) {
@@ -3007,15 +3027,19 @@ ${SHEET_STYLES}
     // Mirrors the trending/regular section pattern (~line 650): headings shown
     // only when both groups are non-empty — a single-group list (e.g. all beans
     // untagged) renders as one plain grid, no noisy "Normal" label.
-    _variantInnerHtml(grouped, lang) {
+    // `mergedHeadings` folds the standalone "Variant" heading into each group
+    // heading ("Variant · Speciality" / "Variant · Normal"), built from the
+    // existing keys so no new translation strings are needed.
+    _variantInnerHtml(grouped, lang, mergedHeadings = false) {
       if (grouped.flat) return b2`${grouped.flat.map((v2) => this._variantChipHtml(v2, lang))}`;
       const { speciality, normal } = grouped;
       const showHeadings = speciality.length > 0 && normal.length > 0;
+      const heading = (key) => mergedHeadings ? `${_s("variant_label", lang)} · ${_s(key, lang)}` : _s(key, lang);
       const specialitySection = speciality.length ? b2`
-      ${showHeadings ? b2`<p class="menu-section-title">${_s("variant_speciality", lang)}</p>` : A}
+      ${showHeadings ? b2`<p class="menu-section-title">${heading("variant_speciality")}</p>` : A}
       <div class="variant-grid">${speciality.map((v2) => this._variantChipHtml(v2, lang))}</div>` : A;
       const normalSection = normal.length ? b2`
-      ${showHeadings ? b2`<p class="menu-section-title" style="margin-top:var(--glp-sp-3)">${_s("variant_normal", lang)}</p>` : A}
+      ${showHeadings ? b2`<p class="menu-section-title" style="margin-top:var(--glp-sp-3)">${heading("variant_normal")}</p>` : A}
       <div class="variant-grid">${normal.map((v2) => this._variantChipHtml(v2, lang))}</div>` : A;
       return b2`${specialitySection}${normalSection}`;
     }
