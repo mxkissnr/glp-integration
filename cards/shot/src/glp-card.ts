@@ -29,6 +29,19 @@ const GLP_CARD_VERSION = '2.22.0';
 // after the service call is debounced.
 const READY_BY_PENDING_FALLBACK_MS = 60000;
 
+// The card's UI language follows the Home Assistant frontend language and
+// falls back to English (the i18n table's own fallback) when hass has none or
+// names one this card has no table for.
+function resolveLang(hass: Hass | null | undefined): string {
+  const l = String(hass?.language || hass?.locale?.language || 'en').slice(0, 2).toLowerCase();
+  return SUPPORTED_LANGS.includes(l) ? l : 'en';
+}
+
+// A configured entity_prefix names this card's machine: a sensor entity id and
+// nothing else. A typo (or a non-string from YAML) would otherwise silently
+// fall back to "no entity found" and render an empty card.
+const ENTITY_PREFIX_RE = /^sensor\.[a-z0-9_]+$/;
+
 // A tile in the live-machine panel below the profile picker.
 interface LmTile {
   val: string | number;
@@ -452,9 +465,15 @@ class GlpCard extends HTMLElement {
     return T('ready_by_switching_in', Math.ceil(diffMs / 60000) as unknown as string);
   }
 
+  // Dates and times follow Home Assistant's locale, then its language, then
+  // the card's active language — never a fixed locale.
+  _locale(): string {
+    return String(this._hass?.locale?.language || this._hass?.language || getLang());
+  }
+
   _buildReadyByHtml(targetAt: Date | null, plannedAt: Date | null): TemplateResult {
     if (targetAt) {
-      const hhmm = targetAt.toLocaleTimeString(getLang(), { hour: '2-digit', minute: '2-digit' });
+      const hhmm = targetAt.toLocaleTimeString(this._locale(), { hour: '2-digit', minute: '2-digit' });
       return html`<div class="ready-by ready-by-set">
         <div class="ready-by-info">
           <span class="ready-by-label">${T('ready_by_target', hhmm)}</span>
@@ -609,6 +628,11 @@ class GlpCard extends HTMLElement {
   // standalone/no-app YAML fallback; the app's own stored theme (#701, see
   // _appMachineTheme() below) takes precedence over these once available.
   setConfig(config: CardConfig): void {
+    const prefix = config?.entity_prefix;
+    if (prefix != null && (typeof prefix !== 'string' || !ENTITY_PREFIX_RE.test(prefix))) {
+      // Home Assistant shows a thrown message as the card's error text.
+      throw new Error('entity_prefix must be a sensor entity id, for example sensor.gaggiuino_local_profiler_');
+    }
     this._config = { title: 'Gaggiuino', ...config };
     // New config can change the prefix, the language-independent theme or the
     // switch entity, so nothing cached from the previous config may survive;
@@ -681,7 +705,7 @@ class GlpCard extends HTMLElement {
 
   set hass(hass: Hass) {
     this._hass = hass;
-    { const l = String(hass?.language || hass?.locale?.language || 'de').slice(0, 2).toLowerCase(); setLang(SUPPORTED_LANGS.includes(l) ? l : 'en'); }
+    setLang(resolveLang(hass));
     // A detached card gets one last hass push when its view goes away; it must
     // not use it to arm a poll disconnectedCallback has already cleaned up.
     if (this.isConnected && !this._ordersPoll) this._startOrdersPoll();
@@ -718,7 +742,7 @@ class GlpCard extends HTMLElement {
     const ids = this._watchedIds(prefix);
     return {
       prefix,
-      language: String(this._hass?.language || this._hass?.locale?.language || 'de').slice(0, 2).toLowerCase(),
+      language: resolveLang(this._hass),
       theme: this._themeKey(),
       ids,
       states: ids.map(id => states[id]),
@@ -942,7 +966,7 @@ class GlpCard extends HTMLElement {
       const pctW = Math.max(0, Math.min(100, Math.round((parseFloat(pct as string) || 0) * 100)));
       const sub  = [
         daysSince != null ? (daysSince === 0 ? T('maint_today') : T('days_ago', daysSince as unknown as string)) : null,
-        shotsSince != null && shotsSince > 0 ? `${shotsSince} Shots` : null,
+        shotsSince != null && shotsSince > 0 ? T('maint_shots', shotsSince as unknown as string) : null,
       ].filter(Boolean).join(' · ');
       const confirming = task && this._maintConfirm === task;
       // One toggle shared by the mouse and keyboard paths, so both keep the
@@ -1208,11 +1232,11 @@ class GlpCard extends HTMLElement {
     const lmTiles = [
       temp !== null ? {
         val: temp, unit: '°',
-        lbl: boilerOff ? 'Temp · Boiler aus' : (targetTemp !== null ? `Temp · Ziel ${targetTemp}°` : 'Temp'),
+        lbl: boilerOff ? T('lm_temp_off') : (targetTemp !== null ? T('lm_temp_target', targetTemp) : T('lm_temp')),
         warm: !boilerOff && targetTemp !== null && parseFloat(temp) < parseFloat(targetTemp) - 1,
       } : null,
-      livePressure !== null ? { val: livePressure, unit: ' bar', lbl: 'Druck' } : null,
-      liveWeight   !== null ? { val: liveWeight,   unit: ' g',   lbl: 'Waage' } : null,
+      livePressure !== null ? { val: livePressure, unit: ' bar', lbl: T('lm_pressure') } : null,
+      liveWeight   !== null ? { val: liveWeight,   unit: ' g',   lbl: T('lm_weight') } : null,
     ].filter(Boolean);
 
     // ── shot section ─────────────────────────────────────────────────────────
@@ -1276,7 +1300,7 @@ class GlpCard extends HTMLElement {
     const { maintAvailable, ordersTabAvail, showMaint, showOrders, pendingOrders } = vm;
     return (maintAvailable || ordersTabAvail) ? html`
       <div class="tab-bar">
-        <button class="tab-btn${(!showMaint && !showOrders) ? ' active':''}" data-tab="shot" @click=${() => { this._selectTab('shot'); }}>${/* ICONS.of() emits fixed SVG markup */ unsafeHTML(ICONS.of('coffee'))} Shot</button>
+        <button class="tab-btn${(!showMaint && !showOrders) ? ' active':''}" data-tab="shot" @click=${() => { this._selectTab('shot'); }}>${/* ICONS.of() emits fixed SVG markup */ unsafeHTML(ICONS.of('coffee'))} ${T('tab_shot')}</button>
         ${ordersTabAvail ? html`<button class="tab-btn${showOrders ? ' active':''}" data-tab="orders" @click=${() => { this._selectTab('orders'); }}>${/* ICONS.of() emits fixed SVG markup */ unsafeHTML(ICONS.of('cart'))} ${T('tab_orders')}${pendingOrders ? html` <span class="tab-badge">${pendingOrders}</span>` : nothing}</button>` : nothing}
         ${maintAvailable ? html`<button class="tab-btn${showMaint ? ' active':''}" data-tab="maint" @click=${() => { this._selectTab('maint'); }}>${/* ICONS.of() emits fixed SVG markup */ unsafeHTML(ICONS.of('wrench'))} ${T('tab_maint')}${this._maintAnyDue() ? html` ${/* ICONS.of() emits fixed SVG markup */ unsafeHTML(ICONS.of('warning', 'due'))}` : nothing}</button>` : nothing}
       </div>` : nothing;
@@ -1296,7 +1320,7 @@ class GlpCard extends HTMLElement {
       if (this._shotIndex > 0 && shotObj?.ts) {
         const d = parseTs(shotObj.ts);
         if (d && !isNaN(d as unknown as number))
-          tsLine = html`<div class="nav-ts">${d.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'2-digit'})} ${d.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})}</div>`;
+          tsLine = html`<div class="nav-ts">${d.toLocaleDateString(this._locale(),{day:'2-digit',month:'2-digit',year:'2-digit'})} ${d.toLocaleTimeString(this._locale(),{hour:'2-digit',minute:'2-digit'})}</div>`;
       }
       navHtml = html`
         <div class="nav-row">
@@ -1346,7 +1370,7 @@ class GlpCard extends HTMLElement {
   _metricTrioHtml(vm: ViewModel): TemplateResult {
     const { ratio, duration, weight } = vm;
     return html`${/* metricLineHtml() escapes its own input and emits fixed markup */ unsafeHTML(metricLineHtml([
-      ratio    ? { role: 'recipe',  num: `1:${ratio}`, unit: '',  label: 'Ratio'          } : null,
+      ratio    ? { role: 'recipe',  num: `1:${ratio}`, unit: '',  label: T('m_ratio')     } : null,
       duration ? { role: 'process', num: duration,      unit: 's', label: T('m_duration') } : null,
       weight   ? { role: 'result',  num: weight,        unit: 'g', label: T('m_yield')    } : null,
     ]))}`;
@@ -1476,6 +1500,9 @@ class GlpCard extends HTMLElement {
 
   _render(): void {
     if (!this._hass || !this._config) return;
+    // Also set here (not only in the hass setter) so a card rendered straight
+    // from a hass object — a preview, a test — uses that object's language.
+    setLang(resolveLang(this._hass));
 
     const vm = this._viewModel();
     const machineType = appMachineType(this._machineEntry());
@@ -1547,7 +1574,10 @@ class GlpCard extends HTMLElement {
   }
 
   getCardSize(): number { return 3; }
-  static getStubConfig() { return { entity_prefix: 'sensor.gaggiuino_local_profiler_' }; }
+  // An empty config lets _resolvePrefix() find the machine from the entities
+  // Home Assistant already has, so a card added from the picker works without
+  // hand-editing YAML.
+  static getStubConfig() { return {}; }
 }
 
 // Deferred until HA's scoped-registry polyfill has replaced customElements. #184

@@ -1546,6 +1546,14 @@ ${TOKENS}
       m_yield: "Ausbeute",
       m_pressure: "Druck Ø",
       m_temp: "Temp",
+      tab_shot: "Shot",
+      m_ratio: "Ratio",
+      lm_temp: "Temp",
+      lm_temp_off: "Temp · Boiler aus",
+      lm_temp_target: /* @__PURE__ */ __name((t5) => `Temp · Ziel ${t5}°`, "lm_temp_target"),
+      lm_pressure: "Druck",
+      lm_weight: "Waage",
+      maint_shots: /* @__PURE__ */ __name((n4) => `${n4} Shots`, "maint_shots"),
       leg_pressure: "Druck",
       leg_flow: "Flow",
       leg_temp: "Temp",
@@ -1616,6 +1624,14 @@ ${TOKENS}
       m_yield: "Yield",
       m_pressure: "Pressure Ø",
       m_temp: "Temp",
+      tab_shot: "Shot",
+      m_ratio: "Ratio",
+      lm_temp: "Temp",
+      lm_temp_off: "Temp · Boiler off",
+      lm_temp_target: /* @__PURE__ */ __name((t5) => `Temp · Target ${t5}°`, "lm_temp_target"),
+      lm_pressure: "Pressure",
+      lm_weight: "Scale",
+      maint_shots: /* @__PURE__ */ __name((n4) => `${n4} shots`, "maint_shots"),
       leg_pressure: "Pressure",
       leg_flow: "Flow",
       leg_temp: "Temp",
@@ -1686,6 +1702,14 @@ ${TOKENS}
       m_yield: "Resa",
       m_pressure: "Pressione Ø",
       m_temp: "Temp",
+      tab_shot: "Shot",
+      m_ratio: "Rapporto",
+      lm_temp: "Temp",
+      lm_temp_off: "Temp · Caldaia spenta",
+      lm_temp_target: /* @__PURE__ */ __name((t5) => `Temp · Obiettivo ${t5}°`, "lm_temp_target"),
+      lm_pressure: "Pressione",
+      lm_weight: "Bilancia",
+      maint_shots: /* @__PURE__ */ __name((n4) => `${n4} shot`, "maint_shots"),
       leg_pressure: "Pressione",
       leg_flow: "Flusso",
       leg_temp: "Temp",
@@ -1756,6 +1780,14 @@ ${TOKENS}
       m_yield: "Rendement",
       m_pressure: "Pression Ø",
       m_temp: "Temp",
+      tab_shot: "Shot",
+      m_ratio: "Ratio",
+      lm_temp: "Temp",
+      lm_temp_off: "Temp · Chauffe éteinte",
+      lm_temp_target: /* @__PURE__ */ __name((t5) => `Temp · Cible ${t5}°`, "lm_temp_target"),
+      lm_pressure: "Pression",
+      lm_weight: "Balance",
+      maint_shots: /* @__PURE__ */ __name((n4) => `${n4} shots`, "maint_shots"),
       leg_pressure: "Pression",
       leg_flow: "Débit",
       leg_temp: "Temp",
@@ -1826,6 +1858,14 @@ ${TOKENS}
       m_yield: "Rendimiento",
       m_pressure: "Presión Ø",
       m_temp: "Temp",
+      tab_shot: "Shot",
+      m_ratio: "Proporción",
+      lm_temp: "Temp",
+      lm_temp_off: "Temp · Caldera apagada",
+      lm_temp_target: /* @__PURE__ */ __name((t5) => `Temp · Objetivo ${t5}°`, "lm_temp_target"),
+      lm_pressure: "Presión",
+      lm_weight: "Báscula",
+      maint_shots: /* @__PURE__ */ __name((n4) => `${n4} shots`, "maint_shots"),
       leg_pressure: "Presión",
       leg_flow: "Flujo",
       leg_temp: "Temp",
@@ -1896,6 +1936,14 @@ ${TOKENS}
       m_yield: "Opbrengst",
       m_pressure: "Druk Ø",
       m_temp: "Temp",
+      tab_shot: "Shot",
+      m_ratio: "Verhouding",
+      lm_temp: "Temp",
+      lm_temp_off: "Temp · Boiler uit",
+      lm_temp_target: /* @__PURE__ */ __name((t5) => `Temp · Doel ${t5}°`, "lm_temp_target"),
+      lm_pressure: "Druk",
+      lm_weight: "Weegschaal",
+      maint_shots: /* @__PURE__ */ __name((n4) => `${n4} shots`, "maint_shots"),
       leg_pressure: "Druk",
       leg_flow: "Flow",
       leg_temp: "Temp",
@@ -1911,7 +1959,7 @@ ${TOKENS}
     }
   };
   var SUPPORTED_LANGS = ["de", "en", "it", "fr", "es", "nl"];
-  var LANG = "de";
+  var LANG = "en";
   function setLang(lang) {
     LANG = lang;
   }
@@ -2416,6 +2464,12 @@ ${TOKENS}
   // shot/src/glp-card.ts
   var GLP_CARD_VERSION = "2.22.0";
   var READY_BY_PENDING_FALLBACK_MS = 6e4;
+  function resolveLang(hass) {
+    const l3 = String(hass?.language || hass?.locale?.language || "en").slice(0, 2).toLowerCase();
+    return SUPPORTED_LANGS.includes(l3) ? l3 : "en";
+  }
+  __name(resolveLang, "resolveLang");
+  var ENTITY_PREFIX_RE = /^sensor\.[a-z0-9_]+$/;
   var GlpCard = class _GlpCard extends HTMLElement {
     static {
       __name(this, "GlpCard");
@@ -2648,9 +2702,14 @@ ${TOKENS}
       if (diffMs <= 0) return T2("ready_by_switching_now");
       return T2("ready_by_switching_in", Math.ceil(diffMs / 6e4));
     }
+    // Dates and times follow Home Assistant's locale, then its language, then
+    // the card's active language — never a fixed locale.
+    _locale() {
+      return String(this._hass?.locale?.language || this._hass?.language || getLang());
+    }
     _buildReadyByHtml(targetAt, plannedAt) {
       if (targetAt) {
-        const hhmm = targetAt.toLocaleTimeString(getLang(), { hour: "2-digit", minute: "2-digit" });
+        const hhmm = targetAt.toLocaleTimeString(this._locale(), { hour: "2-digit", minute: "2-digit" });
         return b2`<div class="ready-by ready-by-set">
         <div class="ready-by-info">
           <span class="ready-by-label">${T2("ready_by_target", hhmm)}</span>
@@ -2813,6 +2872,10 @@ ${TOKENS}
     // standalone/no-app YAML fallback; the app's own stored theme (#701, see
     // _appMachineTheme() below) takes precedence over these once available.
     setConfig(config) {
+      const prefix = config?.entity_prefix;
+      if (prefix != null && (typeof prefix !== "string" || !ENTITY_PREFIX_RE.test(prefix))) {
+        throw new Error("entity_prefix must be a sensor entity id, for example sensor.gaggiuino_local_profiler_");
+      }
       this._config = { title: "Gaggiuino", ...config };
       this._prefixStates = null;
       this._prefixConfig = null;
@@ -2874,10 +2937,7 @@ ${TOKENS}
     }
     set hass(hass) {
       this._hass = hass;
-      {
-        const l3 = String(hass?.language || hass?.locale?.language || "de").slice(0, 2).toLowerCase();
-        setLang(SUPPORTED_LANGS.includes(l3) ? l3 : "en");
-      }
+      setLang(resolveLang(hass));
       if (this.isConnected && !this._ordersPoll) this._startOrdersPoll();
       this._loadBeansInfo();
       if (this._needsRender()) this._render();
@@ -2904,7 +2964,7 @@ ${TOKENS}
       const ids = this._watchedIds(prefix);
       return {
         prefix,
-        language: String(this._hass?.language || this._hass?.locale?.language || "de").slice(0, 2).toLowerCase(),
+        language: resolveLang(this._hass),
         theme: this._themeKey(),
         ids,
         states: ids.map((id) => states[id]),
@@ -3102,7 +3162,7 @@ ${TOKENS}
         const pctW = Math.max(0, Math.min(100, Math.round((parseFloat(pct) || 0) * 100)));
         const sub = [
           daysSince != null ? daysSince === 0 ? T2("maint_today") : T2("days_ago", daysSince) : null,
-          shotsSince != null && shotsSince > 0 ? `${shotsSince} Shots` : null
+          shotsSince != null && shotsSince > 0 ? T2("maint_shots", shotsSince) : null
         ].filter(Boolean).join(" · ");
         const confirming = task && this._maintConfirm === task;
         const toggleConfirm = /* @__PURE__ */ __name((taskId) => {
@@ -3320,11 +3380,11 @@ ${TOKENS}
         temp !== null ? {
           val: temp,
           unit: "°",
-          lbl: boilerOff ? "Temp · Boiler aus" : targetTemp !== null ? `Temp · Ziel ${targetTemp}°` : "Temp",
+          lbl: boilerOff ? T2("lm_temp_off") : targetTemp !== null ? T2("lm_temp_target", targetTemp) : T2("lm_temp"),
           warm: !boilerOff && targetTemp !== null && parseFloat(temp) < parseFloat(targetTemp) - 1
         } : null,
-        livePressure !== null ? { val: livePressure, unit: " bar", lbl: "Druck" } : null,
-        liveWeight !== null ? { val: liveWeight, unit: " g", lbl: "Waage" } : null
+        livePressure !== null ? { val: livePressure, unit: " bar", lbl: T2("lm_pressure") } : null,
+        liveWeight !== null ? { val: liveWeight, unit: " g", lbl: T2("lm_weight") } : null
       ].filter(Boolean);
       const score = shotObj?.score ?? null;
       const scoreCls = score == null ? "" : score >= 80 ? "high" : score >= 55 ? "mid" : "low";
@@ -3423,7 +3483,7 @@ ${TOKENS}
         <button class="tab-btn${!showMaint && !showOrders ? " active" : ""}" data-tab="shot" @click=${() => {
         this._selectTab("shot");
       }}>${/* ICONS.of() emits fixed SVG markup */
-      o5(ICONS.of("coffee"))} Shot</button>
+      o5(ICONS.of("coffee"))} ${T2("tab_shot")}</button>
         ${ordersTabAvail ? b2`<button class="tab-btn${showOrders ? " active" : ""}" data-tab="orders" @click=${() => {
         this._selectTab("orders");
       }}>${/* ICONS.of() emits fixed SVG markup */
@@ -3449,7 +3509,7 @@ ${TOKENS}
         if (this._shotIndex > 0 && shotObj?.ts) {
           const d3 = parseTs(shotObj.ts);
           if (d3 && !isNaN(d3))
-            tsLine = b2`<div class="nav-ts">${d3.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "2-digit" })} ${d3.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })}</div>`;
+            tsLine = b2`<div class="nav-ts">${d3.toLocaleDateString(this._locale(), { day: "2-digit", month: "2-digit", year: "2-digit" })} ${d3.toLocaleTimeString(this._locale(), { hour: "2-digit", minute: "2-digit" })}</div>`;
         }
         navHtml = b2`
         <div class="nav-row">
@@ -3508,7 +3568,7 @@ ${TOKENS}
       const { ratio, duration, weight } = vm;
       return b2`${/* metricLineHtml() escapes its own input and emits fixed markup */
       o5(metricLineHtml([
-        ratio ? { role: "recipe", num: `1:${ratio}`, unit: "", label: "Ratio" } : null,
+        ratio ? { role: "recipe", num: `1:${ratio}`, unit: "", label: T2("m_ratio") } : null,
         duration ? { role: "process", num: duration, unit: "s", label: T2("m_duration") } : null,
         weight ? { role: "result", num: weight, unit: "g", label: T2("m_yield") } : null
       ]))}`;
@@ -3630,6 +3690,7 @@ ${TOKENS}
     }
     _render() {
       if (!this._hass || !this._config) return;
+      setLang(resolveLang(this._hass));
       const vm = this._viewModel();
       const machineType = appMachineType(this._machineEntry());
       if (vm.machineOff) {
@@ -3705,8 +3766,11 @@ ${TOKENS}
     getCardSize() {
       return 3;
     }
+    // An empty config lets _resolvePrefix() find the machine from the entities
+    // Home Assistant already has, so a card added from the picker works without
+    // hand-editing YAML.
     static getStubConfig() {
-      return { entity_prefix: "sensor.gaggiuino_local_profiler_" };
+      return {};
     }
   };
   var define = /* @__PURE__ */ __name(() => customElements.get("glp-card") || customElements.define("glp-card", GlpCard), "define");
