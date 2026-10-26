@@ -32,9 +32,9 @@ const GLP_ORDER_CARD_VERSION = '1.22.0';
 // Menu items younger than this show the NEW badge (config: new_badge_days)
 const NEW_BADGE_DAYS_DEFAULT = 7;
 
-// The languages the visual editor's labels can be resolved in, in the same
-// normalisation as the card's own language detection: first two letters, lower
-// case, English for anything the card has no strings for.
+// The card's language detection, shared by the constructor and the visual
+// editor's labels: first two letters, lower case, English for anything the
+// card has no strings for.
 function _configLang(code: string | null | undefined): string {
   const lang = String(code || '').slice(0, 2).toLowerCase();
   return STRINGS[lang] ? lang : 'en';
@@ -123,8 +123,7 @@ class GlpOrderCard extends HTMLElement {
   // First two letters, lower case, falling back to English for a language this
   // card has no strings for.
   _normalizeLang(code: string | null | undefined): string {
-    const lang = String(code || '').slice(0, 2).toLowerCase();
-    return STRINGS[lang] ? lang : 'en';
+    return _configLang(code);
   }
 
   // Home Assistant's visual card editor renders this schema with its own

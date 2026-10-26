@@ -2422,8 +2422,7 @@ ${SHEET_STYLES}
     // First two letters, lower case, falling back to English for a language this
     // card has no strings for.
     _normalizeLang(code) {
-      const lang = String(code || "").slice(0, 2).toLowerCase();
-      return STRINGS[lang] ? lang : "en";
+      return _configLang(code);
     }
     // Home Assistant's visual card editor renders this schema with its own
     // ha-form; there is no custom editor element. Every documented option in
