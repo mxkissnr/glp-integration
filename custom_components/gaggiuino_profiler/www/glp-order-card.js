@@ -2072,7 +2072,28 @@ ${SHEET_STYLES}
       order_failed: "Bestellung konnte nicht gesendet werden. Bitte erneut versuchen.",
       toast_order_sent: (item) => `Bestellung gesendet: ${item}`,
       chart_pressure: "Druck",
-      chart_weight: "Gewicht"
+      chart_weight: "Gewicht",
+      cfg_title: "Titel",
+      cfg_title_help: "Titel im Kartenkopf. Leer lassen für den übersetzten Standard.",
+      cfg_machine: "Maschine",
+      cfg_machine_help: "Name oder ID einer Maschine aus dem Maschinen-Register des Apps.",
+      cfg_switch_entity: "Switch-Entity",
+      cfg_switch_entity_help: "Schalter der Maschine. Solange er aus ist, zeigt die Karte keine Bestellung an.",
+      cfg_new_badge_days: "Tage für das NEW-Badge",
+      cfg_new_badge_days_help: "So viele Tage behält ein neu hinzugefügtes Getränk sein NEW-Badge.",
+      cfg_theme: "Farb-Preset",
+      cfg_theme_help: "Preset für Bestell-Button, Auswahl-Hervorhebungen und Maschinen-Icon.",
+      cfg_accent_color: "Akzentfarbe",
+      cfg_accent_color_help: "Eigene Farbe als #rrggbb statt eines Presets. Ungültige Werte werden ignoriert.",
+      cfg_accent_gradient: "Akzent-Verlauf",
+      cfg_accent_gradient_help: "Zwei Farben als #rrggbb, eine pro Zeile. Überschreibt Preset und Akzentfarbe.",
+      cfg_glp_url: "GLP-URL",
+      cfg_glp_url_help: "Adresse des GLP-Apps auf Port 8099. Nur für eine direkte Verbindung nötig.",
+      cfg_glp_token: "API-Token",
+      cfg_glp_token_help: "Nur für eine direkte Verbindung. Achtung: Jeder Dashboard-Benutzer kann den Token lesen.",
+      cfg_advanced: "Erweitert / direkte URL",
+      cfg_advanced_help: "Nur nötig, wenn die Karte das App nicht über den Home-Assistant-Ingress erreicht.",
+      cfg_theme_none: "Kein Preset"
     },
     en: {
       title: "Order",
@@ -2105,7 +2126,28 @@ ${SHEET_STYLES}
       order_failed: "Order could not be sent. Please try again.",
       toast_order_sent: (item) => `Order sent: ${item}`,
       chart_pressure: "Pressure",
-      chart_weight: "Weight"
+      chart_weight: "Weight",
+      cfg_title: "Title",
+      cfg_title_help: "Title in the card header. Leave empty for the translated default.",
+      cfg_machine: "Machine",
+      cfg_machine_help: "Name or id of one machine from the app's machine registry.",
+      cfg_switch_entity: "Switch entity",
+      cfg_switch_entity_help: "The machine's switch. While it is off, the card shows no ordering.",
+      cfg_new_badge_days: "NEW badge days",
+      cfg_new_badge_days_help: "How many days a newly added drink keeps its NEW badge.",
+      cfg_theme: "Colour preset",
+      cfg_theme_help: "Preset for the order button, the selection highlights and the machine icon.",
+      cfg_accent_color: "Accent colour",
+      cfg_accent_color_help: "Custom #rrggbb colour instead of a preset. Invalid values are ignored.",
+      cfg_accent_gradient: "Accent gradient",
+      cfg_accent_gradient_help: "Two #rrggbb colours, one per line. Overrides the preset and the accent colour.",
+      cfg_glp_url: "GLP URL",
+      cfg_glp_url_help: "Address of the GLP app on port 8099. Only needed for a direct connection.",
+      cfg_glp_token: "API token",
+      cfg_glp_token_help: "Only for a direct connection. Warning: every dashboard user can read this token.",
+      cfg_advanced: "Advanced / direct URL",
+      cfg_advanced_help: "Only needed when the card cannot reach the app through Home Assistant ingress.",
+      cfg_theme_none: "No preset"
     },
     it: {
       title: "Ordina",
@@ -2138,7 +2180,28 @@ ${SHEET_STYLES}
       order_failed: "Impossibile inviare l'ordine. Riprova.",
       toast_order_sent: (item) => `Ordine inviato: ${item}`,
       chart_pressure: "Pressione",
-      chart_weight: "Peso"
+      chart_weight: "Peso",
+      cfg_title: "Titolo",
+      cfg_title_help: "Titolo nell'intestazione della scheda. Vuoto per il valore predefinito tradotto.",
+      cfg_machine: "Macchina",
+      cfg_machine_help: "Nome o ID di una macchina dal registro macchine dell'app.",
+      cfg_switch_entity: "Entità switch",
+      cfg_switch_entity_help: "Lo switch della macchina. Finché è spento, la scheda non permette ordini.",
+      cfg_new_badge_days: "Giorni del badge NEW",
+      cfg_new_badge_days_help: "Per quanti giorni una bevanda nuova mantiene il badge NEW.",
+      cfg_theme: "Preset di colore",
+      cfg_theme_help: "Preset per il pulsante d'ordine, le selezioni e l'icona della macchina.",
+      cfg_accent_color: "Colore d'accento",
+      cfg_accent_color_help: "Colore #rrggbb personalizzato invece di un preset. I valori non validi vengono ignorati.",
+      cfg_accent_gradient: "Sfumatura d'accento",
+      cfg_accent_gradient_help: "Due colori #rrggbb, uno per riga. Prevale sul preset e sul colore d'accento.",
+      cfg_glp_url: "URL GLP",
+      cfg_glp_url_help: "Indirizzo dell'app GLP sulla porta 8099. Serve solo per una connessione diretta.",
+      cfg_glp_token: "Token API",
+      cfg_glp_token_help: "Solo per una connessione diretta. Attenzione: ogni utente della dashboard può leggerlo.",
+      cfg_advanced: "Avanzate / URL diretto",
+      cfg_advanced_help: "Serve solo se la scheda non raggiunge l'app tramite l'ingress di Home Assistant.",
+      cfg_theme_none: "Nessun preset"
     },
     fr: {
       title: "Commander",
@@ -2171,7 +2234,28 @@ ${SHEET_STYLES}
       order_failed: "La commande n'a pas pu être envoyée. Veuillez réessayer.",
       toast_order_sent: (item) => `Commande envoyée : ${item}`,
       chart_pressure: "Pression",
-      chart_weight: "Poids"
+      chart_weight: "Poids",
+      cfg_title: "Titre",
+      cfg_title_help: "Titre dans l'en-tête de la carte. Laisser vide pour le texte traduit par défaut.",
+      cfg_machine: "Machine",
+      cfg_machine_help: "Nom ou identifiant d'une machine du registre des machines de l'application.",
+      cfg_switch_entity: "Entité switch",
+      cfg_switch_entity_help: "L'interrupteur de la machine. Tant qu'il est éteint, la carte ne permet pas de commander.",
+      cfg_new_badge_days: "Jours du badge NEW",
+      cfg_new_badge_days_help: "Pendant combien de jours une boisson ajoutée garde son badge NEW.",
+      cfg_theme: "Préréglage de couleur",
+      cfg_theme_help: "Préréglage pour le bouton de commande, les sélections et l'icône de la machine.",
+      cfg_accent_color: "Couleur d'accent",
+      cfg_accent_color_help: "Couleur #rrggbb personnalisée au lieu d'un préréglage. Les valeurs invalides sont ignorées.",
+      cfg_accent_gradient: "Dégradé d'accent",
+      cfg_accent_gradient_help: "Deux couleurs #rrggbb, une par ligne. Prioritaire sur le préréglage et la couleur d'accent.",
+      cfg_glp_url: "URL GLP",
+      cfg_glp_url_help: "Adresse de l'application GLP sur le port 8099. Nécessaire seulement pour une connexion directe.",
+      cfg_glp_token: "Jeton API",
+      cfg_glp_token_help: "Seulement pour une connexion directe. Attention : chaque utilisateur du tableau de bord peut le lire.",
+      cfg_advanced: "Avancé / URL directe",
+      cfg_advanced_help: "Nécessaire seulement si la carte n'atteint pas l'application via l'ingress de Home Assistant.",
+      cfg_theme_none: "Aucun préréglage"
     },
     es: {
       title: "Pedir",
@@ -2204,7 +2288,28 @@ ${SHEET_STYLES}
       order_failed: "No se pudo enviar el pedido. Inténtalo de nuevo.",
       toast_order_sent: (item) => `Pedido enviado: ${item}`,
       chart_pressure: "Presión",
-      chart_weight: "Peso"
+      chart_weight: "Peso",
+      cfg_title: "Título",
+      cfg_title_help: "Título en la cabecera de la tarjeta. Déjalo vacío para el valor traducido.",
+      cfg_machine: "Máquina",
+      cfg_machine_help: "Nombre o ID de una máquina del registro de máquinas de la app.",
+      cfg_switch_entity: "Entidad switch",
+      cfg_switch_entity_help: "El interruptor de la máquina. Mientras está apagado, la tarjeta no permite pedir.",
+      cfg_new_badge_days: "Días del badge NEW",
+      cfg_new_badge_days_help: "Cuántos días mantiene una bebida nueva su badge NEW.",
+      cfg_theme: "Preset de color",
+      cfg_theme_help: "Preset para el botón de pedido, las selecciones y el icono de la máquina.",
+      cfg_accent_color: "Color de acento",
+      cfg_accent_color_help: "Color #rrggbb propio en lugar de un preset. Los valores no válidos se ignoran.",
+      cfg_accent_gradient: "Degradado de acento",
+      cfg_accent_gradient_help: "Dos colores #rrggbb, uno por línea. Tiene prioridad sobre el preset y el color de acento.",
+      cfg_glp_url: "URL de GLP",
+      cfg_glp_url_help: "Dirección de la app GLP en el puerto 8099. Solo hace falta para una conexión directa.",
+      cfg_glp_token: "Token de API",
+      cfg_glp_token_help: "Solo para una conexión directa. Aviso: cualquier usuario del panel puede leerlo.",
+      cfg_advanced: "Avanzado / URL directa",
+      cfg_advanced_help: "Solo hace falta si la tarjeta no llega a la app mediante el ingress de Home Assistant.",
+      cfg_theme_none: "Sin preset"
     },
     nl: {
       title: "Bestellen",
@@ -2237,7 +2342,28 @@ ${SHEET_STYLES}
       order_failed: "Bestelling kon niet worden verzonden. Probeer het opnieuw.",
       toast_order_sent: (item) => `Bestelling verzonden: ${item}`,
       chart_pressure: "Druk",
-      chart_weight: "Gewicht"
+      chart_weight: "Gewicht",
+      cfg_title: "Titel",
+      cfg_title_help: "Titel in de kop van de kaart. Leeg laten voor de vertaalde standaardtekst.",
+      cfg_machine: "Machine",
+      cfg_machine_help: "Naam of id van een machine uit het machineregister van de app.",
+      cfg_switch_entity: "Switch-entiteit",
+      cfg_switch_entity_help: "De schakelaar van de machine. Zolang die uit staat, laat de kaart geen bestelling toe.",
+      cfg_new_badge_days: "Dagen voor het NEW-label",
+      cfg_new_badge_days_help: "Hoeveel dagen een nieuw drankje zijn NEW-label houdt.",
+      cfg_theme: "Kleurpreset",
+      cfg_theme_help: "Preset voor de bestelknop, de selecties en het machine-icoon.",
+      cfg_accent_color: "Accentkleur",
+      cfg_accent_color_help: "Eigen #rrggbb-kleur in plaats van een preset. Ongeldige waarden worden genegeerd.",
+      cfg_accent_gradient: "Accentverloop",
+      cfg_accent_gradient_help: "Twee #rrggbb-kleuren, één per regel. Gaat voor op de preset en de accentkleur.",
+      cfg_glp_url: "GLP-URL",
+      cfg_glp_url_help: "Adres van de GLP-app op poort 8099. Alleen nodig voor een directe verbinding.",
+      cfg_glp_token: "API-token",
+      cfg_glp_token_help: "Alleen voor een directe verbinding. Let op: elke dashboardgebruiker kan dit token lezen.",
+      cfg_advanced: "Geavanceerd / directe URL",
+      cfg_advanced_help: "Alleen nodig als de kaart de app niet via de Home Assistant-ingress bereikt.",
+      cfg_theme_none: "Geen preset"
     }
   };
   function _s(key, lang, ...args) {
@@ -2249,6 +2375,25 @@ ${SHEET_STYLES}
   // order/src/glp-order-card.ts
   var GLP_ORDER_CARD_VERSION = "1.22.0";
   var NEW_BADGE_DAYS_DEFAULT = 7;
+  function _configLang(code) {
+    const lang = String(code || "").slice(0, 2).toLowerCase();
+    return STRINGS[lang] ? lang : "en";
+  }
+  function _normalizeConfig(config) {
+    const out = { ...config };
+    const textKeys = ["title", "machine", "switch_entity", "theme", "accent_color", "glp_url", "glp_token"];
+    for (const key of textKeys) {
+      if (typeof out[key] === "string" && out[key].trim() === "") delete out[key];
+    }
+    if (out.theme === "none") delete out.theme;
+    const gradient = out.accent_gradient;
+    if (typeof gradient === "string") {
+      const stops = gradient.split(/[\s,]+/).filter(Boolean);
+      if (stops.length > 0) out.accent_gradient = stops;
+      else delete out.accent_gradient;
+    }
+    return out;
+  }
   var _glpOrderCardInstanceSeq = 0;
   var GlpOrderCard = class extends HTMLElement {
     constructor() {
@@ -2280,7 +2425,44 @@ ${SHEET_STYLES}
       const lang = String(code || "").slice(0, 2).toLowerCase();
       return STRINGS[lang] ? lang : "en";
     }
+    // Home Assistant's visual card editor renders this schema with its own
+    // ha-form; there is no custom editor element. Every documented option in
+    // DOCS.md ("Order Card options") appears here once, in the same order.
+    static getConfigForm() {
+      const lang = _configLang(navigator.language);
+      const themeOptions = [
+        { value: "none", label: _s("cfg_theme_none", lang) },
+        ...Object.keys(THEME_PRESETS).map((key) => ({ value: key, label: key }))
+      ];
+      return {
+        schema: [
+          { name: "title", selector: { text: {} } },
+          { name: "machine", selector: { text: {} } },
+          { name: "switch_entity", selector: { entity: { domain: "switch" } } },
+          { name: "new_badge_days", selector: { number: { min: 0, max: 365, mode: "box" } } },
+          { name: "theme", selector: { select: { mode: "dropdown", options: themeOptions } } },
+          { name: "accent_color", selector: { text: {} } },
+          { name: "accent_gradient", selector: { text: { multiple: true } } },
+          {
+            type: "expandable",
+            name: "advanced",
+            title: _s("cfg_advanced", lang),
+            schema: [
+              { name: "glp_url", selector: { text: { type: "url" } } },
+              { name: "glp_token", selector: { text: { type: "password" } } }
+            ]
+          }
+        ],
+        computeLabel: (entry) => _s(`cfg_${entry.name}`, _configLang(navigator.language)),
+        computeHelper: (entry) => _s(`cfg_${entry.name}_help`, _configLang(navigator.language))
+      };
+    }
+    // Accepts both the YAML shape and what getConfigForm()'s form produces
+    // (numbers from the number selector, 'none' from the theme dropdown, ''
+    // from emptied text fields, a string for the multi-line gradient) without
+    // changing what an existing YAML config means.
     setConfig(config) {
+      const normalized = _normalizeConfig(config);
       this._config = {
         title: null,
         switch_entity: null,
@@ -2289,9 +2471,9 @@ ${SHEET_STYLES}
         theme: null,
         accent_color: null,
         accent_gradient: null,
-        ...config
+        ...normalized
       };
-      if (config.glp_token) this._token = String(config.glp_token);
+      if (normalized.glp_token) this._token = String(normalized.glp_token);
     }
     // The app's own stored per-machine theme (#701), read from hass state by
     // the shared machine lookup; null when nothing valid is synced.
@@ -2572,7 +2754,7 @@ ${SHEET_STYLES}
       if (visibleMenu.length === 0) {
         return b2`<div class="loading">${_s("no_menu", lang)}</div>`;
       }
-      const newThreshold = (parseFloat(this._config?.new_badge_days) || NEW_BADGE_DAYS_DEFAULT) * 24 * 60 * 60 * 1e3;
+      const newThreshold = (parseFloat(String(this._config?.new_badge_days ?? "")) || NEW_BADGE_DAYS_DEFAULT) * 24 * 60 * 60 * 1e3;
       const now = Date.now();
       const renderItem = (m2) => {
         const isNew = m2.createdAt && now - m2.createdAt < newThreshold;
