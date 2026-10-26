@@ -100,11 +100,14 @@ function idleOnStates(extra = {}) {
   };
 }
 
+// The fixture freezes the German output (it predates the English fallback),
+// so every scenario asks for German explicitly.
 const SCENARIOS = [
   {
     name: 'machine-off',
     config: BASE_CONFIG,
     hass: {
+      language: 'de',
       states: {
         'switch.gaggiuino': { state: 'off' },
         [`${P}machine_status`]: { state: 'offline', attributes: {} },
@@ -116,6 +119,7 @@ const SCENARIOS = [
     name: 'machine-off-ready-by',
     config: BASE_CONFIG,
     hass: {
+      language: 'de',
       states: {
         'switch.gaggiuino': { state: 'off' },
         [`${P}machine_status`]: { state: 'offline', attributes: {} },
@@ -128,12 +132,13 @@ const SCENARIOS = [
   {
     name: 'idle-recent-shot',
     config: BASE_CONFIG,
-    hass: { states: idleOnStates() },
+    hass: { language: 'de', states: idleOnStates() },
   },
   {
     name: 'brewing',
     config: BASE_CONFIG,
     hass: {
+      language: 'de',
       states: idleOnStates({
         [`${B}brewing`]: {
           state: 'on',
@@ -158,6 +163,7 @@ const SCENARIOS = [
     name: 'maintenance-tab',
     config: BASE_CONFIG,
     hass: {
+      language: 'de',
       states: idleOnStates({
         [`${P}maintenance_descaling`]: {
           state: 'ok',
@@ -170,7 +176,7 @@ const SCENARIOS = [
   {
     name: 'orders-tab',
     config: BASE_CONFIG,
-    hass: { states: idleOnStates() },
+    hass: { language: 'de', states: idleOnStates() },
     card: {
       _activeTab: 'orders',
       _orders: [
@@ -183,6 +189,7 @@ const SCENARIOS = [
     name: 'descaling-steam-low-water',
     config: BASE_CONFIG,
     hass: {
+      language: 'de',
       states: idleOnStates({
         [`${B}brewing`]: { state: 'off', attributes: { is_descaling: true } },
         [`${B}steam_switch`]: { state: 'on' },

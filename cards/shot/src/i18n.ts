@@ -34,6 +34,9 @@ export const STRINGS: Record<string, Record<string, StringEntry>> = {
     brewing: 'Bezug läuft',
     no_shot_label: 'Noch kein Shot aufgezeichnet', no_shot_hint: 'Shots werden automatisch synchronisiert',
     m_duration: 'Dauer', m_yield: 'Ausbeute', m_pressure: 'Druck Ø', m_temp: 'Temp',
+    tab_shot: 'Shot', m_ratio: 'Ratio',
+    lm_temp: 'Temp', lm_temp_off: 'Temp · Boiler aus', lm_temp_target: t => `Temp · Ziel ${t}°`,
+    lm_pressure: 'Druck', lm_weight: 'Waage', maint_shots: n => `${n} Shots`,
     leg_pressure: 'Druck', leg_flow: 'Flow', leg_temp: 'Temp', leg_weight: 'Gewicht',
     ph_pre: 'Vorinfusion', ph_ext: 'Extraktion',
     footer_today: n => `${n} heute`, uptime_title: 'Maschine an seit',
@@ -67,6 +70,9 @@ export const STRINGS: Record<string, Record<string, StringEntry>> = {
     brewing: 'Brewing',
     no_shot_label: 'No shot recorded yet', no_shot_hint: 'Shots sync automatically',
     m_duration: 'Duration', m_yield: 'Yield', m_pressure: 'Pressure Ø', m_temp: 'Temp',
+    tab_shot: 'Shot', m_ratio: 'Ratio',
+    lm_temp: 'Temp', lm_temp_off: 'Temp · Boiler off', lm_temp_target: t => `Temp · Target ${t}°`,
+    lm_pressure: 'Pressure', lm_weight: 'Scale', maint_shots: n => `${n} shots`,
     leg_pressure: 'Pressure', leg_flow: 'Flow', leg_temp: 'Temp', leg_weight: 'Weight',
     ph_pre: 'Preinfusion', ph_ext: 'Extraction',
     footer_today: n => `${n} today`, uptime_title: 'Machine on since',
@@ -100,6 +106,9 @@ export const STRINGS: Record<string, Record<string, StringEntry>> = {
     brewing: 'Estrazione in corso',
     no_shot_label: 'Nessuno shot ancora registrato', no_shot_hint: 'Gli shot si sincronizzano automaticamente',
     m_duration: 'Durata', m_yield: 'Resa', m_pressure: 'Pressione Ø', m_temp: 'Temp',
+    tab_shot: 'Shot', m_ratio: 'Rapporto',
+    lm_temp: 'Temp', lm_temp_off: 'Temp · Caldaia spenta', lm_temp_target: t => `Temp · Obiettivo ${t}°`,
+    lm_pressure: 'Pressione', lm_weight: 'Bilancia', maint_shots: n => `${n} shot`,
     leg_pressure: 'Pressione', leg_flow: 'Flusso', leg_temp: 'Temp', leg_weight: 'Peso',
     ph_pre: 'Preinfusione', ph_ext: 'Estrazione',
     footer_today: n => `${n} oggi`, uptime_title: 'Macchina accesa da',
@@ -133,6 +142,9 @@ export const STRINGS: Record<string, Record<string, StringEntry>> = {
     brewing: 'Extraction en cours',
     no_shot_label: 'Aucun shot enregistré pour l\'instant', no_shot_hint: 'Les shots se synchronisent automatiquement',
     m_duration: 'Durée', m_yield: 'Rendement', m_pressure: 'Pression Ø', m_temp: 'Temp',
+    tab_shot: 'Shot', m_ratio: 'Ratio',
+    lm_temp: 'Temp', lm_temp_off: 'Temp · Chauffe éteinte', lm_temp_target: t => `Temp · Cible ${t}°`,
+    lm_pressure: 'Pression', lm_weight: 'Balance', maint_shots: n => `${n} shots`,
     leg_pressure: 'Pression', leg_flow: 'Débit', leg_temp: 'Temp', leg_weight: 'Poids',
     ph_pre: 'Préinfusion', ph_ext: 'Extraction',
     footer_today: n => `${n} aujourd'hui`, uptime_title: 'Machine allumée depuis',
@@ -166,6 +178,9 @@ export const STRINGS: Record<string, Record<string, StringEntry>> = {
     brewing: 'Extracción en curso',
     no_shot_label: 'Aún no se ha registrado ningún shot', no_shot_hint: 'Los shots se sincronizan automáticamente',
     m_duration: 'Duración', m_yield: 'Rendimiento', m_pressure: 'Presión Ø', m_temp: 'Temp',
+    tab_shot: 'Shot', m_ratio: 'Proporción',
+    lm_temp: 'Temp', lm_temp_off: 'Temp · Caldera apagada', lm_temp_target: t => `Temp · Objetivo ${t}°`,
+    lm_pressure: 'Presión', lm_weight: 'Báscula', maint_shots: n => `${n} shots`,
     leg_pressure: 'Presión', leg_flow: 'Flujo', leg_temp: 'Temp', leg_weight: 'Peso',
     ph_pre: 'Preinfusión', ph_ext: 'Extracción',
     footer_today: n => `${n} hoy`, uptime_title: 'Máquina encendida desde',
@@ -199,6 +214,9 @@ export const STRINGS: Record<string, Record<string, StringEntry>> = {
     brewing: 'Bereiden',
     no_shot_label: 'Nog geen shot geregistreerd', no_shot_hint: 'Shots synchroniseren automatisch',
     m_duration: 'Duur', m_yield: 'Opbrengst', m_pressure: 'Druk Ø', m_temp: 'Temp',
+    tab_shot: 'Shot', m_ratio: 'Verhouding',
+    lm_temp: 'Temp', lm_temp_off: 'Temp · Boiler uit', lm_temp_target: t => `Temp · Doel ${t}°`,
+    lm_pressure: 'Druk', lm_weight: 'Weegschaal', maint_shots: n => `${n} shots`,
     leg_pressure: 'Druk', leg_flow: 'Flow', leg_temp: 'Temp', leg_weight: 'Gewicht',
     ph_pre: 'Voorinfusie', ph_ext: 'Extractie',
     footer_today: n => `${n} vandaag`, uptime_title: 'Machine aan sinds',
@@ -211,8 +229,9 @@ export const SUPPORTED_LANGS = ['de', 'en', 'it', 'fr', 'es', 'nl'];
 
 // The active language is per-card state driven by hass.language. It is
 // exported through setLang()/getLang() because an ESM import cannot be
-// reassigned from the class.
-let LANG = 'de';
+// reassigned from the class. English matches the fallback promised above: a
+// card that never saw a hass language (a stub, a test) renders in English.
+let LANG = 'en';
 
 export function setLang(lang: string): void { LANG = lang; }
 export function getLang(): string { return LANG; }

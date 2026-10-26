@@ -311,11 +311,11 @@ test('_readyByCountdownText() returns empty string when nothing is planned or pe
 });
 
 test('_readyByCountdownText() returns the scheduling placeholder when a target is set but plannedAt is not known yet', () => {
-  // LANG defaults to 'de' at module load until _render() sets it from
-  // hass.language — this suite never calls _render(), so the German string
+  // LANG defaults to 'en' at module load until _render() sets it from
+  // hass.language — this suite never calls _render(), so the English string
   // is what T() resolves to here.
   const inst = makeInstance();
-  assert.equal(inst._readyByCountdownText(null, new Date()), 'Wird geplant …');
+  assert.equal(inst._readyByCountdownText(null, new Date()), 'Scheduling…');
 });
 
 // The ready-by input is left uncontrolled in the Lit template, so a typed time
