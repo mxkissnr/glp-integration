@@ -170,8 +170,7 @@ ${SHEET_STYLES}
   /* Score ring → typographic verdict (#120): the number carries the
      weight, the word names it, no circle/badge chrome. Score thresholds
      are unchanged (see the scoreCls computation in _render()) — only the
-     presentation changed here. Sans throughout, incl. the number: Fraunces
-     stays reserved for the bean name alone (see .shot-coffee below). */
+     presentation changed here. Sans throughout, incl. the number. */
   .verdict {
     flex-shrink: 0; display: flex; align-items: baseline; gap: 3px;
   }
@@ -203,16 +202,6 @@ ${SHEET_STYLES}
     white-space: nowrap; flex-shrink: 0;
   }
   .shot-coffee {
-    /* Fraunces stays scoped to exactly this element (#120) — not the shot
-       title (.shot-profile above, sans/800) and not the verdict. No
-       @font-face is bundled here: this is a single-file Lovelace element
-       with no font asset shipped alongside it (unlike the app, which
-       already bundles Fraunces in public-src/fonts/), and reaching out to
-       a font CDN from a HA custom card would add a network dependency this
-       file has never had. Falls back to the platform serif stack, which is
-       still the intended visual note (a warm serif against the sans
-       everywhere else) even where Fraunces itself isn't installed. */
-    font-family: Fraunces, Georgia, 'Times New Roman', serif;
     font-weight: 600;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
@@ -241,6 +230,7 @@ ${SHEET_STYLES}
     display: flex; align-items: center; justify-content: center;
     transition: color .15s; touch-action: manipulation; flex-shrink: 0;
   }
+  .nav-arrow svg { width: 21px; height: 21px; }
   .nav-arrow:active:not([disabled]) { color: var(--text); }
   .nav-arrow[disabled] { opacity: .12; cursor: default; pointer-events: none; }
   .nav-dots {
@@ -272,20 +262,11 @@ ${SHEET_STYLES}
   }
 
   /* ── guided metric line (#120) ──────────────────────────────────────────
-     Was two separate three-tile box rows (.metric-trio for a historical
-     shot, .live-stats for a brewing one) — the single clearest "generated
-     UI" tell in this file per two independent audits landing on the exact
-     same finding. One component now serves both call sites (_metricLineHtml()
-     in the render code below); which one is on screen is still driven by the
-     brewing flag, same as before.
-     The three roles (recipe = what was asked for, process = what happened,
-     result = what came out) stay legible without three separate boxes: they
-     are told apart by size/weight/color alone, not by grouping into cards —
-     recipe is the quietest (muted, regular weight), process is mid-weight,
-     result is the loudest (largest, full-contrast text or, for the historical
-     yield/ratio pairing, plain — see the role assignment at the call site for
-     why temp/pressure/weight map to recipe/process/result while brewing, and
-     ratio/duration/yield do so for a finished shot). */
+     The live brewing row only now (_liveStatsHtml()); a finished shot uses
+     .key-figures below. The three roles (recipe = what was asked for, process
+     = what happened, result = what came out) stay legible without three
+     separate boxes: they are told apart by size/weight/color alone, not by
+     grouping into cards. */
   .metric-line {
     display: flex; align-items: flex-end; gap: var(--glp-sp-5);
     margin-bottom: var(--glp-sp-3);
@@ -298,14 +279,31 @@ ${SHEET_STYLES}
   .metric-item.role-process .num { font-size: var(--glp-fs-4); font-weight: 700; color: var(--text); }
   .metric-item.role-result  .num { font-size: var(--glp-fs-5); font-weight: 700; color: var(--text); }
 
-  /* secondary stats — border diet (#120): not clickable, so grouping comes
-     from being inline text on the card's own background, not a nested box. */
-  .stats-secondary {
-    display: flex; gap: var(--glp-sp-5); margin-bottom: var(--glp-sp-3);
+  /* ── key figures ────────────────────────────────────────────────────────
+     All five finished-shot figures in one grid with one value style: ratio,
+     duration, yield, pressure and temperature differ in what they mean, not
+     in how loudly they are set. The column count follows the rendered count
+     (.figures-N, set from _keyFiguresHtml()) so a row is never left half
+     empty — five sit 3 + 2 at phone width, with the last two spanning the
+     full row; four sit 2 + 2 rather than 3 + 1. */
+  .key-figures {
+    display: grid; gap: var(--glp-sp-3) var(--glp-sp-4);
+    margin-bottom: var(--glp-sp-3);
+    grid-template-columns: repeat(6, minmax(0, 1fr));
   }
-  .stat-pill { display: flex; flex-direction: column; gap: 2px; }
-  .stat-pill-label { font-size: var(--glp-fs-1); color: var(--sub); }
-  .stat-pill-value { font-size: var(--glp-fs-3); font-weight: 700; letter-spacing: -.02em; }
+  .key-figure { grid-column: span 2; min-width: 0; }
+  .key-figures.figures-5 .key-figure:nth-child(4),
+  .key-figures.figures-5 .key-figure:nth-child(5) { grid-column: span 3; }
+  .key-figures:not(.figures-5) .key-figure { grid-column: auto; }
+  .key-figures.figures-4, .key-figures.figures-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .key-figures.figures-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .key-figures.figures-1 { grid-template-columns: minmax(0, 1fr); }
+  .kf-value {
+    font-size: var(--glp-fs-4); font-weight: 700; line-height: 1;
+    color: var(--text); letter-spacing: -.02em; font-variant-numeric: tabular-nums;
+  }
+  .kf-unit { font-size: var(--glp-fs-1); font-weight: 500; color: var(--sub); margin-left: 1px; }
+  .kf-label { font-size: var(--glp-fs-1); color: var(--sub); margin-top: 2px; }
 
   /* rating stars — drawn icons (ICONS.of('star')) replace the ★ text
      character; filled vs. empty is the .on class on the same shape. */
@@ -422,9 +420,10 @@ ${SHEET_STYLES}
   .profile-label-small { font-size: var(--glp-fs-1); color: var(--sub); font-weight: 500; }
   .profile-current-name { flex: 1; text-align: left; }
   .profile-chevron {
-    color: var(--sub); font-size: var(--glp-fs-1); margin-left: var(--glp-sp-2);
-    opacity: .6;
+    color: var(--sub); margin-left: var(--glp-sp-2); opacity: .6;
+    display: flex; align-items: center;
   }
+  .profile-chevron .glp-i { width: 15px; height: 15px; }
   /* The picker inside the shared sheet: a flat list, the active profile
      carrying the accent tint and a check icon. */
   .profile-sheet-list { display: flex; flex-direction: column; gap: var(--glp-sp-1); }
@@ -651,6 +650,7 @@ ${SHEET_STYLES}
     -webkit-appearance: none; appearance: none;
   }
   .footer-item svg { width: 11px; height: 11px; opacity: .8; flex-shrink: 0; }
+  .footer a .glp-i { vertical-align: -1px; }
   .footer a { color: var(--sub); text-decoration: none; }
   .footer a:hover { color: var(--text); }
 
