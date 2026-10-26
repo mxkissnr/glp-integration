@@ -1324,6 +1324,13 @@ ${TOKENS}
     return type === "gaggimate" ? "gaggimate" : "gaggiuino";
   }
 
+  // shared/ha-events.ts
+  function fireHaEvent(node, type, detail) {
+    node.dispatchEvent(new CustomEvent(type, { detail, bubbles: true, composed: true }));
+  }
+  var toast = (node, message) => fireHaEvent(node, "hass-notification", { message });
+  var haptic = (node, type) => fireHaEvent(node, "haptic", type);
+
   // order/src/i18n.ts
   var STRINGS = {
     de: {
@@ -1353,6 +1360,7 @@ ${TOKENS}
       no_menu: "Noch kein Menü konfiguriert",
       menu_all: "Alle Getränke",
       order_failed: "Bestellung konnte nicht gesendet werden. Bitte erneut versuchen.",
+      toast_order_sent: (item) => `Bestellung gesendet: ${item}`,
       chart_pressure: "Druck",
       chart_weight: "Gewicht"
     },
@@ -1383,6 +1391,7 @@ ${TOKENS}
       no_menu: "No menu configured yet",
       menu_all: "All drinks",
       order_failed: "Order could not be sent. Please try again.",
+      toast_order_sent: (item) => `Order sent: ${item}`,
       chart_pressure: "Pressure",
       chart_weight: "Weight"
     },
@@ -1413,6 +1422,7 @@ ${TOKENS}
       no_menu: "Nessun menu configurato ancora",
       menu_all: "Tutte le bevande",
       order_failed: "Impossibile inviare l'ordine. Riprova.",
+      toast_order_sent: (item) => `Ordine inviato: ${item}`,
       chart_pressure: "Pressione",
       chart_weight: "Peso"
     },
@@ -1443,6 +1453,7 @@ ${TOKENS}
       no_menu: "Aucun menu configuré pour le moment",
       menu_all: "Toutes les boissons",
       order_failed: "La commande n'a pas pu être envoyée. Veuillez réessayer.",
+      toast_order_sent: (item) => `Commande envoyée : ${item}`,
       chart_pressure: "Pression",
       chart_weight: "Poids"
     },
@@ -1473,6 +1484,7 @@ ${TOKENS}
       no_menu: "Aún no hay menú configurado",
       menu_all: "Todas las bebidas",
       order_failed: "No se pudo enviar el pedido. Inténtalo de nuevo.",
+      toast_order_sent: (item) => `Pedido enviado: ${item}`,
       chart_pressure: "Presión",
       chart_weight: "Peso"
     },
@@ -1503,6 +1515,7 @@ ${TOKENS}
       no_menu: "Nog geen menu ingesteld",
       menu_all: "Alle drankjes",
       order_failed: "Bestelling kon niet worden verzonden. Probeer het opnieuw.",
+      toast_order_sent: (item) => `Bestelling verzonden: ${item}`,
       chart_pressure: "Druk",
       chart_weight: "Gewicht"
     }
@@ -1981,6 +1994,7 @@ ${TOKENS}
         this._selectedBeanId = null;
       }
       this._orderError = null;
+      if (this._selected) haptic(this, "selection");
       this._render();
     }
     _selectVariant(variant, beanId) {
@@ -1988,6 +2002,7 @@ ${TOKENS}
       this._selectedVariant = wasSelected ? null : variant;
       this._selectedBeanId = wasSelected ? null : beanId != null ? Number(beanId) : null;
       this._orderError = null;
+      if (!wasSelected) haptic(this, "selection");
       this._render();
     }
     _newOrder() {
@@ -2070,8 +2085,18 @@ ${TOKENS}
       if (bean.process) rows.push(b2`<div class="bean-info-row"><span class="bean-info-label">${_s("bean_process", lang)}</span><span>${bean.process}</span></div>`);
       return b2`<div class="bean-info" id="oc-bean-info">${rows}</div>`;
     }
+    // The inline message stays the primary feedback; the toast and the
+    // vibration repeat it for people who are looking at the machine.
+    _failOrder() {
+      const message = _s("order_failed", this._lang);
+      this._orderError = message;
+      toast(this, message);
+      haptic(this, "failure");
+    }
     async _placeOrder() {
       if (!this._selected || this._submitting) return;
+      const requestedItem = this._selected;
+      const variant = this._selectedVariant;
       const noteEl = this.shadowRoot.getElementById("oc-note");
       const note = noteEl?.value?.trim() || "";
       const haUser = this._hass?.user;
@@ -2097,16 +2122,19 @@ ${TOKENS}
         });
         const order = res.ok ? await res.json() : null;
         if (order?.id) {
+          const sentLabel = variant ? `${requestedItem} · ${variant}` : requestedItem;
           this._activeOrder = order;
           this._orderError = null;
           this._selected = null;
           this._selectedVariant = null;
           this._selectedBeanId = null;
+          toast(this, _s("toast_order_sent", this._lang, sentLabel));
+          haptic(this, "success");
         } else {
-          this._orderError = _s("order_failed", this._lang);
+          this._failOrder();
         }
       } catch {
-        this._orderError = _s("order_failed", this._lang);
+        this._failOrder();
       }
       this._submitting = false;
       this._render();

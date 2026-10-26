@@ -170,6 +170,7 @@ Ein im App gesetztes Thema (Einstellungen → Maschinen) wird live aus dem Attri
 - Getränkemenü aus dem Tab **Bestellungen** des Apps — ein Abschnitt "Beliebt" für markierte Getränke, ein NEW-Badge auf Items, die innerhalb von `new_badge_days` hinzugekommen sind, und der Rest unter "Alle Getränke"
 - Bohnen-Varianten aus der Kaffeebibliothek für Getränke, die Bohnen nutzen — nur tatsächlich vorrätige Bohnen, gruppiert in Spezialität und Normal; die Auswahl zeigt Geschmacksnoten, Herkunft (bei Blends die einzelnen Länder), Sorte und Aufbereitung
 - Ein optionales Notizfeld und ein Bestell-Button, der mit dem gewählten Getränk und der Variante beschriftet ist
+- Eine kurze Home-Assistant-Benachrichtigung und ein Vibrieren auf dem Handy, wenn die Bestellung gesendet wurde oder fehlgeschlagen ist — beides nutzt die dokumentierten Karten-Events von Home Assistant und erscheint daher dort, wo Home Assistant seine eigenen Meldungen zeigt
 - Bestellstatus: wartet auf Bestätigung mit Position in der Warteschlange und geschätzter Zeit, angenommen mit Live-Countdown bis zur Fertigstellung, fertig mit Bestätigung plus dem fertigen Shot samt Kurve, wenn die Bestellung eine Shot-ID trägt, abgelehnt mit Begründung
 - Statt des Menüs die Ansicht "Maschine aus" oder "Bestellungen pausiert", wenn der Barista oder die Maschine das so meldet
 
