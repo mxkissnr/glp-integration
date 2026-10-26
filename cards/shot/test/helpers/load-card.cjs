@@ -18,6 +18,11 @@ function loadCard({ expose = [], context = {} } = {}) {
     // Lit's runtime calls document.createTreeWalker while it is imported; the
     // DOM-rendering suites override this with a real happy-dom document.
     document: { createTreeWalker() { return {}; } },
+    // A DOM suite dispatches the card's Home Assistant events on happy-dom
+    // elements, and happy-dom rejects an Event built by another realm
+    // ("parameter 1 is not of type 'Event'"). The card constructs its events
+    // with the global CustomEvent, so point that at the suite's own window.
+    ...(context.window && context.window.CustomEvent ? { CustomEvent: context.window.CustomEvent } : {}),
     ...context,
   };
   // defineProperty, not assignment: Node already defines some of these (e.g.

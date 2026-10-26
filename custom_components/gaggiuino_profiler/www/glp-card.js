@@ -1187,12 +1187,18 @@ ${TOKENS}
     50%      { opacity: .35; }
   }
   .lm-tiles { display: flex; gap: var(--glp-sp-2); }
-  /* Border diet (#120): static readouts, not clickable — grouped by fill,
-     no border. The warming state still needs to stand out, so it keeps a
-     tinted background instead of a tinted border. */
+  /* Border diet (#120): readouts group by fill, no border. The warming state
+     still needs to stand out, so it keeps a tinted background instead of a
+     tinted border. Each tile is a <button> (a tap opens its history), so the
+     native button chrome is reset to keep the drawn look identical. */
   .lm-tile {
     flex: 1; background: var(--surface);
-    border-radius: var(--glp-radius-sm); padding: var(--glp-sp-2) 6px; text-align: center;
+    border: none; border-radius: var(--glp-radius-sm); padding: var(--glp-sp-2) 6px;
+    text-align: center; font: inherit; color: inherit; cursor: pointer;
+    -webkit-appearance: none; appearance: none;
+  }
+  .lm-tile:focus-visible, .footer-history:focus-visible {
+    outline: 2px solid var(--glp-aline); outline-offset: 2px;
   }
   .lm-tile.warming { background: color-mix(in srgb, var(--amber) 12%, var(--surface)); }
   .lm-val { font-size: var(--glp-fs-4); font-weight: 700; color: var(--text); letter-spacing: -.02em; line-height: 1.1; }
@@ -1434,6 +1440,13 @@ ${TOKENS}
     padding-top: var(--glp-sp-2); margin-top: 6px; gap: var(--glp-sp-2);
   }
   .footer-item { display: flex; align-items: center; gap: 4px; }
+  /* The water level is a <button> now; reset the native chrome so it still
+     sits inline with the plain footer text. */
+  .footer-history {
+    background: none; border: none; padding: 0; margin: 0;
+    font: inherit; color: inherit; text-align: inherit; cursor: pointer;
+    -webkit-appearance: none; appearance: none;
+  }
   .footer-item svg { width: 11px; height: 11px; opacity: .8; flex-shrink: 0; }
   .footer a { color: var(--sub); text-decoration: none; }
   .footer a:hover { color: var(--text); }
@@ -1565,7 +1578,11 @@ ${TOKENS}
       bean_roasted_ago: /* @__PURE__ */ __name((d3) => `Geröstet vor ${d3} Tagen`, "bean_roasted_ago"),
       verdict_high: "stark",
       verdict_mid: "gut",
-      verdict_low: "schwach"
+      verdict_low: "schwach",
+      toast_profile: /* @__PURE__ */ __name((p3) => `Profil ${p3} gewählt`, "toast_profile"),
+      toast_ready_by: /* @__PURE__ */ __name((hhmm) => `Brühbereit bis ${hhmm}`, "toast_ready_by"),
+      toast_action_failed: "Aktion fehlgeschlagen",
+      lm_history: "Verlauf anzeigen"
     },
     en: {
       tab_orders: "Orders",
@@ -1643,7 +1660,11 @@ ${TOKENS}
       bean_roasted_ago: /* @__PURE__ */ __name((d3) => `Roasted ${d3} days ago`, "bean_roasted_ago"),
       verdict_high: "great",
       verdict_mid: "good",
-      verdict_low: "weak"
+      verdict_low: "weak",
+      toast_profile: /* @__PURE__ */ __name((p3) => `Profile ${p3} selected`, "toast_profile"),
+      toast_ready_by: /* @__PURE__ */ __name((hhmm) => `Ready by ${hhmm}`, "toast_ready_by"),
+      toast_action_failed: "Action failed",
+      lm_history: "Show history"
     },
     it: {
       tab_orders: "Ordini",
@@ -1721,7 +1742,11 @@ ${TOKENS}
       bean_roasted_ago: /* @__PURE__ */ __name((d3) => `Tostato ${d3} giorni fa`, "bean_roasted_ago"),
       verdict_high: "ottimo",
       verdict_mid: "buono",
-      verdict_low: "debole"
+      verdict_low: "debole",
+      toast_profile: /* @__PURE__ */ __name((p3) => `Profilo ${p3} selezionato`, "toast_profile"),
+      toast_ready_by: /* @__PURE__ */ __name((hhmm) => `Pronto entro le ${hhmm}`, "toast_ready_by"),
+      toast_action_failed: "Azione non riuscita",
+      lm_history: "Mostra cronologia"
     },
     fr: {
       tab_orders: "Commandes",
@@ -1799,7 +1824,11 @@ ${TOKENS}
       bean_roasted_ago: /* @__PURE__ */ __name((d3) => `Torréfié il y a ${d3} jours`, "bean_roasted_ago"),
       verdict_high: "excellent",
       verdict_mid: "bon",
-      verdict_low: "faible"
+      verdict_low: "faible",
+      toast_profile: /* @__PURE__ */ __name((p3) => `Profil ${p3} sélectionné`, "toast_profile"),
+      toast_ready_by: /* @__PURE__ */ __name((hhmm) => `Prêt avant ${hhmm}`, "toast_ready_by"),
+      toast_action_failed: "Échec de l'action",
+      lm_history: "Afficher l'historique"
     },
     es: {
       tab_orders: "Pedidos",
@@ -1877,7 +1906,11 @@ ${TOKENS}
       bean_roasted_ago: /* @__PURE__ */ __name((d3) => `Tostado hace ${d3} días`, "bean_roasted_ago"),
       verdict_high: "excelente",
       verdict_mid: "bueno",
-      verdict_low: "débil"
+      verdict_low: "débil",
+      toast_profile: /* @__PURE__ */ __name((p3) => `Perfil ${p3} seleccionado`, "toast_profile"),
+      toast_ready_by: /* @__PURE__ */ __name((hhmm) => `Listo antes de las ${hhmm}`, "toast_ready_by"),
+      toast_action_failed: "La acción ha fallado",
+      lm_history: "Mostrar historial"
     },
     nl: {
       tab_orders: "Bestellingen",
@@ -1955,7 +1988,11 @@ ${TOKENS}
       bean_roasted_ago: /* @__PURE__ */ __name((d3) => `${d3} dagen geleden gebrand`, "bean_roasted_ago"),
       verdict_high: "sterk",
       verdict_mid: "goed",
-      verdict_low: "zwak"
+      verdict_low: "zwak",
+      toast_profile: /* @__PURE__ */ __name((p3) => `Profiel ${p3} geselecteerd`, "toast_profile"),
+      toast_ready_by: /* @__PURE__ */ __name((hhmm) => `Klaar voor ${hhmm}`, "toast_ready_by"),
+      toast_action_failed: "Actie mislukt",
+      lm_history: "Geschiedenis tonen"
     }
   };
   var SUPPORTED_LANGS = ["de", "en", "it", "fr", "es", "nl"];
@@ -2320,6 +2357,15 @@ ${TOKENS}
   }
   __name(appMachineType, "appMachineType");
 
+  // shared/ha-events.ts
+  function fireHaEvent(node, type, detail) {
+    node.dispatchEvent(new CustomEvent(type, { detail, bubbles: true, composed: true }));
+  }
+  __name(fireHaEvent, "fireHaEvent");
+  var moreInfo = /* @__PURE__ */ __name((node, entityId) => fireHaEvent(node, "hass-more-info", { entityId }), "moreInfo");
+  var toast = /* @__PURE__ */ __name((node, message) => fireHaEvent(node, "hass-notification", { message }), "toast");
+  var haptic = /* @__PURE__ */ __name((node, type) => fireHaEvent(node, "haptic", type), "haptic");
+
   // shot/src/charts.ts
   function _scale(arr) {
     return Array.isArray(arr) && arr.length ? arr.map((v2) => v2 / 10) : [];
@@ -2464,6 +2510,8 @@ ${TOKENS}
   // shot/src/glp-card.ts
   var GLP_CARD_VERSION = "2.22.0";
   var READY_BY_PENDING_FALLBACK_MS = 6e4;
+  var HEADER_LONG_PRESS_MS = 500;
+  var HEADER_PRESS_MOVE_PX = 10;
   function resolveLang(hass) {
     const l3 = String(hass?.language || hass?.locale?.language || "en").slice(0, 2).toLowerCase();
     return SUPPORTED_LANGS.includes(l3) ? l3 : "en";
@@ -2509,6 +2557,9 @@ ${TOKENS}
       this._readyByTargetAt = null;
       this._pendingReadyByTargetAt = null;
       this._pendingReadyByTimer = null;
+      this._headerPressTimer = null;
+      this._headerPressX = 0;
+      this._headerPressY = 0;
       this._lastKnownReadyByTargetAt = null;
       this._lastKnownReadyByPlannedAt = null;
       this._stateKeysStates = null;
@@ -2526,7 +2577,9 @@ ${TOKENS}
         if (e6.target.closest('[data-action="toggle-switch"]')) {
           e6.stopPropagation();
           if (this._hass && this._switchEntity)
-            this._hass.callService("switch", "toggle", { entity_id: this._switchEntity });
+            this._callService("switch", "toggle", { entity_id: this._switchEntity }, () => {
+              haptic(this, "success");
+            });
           return;
         }
         if (e6.target.closest('[data-action="set-ready-by"]')) {
@@ -2534,10 +2587,14 @@ ${TOKENS}
           const input = this.shadowRoot.getElementById("glp-readyby-input");
           const target = this._resolveReadyByTarget(input?.value, /* @__PURE__ */ new Date());
           if (this._hass && target) {
-            this._hass.callService("gaggiuino_profiler", "set_ready_by", {
+            const hhmm = target.toLocaleTimeString(this._locale(), { hour: "2-digit", minute: "2-digit" });
+            this._callService("gaggiuino_profiler", "set_ready_by", {
               target_time: target.toISOString(),
               ...this._config?.machine != null ? { machine: this._config.machine } : {}
-            });
+            }, () => {
+              toast(this, T2("toast_ready_by", hhmm));
+              haptic(this, "success");
+            }, () => this._clearPendingReadyBy());
             this._pendingReadyByTargetAt = target;
             clearTimeout(this._pendingReadyByTimer);
             this._pendingReadyByTimer = setTimeout(() => {
@@ -2551,9 +2608,11 @@ ${TOKENS}
         if (e6.target.closest('[data-action="cancel-ready-by"]')) {
           e6.stopPropagation();
           if (this._hass) {
-            this._hass.callService("gaggiuino_profiler", "set_ready_by", {
+            this._callService("gaggiuino_profiler", "set_ready_by", {
               ...this._config?.machine != null ? { machine: this._config.machine } : {}
-            });
+            }, () => {
+              haptic(this, "success");
+            }, () => this._clearPendingReadyBy());
             this._pendingReadyByTargetAt = false;
             clearTimeout(this._pendingReadyByTimer);
             this._pendingReadyByTimer = setTimeout(() => {
@@ -2563,6 +2622,35 @@ ${TOKENS}
             this._render();
           }
         }
+      });
+      this.shadowRoot.addEventListener("pointerdown", (e6) => {
+        const target = e6.target;
+        if (!target || typeof target.closest !== "function") return;
+        if (!target.closest(".header")) return;
+        if (target.closest("button")) return;
+        const pe = e6;
+        this._headerPressX = pe.clientX;
+        this._headerPressY = pe.clientY;
+        clearTimeout(this._headerPressTimer);
+        this._headerPressTimer = setTimeout(() => {
+          this._headerPressTimer = null;
+          this._longPressHeader();
+        }, HEADER_LONG_PRESS_MS);
+      });
+      const endHeaderPress = /* @__PURE__ */ __name(() => {
+        if (!this._headerPressTimer) return;
+        clearTimeout(this._headerPressTimer);
+        this._headerPressTimer = null;
+      }, "endHeaderPress");
+      this.shadowRoot.addEventListener("pointerup", endHeaderPress);
+      this.shadowRoot.addEventListener("pointercancel", endHeaderPress);
+      this.shadowRoot.addEventListener("pointerleave", endHeaderPress, true);
+      this.shadowRoot.addEventListener("pointermove", (e6) => {
+        if (!this._headerPressTimer) return;
+        const pe = e6;
+        const dx = pe.clientX - this._headerPressX;
+        const dy = pe.clientY - this._headerPressY;
+        if (Number.isFinite(dx) && Number.isFinite(dy) && Math.hypot(dx, dy) > HEADER_PRESS_MOVE_PX) endHeaderPress();
       });
     }
     // Handlers bound from the Lit templates (elements survive renders now, so
@@ -2575,7 +2663,16 @@ ${TOKENS}
     _selectProfile(val) {
       if (this._hass) {
         const entityId = this._resolvePrefix().replace(/^sensor\./, "select.") + "profile";
-        this._hass.callService("select", "select_option", { entity_id: entityId, option: val });
+        haptic(this, "selection");
+        this._callService("select", "select_option", { entity_id: entityId, option: val }, () => {
+          toast(this, T2("toast_profile", val));
+          haptic(this, "success");
+        }, () => {
+          this._pendingProfile = null;
+          clearTimeout(this._pendingProfileTimer);
+          this._pendingProfileTimer = null;
+          this._render();
+        });
         this._pendingProfile = val;
         clearTimeout(this._pendingProfileTimer);
         this._pendingProfileTimer = setTimeout(() => {
@@ -2590,6 +2687,7 @@ ${TOKENS}
       if (tab !== this._activeTab) {
         this._activeTab = tab;
         this._maintConfirm = null;
+        haptic(this, "selection");
         this._render();
       }
     }
@@ -2628,6 +2726,51 @@ ${TOKENS}
       this._pendingProfileTimer = null;
       if (this._pendingReadyByTimer) clearTimeout(this._pendingReadyByTimer);
       this._pendingReadyByTimer = null;
+      if (this._headerPressTimer) clearTimeout(this._headerPressTimer);
+      this._headerPressTimer = null;
+    }
+    // ── Home Assistant events (documented custom-card events) ─────────────────
+    // callService returns a Promise in HA, but a stub may return nothing, so the
+    // result is always promisified. A rejected call is a failed action: the
+    // caller rolls its optimistic state back, then the user gets a toast and a
+    // failure vibration.
+    _callService(domain, service, data, onDone, onFail) {
+      const hass = this._hass;
+      if (!hass?.callService) return;
+      let call;
+      try {
+        call = Promise.resolve(hass.callService(domain, service, data));
+      } catch {
+        this._actionFailed(onFail);
+        return;
+      }
+      call.then(() => {
+        onDone?.();
+      }, () => {
+        this._actionFailed(onFail);
+      });
+    }
+    _actionFailed(onFail) {
+      onFail?.();
+      toast(this, T2("toast_action_failed"));
+      haptic(this, "failure");
+    }
+    // Rolls the optimistic ready-by state back after a rejected call.
+    _clearPendingReadyBy() {
+      this._pendingReadyByTargetAt = null;
+      clearTimeout(this._pendingReadyByTimer);
+      this._pendingReadyByTimer = null;
+      this._render();
+    }
+    // A long press on the header opens the machine itself: its switch entity
+    // when one is configured, the status sensor otherwise.
+    _longPressHeader() {
+      moreInfo(this, this._switchEntity || this._resolvePrefix() + "machine_status");
+      haptic(this, "selection");
+    }
+    // Tapping a live value opens that entity's history.
+    _showHistory(entityId) {
+      moreInfo(this, entityId);
     }
     // ── ready-by preheat scheduler (#61) ───────────────────────────────────────
     // Reads sensor.<prefix>preheat_ready_by_target_at / _planned_switch_on_at
@@ -3376,16 +3519,18 @@ ${TOKENS}
       const shotChartKey = shotObj ? shotObj.id ?? `idx:${this._shotIndex}` : null;
       const animateChart = this._shotChartKeyChanged(this._lastChartShotKey, shotChartKey);
       this._lastChartShotKey = shotChartKey;
-      const lmTiles = [
+      const lmTileCandidates = [
         temp !== null ? {
           val: temp,
           unit: "°",
           lbl: boilerOff ? T2("lm_temp_off") : targetTemp !== null ? T2("lm_temp_target", targetTemp) : T2("lm_temp"),
+          entity: `${prefix}machine_temperature`,
           warm: !boilerOff && targetTemp !== null && parseFloat(temp) < parseFloat(targetTemp) - 1
         } : null,
-        livePressure !== null ? { val: livePressure, unit: " bar", lbl: T2("lm_pressure") } : null,
-        liveWeight !== null ? { val: liveWeight, unit: " g", lbl: T2("lm_weight") } : null
-      ].filter(Boolean);
+        livePressure !== null ? { val: livePressure, unit: " bar", lbl: T2("lm_pressure"), entity: `${prefix}machine_live_pressure` } : null,
+        liveWeight !== null ? { val: liveWeight, unit: " g", lbl: T2("lm_weight"), entity: `${prefix}machine_live_weight` } : null
+      ];
+      const lmTiles = lmTileCandidates.filter((t5) => t5 !== null);
       const score = shotObj?.score ?? null;
       const scoreCls = score == null ? "" : score >= 80 ? "high" : score >= 55 ? "mid" : "low";
       const verdictWord = { high: T2("verdict_high"), mid: T2("verdict_mid"), low: T2("verdict_low") }[scoreCls];
@@ -3625,11 +3770,16 @@ ${TOKENS}
       <div class="live-machine">
         <div class="lm-head"><span class="lm-live-dot"></span>${T2("lm_live")}</div>
         <div class="lm-tiles">
-          ${lmTiles.map((t5) => b2`
-            <div class="lm-tile${t5.warm ? " warming" : ""}">
+          ${lmTiles.map((t5) => {
+        const label = `${t5.lbl} ${t5.val}${t5.unit}`.replace(/\s+/g, " ").trim();
+        return b2`
+            <button type="button" class="lm-tile${t5.warm ? " warming" : ""}"
+                    aria-label="${label} · ${T2("lm_history")}"
+                    @click=${() => this._showHistory(t5.entity)}>
               <div class="lm-val">${String(t5.val)}<span class="lm-unit">${t5.unit}</span></div>
               <div class="lm-lbl">${t5.lbl}</div>
-            </div>`)}
+            </button>`;
+      })}
         </div>
       </div>` : A;
     }
@@ -3680,8 +3830,10 @@ ${TOKENS}
       <div class="footer">
         <span class="footer-item">${/* ICONS.of() emits fixed SVG markup */
       o5(ICONS.of("coffee"))} ${T2("footer_today", today)}</span>
-        ${waterLevel !== null ? b2`<span class="footer-item">${/* ICONS.of() emits fixed SVG markup */
-      o5(ICONS.of("droplet"))} ${waterLevel}%</span>` : b2`<span></span>`}
+        ${waterLevel !== null ? b2`<button type="button" class="footer-item footer-history"
+                        aria-label="${waterLevel}% · ${T2("lm_history")}"
+                        @click=${() => this._showHistory(`${vm.prefix}machine_water_level`)}>${/* ICONS.of() emits fixed SVG markup */
+      o5(ICONS.of("droplet"))} ${waterLevel}%</button>` : b2`<span></span>`}
         <span class="footer-item">
           ${syncTime ? syncTime : A}
           ${glpUrl ? b2`${syncTime ? " · " : ""}<a href=${glpUrl} target="_blank" rel="noopener noreferrer">GLP ↗</a>` : A}

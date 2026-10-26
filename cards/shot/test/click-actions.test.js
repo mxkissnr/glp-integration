@@ -103,9 +103,10 @@ test('a click on a tab button switches the tab', () => {
   assert.equal(card._activeTab, 'maint', 'the maintenance tab is active after the click');
 });
 
-test('the card source binds no pointerdown handler', () => {
+test('the only pointerdown handler in the card is the header long-press', () => {
   const src = readFileSync(path.join(__dirname, '..', 'src', 'glp-card.ts'), 'utf8');
-  assert.ok(!src.includes('pointerdown'), 'src/glp-card.ts must not reference pointerdown');
+  const handlers = src.match(/'pointerdown', \(e: Event\) => \{/g) || [];
+  assert.equal(handlers.length, 1, 'control actions stay on click; only the header press uses pointerdown');
 });
 
 // #267: the maintenance row with a confirm flow is the card's only action that
