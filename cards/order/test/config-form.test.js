@@ -178,6 +178,11 @@ test('a form config renders like the equivalent YAML config', () => {
   }
 });
 
+test('the form\'s minimum of 0 days really switches the NEW badge off', () => {
+  const card = makeCard({ new_badge_days: 0 });
+  assert.deepEqual(badgedItems(card), []);
+});
+
 test('an existing YAML config with a string new_badge_days still works', () => {
   const card = makeCard({ new_badge_days: '7' });
   assert.equal(card._config.new_badge_days, '7');

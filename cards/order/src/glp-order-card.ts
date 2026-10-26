@@ -493,7 +493,10 @@ class GlpOrderCard extends HTMLElement {
       return html`<div class="loading">${_s('no_menu', lang)}</div>`;
     }
 
-    const newThreshold = (parseFloat(String(this._config?.new_badge_days ?? '')) || NEW_BADGE_DAYS_DEFAULT) * 24 * 60 * 60 * 1000;
+    // A configured 0 is a real choice (no NEW badges at all), so only an
+    // unparseable or absent value falls back to the default window.
+    const badgeDays = parseFloat(String(this._config?.new_badge_days ?? ''));
+    const newThreshold = (Number.isFinite(badgeDays) ? badgeDays : NEW_BADGE_DAYS_DEFAULT) * 24 * 60 * 60 * 1000;
     const now = Date.now();
 
     const renderItem = (m: MenuItem) => {

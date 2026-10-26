@@ -2753,7 +2753,8 @@ ${SHEET_STYLES}
       if (visibleMenu.length === 0) {
         return b2`<div class="loading">${_s("no_menu", lang)}</div>`;
       }
-      const newThreshold = (parseFloat(String(this._config?.new_badge_days ?? "")) || NEW_BADGE_DAYS_DEFAULT) * 24 * 60 * 60 * 1e3;
+      const badgeDays = parseFloat(String(this._config?.new_badge_days ?? ""));
+      const newThreshold = (Number.isFinite(badgeDays) ? badgeDays : NEW_BADGE_DAYS_DEFAULT) * 24 * 60 * 60 * 1e3;
       const now = Date.now();
       const renderItem = (m2) => {
         const isNew = m2.createdAt && now - m2.createdAt < newThreshold;
