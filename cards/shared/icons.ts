@@ -178,6 +178,15 @@ const GLP_ICON_PATHS = {
   // Replaces the ★/☆ text characters in the rating row. The filled state is a
   // class on the element, not a second path — it is the same shape either way.
   star:       '<path d="M12 3.8l2.6 5.3 5.9.9-4.2 4.1 1 5.8-5.3-2.8-5.3 2.8 1-5.8L3.5 10l5.9-.9L12 3.8z"/>',
+  // --- direction and links ----------------------------------------------
+  // Replace the ‹ › ▾ ↗ text characters: those render in whichever font the
+  // platform picks, ignore the button's colour and sit off the text baseline,
+  // exactly the emoji problem these icons were introduced for.
+  'chevron-left':  '<path d="M14.5 5.5 8 12l6.5 6.5"/>',
+  'chevron-right': '<path d="M9.5 5.5 16 12l-6.5 6.5"/>',
+  'chevron-down':  '<path d="M5.5 9.5 12 16l6.5-6.5"/>',
+  // An arrow leaving a box: "this leaves the card" rather than a bare arrow.
+  'open-in-new':   '<path d="M13.5 4.5h6v6"/><path d="M19.5 4.5 11 13"/><path d="M17 14v4.5a1.5 1.5 0 0 1-1.5 1.5h-10A1.5 1.5 0 0 1 4 18.5v-10A1.5 1.5 0 0 1 5.5 7H10"/>',
 };
 
 const ICONS = {

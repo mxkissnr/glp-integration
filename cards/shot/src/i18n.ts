@@ -64,7 +64,7 @@ export const STRINGS: Record<string, Record<string, StringEntry>> = {
     cfg_accent_gradient: 'Akzent-Verlauf',
     cfg_accent_gradient_help: 'Zwei Farben als #rrggbb, eine pro Zeile. Überschreibt Preset und Akzentfarbe.',
     cfg_glp_url: 'GLP-URL',
-    cfg_glp_url_help: 'URL der Weboberfläche des GLP-Apps. Ergänzt einen "GLP ↗"-Link in der Fußzeile.',
+    cfg_glp_url_help: 'URL der Weboberfläche des GLP-Apps. Ergänzt einen Link "GLP" in der Fußzeile.',
     cfg_theme_none: 'Kein Preset',
   },
   en: {
@@ -124,7 +124,7 @@ export const STRINGS: Record<string, Record<string, StringEntry>> = {
     cfg_accent_gradient: 'Accent gradient',
     cfg_accent_gradient_help: 'Two #rrggbb colours, one per line. Overrides the preset and the accent colour.',
     cfg_glp_url: 'GLP URL',
-    cfg_glp_url_help: 'URL of the GLP app\'s web interface. Adds a "GLP ↗" link to the footer.',
+    cfg_glp_url_help: 'URL of the GLP app\'s web interface. Adds a "GLP" link to the footer.',
     cfg_theme_none: 'No preset',
   },
   it: {
@@ -184,7 +184,7 @@ export const STRINGS: Record<string, Record<string, StringEntry>> = {
     cfg_accent_gradient: 'Sfumatura d\'accento',
     cfg_accent_gradient_help: 'Due colori #rrggbb, uno per riga. Prevale sul preset e sul colore d\'accento.',
     cfg_glp_url: 'URL GLP',
-    cfg_glp_url_help: 'URL dell\'interfaccia web dell\'app GLP. Aggiunge un link "GLP ↗" a piè di pagina.',
+    cfg_glp_url_help: 'URL dell\'interfaccia web dell\'app GLP. Aggiunge un link "GLP" a piè di pagina.',
     cfg_theme_none: 'Nessun preset',
   },
   fr: {
@@ -244,7 +244,7 @@ export const STRINGS: Record<string, Record<string, StringEntry>> = {
     cfg_accent_gradient: 'Dégradé d\'accent',
     cfg_accent_gradient_help: 'Deux couleurs #rrggbb, une par ligne. Prioritaire sur le préréglage et la couleur d\'accent.',
     cfg_glp_url: 'URL GLP',
-    cfg_glp_url_help: 'URL de l\'interface web de l\'application GLP. Ajoute un lien « GLP ↗ » en pied de carte.',
+    cfg_glp_url_help: 'URL de l\'interface web de l\'application GLP. Ajoute un lien « GLP » en pied de carte.',
     cfg_theme_none: 'Aucun préréglage',
   },
   es: {
@@ -304,7 +304,7 @@ export const STRINGS: Record<string, Record<string, StringEntry>> = {
     cfg_accent_gradient: 'Degradado de acento',
     cfg_accent_gradient_help: 'Dos colores #rrggbb, uno por línea. Tiene prioridad sobre el preset y el color de acento.',
     cfg_glp_url: 'URL de GLP',
-    cfg_glp_url_help: 'URL de la interfaz web de la app GLP. Añade un enlace "GLP ↗" al pie.',
+    cfg_glp_url_help: 'URL de la interfaz web de la app GLP. Añade un enlace "GLP" al pie.',
     cfg_theme_none: 'Sin preset',
   },
   nl: {
@@ -364,7 +364,7 @@ export const STRINGS: Record<string, Record<string, StringEntry>> = {
     cfg_accent_gradient: 'Accentverloop',
     cfg_accent_gradient_help: 'Twee #rrggbb-kleuren, één per regel. Gaat voor op de preset en de accentkleur.',
     cfg_glp_url: 'GLP-URL',
-    cfg_glp_url_help: 'URL van de webinterface van de GLP-app. Voegt een "GLP ↗"-link aan de voettekst toe.',
+    cfg_glp_url_help: 'URL van de webinterface van de GLP-app. Voegt een "GLP"-link aan de voettekst toe.',
     cfg_theme_none: 'Geen preset',
   },
 };

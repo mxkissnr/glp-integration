@@ -9,6 +9,7 @@
 - **Development builds of the integration and both cards are published as beta versions in HACS, for anyone who wants to test upcoming changes.** Refs #256
 
 ### Changed
+- **The Shot Card uses drawn icons for navigation and links, shows the bean name in the card's own font and lines up all five key figures in one grid.** Refs #263
 - **On the Shot Card a tap on an order opens its details with accept, done and decline in a sheet, and every action confirms with a short message.** Refs #264
 - **The Order Card fills the popular row with a single drink, keeps the order button on one line and needs one heading less above the bean choice.** Refs #273
 - **On the Shot Card the profile list and the maintenance confirmation now open in a sheet from the bottom of the screen instead of stretching the card.** Refs #265
@@ -19,6 +20,7 @@
 - **The integration test suite now fails when a test hits an endpoint it did not mock, and several tests check what their names promise.** Refs #238
 
 ### Fixed
+- **For users who are not Home Assistant admins the Shot Card no longer keeps asking for the order list.** Refs #239
 - **Only Home Assistant admins can list all coffee orders, the shot proxy accepts numeric shot ids only, and diagnostics downloads hide addresses, tokens and names.** Refs #239
 - **The Shot Card now writes every label and both of its dates in the Home Assistant language, and a card added from the card picker finds its machine by itself.** Refs #269
 - **With reduced motion switched on the Shot Card no longer animates, the order buttons and badges are easier to read, and screen readers announce the shot arrows and the power button.** Refs #269

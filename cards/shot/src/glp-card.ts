@@ -743,8 +743,15 @@ class GlpCard extends HTMLElement {
     try {
       const r = await this._hass.fetchWithAuth('/api/glp/orders');
       // 404: the orders feature is switched off in the app (or the proxy is
-      // too old). Polling would only ever answer 404, so stop for this card.
-      if (r.status === 404) { this._ordersOff = true; this._stopOrdersPoll(); return; }
+      // too old). 403: listing every order is admin-only (#239) and this user
+      // is not an admin. Either answer would only repeat, so stop polling for
+      // this card and drop anything that was listed before the role changed.
+      if (r.status === 404 || r.status === 403) {
+        this._ordersOff = true;
+        this._stopOrdersPoll();
+        if (this._orders.length) { this._orders = []; this._ordersSig = null; this._render(); }
+        return;
+      }
       if (!r.ok) return;
       list = await r.json();
     } catch { return; }
@@ -1663,7 +1670,7 @@ class GlpCard extends HTMLElement {
 
     // ── maintenance ───────────────────────────────────────────────────────────
     const maintAvailable = this._maintAvailable();
-    const ordersTabAvail = this._orders.length > 0;
+    const ordersTabAvail = !this._ordersOff && this._orders.length > 0;
     if (brewing && this._activeTab === 'maint') this._activeTab = 'shot';
     if (this._activeTab === 'orders' && !ordersTabAvail) this._activeTab = 'shot';
     const showMaint  = maintAvailable && !brewing && this._activeTab === 'maint';
@@ -1782,9 +1789,9 @@ class GlpCard extends HTMLElement {
       }
       navHtml = html`
         <div class="nav-row">
-          <button class="nav-arrow" data-nav="next" ?disabled=${nextDis} aria-label=${T('nav_next')} @click=${(e: Event) => { if ((e.currentTarget as HTMLButtonElement).hasAttribute('disabled')) return; this._navShot('next'); }}>‹</button>
+          <button class="nav-arrow" data-nav="next" ?disabled=${nextDis} aria-label=${T('nav_next')} @click=${(e: Event) => { if ((e.currentTarget as HTMLButtonElement).hasAttribute('disabled')) return; this._navShot('next'); }}>${/* ICONS.of() emits fixed SVG markup */ unsafeHTML(ICONS.of('chevron-left'))}</button>
           <div class="nav-dots">${dots}</div>
-          <button class="nav-arrow" data-nav="prev" ?disabled=${prevDis} aria-label=${T('nav_prev')} @click=${(e: Event) => { if ((e.currentTarget as HTMLButtonElement).hasAttribute('disabled')) return; this._navShot('prev'); }}>›</button>
+          <button class="nav-arrow" data-nav="prev" ?disabled=${prevDis} aria-label=${T('nav_prev')} @click=${(e: Event) => { if ((e.currentTarget as HTMLButtonElement).hasAttribute('disabled')) return; this._navShot('prev'); }}>${/* ICONS.of() emits fixed SVG markup */ unsafeHTML(ICONS.of('chevron-right'))}</button>
         </div>${tsLine}`;
     }
     return navHtml;
@@ -1799,7 +1806,7 @@ class GlpCard extends HTMLElement {
             <span class="profile-label-small">${T('profile_label')}</span>
             <span class="profile-current-name">${currentProfile || '—'}${profileSwitching ? html`<span style="color:var(--amber);font-weight:500;font-size:var(--glp-fs-1)"> · ${T('profile_switching')}</span>` : nothing}</span>
           </div>
-          <span class="profile-chevron">▾</span>
+          <span class="profile-chevron">${/* ICONS.of() emits fixed SVG markup */ unsafeHTML(ICONS.of('chevron-down'))}</span>
         </button>
       </div>` : nothing;
   }
@@ -1857,31 +1864,24 @@ class GlpCard extends HTMLElement {
   // Historical shot: ratio is the recipe target a profile is set to hit,
   // duration is what actually happened during the pull, yield is what
   // came out — recipe/process/result, see metricLineHtml() above.
-  _metricTrioHtml(vm: ViewModel): TemplateResult {
-    const { ratio, duration, weight } = vm;
-    return html`${/* metricLineHtml() escapes its own input and emits fixed markup */ unsafeHTML(metricLineHtml([
-      ratio    ? { role: 'recipe',  num: `1:${ratio}`, unit: '',  label: T('m_ratio')     } : null,
-      duration ? { role: 'process', num: duration,      unit: 's', label: T('m_duration') } : null,
-      weight   ? { role: 'result',  num: weight,        unit: 'g', label: T('m_yield')    } : null,
-    ]))}`;
-  }
-
-  _secondaryHtml(vm: ViewModel): TemplateResult | typeof nothing {
-    const { pressure, shotTemp } = vm;
-    return (() => {
-      const pills = [
-        pressure   !== null ? { label: T('m_pressure'), val: `${pressure} bar` }  : null,
-        shotTemp   !== null ? { label: T('m_temp'),     val: `${shotTemp}°` }     : null,
-      ].filter(Boolean) as { label: string; val: string }[];
-      if (!pills.length) return nothing;
-      return html`<div class="stats-secondary">
-        ${pills.map(p => html`
-          <div class="stat-pill">
-            <span class="stat-pill-label">${p.label}</span>
-            <span class="stat-pill-value">${p.val}</span>
-          </div>`)}
-      </div>`;
-    })();
+  // The five figures that describe one finished shot: recipe, process, result
+  // (ratio, duration, yield) plus the two averages (pressure, temperature).
+  // One grid with one value style — they used to be split into a three-item
+  // metric line and a two-pill row with a lighter, differently coloured value,
+  // which read as three numbers and two leftovers.
+  _keyFiguresHtml(vm: ViewModel): TemplateResult | typeof nothing {
+    const { ratio, duration, weight, pressure, shotTemp } = vm;
+    const figures = [
+      ratio    !== null ? { label: T('m_ratio'),    num: `1:${ratio}`, unit: ''    } : null,
+      duration !== null ? { label: T('m_duration'), num: duration,     unit: 's'   } : null,
+      weight   !== null ? { label: T('m_yield'),    num: weight,       unit: 'g'   } : null,
+      pressure !== null ? { label: T('m_pressure'), num: pressure,     unit: 'bar' } : null,
+      shotTemp !== null ? { label: T('m_temp'),     num: shotTemp,     unit: '°'   } : null,
+    ].filter((f): f is { label: string; num: string; unit: string } => f !== null);
+    if (!figures.length) return nothing;
+    // The count drives the column layout in STYLES: five figures sit 3 + 2
+    // with the last two spanning the full width, so no row is left half empty.
+    return html`<div class="key-figures figures-${figures.length}">${figures.map(f => html`<div class="key-figure"><div class="kf-value">${f.num}${f.unit ? html`<span class="kf-unit">${f.unit}</span>` : nothing}</div><div class="kf-label">${f.label}</div></div>`)}</div>`;
   }
 
   _liveSvgHtml(vm: ViewModel): TemplateResult | typeof nothing {
@@ -1897,13 +1897,11 @@ class GlpCard extends HTMLElement {
   }
 
   // ── live brewing stats ──────────────────────────────────────────────────
-  // Same metricLineHtml() component as the historical shot (metricTrioHtml
-  // above) — see the redesign note on .metric-line in STYLES. Roles while
-  // brewing: temp is the recipe's set point being held, pressure is the
-  // process happening right now, weight is the result accumulating in the
-  // cup. (labels were hardcoded German before this pass — T() is correct
-  // behavior here, not a scope change: these three tiles are the same
-  // per-shot stats as leg_temp/leg_pressure/leg_weight used elsewhere.)
+  // The metricLineHtml() row, which a finished shot no longer uses (it shows
+  // _keyFiguresHtml() instead) — see the note on .metric-line in STYLES.
+  // Roles while brewing: temp is the recipe's set point being held, pressure
+  // is the process happening right now, weight is the result accumulating in
+  // the cup.
   _liveStatsHtml(vm: ViewModel): TemplateResult | typeof nothing {
     const { brewing, temp, livePressure, liveWeight } = vm;
     return brewing ? html`${/* metricLineHtml() escapes its own input and emits fixed markup */ unsafeHTML(metricLineHtml([
@@ -1976,8 +1974,7 @@ class GlpCard extends HTMLElement {
             <div class="no-shot-hint">${T('no_shot_hint')}</div>
           </div>`}
       ${this._ratingHtml(vm)}
-      ${this._metricTrioHtml(vm)}
-      ${this._secondaryHtml(vm)}
+      ${this._keyFiguresHtml(vm)}
       ${this._histSvgHtml(vm)}
     ` : nothing;
   }
@@ -1994,7 +1991,7 @@ class GlpCard extends HTMLElement {
           : html`<span></span>`}
         <span class="footer-item">
           ${syncTime ? syncTime : nothing}
-          ${glpUrl ? html`${syncTime ? ' · ' : ''}<a href=${glpUrl} target="_blank" rel="noopener noreferrer">GLP ↗</a>` : nothing}
+          ${glpUrl ? html`${syncTime ? ' · ' : ''}<a href=${glpUrl} target="_blank" rel="noopener noreferrer">GLP ${/* ICONS.of() emits fixed SVG markup */ unsafeHTML(ICONS.of('open-in-new', 'ext'))}</a>` : nothing}
         </span>
       </div>`;
   }
