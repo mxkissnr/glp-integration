@@ -252,6 +252,8 @@ test('the sheet follows a card language change', (t) => {
   assert.equal(card.shadowRoot.querySelector('.glp-sheet-close').getAttribute('aria-label'), 'Schließen');
   assert.equal(card.shadowRoot.querySelector('.glp-sheet-title').textContent, 'Ethiopia',
     'the bean name is data, not translated');
+  assert.equal(card.shadowRoot.querySelectorAll('dialog.glp-sheet').length, 1,
+    'the replaced sheet leaves no second close button behind');
 });
 
 test('bean text in the sheet is escaped, never markup', (t) => {
