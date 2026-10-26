@@ -56,7 +56,7 @@ const plain = (name) => ({ name });
 
 test('a single popular drink fills the row', () => {
   const card = makeCard({ menu: [popular('Flat White'), plain('Latte')] });
-  const tiles = [...card.shadowRoot.querySelectorAll('.menu-item')];
+  const tiles = Array.from(card.shadowRoot.querySelectorAll('.menu-item'));
   const popularTile = tiles.find(el => el.dataset.item === 'Flat White');
   assert.ok(popularTile.classList.contains('menu-item-full'),
     'the lone popular tile spans the full row');
@@ -64,7 +64,7 @@ test('a single popular drink fills the row', () => {
 
 test('two popular drinks keep the normal grid', () => {
   const card = makeCard({ menu: [popular('Flat White'), popular('Espresso'), plain('Latte')] });
-  const fullRow = [...card.shadowRoot.querySelectorAll('.menu-item-full')];
+  const fullRow = Array.from(card.shadowRoot.querySelectorAll('.menu-item-full'));
   assert.deepEqual(fullRow, [], 'two popular drinks stay in the normal grid');
 });
 
@@ -96,7 +96,7 @@ test('both bean groups merge the Variant heading into each group heading', () =>
     ],
     selected: 'Coffee',
   });
-  const headings = [...card.shadowRoot.querySelectorAll('.menu-section-title')]
+  const headings = Array.from(card.shadowRoot.querySelectorAll('.menu-section-title'))
     .map(el => el.textContent.trim());
   assert.deepEqual(headings, ['Variant · Speciality', 'Variant · Normal']);
   assert.equal(card.shadowRoot.querySelector('.variant-label'), null,
@@ -108,7 +108,7 @@ test('flat variants show only the plain Variant heading', () => {
     menu: [{ name: 'Flat White', variants: ['Single', 'Doppio'] }],
     selected: 'Flat White',
   });
-  const headings = [...card.shadowRoot.querySelectorAll('.menu-section-title')]
+  const headings = Array.from(card.shadowRoot.querySelectorAll('.menu-section-title'))
     .map(el => el.textContent.trim());
   assert.deepEqual(headings, [], 'a flat list adds no group headings');
   assert.equal(card.shadowRoot.querySelector('.variant-label').textContent.trim(), 'Variant');
