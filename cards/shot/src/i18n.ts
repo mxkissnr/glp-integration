@@ -42,6 +42,8 @@ export const STRINGS: Record<string, Record<string, StringEntry>> = {
     footer_today: n => `${n} heute`, uptime_title: 'Maschine an seit',
     bean_roasted_ago: d => `Geröstet vor ${d} Tagen`,
     verdict_high: 'stark', verdict_mid: 'gut', verdict_low: 'schwach',
+    toast_profile: p => `Profil ${p} gewählt`, toast_ready_by: hhmm => `Brühbereit bis ${hhmm}`,
+    toast_action_failed: 'Aktion fehlgeschlagen', lm_history: 'Verlauf anzeigen',
   },
   en: {
     tab_orders: 'Orders', tab_maint: 'Maintenance',
@@ -78,6 +80,8 @@ export const STRINGS: Record<string, Record<string, StringEntry>> = {
     footer_today: n => `${n} today`, uptime_title: 'Machine on since',
     bean_roasted_ago: d => `Roasted ${d} days ago`,
     verdict_high: 'great', verdict_mid: 'good', verdict_low: 'weak',
+    toast_profile: p => `Profile ${p} selected`, toast_ready_by: hhmm => `Ready by ${hhmm}`,
+    toast_action_failed: 'Action failed', lm_history: 'Show history',
   },
   it: {
     tab_orders: 'Ordini', tab_maint: 'Manutenzione',
@@ -114,6 +118,8 @@ export const STRINGS: Record<string, Record<string, StringEntry>> = {
     footer_today: n => `${n} oggi`, uptime_title: 'Macchina accesa da',
     bean_roasted_ago: d => `Tostato ${d} giorni fa`,
     verdict_high: 'ottimo', verdict_mid: 'buono', verdict_low: 'debole',
+    toast_profile: p => `Profilo ${p} selezionato`, toast_ready_by: hhmm => `Pronto entro le ${hhmm}`,
+    toast_action_failed: 'Azione non riuscita', lm_history: 'Mostra cronologia',
   },
   fr: {
     tab_orders: 'Commandes', tab_maint: 'Entretien',
@@ -150,6 +156,8 @@ export const STRINGS: Record<string, Record<string, StringEntry>> = {
     footer_today: n => `${n} aujourd'hui`, uptime_title: 'Machine allumée depuis',
     bean_roasted_ago: d => `Torréfié il y a ${d} jours`,
     verdict_high: 'excellent', verdict_mid: 'bon', verdict_low: 'faible',
+    toast_profile: p => `Profil ${p} sélectionné`, toast_ready_by: hhmm => `Prêt avant ${hhmm}`,
+    toast_action_failed: 'Échec de l\'action', lm_history: 'Afficher l\'historique',
   },
   es: {
     tab_orders: 'Pedidos', tab_maint: 'Mantenimiento',
@@ -186,6 +194,8 @@ export const STRINGS: Record<string, Record<string, StringEntry>> = {
     footer_today: n => `${n} hoy`, uptime_title: 'Máquina encendida desde',
     bean_roasted_ago: d => `Tostado hace ${d} días`,
     verdict_high: 'excelente', verdict_mid: 'bueno', verdict_low: 'débil',
+    toast_profile: p => `Perfil ${p} seleccionado`, toast_ready_by: hhmm => `Listo antes de las ${hhmm}`,
+    toast_action_failed: 'La acción ha fallado', lm_history: 'Mostrar historial',
   },
   nl: {
     tab_orders: 'Bestellingen', tab_maint: 'Onderhoud',
@@ -222,6 +232,8 @@ export const STRINGS: Record<string, Record<string, StringEntry>> = {
     footer_today: n => `${n} vandaag`, uptime_title: 'Machine aan sinds',
     bean_roasted_ago: d => `${d} dagen geleden gebrand`,
     verdict_high: 'sterk', verdict_mid: 'goed', verdict_low: 'zwak',
+    toast_profile: p => `Profiel ${p} geselecteerd`, toast_ready_by: hhmm => `Klaar voor ${hhmm}`,
+    toast_action_failed: 'Actie mislukt', lm_history: 'Geschiedenis tonen',
   },
 };
 

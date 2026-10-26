@@ -12,6 +12,7 @@ import { roastAgeDays, esc, safeUrl, parseTs, THEME_PRESETS, HEX_COLOR_RE } from
 import { MACHINE_ICON_MINI, ICONS } from './icons.ts';
 import { applySemanticColorContrast } from '../../shared/contrast.ts';
 import { appMachineEntry, appMachineTheme, appMachineType, matchMachineStatusEntity } from '../../shared/machine.ts';
+import { moreInfo, toast, haptic } from '../../shared/ha-events.ts';
 import { fmtUptime, buildShotChart, buildLiveChart, chartLegendHtml, metricLineHtml } from './charts.ts';
 import type { TemplateResult } from 'lit';
 import type {
@@ -28,6 +29,12 @@ const GLP_CARD_VERSION = '2.22.0';
 // applied; sized to the integration's default 60 s poll because its refresh
 // after the service call is debounced.
 const READY_BY_PENDING_FALLBACK_MS = 60000;
+
+// A press held this long on the card header opens the machine's more-info
+// dialog, like Home Assistant's own long-press. Any earlier pointerup, a
+// cancel/leave or a move past HEADER_PRESS_MOVE_PX turns it back into a no-op.
+const HEADER_LONG_PRESS_MS = 500;
+const HEADER_PRESS_MOVE_PX = 10;
 
 // The card's UI language follows the Home Assistant frontend language and
 // falls back to English (the i18n table's own fallback) when hass has none or
@@ -47,6 +54,8 @@ interface LmTile {
   val: string | number;
   unit: string;
   lbl: string;
+  // The sensor this value comes from: tapping the tile opens its history.
+  entity: string;
   warm?: boolean;
 }
 
@@ -180,6 +189,9 @@ class GlpCard extends HTMLElement {
   declare _readyByTargetAt: Date | null;
   declare _pendingReadyByTargetAt: Date | false | null;
   declare _pendingReadyByTimer: ReturnType<typeof setTimeout> | null;
+  declare _headerPressTimer: ReturnType<typeof setTimeout> | null;
+  declare _headerPressX: number;
+  declare _headerPressY: number;
   declare _lastKnownReadyByTargetAt: Date | null;
   declare _lastKnownReadyByPlannedAt: Date | null;
   // Caches for the whole-map scans (_stateKeys, _resolvePrefix) and for the
@@ -246,6 +258,9 @@ class GlpCard extends HTMLElement {
     // when nothing is pending — see _readReadyBy().
     this._pendingReadyByTargetAt = null;
     this._pendingReadyByTimer = null;
+    this._headerPressTimer = null;
+    this._headerPressX = 0;
+    this._headerPressY = 0;
     // last-known-good cache (#68): 'unavailable' is a transient connectivity
     // blip, not a real "nothing scheduled" signal — see _readReadyBy().
     this._lastKnownReadyByTargetAt = null;
@@ -272,7 +287,9 @@ class GlpCard extends HTMLElement {
       if ((e.target as Element).closest('[data-action="toggle-switch"]')) {
         e.stopPropagation();
         if (this._hass && this._switchEntity)
-          this._hass.callService!('switch', 'toggle', { entity_id: this._switchEntity });
+          this._callService('switch', 'toggle', { entity_id: this._switchEntity }, () => {
+            haptic(this, 'success');
+          });
         return;
       }
       if ((e.target as Element).closest('[data-action="set-ready-by"]')) {
@@ -280,10 +297,14 @@ class GlpCard extends HTMLElement {
         const input = this.shadowRoot!.getElementById('glp-readyby-input') as HTMLInputElement | null;
         const target = this._resolveReadyByTarget(input?.value, new Date());
         if (this._hass && target) {
-          this._hass.callService!('gaggiuino_profiler', 'set_ready_by', {
+          const hhmm = target.toLocaleTimeString(this._locale(), { hour: '2-digit', minute: '2-digit' });
+          this._callService('gaggiuino_profiler', 'set_ready_by', {
             target_time: target.toISOString(),
             ...(this._config?.machine != null ? { machine: this._config.machine } : {}),
-          });
+          }, () => {
+            toast(this, T('toast_ready_by', hhmm));
+            haptic(this, 'success');
+          }, () => this._clearPendingReadyBy());
           this._pendingReadyByTargetAt = target;   // optimistic: show immediately until the sensor confirms
           clearTimeout(this._pendingReadyByTimer as ReturnType<typeof setTimeout>);
           this._pendingReadyByTimer = setTimeout(() => { this._pendingReadyByTargetAt = null; this._render(); }, READY_BY_PENDING_FALLBACK_MS);
@@ -294,15 +315,57 @@ class GlpCard extends HTMLElement {
       if ((e.target as Element).closest('[data-action="cancel-ready-by"]')) {
         e.stopPropagation();
         if (this._hass) {
-          this._hass.callService!('gaggiuino_profiler', 'set_ready_by', {
+          this._callService('gaggiuino_profiler', 'set_ready_by', {
             ...(this._config?.machine != null ? { machine: this._config.machine } : {}),
-          });
+          }, () => {
+            haptic(this, 'success');
+          }, () => this._clearPendingReadyBy());
           this._pendingReadyByTargetAt = false;   // optimistic: show the picker immediately until the sensor confirms
           clearTimeout(this._pendingReadyByTimer as ReturnType<typeof setTimeout>);
           this._pendingReadyByTimer = setTimeout(() => { this._pendingReadyByTargetAt = null; this._render(); }, READY_BY_PENDING_FALLBACK_MS);
           this._render();
         }
       }
+    });
+
+    // Header long-press (Home Assistant's own gesture for "open the entity"):
+    // 500 ms with the finger still, then the machine's more-info dialog.
+    // Buttons inside the header keep their own gesture, so a press on the
+    // power button only toggles.
+    this.shadowRoot!.addEventListener('pointerdown', (e: Event) => {
+      const target = e.target as Element | null;
+      if (!target || typeof target.closest !== 'function') return;
+      if (!target.closest('.header')) return;
+      // A press that starts on a button belongs to that button: the power
+      // button must never also open the machine dialog.
+      if (target.closest('button')) return;
+      const pe = e as PointerEvent;
+      this._headerPressX = pe.clientX;
+      this._headerPressY = pe.clientY;
+      clearTimeout(this._headerPressTimer as ReturnType<typeof setTimeout>);
+      this._headerPressTimer = setTimeout(() => {
+        this._headerPressTimer = null;
+        this._longPressHeader();
+      }, HEADER_LONG_PRESS_MS);
+    });
+    const endHeaderPress = (): void => {
+      if (!this._headerPressTimer) return;
+      clearTimeout(this._headerPressTimer as ReturnType<typeof setTimeout>);
+      this._headerPressTimer = null;
+    };
+    this.shadowRoot!.addEventListener('pointerup', endHeaderPress);
+    this.shadowRoot!.addEventListener('pointercancel', endHeaderPress);
+    // pointerleave does not bubble, so only a capture listener on the shadow
+    // root sees the pointer leaving the header for outside the card.
+    this.shadowRoot!.addEventListener('pointerleave', endHeaderPress, true);
+    this.shadowRoot!.addEventListener('pointermove', (e: Event) => {
+      if (!this._headerPressTimer) return;
+      const pe = e as PointerEvent;
+      const dx = pe.clientX - this._headerPressX;
+      const dy = pe.clientY - this._headerPressY;
+      // A scroll or swipe is not a long press; an event without coordinates
+      // cannot prove either way, so it leaves the timer alone.
+      if (Number.isFinite(dx) && Number.isFinite(dy) && Math.hypot(dx, dy) > HEADER_PRESS_MOVE_PX) endHeaderPress();
     });
   }
 
@@ -317,7 +380,16 @@ class GlpCard extends HTMLElement {
   _selectProfile(val: string): void {
     if (this._hass) {
       const entityId = this._resolvePrefix().replace(/^sensor\./, 'select.') + 'profile';
-      this._hass.callService!('select', 'select_option', { entity_id: entityId, option: val });
+      haptic(this, 'selection');
+      this._callService('select', 'select_option', { entity_id: entityId, option: val }, () => {
+        toast(this, T('toast_profile', val));
+        haptic(this, 'success');
+      }, () => {
+        this._pendingProfile = null;
+        clearTimeout(this._pendingProfileTimer as ReturnType<typeof setTimeout>);
+        this._pendingProfileTimer = null;
+        this._render();
+      });
       this._pendingProfile = val;   // optimistic: show immediately until the machine confirms
       clearTimeout(this._pendingProfileTimer as ReturnType<typeof setTimeout>);
       this._pendingProfileTimer = setTimeout(() => { this._pendingProfile = null; this._render(); }, 8000);
@@ -327,7 +399,12 @@ class GlpCard extends HTMLElement {
   }
 
   _selectTab(tab: string): void {
-    if (tab !== this._activeTab) { this._activeTab = tab; this._maintConfirm = null; this._render(); }
+    if (tab !== this._activeTab) {
+      this._activeTab = tab;
+      this._maintConfirm = null;
+      haptic(this, 'selection');
+      this._render();
+    }
   }
 
   _startUptimeTicker(): void {
@@ -374,6 +451,54 @@ class GlpCard extends HTMLElement {
     this._pendingProfileTimer = null;
     if (this._pendingReadyByTimer) clearTimeout(this._pendingReadyByTimer as ReturnType<typeof setTimeout>);
     this._pendingReadyByTimer = null;
+    if (this._headerPressTimer) clearTimeout(this._headerPressTimer as ReturnType<typeof setTimeout>);
+    this._headerPressTimer = null;
+  }
+
+  // ── Home Assistant events (documented custom-card events) ─────────────────
+  // callService returns a Promise in HA, but a stub may return nothing, so the
+  // result is always promisified. A rejected call is a failed action: the
+  // caller rolls its optimistic state back, then the user gets a toast and a
+  // failure vibration.
+  _callService(
+    domain: string, service: string, data: Record<string, unknown>,
+    onDone?: () => void, onFail?: () => void,
+  ): void {
+    if (!this._hass?.callService) return;
+    let call: Promise<unknown>;
+    try {
+      call = Promise.resolve(this._hass.callService(domain, service, data));
+    } catch {
+      this._actionFailed(onFail);
+      return;
+    }
+    call.then(() => { onDone?.(); }, () => { this._actionFailed(onFail); });
+  }
+
+  _actionFailed(onFail?: () => void): void {
+    onFail?.();
+    toast(this, T('toast_action_failed'));
+    haptic(this, 'failure');
+  }
+
+  // Rolls the optimistic ready-by state back after a rejected call.
+  _clearPendingReadyBy(): void {
+    this._pendingReadyByTargetAt = null;
+    clearTimeout(this._pendingReadyByTimer as ReturnType<typeof setTimeout>);
+    this._pendingReadyByTimer = null;
+    this._render();
+  }
+
+  // A long press on the header opens the machine itself: its switch entity
+  // when one is configured, the status sensor otherwise.
+  _longPressHeader(): void {
+    moreInfo(this, this._switchEntity || this._resolvePrefix() + 'machine_status');
+    haptic(this, 'selection');
+  }
+
+  // Tapping a live value opens that entity's history.
+  _showHistory(entityId: string): void {
+    moreInfo(this, entityId);
   }
 
   // ── ready-by preheat scheduler (#61) ───────────────────────────────────────
@@ -1233,11 +1358,12 @@ class GlpCard extends HTMLElement {
       temp !== null ? {
         val: temp, unit: '°',
         lbl: boilerOff ? T('lm_temp_off') : (targetTemp !== null ? T('lm_temp_target', targetTemp) : T('lm_temp')),
+        entity: `${prefix}machine_temperature`,
         warm: !boilerOff && targetTemp !== null && parseFloat(temp) < parseFloat(targetTemp) - 1,
       } : null,
-      livePressure !== null ? { val: livePressure, unit: ' bar', lbl: T('lm_pressure') } : null,
-      liveWeight   !== null ? { val: liveWeight,   unit: ' g',   lbl: T('lm_weight') } : null,
-    ].filter(Boolean);
+      livePressure !== null ? { val: livePressure, unit: ' bar', lbl: T('lm_pressure'), entity: `${prefix}machine_live_pressure` } : null,
+      liveWeight   !== null ? { val: liveWeight,   unit: ' g',   lbl: T('lm_weight'),   entity: `${prefix}machine_live_weight` } : null,
+    ].filter((t): t is LmTile => t !== null);
 
     // ── shot section ─────────────────────────────────────────────────────────
     // Score ring → typographic verdict (#120): thresholds intentionally
@@ -1430,10 +1556,12 @@ class GlpCard extends HTMLElement {
         <div class="lm-head"><span class="lm-live-dot"></span>${T('lm_live')}</div>
         <div class="lm-tiles">
           ${lmTiles.map(t => html`
-            <div class="lm-tile${t.warm ? ' warming' : ''}">
+            <button type="button" class="lm-tile${t.warm ? ' warming' : ''}"
+                    aria-label="${t.lbl} · ${T('lm_history')}"
+                    @click=${() => this._showHistory(t.entity)}>
               <div class="lm-val">${String(t.val)}<span class="lm-unit">${t.unit}</span></div>
               <div class="lm-lbl">${t.lbl}</div>
-            </div>`)}
+            </button>`)}
         </div>
       </div>` : nothing;
   }
@@ -1490,7 +1618,11 @@ class GlpCard extends HTMLElement {
     return html`
       <div class="footer">
         <span class="footer-item">${/* ICONS.of() emits fixed SVG markup */ unsafeHTML(ICONS.of('coffee'))} ${T('footer_today', today)}</span>
-        ${waterLevel !== null ? html`<span class="footer-item">${/* ICONS.of() emits fixed SVG markup */ unsafeHTML(ICONS.of('droplet'))} ${waterLevel}%</span>` : html`<span></span>`}
+        ${waterLevel !== null
+          ? html`<button type="button" class="footer-item footer-history"
+                        aria-label="${waterLevel}% · ${T('lm_history')}"
+                        @click=${() => this._showHistory(`${vm.prefix}machine_water_level`)}>${/* ICONS.of() emits fixed SVG markup */ unsafeHTML(ICONS.of('droplet'))} ${waterLevel}%</button>`
+          : html`<span></span>`}
         <span class="footer-item">
           ${syncTime ? syncTime : nothing}
           ${glpUrl ? html`${syncTime ? ' · ' : ''}<a href=${glpUrl} target="_blank" rel="noopener noreferrer">GLP ↗</a>` : nothing}

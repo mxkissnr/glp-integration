@@ -384,12 +384,18 @@ ${TOKENS}
     50%      { opacity: .35; }
   }
   .lm-tiles { display: flex; gap: var(--glp-sp-2); }
-  /* Border diet (#120): static readouts, not clickable — grouped by fill,
-     no border. The warming state still needs to stand out, so it keeps a
-     tinted background instead of a tinted border. */
+  /* Border diet (#120): readouts group by fill, no border. The warming state
+     still needs to stand out, so it keeps a tinted background instead of a
+     tinted border. Each tile is a <button> (a tap opens its history), so the
+     native button chrome is reset to keep the drawn look identical. */
   .lm-tile {
     flex: 1; background: var(--surface);
-    border-radius: var(--glp-radius-sm); padding: var(--glp-sp-2) 6px; text-align: center;
+    border: none; border-radius: var(--glp-radius-sm); padding: var(--glp-sp-2) 6px;
+    text-align: center; font: inherit; color: inherit; cursor: pointer;
+    -webkit-appearance: none; appearance: none;
+  }
+  .lm-tile:focus-visible, .footer-history:focus-visible {
+    outline: 2px solid var(--glp-aline); outline-offset: 2px;
   }
   .lm-tile.warming { background: color-mix(in srgb, var(--amber) 12%, var(--surface)); }
   .lm-val { font-size: var(--glp-fs-4); font-weight: 700; color: var(--text); letter-spacing: -.02em; line-height: 1.1; }
@@ -631,6 +637,13 @@ ${TOKENS}
     padding-top: var(--glp-sp-2); margin-top: 6px; gap: var(--glp-sp-2);
   }
   .footer-item { display: flex; align-items: center; gap: 4px; }
+  /* The water level is a <button> now; reset the native chrome so it still
+     sits inline with the plain footer text. */
+  .footer-history {
+    background: none; border: none; padding: 0; margin: 0;
+    font: inherit; color: inherit; text-align: inherit; cursor: pointer;
+    -webkit-appearance: none; appearance: none;
+  }
   .footer-item svg { width: 11px; height: 11px; opacity: .8; flex-shrink: 0; }
   .footer a { color: var(--sub); text-decoration: none; }
   .footer a:hover { color: var(--text); }
