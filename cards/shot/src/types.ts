@@ -99,6 +99,18 @@ export interface GrinderEntry {
   days_since?: number;
   shots_since?: number;
   task?: string;
+  last_date?: string | null;
+}
+
+// What the Shot Card's maintenance sheet shows for one task: the values the
+// row already has, gathered so the sheet body and its actions take one object.
+export interface MaintTaskDetail {
+  task: string;
+  name: string;
+  status: string;
+  daysSince: number | null;
+  shotsSince: number | null;
+  lastDate: string | null;
 }
 
 // The colour and machine-lookup shapes now live in cards/shared/types.ts;

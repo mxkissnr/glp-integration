@@ -1,9 +1,11 @@
 import { TOKENS } from '../../shared/tokens.ts';
+import { SHEET_STYLES } from '../../shared/sheet.ts';
 
 // ─── styles ───────────────────────────────────────────────────────────────────
 
 export const STYLES: string = `
 ${TOKENS}
+${SHEET_STYLES}
 
   /* legacy internal aliases — rest of this file still reads these names;
      hybrid theming happens one level up, in the GLP-TOKENS block above */
@@ -417,41 +419,31 @@ ${TOKENS}
     touch-action: manipulation; transition: all .15s;
   }
   .profile-current-btn:active { background: var(--s2); }
-  .profile-current-btn.open {
-    border-color: color-mix(in srgb, var(--text) 18%, transparent);
-    border-bottom-left-radius: 4px; border-bottom-right-radius: 4px;
-  }
   .profile-label-small { font-size: var(--glp-fs-1); color: var(--sub); font-weight: 500; }
   .profile-current-name { flex: 1; text-align: left; }
   .profile-chevron {
     color: var(--sub); font-size: var(--glp-fs-1); margin-left: var(--glp-sp-2);
-    transition: transform .2s; opacity: .6;
+    opacity: .6;
   }
-  .profile-chevron.open { transform: rotate(180deg); }
-  /* Border diet (#120): this panel is a dropdown surface, not itself
-     clickable — dropping its border (previously bordered on all 4 sides,
-     nested inside the card's own border, with the .profile-opt buttons
-     bordered again inside THAT) was the "three levels deep" case from the
-     redesign notes. The buttons below keep their border; they're what's
-     actually clickable. */
-  .profile-opts {
-    display: flex; flex-wrap: wrap; gap: 6px;
-    padding: var(--glp-sp-3) var(--glp-sp-3) var(--glp-sp-3);
-    background: var(--surface);
-    border-bottom-left-radius: var(--glp-radius-sm); border-bottom-right-radius: var(--glp-radius-sm);
+  /* The picker inside the shared sheet: a flat list, the active profile
+     carrying the accent tint and a check icon. */
+  .profile-sheet-list { display: flex; flex-direction: column; gap: var(--glp-sp-1); }
+  .profile-sheet-opt {
+    display: flex; align-items: center; gap: var(--glp-sp-2); width: 100%;
+    background: transparent; border: 1px solid transparent; border-radius: var(--glp-radius-sm);
+    padding: var(--glp-sp-3); min-height: 40px; cursor: pointer; color: var(--text);
+    font-family: inherit; font-size: var(--glp-fs-2); font-weight: 500; text-align: left;
+    touch-action: manipulation;
   }
-  .profile-opt {
-    background: color-mix(in srgb, var(--text) 6%, transparent); border: 1px solid var(--border);
-    border-radius: var(--glp-radius-sm); padding: var(--glp-sp-2) var(--glp-sp-4); min-height: 34px;
-    cursor: pointer; color: var(--text);
-    font-family: inherit; font-size: var(--glp-fs-1); font-weight: 500;
-    touch-action: manipulation; transition: all .15s; white-space: nowrap;
-  }
-  .profile-opt:active { background: color-mix(in srgb, var(--text) 12%, transparent); }
-  .profile-opt.active {
+  .profile-sheet-opt:active { background: color-mix(in srgb, var(--text) 8%, transparent); }
+  .profile-sheet-opt:focus-visible { outline: 2px solid var(--glp-aline); outline-offset: -1px; }
+  .profile-sheet-opt.active {
     background: color-mix(in srgb, var(--accent) 15%, transparent);
-    border-color: color-mix(in srgb, var(--accent) 45%, transparent); color: var(--accent); font-weight: 700;
+    border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+    color: var(--accent); font-weight: 700;
   }
+  .profile-sheet-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .profile-sheet-opt .glp-i { width: 14px; height: 14px; }
 
   /* ── banners ── border diet (#120): status text, not clickable — the
      tinted background alone carries the semantic color now. */
@@ -572,17 +564,21 @@ ${TOKENS}
   /* The row is reachable with Tab (#267); the outline is the same accent-as-
      thin-line token the order card uses for its focus ring. */
   .maint-row[role="button"]:focus-visible { outline: 2px solid var(--glp-aline); outline-offset: 2px; }
-  .maint-row.confirming { border: 1px solid color-mix(in srgb, var(--amber) 40%, transparent); background: color-mix(in srgb, var(--amber) 6%, transparent); }
-  .maint-confirm { display: flex; align-items: center; gap: var(--glp-sp-2); margin-top: var(--glp-sp-1); }
-  .maint-confirm-q { flex: 1; font-size: var(--glp-fs-1); color: var(--sub); }
-  .maint-confirm-yes, .maint-confirm-no {
+  /* The row's confirmation is the shared sheet now (#265): the body reuses
+     the row's own .maint-sub and .maint-pill, plus the last-done date. */
+  .maint-detail { display: flex; flex-direction: column; align-items: flex-start; gap: var(--glp-sp-2); }
+  .maint-detail-row { display: flex; align-items: baseline; gap: var(--glp-sp-2); width: 100%; }
+  .maint-detail-lbl { font-size: var(--glp-fs-1); color: var(--sub); }
+  .maint-detail-val { font-size: var(--glp-fs-2); font-weight: 600; margin-left: auto; }
+  .maint-sheet-done, .maint-sheet-cancel {
     border: none; border-radius: var(--glp-radius-sm); font-family: inherit; font-weight: 700;
-    font-size: var(--glp-fs-1); padding: 5px var(--glp-sp-3); cursor: pointer;
-    display: inline-flex; align-items: center; gap: 4px;
+    font-size: var(--glp-fs-1); padding: 7px var(--glp-sp-3); min-height: 34px; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;
+    touch-action: manipulation;
   }
-  .maint-confirm-yes { background: color-mix(in srgb, var(--green) 14%, transparent); color: var(--green); }
-  .maint-confirm-no  { background: var(--surface); color: var(--sub); }
-  .maint-confirm-no svg { width: 11px; height: 11px; }
+  .maint-sheet-done { background: color-mix(in srgb, var(--green) 14%, transparent); color: var(--green); }
+  .maint-sheet-cancel { background: transparent; border: 1px solid var(--border); color: var(--sub); }
+  .maint-sheet-done svg { width: 11px; height: 11px; }
 
   /* ── orders tab ── */
   /* Fill is the accent darkened by 15% (#269): white on the raw --glp-err
@@ -597,7 +593,8 @@ ${TOKENS}
   }
   /* Border diet (#120): accepted rows group via fill only; a pending order
      keeps a border, but as a semantic "needs your attention" state marker
-     (like maint-row.confirming above), not a default box around content. */
+     (like the maintenance "due" pill above), not a default box around
+     content. */
   .ord-list { display: flex; flex-direction: column; gap: var(--glp-sp-2); margin-bottom: var(--glp-sp-3); }
   .ord-row {
     background: var(--surface);
@@ -663,7 +660,7 @@ ${TOKENS}
     .nav-arrow { width: 40px; height: 40px; font-size: var(--glp-fs-5); }
     .tab-btn   { min-height: 44px; }
     .profile-current-btn { min-height: 50px; }
-    .profile-opt { min-height: 40px; padding: 9px 18px; }
+    .profile-sheet-opt { min-height: 44px; }
     .power-btn { min-height: 42px; }
     .metric-item.role-result .num { font-size: var(--glp-fs-6); }
   }
