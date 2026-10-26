@@ -464,10 +464,11 @@ class GlpCard extends HTMLElement {
     domain: string, service: string, data: Record<string, unknown>,
     onDone?: () => void, onFail?: () => void,
   ): void {
-    if (!this._hass?.callService) return;
+    const hass = this._hass;
+    if (!hass?.callService) return;
     let call: Promise<unknown>;
     try {
-      call = Promise.resolve(this._hass.callService(domain, service, data));
+      call = Promise.resolve(hass.callService(domain, service, data));
     } catch {
       this._actionFailed(onFail);
       return;
@@ -1354,7 +1355,7 @@ class GlpCard extends HTMLElement {
     this._lastChartShotKey = shotChartKey;
 
     // ── live machine panel (static, shown when on & not brewing) ──────────────
-    const lmTiles = [
+    const lmTileCandidates: (LmTile | null)[] = [
       temp !== null ? {
         val: temp, unit: '°',
         lbl: boilerOff ? T('lm_temp_off') : (targetTemp !== null ? T('lm_temp_target', targetTemp) : T('lm_temp')),
@@ -1363,7 +1364,8 @@ class GlpCard extends HTMLElement {
       } : null,
       livePressure !== null ? { val: livePressure, unit: ' bar', lbl: T('lm_pressure'), entity: `${prefix}machine_live_pressure` } : null,
       liveWeight   !== null ? { val: liveWeight,   unit: ' g',   lbl: T('lm_weight'),   entity: `${prefix}machine_live_weight` } : null,
-    ].filter((t): t is LmTile => t !== null);
+    ];
+    const lmTiles = lmTileCandidates.filter((t): t is LmTile => t !== null);
 
     // ── shot section ─────────────────────────────────────────────────────────
     // Score ring → typographic verdict (#120): thresholds intentionally

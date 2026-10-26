@@ -2735,10 +2735,11 @@ ${TOKENS}
     // caller rolls its optimistic state back, then the user gets a toast and a
     // failure vibration.
     _callService(domain, service, data, onDone, onFail) {
-      if (!this._hass?.callService) return;
+      const hass = this._hass;
+      if (!hass?.callService) return;
       let call;
       try {
-        call = Promise.resolve(this._hass.callService(domain, service, data));
+        call = Promise.resolve(hass.callService(domain, service, data));
       } catch {
         this._actionFailed(onFail);
         return;
@@ -3518,7 +3519,7 @@ ${TOKENS}
       const shotChartKey = shotObj ? shotObj.id ?? `idx:${this._shotIndex}` : null;
       const animateChart = this._shotChartKeyChanged(this._lastChartShotKey, shotChartKey);
       this._lastChartShotKey = shotChartKey;
-      const lmTiles = [
+      const lmTileCandidates = [
         temp !== null ? {
           val: temp,
           unit: "°",
@@ -3528,7 +3529,8 @@ ${TOKENS}
         } : null,
         livePressure !== null ? { val: livePressure, unit: " bar", lbl: T2("lm_pressure"), entity: `${prefix}machine_live_pressure` } : null,
         liveWeight !== null ? { val: liveWeight, unit: " g", lbl: T2("lm_weight"), entity: `${prefix}machine_live_weight` } : null
-      ].filter((t5) => t5 !== null);
+      ];
+      const lmTiles = lmTileCandidates.filter((t5) => t5 !== null);
       const score = shotObj?.score ?? null;
       const scoreCls = score == null ? "" : score >= 80 ? "high" : score >= 55 ? "mid" : "low";
       const verdictWord = { high: T2("verdict_high"), mid: T2("verdict_mid"), low: T2("verdict_low") }[scoreCls];
