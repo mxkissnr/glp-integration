@@ -15,11 +15,10 @@ from .const import DOMAIN
 _TIMEOUT = aiohttp.ClientTimeout(total=10)
 _LOGGER = logging.getLogger(__name__)
 
-# A single path segment — order ids (`ord_<ts>_<rand>`) and shot ids (numeric
-# row ids) both fit this shape. No '.', '/', or '\\' can appear here, which is
-# what closes the traversal hole (#65): aiohttp decodes `rest` before it
-# reaches us, so a check against the decoded string is sufficient — there is
-# no second encoding layer left to normalise away.
+# A single order-id path segment (`ord_<ts>_<rand>`). No '.', '/', or '\\' can
+# appear here, which is what closes the traversal hole (#65): aiohttp decodes
+# `rest` before it reaches us, so a check against the decoded string is
+# sufficient — there is no second encoding layer left to normalise away.
 _SAFE_ID = r"[A-Za-z0-9_-]+"
 
 # Allowlists below are drawn from the *actual* callers of the HA proxy —
@@ -35,7 +34,9 @@ _ORDERS_POST_ALLOW_RE = re.compile(rf"^{_SAFE_ID}/(?:accept|complete|decline)$")
 # No verified HA-proxy caller uses DELETE today (menu/history management only
 # happens in the add-on's own UI) — left empty on purpose rather than guessed.
 _ORDERS_DELETE_ALLOW: frozenset[str] = frozenset()
-_SHOTS_GET_ALLOW_RE = re.compile(rf"^{_SAFE_ID}$")
+# Shot ids are integers in the app (go/internal/shots parseID) and every
+# caller asks for one by number; "last" is the single named route in use.
+_SHOTS_GET_ALLOW_RE = re.compile(r"^(?:\d+|last)$")
 
 
 def _forbidden_unless_admin(request: Request) -> Response | None:
@@ -90,12 +91,21 @@ async def _proxy(request: Request, method: str, addon_path: str) -> Response:
 
 
 class GlpOrdersView(HomeAssistantView):
-    """Proxy for /api/glp/orders → app /api/orders (GET list, POST place)."""
+    """Proxy for /api/glp/orders → app /api/orders (GET list, POST place).
+
+    GET returns every order, including other people's names and notes, so it
+    requires HA admin — the only caller is the Shot Card's barista tab, whose
+    accept/complete/decline actions are already admin-only. POST stays open to
+    any authenticated user: that is the customer placing an order.
+    """
     url = "/api/glp/orders"
     name = "api:glp:orders:root"
     requires_auth = True
 
     async def get(self, request: Request) -> Response:
+        forbidden = _forbidden_unless_admin(request)
+        if forbidden:
+            return forbidden
         # `_proxy` is the single place that appends request.query_string; passing
         # it here too produced `api/orders?x=1?x=1` (the app then read `x` as
         # `1?x=1`). Keep the add-on path bare.
