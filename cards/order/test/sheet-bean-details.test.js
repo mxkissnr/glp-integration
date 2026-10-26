@@ -204,6 +204,17 @@ test('no details block is rendered under the chips anymore', (t) => {
   assert.ok(infoButtonFor(card, 'Ethiopia'));
 });
 
+test('removing the card closes an open sheet', (t) => {
+  const card = makeCardFor(t);
+  card._render();
+  infoButtonFor(card, 'Ethiopia').click();
+  assert.equal(card._sheet.isOpen, true);
+
+  card.disconnectedCallback();
+
+  assert.equal(card._sheet.isOpen, false, 'the sheet does not outlive the card');
+});
+
 test('bean text in the sheet is escaped, never markup', (t) => {
   const card = makeCardFor(t, {
     beans: [{ id: 3, name: 'Mystery', notes: NOTE_PAYLOAD, origins: [] }],
