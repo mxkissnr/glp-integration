@@ -113,6 +113,9 @@ ${TOKENS}
   .menu-item.selected .menu-item-icon { color: var(--glp-accent); }
   .menu-item-name  { font-size: var(--glp-fs-1); font-weight: 500; color: var(--oc-sub); }
   .menu-item.selected .menu-item-name { color: var(--oc-text); }
+  /* A lone popular drink fills its row instead of leaving half of the
+     two-column grid empty. */
+  .menu-item-full { grid-column: 1 / -1; }
 
   /* Order form */
   .order-form { display: flex; flex-direction: column; gap: var(--glp-sp-3); margin-bottom: var(--glp-sp-1); }
@@ -136,7 +139,13 @@ ${TOKENS}
     font-family: inherit; color: var(--glp-accent-text);
     background: linear-gradient(135deg, var(--glp-accent-start), var(--glp-accent-end));
     transition: background .15s, opacity .15s;
+    /* The label names the drink only and must never wrap: the icon keeps its
+       size, the text truncates with an ellipsis, and the full order stays in
+       the button's title and aria-label. */
+    display: flex; align-items: center; justify-content: center; gap: var(--glp-sp-2);
   }
+  .order-btn > svg { flex: 0 0 auto; }
+  .order-btn-label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
   .order-btn:disabled { opacity: .4; cursor: default; background: var(--oc-surface); color: var(--oc-sub); }
   .order-btn:not(:disabled):hover {
     background: linear-gradient(135deg,

@@ -98,6 +98,9 @@ ${THEME_VARS}  }
     title: 'Bestellen',
   });
   el.hass = {
+    // German like the title and the Shot Card screenshot; without it the card
+    // falls back to English.
+    language: 'de',
     states: {
       'switch.espresso_plug': { state: 'on', attributes: {} },
     },
