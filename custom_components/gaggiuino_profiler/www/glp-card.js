@@ -2434,7 +2434,24 @@ ${SHEET_STYLES}
       toast_ord_done: "Bestellung fertig",
       toast_ord_declined: "Bestellung abgelehnt",
       toast_action_failed: "Aktion fehlgeschlagen",
-      lm_history: "Verlauf anzeigen"
+      lm_history: "Verlauf anzeigen",
+      cfg_title: "Titel",
+      cfg_title_help: "Titel im Kartenkopf. Leer lassen für den Standard.",
+      cfg_entity_prefix: "Entity-Präfix",
+      cfg_entity_prefix_help: "Präfix der Entities dieser Integration. Leer lassen, damit die Karte die Maschine selbst findet.",
+      cfg_machine: "Maschine",
+      cfg_machine_help: "Name oder ID einer Maschine aus dem Maschinen-Register des Apps.",
+      cfg_switch_entity: "Switch-Entity",
+      cfg_switch_entity_help: "Switch-Entity der smarten Steckdose der Maschine. Der Power-Knopf im Kopf schaltet sie.",
+      cfg_theme: "Farb-Preset",
+      cfg_theme_help: "Preset für die Akzentfarben der Karte und das Maschinen-Icon.",
+      cfg_accent_color: "Akzentfarbe",
+      cfg_accent_color_help: "Eigene Farbe als #rrggbb statt eines Presets. Ungültige Werte werden ignoriert.",
+      cfg_accent_gradient: "Akzent-Verlauf",
+      cfg_accent_gradient_help: "Zwei Farben als #rrggbb, eine pro Zeile. Überschreibt Preset und Akzentfarbe.",
+      cfg_glp_url: "GLP-URL",
+      cfg_glp_url_help: 'URL der Weboberfläche des GLP-Apps. Ergänzt einen "GLP ↗"-Link in der Fußzeile.',
+      cfg_theme_none: "Kein Preset"
     },
     en: {
       tab_orders: "Orders",
@@ -2525,7 +2542,24 @@ ${SHEET_STYLES}
       toast_ord_done: "Order done",
       toast_ord_declined: "Order declined",
       toast_action_failed: "Action failed",
-      lm_history: "Show history"
+      lm_history: "Show history",
+      cfg_title: "Title",
+      cfg_title_help: "Title in the card header. Leave empty for the default.",
+      cfg_entity_prefix: "Entity prefix",
+      cfg_entity_prefix_help: "Prefix shared by this integration's entities. Leave empty so the card finds the machine itself.",
+      cfg_machine: "Machine",
+      cfg_machine_help: "Name or id of one machine from the app's machine registry.",
+      cfg_switch_entity: "Switch entity",
+      cfg_switch_entity_help: "Switch entity of the machine's smart plug. The header power button toggles it.",
+      cfg_theme: "Colour preset",
+      cfg_theme_help: "Preset for the card's accent colours and the machine icon.",
+      cfg_accent_color: "Accent colour",
+      cfg_accent_color_help: "Custom #rrggbb colour instead of a preset. Invalid values are ignored.",
+      cfg_accent_gradient: "Accent gradient",
+      cfg_accent_gradient_help: "Two #rrggbb colours, one per line. Overrides the preset and the accent colour.",
+      cfg_glp_url: "GLP URL",
+      cfg_glp_url_help: `URL of the GLP app's web interface. Adds a "GLP ↗" link to the footer.`,
+      cfg_theme_none: "No preset"
     },
     it: {
       tab_orders: "Ordini",
@@ -2616,7 +2650,24 @@ ${SHEET_STYLES}
       toast_ord_done: "Ordine completato",
       toast_ord_declined: "Ordine rifiutato",
       toast_action_failed: "Azione non riuscita",
-      lm_history: "Mostra cronologia"
+      lm_history: "Mostra cronologia",
+      cfg_title: "Titolo",
+      cfg_title_help: "Titolo nell'intestazione della scheda. Vuoto per il valore predefinito.",
+      cfg_entity_prefix: "Prefisso entità",
+      cfg_entity_prefix_help: "Prefisso delle entità di questa integrazione. Vuoto perché la scheda trovi la macchina da sola.",
+      cfg_machine: "Macchina",
+      cfg_machine_help: "Nome o ID di una macchina dal registro macchine dell'app.",
+      cfg_switch_entity: "Entità switch",
+      cfg_switch_entity_help: "Entità switch della presa smart della macchina. Il pulsante di accensione nell'intestazione la commuta.",
+      cfg_theme: "Preset di colore",
+      cfg_theme_help: "Preset per i colori d'accento della scheda e l'icona della macchina.",
+      cfg_accent_color: "Colore d'accento",
+      cfg_accent_color_help: "Colore #rrggbb personalizzato invece di un preset. I valori non validi vengono ignorati.",
+      cfg_accent_gradient: "Sfumatura d'accento",
+      cfg_accent_gradient_help: "Due colori #rrggbb, uno per riga. Prevale sul preset e sul colore d'accento.",
+      cfg_glp_url: "URL GLP",
+      cfg_glp_url_help: `URL dell'interfaccia web dell'app GLP. Aggiunge un link "GLP ↗" a piè di pagina.`,
+      cfg_theme_none: "Nessun preset"
     },
     fr: {
       tab_orders: "Commandes",
@@ -2707,7 +2758,24 @@ ${SHEET_STYLES}
       toast_ord_done: "Commande terminée",
       toast_ord_declined: "Commande refusée",
       toast_action_failed: "Échec de l'action",
-      lm_history: "Afficher l'historique"
+      lm_history: "Afficher l'historique",
+      cfg_title: "Titre",
+      cfg_title_help: "Titre dans l'en-tête de la carte. Laisser vide pour la valeur par défaut.",
+      cfg_entity_prefix: "Préfixe d'entité",
+      cfg_entity_prefix_help: "Préfixe des entités de cette intégration. Laisser vide pour que la carte trouve la machine elle-même.",
+      cfg_machine: "Machine",
+      cfg_machine_help: "Nom ou identifiant d'une machine du registre des machines de l'application.",
+      cfg_switch_entity: "Entité switch",
+      cfg_switch_entity_help: "Entité switch de la prise connectée de la machine. Le bouton d'alimentation de l'en-tête la bascule.",
+      cfg_theme: "Préréglage de couleur",
+      cfg_theme_help: "Préréglage pour les couleurs d'accent de la carte et l'icône de la machine.",
+      cfg_accent_color: "Couleur d'accent",
+      cfg_accent_color_help: "Couleur #rrggbb personnalisée au lieu d'un préréglage. Les valeurs invalides sont ignorées.",
+      cfg_accent_gradient: "Dégradé d'accent",
+      cfg_accent_gradient_help: "Deux couleurs #rrggbb, une par ligne. Prioritaire sur le préréglage et la couleur d'accent.",
+      cfg_glp_url: "URL GLP",
+      cfg_glp_url_help: "URL de l'interface web de l'application GLP. Ajoute un lien « GLP ↗ » en pied de carte.",
+      cfg_theme_none: "Aucun préréglage"
     },
     es: {
       tab_orders: "Pedidos",
@@ -2798,7 +2866,24 @@ ${SHEET_STYLES}
       toast_ord_done: "Pedido completado",
       toast_ord_declined: "Pedido rechazado",
       toast_action_failed: "La acción ha fallado",
-      lm_history: "Mostrar historial"
+      lm_history: "Mostrar historial",
+      cfg_title: "Título",
+      cfg_title_help: "Título en la cabecera de la tarjeta. Déjalo vacío para el valor por defecto.",
+      cfg_entity_prefix: "Prefijo de entidad",
+      cfg_entity_prefix_help: "Prefijo de las entidades de esta integración. Déjalo vacío para que la tarjeta encuentre la máquina sola.",
+      cfg_machine: "Máquina",
+      cfg_machine_help: "Nombre o ID de una máquina del registro de máquinas de la app.",
+      cfg_switch_entity: "Entidad switch",
+      cfg_switch_entity_help: "Entidad switch del enchufe inteligente de la máquina. El botón de encendido de la cabecera lo conmuta.",
+      cfg_theme: "Preset de color",
+      cfg_theme_help: "Preset para los colores de acento de la tarjeta y el icono de la máquina.",
+      cfg_accent_color: "Color de acento",
+      cfg_accent_color_help: "Color #rrggbb propio en lugar de un preset. Los valores no válidos se ignoran.",
+      cfg_accent_gradient: "Degradado de acento",
+      cfg_accent_gradient_help: "Dos colores #rrggbb, uno por línea. Tiene prioridad sobre el preset y el color de acento.",
+      cfg_glp_url: "URL de GLP",
+      cfg_glp_url_help: 'URL de la interfaz web de la app GLP. Añade un enlace "GLP ↗" al pie.',
+      cfg_theme_none: "Sin preset"
     },
     nl: {
       tab_orders: "Bestellingen",
@@ -2889,7 +2974,24 @@ ${SHEET_STYLES}
       toast_ord_done: "Bestelling klaar",
       toast_ord_declined: "Bestelling afgewezen",
       toast_action_failed: "Actie mislukt",
-      lm_history: "Geschiedenis tonen"
+      lm_history: "Geschiedenis tonen",
+      cfg_title: "Titel",
+      cfg_title_help: "Titel in de kop van de kaart. Leeg laten voor de standaardtekst.",
+      cfg_entity_prefix: "Entiteitsprefix",
+      cfg_entity_prefix_help: "Prefix van de entiteiten van deze integratie. Leeg laten zodat de kaart de machine zelf vindt.",
+      cfg_machine: "Machine",
+      cfg_machine_help: "Naam of id van een machine uit het machineregister van de app.",
+      cfg_switch_entity: "Switch-entiteit",
+      cfg_switch_entity_help: "Switch-entiteit van de slimme stekker van de machine. De aan-uitknop in de kop schakelt hem.",
+      cfg_theme: "Kleurpreset",
+      cfg_theme_help: "Preset voor de accentkleuren van de kaart en het machine-icoon.",
+      cfg_accent_color: "Accentkleur",
+      cfg_accent_color_help: "Eigen #rrggbb-kleur in plaats van een preset. Ongeldige waarden worden genegeerd.",
+      cfg_accent_gradient: "Accentverloop",
+      cfg_accent_gradient_help: "Twee #rrggbb-kleuren, één per regel. Gaat voor op de preset en de accentkleur.",
+      cfg_glp_url: "GLP-URL",
+      cfg_glp_url_help: 'URL van de webinterface van de GLP-app. Voegt een "GLP ↗"-link aan de voettekst toe.',
+      cfg_theme_none: "Geen preset"
     }
   };
   var SUPPORTED_LANGS = ["de", "en", "it", "fr", "es", "nl"];
@@ -2907,6 +3009,11 @@ ${SHEET_STYLES}
     return typeof v2 === "function" ? v2(...args) : v2;
   }
   __name(T2, "T");
+  function TIn(lang, key, ...args) {
+    const v2 = (STRINGS[lang] ?? STRINGS.en)[key] ?? STRINGS.en[key] ?? key;
+    return typeof v2 === "function" ? v2(...args) : v2;
+  }
+  __name(TIn, "TIn");
 
   // shared/helpers.ts
   function esc(s4) {
@@ -3123,6 +3230,24 @@ ${SHEET_STYLES}
   var toast = /* @__PURE__ */ __name((node, message) => fireHaEvent(node, "hass-notification", { message }), "toast");
   var haptic = /* @__PURE__ */ __name((node, type) => fireHaEvent(node, "haptic", type), "haptic");
 
+  // shared/config-form.ts
+  function normalizeFormConfig(config, textKeys) {
+    const out = { ...config };
+    for (const key of textKeys) {
+      const value = out[key];
+      if (typeof value === "string" && value.trim() === "") delete out[key];
+    }
+    if (out.theme === "none") delete out.theme;
+    const gradient = out.accent_gradient;
+    if (typeof gradient === "string") {
+      const stops = gradient.split(/[\s,]+/).filter(Boolean);
+      if (stops.length > 0) out.accent_gradient = stops;
+      else delete out.accent_gradient;
+    }
+    return out;
+  }
+  __name(normalizeFormConfig, "normalizeFormConfig");
+
   // shot/src/charts.ts
   function _scale(arr) {
     return Array.isArray(arr) && arr.length ? arr.map((v2) => v2 / 10) : [];
@@ -3275,6 +3400,21 @@ ${SHEET_STYLES}
   }
   __name(resolveLang, "resolveLang");
   var ENTITY_PREFIX_RE = /^sensor\.[a-z0-9_]+$/;
+  function editorLang(hass) {
+    const code = hass?.language || hass?.locale?.language || (typeof navigator === "undefined" ? "" : navigator.language);
+    const lang = String(code || "en").slice(0, 2).toLowerCase();
+    return SUPPORTED_LANGS.includes(lang) ? lang : "en";
+  }
+  __name(editorLang, "editorLang");
+  var SHOT_CONFIG_TEXT_KEYS = [
+    "title",
+    "entity_prefix",
+    "machine",
+    "switch_entity",
+    "theme",
+    "accent_color",
+    "glp_url"
+  ];
   var GlpCard = class _GlpCard extends HTMLElement {
     static {
       __name(this, "GlpCard");
@@ -3949,6 +4089,31 @@ ${SHEET_STYLES}
         }, 250);
       }));
     }
+    // Home Assistant's visual card editor renders this schema with its own
+    // ha-form; there is no custom editor element. Every documented option in
+    // DOCS.md ("Shot Card options") appears here once, in the same order.
+    static getConfigForm(hass) {
+      const themeOptions = [
+        { value: "none", label: TIn(editorLang(hass), "cfg_theme_none") },
+        ...Object.keys(THEME_PRESETS).map((key) => ({ value: key, label: key }))
+      ];
+      return {
+        schema: [
+          { name: "title", selector: { text: {} } },
+          { name: "entity_prefix", selector: { text: {} } },
+          { name: "machine", selector: { text: {} } },
+          { name: "switch_entity", selector: { entity: { domain: "switch" } } },
+          { name: "theme", selector: { select: { mode: "dropdown", options: themeOptions } } },
+          { name: "accent_color", selector: { text: {} } },
+          { name: "accent_gradient", selector: { text: { multiple: true } } },
+          { name: "glp_url", selector: { text: { type: "url" } } }
+        ],
+        // Resolved per call, so a language change reaches the labels without
+        // building the form again.
+        computeLabel: /* @__PURE__ */ __name((entry) => TIn(editorLang(hass), `cfg_${entry.name}`), "computeLabel"),
+        computeHelper: /* @__PURE__ */ __name((entry) => TIn(editorLang(hass), `cfg_${entry.name}_help`), "computeHelper")
+      };
+    }
     // setConfig() also accepts the optional per-machine colour theme keys
     // (#87): `theme` (one of the THEME_PRESETS keys), `accent_color` (a flat
     // custom #rrggbb), and `accent_gradient` (a [start, end] #rrggbb pair) —
@@ -3957,11 +4122,12 @@ ${SHEET_STYLES}
     // standalone/no-app YAML fallback; the app's own stored theme (#701, see
     // _appMachineTheme() below) takes precedence over these once available.
     setConfig(config) {
-      const prefix = config?.entity_prefix;
+      const normalized = normalizeFormConfig(config || {}, SHOT_CONFIG_TEXT_KEYS);
+      const prefix = normalized.entity_prefix;
       if (prefix != null && (typeof prefix !== "string" || !ENTITY_PREFIX_RE.test(prefix))) {
         throw new Error("entity_prefix must be a sensor entity id, for example sensor.gaggiuino_local_profiler_");
       }
-      this._config = { title: "Gaggiuino", ...config };
+      this._config = { title: "Gaggiuino", ...normalized };
       this._prefixStates = null;
       this._prefixConfig = null;
       this._prefixValue = null;

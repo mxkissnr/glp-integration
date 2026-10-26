@@ -18,6 +18,7 @@ import { applySemanticColorContrast } from '../../shared/contrast.ts';
 import { appMachineEntry, appMachineTheme, appMachineType, matchMachineStatusEntity } from '../../shared/machine.ts';
 import { haptic, toast } from '../../shared/ha-events.ts';
 import { GlpSheet } from '../../shared/sheet.ts';
+import { normalizeFormConfig } from '../../shared/config-form.ts';
 import { STRINGS, _s } from './i18n.ts';
 import type { TemplateResult } from 'lit';
 import type {
@@ -44,23 +45,13 @@ type ConfigFormEntry = { name?: string };
 
 // The visual editor's values differ in shape from YAML: the number selector
 // yields a number, the theme dropdown says 'none', a text field the user
-// cleared is ''. Normalising here keeps every reader of `_config` (theme
-// precedence, the NEW-badge window, the URL/token resolution) unchanged.
+// cleared is ''. The shared normaliser turns those back into the YAML shapes,
+// keeping every reader of `_config` (theme precedence, the NEW-badge window,
+// the URL/token resolution) unchanged.
+const ORDER_CONFIG_TEXT_KEYS = ['title', 'machine', 'switch_entity', 'theme', 'accent_color', 'glp_url', 'glp_token'] as const;
+
 function _normalizeConfig(config: CardConfig): CardConfig {
-  const out: CardConfig = { ...config };
-  const textKeys = ['title', 'machine', 'switch_entity', 'theme', 'accent_color', 'glp_url', 'glp_token'] as const;
-  for (const key of textKeys) {
-    if (typeof out[key] === 'string' && (out[key] as string).trim() === '') delete out[key];
-  }
-  if (out.theme === 'none') delete out.theme;
-  const gradient: unknown = out.accent_gradient;
-  if (typeof gradient === 'string') {
-    // The multi-line text field yields one string, the YAML option an array.
-    const stops = gradient.split(/[\s,]+/).filter(Boolean);
-    if (stops.length > 0) out.accent_gradient = stops;
-    else delete out.accent_gradient;
-  }
-  return out;
+  return normalizeFormConfig(config, ORDER_CONFIG_TEXT_KEYS);
 }
 
 // Per-instance-unique suffix for this card's machine-icon gradient ids — a
