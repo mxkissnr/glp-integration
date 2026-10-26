@@ -148,6 +148,9 @@ class GlpOrderCard extends HTMLElement {
           type: 'expandable',
           name: 'advanced',
           title: _s('cfg_advanced', lang),
+          // Without flatten ha-form writes `advanced: {glp_url, glp_token}`
+          // and the card, which reads both keys at the top level, ignores them.
+          flatten: true,
           schema: [
             { name: 'glp_url', selector: { text: { type: 'url' } } },
             { name: 'glp_token', selector: { text: { type: 'password' } } },

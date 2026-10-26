@@ -96,9 +96,12 @@ test('the schema names every CardConfig key exactly once, in order', () => {
   assert.equal(new Set(names).size, names.length, 'no option appears twice');
 
   // One expandable section holds the two direct-URL options; everything else
-  // is a plain field with a selector.
+  // is a plain field with a selector. The section must flatten, otherwise
+  // ha-form nests its values under `advanced` and the card never sees them.
   const expandable = form.schema.filter(entry => entry.type === 'expandable');
   assert.equal(expandable.length, 1);
+  assert.equal(expandable[0].flatten, true, 'the direct-URL options stay top level');
+  assert.equal(expandable[0].name, 'advanced');
   assert.deepEqual(entryNames(expandable[0].schema), ['glp_url', 'glp_token']);
   for (const entry of form.schema) {
     if (entry.type !== 'expandable') assert.ok(entry.selector, `${entry.name} has a selector`);
@@ -187,6 +190,21 @@ test('a form config renders like the equivalent YAML config', () => {
   for (const key of ['title', 'machine', 'switch_entity', 'theme', 'accent_color']) {
     assert.equal(fromForm._config[key], null, `${key} stays unset`);
   }
+});
+
+test('a flattened form config keeps glp_url and glp_token at the top level', () => {
+  // With flatten: true, ha-form merges the expandable's fields into the card
+  // config; the card reads both keys at the top level, so the direct-URL mode
+  // and the token override have to work exactly as they do from YAML.
+  const fromForm = makeCard({ glp_url: 'http://glp.local:8080', glp_token: 'form-token' });
+  assert.equal(fromForm._config.glp_url, 'http://glp.local:8080');
+  assert.equal(fromForm._useIngress(), false);
+  assert.equal(fromForm._getBase(), 'http://glp.local:8080');
+  assert.equal(fromForm._token, 'form-token');
+
+  const fromYaml = makeCard({ glp_url: 'http://glp.local:8080', glp_token: 'yaml-token' });
+  assert.equal(fromYaml._getBase(), fromForm._getBase());
+  assert.equal(fromYaml._token, 'yaml-token');
 });
 
 test('a gradient typed into the multi-line field becomes the two stops', () => {
