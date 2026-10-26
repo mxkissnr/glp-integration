@@ -3770,13 +3770,16 @@ ${TOKENS}
       <div class="live-machine">
         <div class="lm-head"><span class="lm-live-dot"></span>${T2("lm_live")}</div>
         <div class="lm-tiles">
-          ${lmTiles.map((t5) => b2`
+          ${lmTiles.map((t5) => {
+        const label = `${t5.lbl} ${t5.val}${t5.unit}`.replace(/\s+/g, " ").trim();
+        return b2`
             <button type="button" class="lm-tile${t5.warm ? " warming" : ""}"
-                    aria-label="${t5.lbl} · ${T2("lm_history")}"
+                    aria-label="${label} · ${T2("lm_history")}"
                     @click=${() => this._showHistory(t5.entity)}>
               <div class="lm-val">${String(t5.val)}<span class="lm-unit">${t5.unit}</span></div>
               <div class="lm-lbl">${t5.lbl}</div>
-            </button>`)}
+            </button>`;
+      })}
         </div>
       </div>` : A;
     }

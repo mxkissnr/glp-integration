@@ -202,6 +202,7 @@ test('a live tile carries a history aria-label with its own label', () => {
   const label = tile.getAttribute('aria-label');
   assert.match(label, /Show history$/, 'the button announces what tapping it does');
   assert.match(label, /Temp/, 'and which value it belongs to');
+  assert.match(label, /93\.2°/, 'and the value it shows, which the aria-label would otherwise hide');
   assert.equal(tile.getAttribute('type'), 'button');
   releaseTimers(card);
 });

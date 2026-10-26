@@ -1557,13 +1557,18 @@ class GlpCard extends HTMLElement {
       <div class="live-machine">
         <div class="lm-head"><span class="lm-live-dot"></span>${T('lm_live')}</div>
         <div class="lm-tiles">
-          ${lmTiles.map(t => html`
+          ${lmTiles.map(t => {
+            // An aria-label replaces the button's text, so the value has to be
+            // part of it or a screen reader never announces what the tile says.
+            const label = `${t.lbl} ${t.val}${t.unit}`.replace(/\s+/g, ' ').trim();
+            return html`
             <button type="button" class="lm-tile${t.warm ? ' warming' : ''}"
-                    aria-label="${t.lbl} · ${T('lm_history')}"
+                    aria-label="${label} · ${T('lm_history')}"
                     @click=${() => this._showHistory(t.entity)}>
               <div class="lm-val">${String(t.val)}<span class="lm-unit">${t.unit}</span></div>
               <div class="lm-lbl">${t.lbl}</div>
-            </button>`)}
+            </button>`;
+          })}
         </div>
       </div>` : nothing;
   }
