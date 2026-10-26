@@ -13,11 +13,12 @@ import { MACHINE_ICON_MINI, ICONS } from './icons.ts';
 import { applySemanticColorContrast } from '../../shared/contrast.ts';
 import { appMachineEntry, appMachineTheme, appMachineType, matchMachineStatusEntity } from '../../shared/machine.ts';
 import { moreInfo, toast, haptic } from '../../shared/ha-events.ts';
+import { GlpSheet } from '../../shared/sheet.ts';
 import { fmtUptime, buildShotChart, buildLiveChart, chartLegendHtml, metricLineHtml } from './charts.ts';
 import type { TemplateResult } from 'lit';
 import type {
   Hass, HassStateObject, CardConfig, ThemeStops, MachineEntry,
-  RecentShot, BaristaOrder, BeanInfo, GrinderEntry,
+  RecentShot, BaristaOrder, BeanInfo, GrinderEntry, MaintTaskDetail,
 } from './types.ts';
 // Bumped only in a release — a feature or fix PR leaves this alone (see
 // cards/CLAUDE.md and the PR template). Logged on startup below.
@@ -157,7 +158,12 @@ class GlpCard extends HTMLElement {
   // can never change the emitted ES2022 output (#180).
   declare _hass: Hass | null;
   declare _config: CardConfig;
-  declare _profileOpen: boolean;
+  // The card's one bottom sheet (shared GlpSheet), created on first use.
+  declare _sheet: GlpSheet | null;
+  // The slot node that sheet was mounted into; a view switch replaces it.
+  declare _sheetSlot: HTMLElement | null;
+  // The language the cached sheet's close label was built with.
+  declare _sheetLang: string | null;
   declare _shotIndex: number;
   declare _prevShotIndex: number;
   declare _recentShots: RecentShot[];
@@ -168,7 +174,6 @@ class GlpCard extends HTMLElement {
   declare _activeTab: string;
   declare _pendingProfile: string | null;
   declare _pendingProfileTimer: ReturnType<typeof setTimeout> | null;
-  declare _maintConfirm: string | null;
   declare _machineOnSince: number | null;
   declare _uptimeTimer: ReturnType<typeof setInterval> | null;
   declare _orders: BaristaOrder[];
@@ -211,7 +216,9 @@ class GlpCard extends HTMLElement {
   constructor() {
     super();
     this.attachShadow({ mode: 'open' });
-    this._profileOpen  = false;
+    this._sheet        = null;
+    this._sheetSlot    = null;
+    this._sheetLang = null;
     this._shotIndex     = 0;
     this._prevShotIndex = -1;
     this._recentShots   = [];
@@ -228,7 +235,6 @@ class GlpCard extends HTMLElement {
     this._activeTab    = 'shot';
     this._pendingProfile = null;
     this._pendingProfileTimer = null;
-    this._maintConfirm = null;
     this._machineOnSince = null;
     this._uptimeTimer = null;
     this._orders = [];
@@ -372,11 +378,6 @@ class GlpCard extends HTMLElement {
   // Handlers bound from the Lit templates (elements survive renders now, so
   // per-render addEventListener wiring would stack listeners). The delegated
   // power/ready-by buttons stay on the constructor's shadowRoot listener.
-  _toggleProfilePicker(): void {
-    this._profileOpen = !this._profileOpen;
-    this._render();
-  }
-
   _selectProfile(val: string): void {
     if (this._hass) {
       const entityId = this._resolvePrefix().replace(/^sensor\./, 'select.') + 'profile';
@@ -394,14 +395,12 @@ class GlpCard extends HTMLElement {
       clearTimeout(this._pendingProfileTimer as ReturnType<typeof setTimeout>);
       this._pendingProfileTimer = setTimeout(() => { this._pendingProfile = null; this._render(); }, 8000);
     }
-    this._profileOpen = false;
     this._render();
   }
 
   _selectTab(tab: string): void {
     if (tab !== this._activeTab) {
       this._activeTab = tab;
-      this._maintConfirm = null;
       haptic(this, 'selection');
       this._render();
     }
@@ -453,6 +452,58 @@ class GlpCard extends HTMLElement {
     this._pendingReadyByTimer = null;
     if (this._headerPressTimer) clearTimeout(this._headerPressTimer as ReturnType<typeof setTimeout>);
     this._headerPressTimer = null;
+    // A sheet left open by a removed card would keep its history entry
+    // behind; close() trims that entry too.
+    this._sheet?.close();
+  }
+
+  // ── bottom sheet (shared GlpSheet) ────────────────────────────────────────
+  // The sheet mounts into a slot node the card template renders after the
+  // card. Anything appended straight to the shadow root would be dropped by
+  // the next Lit render, which clears everything it did not commit itself.
+  _sheetSlotHtml(): TemplateResult {
+    return html`<div class="glp-sheet-slot"></div>`;
+  }
+
+  // One sheet per card, created on first use. A view switch (machine on/off)
+  // replaces the slot node, and a language change makes the cached sheet's
+  // close label stale, so either rebuilds it.
+  _sheetFor(): GlpSheet | null {
+    const slot = this.shadowRoot?.querySelector<HTMLElement>('.glp-sheet-slot') ?? null;
+    if (!slot) return null;
+    if (!this._sheet || this._sheetSlot !== slot || this._sheetLang !== getLang()) {
+      this._sheet?.close();
+      this._sheet = new GlpSheet(slot, { closeLabel: T('sheet_close') });
+      this._sheetSlot = slot;
+      this._sheetLang = getLang();
+    }
+    return this._sheet;
+  }
+
+  // Arrow/Home/End move focus between the options of an open picker, wrapping
+  // at both ends. Enter and Space select the focused option: preventing the
+  // key default stops the browser from firing its own click on top of the one
+  // dispatched here, so a key press is exactly one selection.
+  _sheetOptionKeyNav(e: KeyboardEvent): void {
+    const key = e.key;
+    if (key === 'Enter' || key === ' ') {
+      const option = (e.target as HTMLElement | null)?.closest<HTMLElement>('[role="option"]');
+      if (!option) return;
+      e.preventDefault();
+      option.click();
+      return;
+    }
+    if (key !== 'ArrowDown' && key !== 'ArrowUp' && key !== 'Home' && key !== 'End') return;
+    const opts = Array.from((e.currentTarget as HTMLElement).querySelectorAll<HTMLElement>('[role="option"]'));
+    if (!opts.length) return;
+    e.preventDefault();
+    const at = opts.indexOf(e.target as HTMLElement);
+    let next: number;
+    if (key === 'Home') next = 0;
+    else if (key === 'End') next = opts.length - 1;
+    else if (key === 'ArrowDown') next = at < 0 ? 0 : (at + 1) % opts.length;
+    else next = at < 0 ? opts.length - 1 : (at - 1 + opts.length) % opts.length;
+    opts[next]?.focus();
   }
 
   // ── Home Assistant events (documented custom-card events) ─────────────────
@@ -1081,38 +1132,105 @@ class GlpCard extends HTMLElement {
       || this._s('maintenance_grinders')?.state === 'due';
   }
 
+  // One date format for the maintenance sheet: the sensor's `last_date`
+  // attribute is ISO in current app versions, but older data used a local
+  // DD.MM.YYYY string, and anything unparsable is shown as it arrived rather
+  // than silently dropped.
+  _maintLastDate(raw: unknown): string {
+    if (raw === null || raw === undefined || raw === '') return '—';
+    let d: Date | null = null;
+    if (typeof raw === 'number') {
+      d = parseTs(raw);
+    } else if (typeof raw === 'string') {
+      const text = raw.trim();
+      const m = /^(\d{1,2})[.\-/](\d{1,2})[.\-/](\d{2,4})$/.exec(text);
+      if (m) {
+        const y = m[3]!.length === 2 ? 2000 + parseInt(m[3]!, 10) : parseInt(m[3]!, 10);
+        d = new Date(y, parseInt(m[2]!, 10) - 1, parseInt(m[1]!, 10));
+      } else {
+        d = parseTs(text);
+      }
+    }
+    if (!d || isNaN(d.getTime())) return typeof raw === 'string' ? raw : '—';
+    return d.toLocaleDateString(this._locale(), { day: '2-digit', month: '2-digit', year: 'numeric' });
+  }
+
+  // Opens the shared sheet for one maintenance task: the same last-done date,
+  // counters and status pill the row shows, plus the two actions. The sensors
+  // carry no interval, so the sheet does not claim one.
+  _openMaintSheet(detail: MaintTaskDetail): void {
+    const sheet = this._sheetFor();
+    if (!sheet) return;
+    const cls: 'ok' | 'soon' | 'due' | 'never' =
+      detail.status === 'ok' || detail.status === 'soon' || detail.status === 'due'
+        ? detail.status : 'never';
+    const pills: Record<'ok' | 'soon' | 'due' | 'never', string> = {
+      ok: T('pill_ok'), soon: T('pill_soon'), due: T('pill_due'), never: T('pill_never'),
+    };
+    const pillText = pills[cls];
+    const pillIcon = cls === 'ok' ? 'check' : cls === 'due' ? 'warning' : null;
+    const sub = [
+      detail.daysSince != null
+        ? (detail.daysSince === 0 ? T('maint_today') : T('days_ago', String(detail.daysSince)))
+        : null,
+      detail.shotsSince != null && detail.shotsSince > 0 ? T('maint_shots', String(detail.shotsSince)) : null,
+    ].filter(Boolean).join(' · ');
+    sheet.open({
+      title: detail.name,
+      body: () => html`
+        <div class="maint-detail">
+          <div class="maint-detail-row">
+            <span class="maint-detail-lbl">${T('maint_last_done')}</span>
+            <span class="maint-detail-val">${this._maintLastDate(detail.lastDate)}</span>
+          </div>
+          ${sub ? html`<div class="maint-sub">${sub}</div>` : nothing}
+          <span class="maint-pill ${cls}">${pillIcon ? unsafeHTML(ICONS.of(pillIcon)) : nothing}${pillText}</span>
+        </div>`,
+      actions: () => html`
+        <button type="button" class="maint-sheet-done" data-maint-done=${detail.task} @click=${() => { this._maintDone(detail); }}>${/* ICONS.of() emits fixed SVG markup */ unsafeHTML(ICONS.of('check'))} ${T('maint_done_today')}</button>
+        <button type="button" class="maint-sheet-cancel" data-maint-cancel="1" @click=${() => { this._sheet?.close(); }}>${T('sheet_cancel')}</button>`,
+    });
+  }
+
+  // Exactly one maintenance_done call per confirmation; the shared helper adds
+  // the failure toast and vibration, the success path toasts the task name.
+  _maintDone(detail: MaintTaskDetail): void {
+    this._callService('gaggiuino_profiler', 'maintenance_done', { task: detail.task }, () => {
+      toast(this, T('toast_maint_done', detail.name));
+      haptic(this, 'success');
+    });
+    this._sheet?.close();
+  }
+
   _buildMaintHtml(): TemplateResult {
     // pill_ok/pill_due used to carry a ✓/⚠ glyph in the string itself; the
     // glyph now lives here as an icon next to the (glyph-free) translated
     // text, so translators aren't carrying markup in six languages (#120).
     const pills: Record<string, string> = { ok: T('pill_ok'), soon: T('pill_soon'), due: T('pill_due'), never: T('pill_never') };
     const pillIcon: Record<string, string> = { ok: 'check', due: 'warning' };
-    const row = (icon: string, name: string, status: string | undefined, pct: string | undefined, daysSince: number | null | undefined, shotsSince: number | null | undefined, task: string | undefined) => {
+    const row = (icon: string, name: string, status: string | undefined, pct: string | undefined, daysSince: number | null | undefined, shotsSince: number | null | undefined, task: string | undefined, lastDate: string | null | undefined) => {
       const cls  = pills[status as string] ? status as string : 'never';
       const pctW = Math.max(0, Math.min(100, Math.round((parseFloat(pct as string) || 0) * 100)));
       const sub  = [
         daysSince != null ? (daysSince === 0 ? T('maint_today') : T('days_ago', daysSince as unknown as string)) : null,
         shotsSince != null && shotsSince > 0 ? T('maint_shots', shotsSince as unknown as string) : null,
       ].filter(Boolean).join(' · ');
-      const confirming = task && this._maintConfirm === task;
-      // One toggle shared by the mouse and keyboard paths, so both keep the
-      // same confirm flow (#267).
-      const toggleConfirm = (taskId: string) => {
-        this._maintConfirm = this._maintConfirm === taskId ? null : taskId;
-        this._render();
-      };
-      return html`<div class="maint-row${confirming ? ' confirming' : ''}" data-maint-task=${ifDefined(task || undefined)} role=${ifDefined(task ? 'button' : undefined)} tabindex=${ifDefined(task ? '0' : undefined)} @click=${(e: Event) => {
+      // A row with a task opens the confirmation sheet; a static grinder-status
+      // row has no task and stays inert (#265).
+      const open = () => {
         if (!task) return;
-        if ((e.target as Element).closest('[data-maint-done],[data-maint-cancel]')) return;
-        toggleConfirm(task);
-      }} @keydown=${(e: Event) => {
+        this._openMaintSheet({
+          task, name, status: cls,
+          daysSince: daysSince ?? null, shotsSince: shotsSince ?? null,
+          lastDate: lastDate ?? null,
+        });
+      };
+      return html`<div class="maint-row" data-maint-task=${ifDefined(task || undefined)} role=${ifDefined(task ? 'button' : undefined)} tabindex=${ifDefined(task ? '0' : undefined)} @click=${open} @keydown=${(e: Event) => {
         if (!task) return;
         const key = (e as KeyboardEvent).key;
         if (key !== 'Enter' && key !== ' ') return;
-        // A key press inside the confirm buttons is theirs, not the row's.
-        if ((e.target as Element).closest('[data-maint-done],[data-maint-cancel]')) return;
         e.preventDefault();   // Space would scroll the page
-        toggleConfirm(task);
+        open();
       }}>
         <div class="maint-row-top">
           ${/* ICONS.of() emits fixed SVG markup */ unsafeHTML(ICONS.of(icon))}
@@ -1121,23 +1239,18 @@ class GlpCard extends HTMLElement {
         </div>
         ${sub ? html`<div class="maint-sub">${sub}</div>` : nothing}
         <div class="maint-bar-bg"><div class="maint-bar ${cls}" style="width:${pctW}%"></div></div>
-        ${confirming ? html`<div class="maint-confirm">
-          <span class="maint-confirm-q">${T('maint_confirm_q')}</span>
-          <button class="maint-confirm-yes" data-maint-done=${task} @click=${(e: Event) => { e.stopPropagation(); if (this._hass && task) this._hass.callService!('gaggiuino_profiler', 'maintenance_done', { task }); this._maintConfirm = null; this._render(); }}>${/* ICONS.of() emits fixed SVG markup */ unsafeHTML(ICONS.of('check'))} ${T('ord_yes')}</button>
-          <button class="maint-confirm-no" data-maint-cancel="1" @click=${(e: Event) => { e.stopPropagation(); this._maintConfirm = null; this._render(); }}>${/* ICONS.of() emits fixed SVG markup */ unsafeHTML(ICONS.of('close'))}</button>
-        </div>` : nothing}
       </div>`;
     };
     const rows = GlpCard.MAINT_TASKS.map(([suffix, nameKey, icon, task]) => {
       const s = this._s(suffix);
       if (!s || s.state === 'unavailable' || s.state === 'unknown') return null;
       const a = s.attributes || {};
-      return row(icon, T(nameKey), s.state, a.pct as string, a.days_since as number | null | undefined, a.shots_since as number | null | undefined, task);
+      return row(icon, T(nameKey), s.state, a.pct as string, a.days_since as number | null | undefined, a.shots_since as number | null | undefined, task, a.last_date as string | null | undefined);
     }).filter(Boolean);
     const gAttrs = this._s('maintenance_grinders')?.attributes || {};
     const gRows  = Object.entries(gAttrs)
       .filter(([, v]) => v && typeof v === 'object' && 'status' in v)
-      .map(([name, v]) => row('gear', name, (v as GrinderEntry).status, (v as GrinderEntry).pct, (v as GrinderEntry).days_since, (v as GrinderEntry).shots_since, (v as GrinderEntry).task));
+      .map(([name, v]) => row('gear', name, (v as GrinderEntry).status, (v as GrinderEntry).pct, (v as GrinderEntry).days_since, (v as GrinderEntry).shots_since, (v as GrinderEntry).task, (v as GrinderEntry).last_date));
     if (!rows.length && !gRows.length)
       return html`<div class="unavailable">${T('maint_none')}</div>`;
     return html`<div class="maint-list">
@@ -1421,7 +1534,7 @@ class GlpCard extends HTMLElement {
           </div>
           ${readyByHtml}
           ${offOrders}
-        </div></ha-card>`;
+        </div></ha-card>${this._sheetSlotHtml()}`;
   }
 
   _tabBarHtml(vm: ViewModel): TemplateResult | typeof nothing {
@@ -1461,22 +1574,53 @@ class GlpCard extends HTMLElement {
   }
 
   _profilePickerHtml(vm: ViewModel): TemplateResult | typeof nothing {
-    const { brewing, showMaint, profileAvailable, currentProfile, profileSwitching, profileOptions } = vm;
+    const { brewing, showMaint, profileAvailable, currentProfile, profileSwitching } = vm;
     return !brewing && !showMaint && profileAvailable ? html`
       <div class="profile-picker">
-        <button class="profile-current-btn${this._profileOpen?' open':''}" data-action="toggle-profile" @click=${(e: Event) => { e.stopPropagation(); this._toggleProfilePicker(); }}>
+        <button class="profile-current-btn" data-action="toggle-profile" @click=${(e: Event) => { e.stopPropagation(); this._openProfileSheet(); }}>
           <div style="display:flex;flex-direction:column;align-items:flex-start;gap:1px">
             <span class="profile-label-small">${T('profile_label')}</span>
             <span class="profile-current-name">${currentProfile || '—'}${profileSwitching ? html`<span style="color:var(--amber);font-weight:500;font-size:var(--glp-fs-1)"> · ${T('profile_switching')}</span>` : nothing}</span>
           </div>
-          <span class="profile-chevron${this._profileOpen?' open':''}">▾</span>
+          <span class="profile-chevron">▾</span>
         </button>
-        ${this._profileOpen ? html`<div class="profile-opts">
-          ${profileOptions!.map(p =>
-            html`<button class="profile-opt${p===currentProfile?' active':''}" data-profile-opt=${p} @click=${(e: Event) => { e.stopPropagation(); this._selectProfile(p); }}>${p}</button>`
-          )}
-        </div>` : nothing}
       </div>` : nothing;
+  }
+
+  // The profile list lives in the shared sheet now (#265): one option per
+  // profile with the active one marked, opened at the active option so a long
+  // list starts where the user last touched it.
+  _openProfileSheet(): void {
+    const entityId = this._resolvePrefix().replace(/^sensor\./, 'select.') + 'profile';
+    const entity = this._hass?.states[entityId];
+    const options = (entity?.attributes?.options || null) as string[] | null;
+    if (!Array.isArray(options) || !options.length) return;
+    // The same optimistic rule the picker's own label follows, so the sheet
+    // marks the profile the card is showing, not the one the machine has yet
+    // to confirm.
+    const current = this._pendingProfile || entity?.state || null;
+    const sheet = this._sheetFor();
+    if (!sheet) return;
+    sheet.open({
+      title: T('profile_label'),
+      body: () => html`<div class="profile-sheet-list" role="listbox" aria-label=${T('profile_label')} @keydown=${(e: KeyboardEvent) => this._sheetOptionKeyNav(e)}>
+        ${options.map(p => html`<button
+          type="button"
+          class="profile-sheet-opt${p === current ? ' active' : ''}"
+          role="option"
+          data-profile-opt=${p}
+          aria-selected=${p === current ? 'true' : 'false'}
+          @click=${() => { this._selectProfile(p); sheet.close(); }}>
+          <span class="profile-sheet-name">${p}</span>
+          ${p === current ? unsafeHTML(ICONS.of('check')) : nothing}
+        </button>`)}
+      </div>`,
+    });
+    // The sheet renders synchronously, so the options are in the DOM here.
+    const slot = this._sheetSlot;
+    const focused = slot?.querySelector<HTMLElement>('.profile-sheet-opt.active')
+      ?? slot?.querySelector<HTMLElement>('.profile-sheet-opt');
+    focused?.focus();
   }
 
   // Star rating: drawn ICONS.of('star') replaces the ★ text character —
@@ -1648,7 +1792,9 @@ class GlpCard extends HTMLElement {
 
     // ── machine off ──────────────────────────────────────────────────────────
     if (vm.machineOff) {
-      this._profileOpen = false;
+      // The profile picker and the maintenance tab do not exist in this view,
+      // so a sheet they opened has nothing left to act on.
+      this._sheet?.close();
       render(this._machineOffHtml(vm), this.shadowRoot!);
       this._applyMachineTheme();
       this._applySemanticColorContrast();
@@ -1685,7 +1831,7 @@ class GlpCard extends HTMLElement {
         <div class="swipe-target"
           @touchstart=${{ handleEvent: (e: TouchEvent) => { this._swipeSx = e.touches[0]!.clientX; this._swipeSy = e.touches[0]!.clientY; }, passive: true }}
           @touchend=${{ handleEvent: (e: TouchEvent) => {
-            if (this._profileOpen) return;
+            if (this._sheet?.isOpen) return;
             const dx = e.changedTouches[0]!.clientX - this._swipeSx;
             const dy = e.changedTouches[0]!.clientY - this._swipeSy;
             if (Math.abs(dx) < 50 || Math.abs(dx) < Math.abs(dy) * 1.2) return;
@@ -1703,7 +1849,7 @@ class GlpCard extends HTMLElement {
 
         ${this._footerHtml(vm)}
 
-      </div></ha-card>`, this.shadowRoot!);
+      </div></ha-card>${this._sheetSlotHtml()}`, this.shadowRoot!);
     this._applyMachineTheme();
     this._applySemanticColorContrast();
     this._startUptimeTicker();
