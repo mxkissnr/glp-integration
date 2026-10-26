@@ -26,8 +26,10 @@ export interface CardConfig {
   machine?: string | null;
   theme?: string | null;
   accent_color?: string | null;
-  accent_gradient?: string[] | null;
-  new_badge_days?: string | null;
+  // string[] in YAML, one raw string from the visual editor's multi-line field.
+  accent_gradient?: string[] | string | null;
+  // string in YAML, a number from the visual editor's number selector.
+  new_badge_days?: string | number | null;
 }
 
 // The colour and machine-lookup shapes now live in cards/shared/types.ts;

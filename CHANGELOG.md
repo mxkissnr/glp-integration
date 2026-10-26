@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 ### Added
+- **The Order Card can now be set up in Home Assistant's visual card editor instead of YAML.** Refs #272
 - **On the Shot Card a tap on a live value opens its Home Assistant history, a long press on the header opens the machine, and every action confirms with a short message and a vibration.** Refs #266
 - **The Order Card confirms a sent or failed order with a short Home Assistant message and a vibration on phones.** Refs #275
 - **Development builds of the integration and both cards are published as beta versions in HACS, for anyone who wants to test upcoming changes.** Refs #256

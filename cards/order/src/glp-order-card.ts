@@ -32,6 +32,37 @@ const GLP_ORDER_CARD_VERSION = '1.22.0';
 // Menu items younger than this show the NEW badge (config: new_badge_days)
 const NEW_BADGE_DAYS_DEFAULT = 7;
 
+// The languages the visual editor's labels can be resolved in, in the same
+// normalisation as the card's own language detection: first two letters, lower
+// case, English for anything the card has no strings for.
+function _configLang(code: string | null | undefined): string {
+  const lang = String(code || '').slice(0, 2).toLowerCase();
+  return STRINGS[lang] ? lang : 'en';
+}
+
+type ConfigFormEntry = { name?: string };
+
+// The visual editor's values differ in shape from YAML: the number selector
+// yields a number, the theme dropdown says 'none', a text field the user
+// cleared is ''. Normalising here keeps every reader of `_config` (theme
+// precedence, the NEW-badge window, the URL/token resolution) unchanged.
+function _normalizeConfig(config: CardConfig): CardConfig {
+  const out: CardConfig = { ...config };
+  const textKeys = ['title', 'machine', 'switch_entity', 'theme', 'accent_color', 'glp_url', 'glp_token'] as const;
+  for (const key of textKeys) {
+    if (typeof out[key] === 'string' && (out[key] as string).trim() === '') delete out[key];
+  }
+  if (out.theme === 'none') delete out.theme;
+  const gradient: unknown = out.accent_gradient;
+  if (typeof gradient === 'string') {
+    // The multi-line text field yields one string, the YAML option an array.
+    const stops = gradient.split(/[\s,]+/).filter(Boolean);
+    if (stops.length > 0) out.accent_gradient = stops;
+    else delete out.accent_gradient;
+  }
+  return out;
+}
+
 // Per-instance-unique suffix for this card's machine-icon gradient ids — a
 // dashboard can render more than one glp-order-card, and SVG gradient ids
 // are global to the document once in the DOM, so a fixed id would let one
@@ -96,13 +127,53 @@ class GlpOrderCard extends HTMLElement {
     return STRINGS[lang] ? lang : 'en';
   }
 
+  // Home Assistant's visual card editor renders this schema with its own
+  // ha-form; there is no custom editor element. Every documented option in
+  // DOCS.md ("Order Card options") appears here once, in the same order.
+  static getConfigForm() {
+    const lang = _configLang(navigator.language);
+    const themeOptions = [
+      { value: 'none', label: _s('cfg_theme_none', lang) },
+      ...Object.keys(THEME_PRESETS).map(key => ({ value: key, label: key })),
+    ];
+    return {
+      schema: [
+        { name: 'title', selector: { text: {} } },
+        { name: 'machine', selector: { text: {} } },
+        { name: 'switch_entity', selector: { entity: { domain: 'switch' } } },
+        { name: 'new_badge_days', selector: { number: { min: 0, max: 365, mode: 'box' } } },
+        { name: 'theme', selector: { select: { mode: 'dropdown', options: themeOptions } } },
+        { name: 'accent_color', selector: { text: {} } },
+        { name: 'accent_gradient', selector: { text: { multiple: true } } },
+        {
+          type: 'expandable',
+          name: 'advanced',
+          title: _s('cfg_advanced', lang),
+          schema: [
+            { name: 'glp_url', selector: { text: { type: 'url' } } },
+            { name: 'glp_token', selector: { text: { type: 'password' } } },
+          ],
+        },
+      ],
+      computeLabel: (entry: ConfigFormEntry) =>
+        _s(`cfg_${entry.name}`, _configLang(navigator.language)),
+      computeHelper: (entry: ConfigFormEntry) =>
+        _s(`cfg_${entry.name}_help`, _configLang(navigator.language)),
+    };
+  }
+
+  // Accepts both the YAML shape and what getConfigForm()'s form produces
+  // (numbers from the number selector, 'none' from the theme dropdown, ''
+  // from emptied text fields, a string for the multi-line gradient) without
+  // changing what an existing YAML config means.
   setConfig(config: CardConfig): void {
+    const normalized = _normalizeConfig(config);
     this._config = {
       title: null, switch_entity: null, glp_token: null, machine: null,
-      theme: null, accent_color: null, accent_gradient: null, ...config,
+      theme: null, accent_color: null, accent_gradient: null, ...normalized,
     };
     // Allow explicit token override in YAML for direct-URL mode
-    if (config.glp_token) this._token = String(config.glp_token);
+    if (normalized.glp_token) this._token = String(normalized.glp_token);
   }
 
   // The app's own stored per-machine theme (#701), read from hass state by
@@ -423,7 +494,7 @@ class GlpOrderCard extends HTMLElement {
       return html`<div class="loading">${_s('no_menu', lang)}</div>`;
     }
 
-    const newThreshold = (parseFloat(this._config?.new_badge_days as string) || NEW_BADGE_DAYS_DEFAULT) * 24 * 60 * 60 * 1000;
+    const newThreshold = (parseFloat(String(this._config?.new_badge_days ?? '')) || NEW_BADGE_DAYS_DEFAULT) * 24 * 60 * 60 * 1000;
     const now = Date.now();
 
     const renderItem = (m: MenuItem) => {
