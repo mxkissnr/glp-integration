@@ -37,7 +37,12 @@ const P = 'sensor.gaggiuino_local_profiler_';
 
 // ── the shared helpers ─────────────────────────────────────────────────────
 
-// A bare EventTarget is enough: the helpers only dispatch.
+// A happy-dom element is the target the card really dispatches on; the
+// helpers themselves only build and dispatch an event.
+function newTarget() {
+  return window.document.createElement('div');
+}
+
 function record(target) {
   const seen = [];
   for (const type of ['hass-more-info', 'hass-notification', 'haptic']) {
@@ -47,7 +52,7 @@ function record(target) {
 }
 
 test('moreInfo() fires hass-more-info with the entity id, bubbling and composed', () => {
-  const target = new EventTarget();
+  const target = newTarget();
   const events = record(target);
 
   moreInfo(target, `${P}machine_temperature`);
@@ -60,7 +65,7 @@ test('moreInfo() fires hass-more-info with the entity id, bubbling and composed'
 });
 
 test('toast() fires hass-notification with the message', () => {
-  const target = new EventTarget();
+  const target = newTarget();
   const events = record(target);
 
   toast(target, 'Profile Espresso selected');
@@ -73,7 +78,7 @@ test('toast() fires hass-notification with the message', () => {
 });
 
 test('haptic() fires haptic with the type as its detail', () => {
-  const target = new EventTarget();
+  const target = newTarget();
   const events = record(target);
 
   haptic(target, 'selection');
