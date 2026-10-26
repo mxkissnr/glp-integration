@@ -463,22 +463,23 @@ class GlpOrderCard extends HTMLElement {
       <div id="oc-variants" class=${groupedVariants.flat ? 'variant-grid' : ''}>
         ${this._variantInnerHtml(groupedVariants, lang, mergedHeadings)}
       </div>` : nothing;
-    const itemLabel = (this._selected && this._selectedVariant)
+    const fullLabel = (this._selected && this._selectedVariant)
       ? `${this._selected} · ${this._selectedVariant}`
-      : this._selected || null;
-    // The button names the drink only; the variant stays in its title and
-    // accessible name so the full order is still announced.
+      : null;
+    // The button label names the drink only and stays on one line; the chosen
+    // variant is already visible in the chip above, so the complete
+    // "drink · variant" moves into the title and the accessible name.
     const btnLabel = this._selected ? _s('order_btn', lang, this._selected) : needsVariant ? _s('variant_select', lang) : _s('order_btn_select', lang);
-    const btnFullLabel = itemLabel ? _s('order_btn', lang, itemLabel) : undefined;
+    const fullBtnLabel = fullLabel ? _s('order_btn', lang, fullLabel) : undefined;
     return html`
       <div class="order-form">
         ${trendSection}${regularSection}
         ${variantSection}
         <input class="note-input" id="oc-note" placeholder=${_s('note_ph', lang)} maxlength="200">
         <button class="order-btn" id="oc-submit" ?disabled=${!this._selected || this._submitting || needsVariant}
-          title=${ifDefined(itemLabel ?? undefined)} aria-label=${ifDefined(btnFullLabel)}
+          title=${ifDefined(fullLabel || undefined)} aria-label=${ifDefined(fullBtnLabel)}
           @click=${() => this._placeOrder()}>
-          ${itemLabel ? html`${/* ICONS.of() emits fixed SVG markup */ unsafeHTML(ICONS.of('coffee'))}` : nothing}<span class="order-btn-label">${btnLabel}</span>
+          ${this._selected ? html`${/* ICONS.of() emits fixed SVG markup */ unsafeHTML(ICONS.of('coffee'))}` : nothing}<span class="order-btn-label">${btnLabel}</span>
         </button>
         ${this._orderError ? html`<div class="order-error" role="alert">${this._orderError}</div>` : nothing}
       </div>`;

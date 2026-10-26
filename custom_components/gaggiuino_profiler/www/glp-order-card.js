@@ -2613,18 +2613,18 @@ ${SHEET_STYLES}
       <div id="oc-variants" class=${groupedVariants.flat ? "variant-grid" : ""}>
         ${this._variantInnerHtml(groupedVariants, lang, mergedHeadings)}
       </div>` : A;
-      const itemLabel = this._selected && this._selectedVariant ? `${this._selected} · ${this._selectedVariant}` : this._selected || null;
+      const fullLabel = this._selected && this._selectedVariant ? `${this._selected} · ${this._selectedVariant}` : null;
       const btnLabel = this._selected ? _s("order_btn", lang, this._selected) : needsVariant ? _s("variant_select", lang) : _s("order_btn_select", lang);
-      const btnFullLabel = itemLabel ? _s("order_btn", lang, itemLabel) : void 0;
+      const fullBtnLabel = fullLabel ? _s("order_btn", lang, fullLabel) : void 0;
       return b2`
       <div class="order-form">
         ${trendSection}${regularSection}
         ${variantSection}
         <input class="note-input" id="oc-note" placeholder=${_s("note_ph", lang)} maxlength="200">
         <button class="order-btn" id="oc-submit" ?disabled=${!this._selected || this._submitting || needsVariant}
-          title=${o6(itemLabel ?? void 0)} aria-label=${o6(btnFullLabel)}
+          title=${o6(fullLabel || void 0)} aria-label=${o6(fullBtnLabel)}
           @click=${() => this._placeOrder()}>
-          ${itemLabel ? b2`${/* ICONS.of() emits fixed SVG markup */
+          ${this._selected ? b2`${/* ICONS.of() emits fixed SVG markup */
       o5(ICONS2.of("coffee"))}` : A}<span class="order-btn-label">${btnLabel}</span>
         </button>
         ${this._orderError ? b2`<div class="order-error" role="alert">${this._orderError}</div>` : A}
