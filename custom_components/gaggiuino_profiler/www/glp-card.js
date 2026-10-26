@@ -3765,14 +3765,12 @@ ${SHEET_STYLES}
       if (!this._hass?.fetchWithAuth || !id) return;
       let ok = false;
       try {
-        const r4 = await this._hass.fetchWithAuth(`/api/glp/orders/${encodeURIComponent(id)}/${action}`, {
+        ok = (await this._hass.fetchWithAuth(`/api/glp/orders/${encodeURIComponent(id)}/${action}`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(body || {})
-        });
-        ok = r4.ok;
+        })).ok;
       } catch {
-        ok = false;
       }
       if (ok) {
         this._sheet?.close();
@@ -3789,24 +3787,21 @@ ${SHEET_STYLES}
     // per order. The row itself is the tap target, keyboard included.
     _buildOrdersHtml() {
       if (!this._orders.length) return b2`<div class="unavailable">${T2("orders_none")}</div>`;
-      return b2`<div class="ord-list">${this._orders.map((o8) => {
-        const label = o8.variant ? `${o8.item} · ${o8.variant}` : o8.item;
-        const minsLeft = this._orderMinsLeft(o8);
-        const open = /* @__PURE__ */ __name(() => {
-          this._openOrderSheet(o8.id);
-        }, "open");
-        return b2`<div class="ord-row ${o8.status === "pending" ? "pending" : "accepted"}" data-order-id=${o8.id} role="button" tabindex="0" @click=${open} @keydown=${(e6) => {
-          const key = e6.key;
-          if (key !== "Enter" && key !== " ") return;
-          e6.preventDefault();
-          open();
-        }}>
-        <div class="ord-top"><span class="ord-item">${/* ICONS.of() emits fixed SVG markup */
-        o5(ICONS.of("coffee"))} ${label}</span>${o8.customer ? b2`<span class="ord-who">${o8.customer}</span>` : A}</div>
-        ${o8.note ? b2`<div class="ord-note">„${o8.note}"</div>` : A}
-        ${o8.status === "accepted" ? b2`<div class="ord-sub">${minsLeft != null ? T2("ord_ready_in", String(minsLeft)) : T2("ord_preparing")}</div>` : A}
-      </div>`;
-      })}</div>`;
+      return b2`<div class="ord-list">${this._orders.map((o8) => this._orderRowHtml(o8))}</div>`;
+    }
+    _orderRowHtml(order) {
+      const label = order.variant ? `${order.item} · ${order.variant}` : order.item;
+      const minsLeft = this._orderMinsLeft(order);
+      const open = /* @__PURE__ */ __name(() => {
+        this._openOrderSheet(order.id);
+      }, "open");
+      return b2`<div class="ord-row ${order.status === "pending" ? "pending" : "accepted"}" data-order-id=${order.id} role="button" tabindex="0" @click=${open} @keydown=${(e6) => {
+        const key = e6.key;
+        if (key !== "Enter" && key !== " ") return;
+        e6.preventDefault();
+        open();
+      }}><div class="ord-top"><span class="ord-item">${/* ICONS.of() emits fixed SVG markup */
+      o5(ICONS.of("coffee"))} ${label}</span>${order.customer ? b2`<span class="ord-who">${order.customer}</span>` : A}</div>${order.note ? b2`<div class="ord-note">„${order.note}"</div>` : A}${order.status === "accepted" ? b2`<div class="ord-sub">${minsLeft != null ? T2("ord_ready_in", String(minsLeft)) : T2("ord_preparing")}</div>` : A}</div>`;
     }
     // One order in the shared sheet (#264): the same summary plus its waiting
     // time, and the actions that used to sit in the row. Pending orders offer

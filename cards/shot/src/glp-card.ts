@@ -767,11 +767,10 @@ class GlpCard extends HTMLElement {
     if (!this._hass?.fetchWithAuth || !id) return;
     let ok = false;
     try {
-      const r = await this._hass.fetchWithAuth(`/api/glp/orders/${encodeURIComponent(id)}/${action}`, {
+      ok = (await this._hass.fetchWithAuth(`/api/glp/orders/${encodeURIComponent(id)}/${action}`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body || {}),
-      });
-      ok = r.ok;
-    } catch { ok = false; }
+      })).ok;
+    } catch { /* the request never landed, so the action failed */ }
     if (ok) {
       this._sheet?.close();
       toast(this, action === 'accept'
@@ -790,21 +789,19 @@ class GlpCard extends HTMLElement {
   // per order. The row itself is the tap target, keyboard included.
   _buildOrdersHtml(): TemplateResult {
     if (!this._orders.length) return html`<div class="unavailable">${T('orders_none')}</div>`;
-    return html`<div class="ord-list">${this._orders.map(o => {
-      const label = o.variant ? `${o.item} · ${o.variant}` : o.item;
-      const minsLeft = this._orderMinsLeft(o);
-      const open = () => { this._openOrderSheet(o.id); };
-      return html`<div class="ord-row ${o.status === 'pending' ? 'pending' : 'accepted'}" data-order-id=${o.id} role="button" tabindex="0" @click=${open} @keydown=${(e: Event) => {
-        const key = (e as KeyboardEvent).key;
-        if (key !== 'Enter' && key !== ' ') return;
-        e.preventDefault();   // Space would scroll the page
-        open();
-      }}>
-        <div class="ord-top"><span class="ord-item">${/* ICONS.of() emits fixed SVG markup */ unsafeHTML(ICONS.of('coffee'))} ${label}</span>${o.customer ? html`<span class="ord-who">${o.customer}</span>` : nothing}</div>
-        ${o.note ? html`<div class="ord-note">„${o.note}"</div>` : nothing}
-        ${o.status === 'accepted' ? html`<div class="ord-sub">${minsLeft != null ? T('ord_ready_in', String(minsLeft)) : T('ord_preparing')}</div>` : nothing}
-      </div>`;
-    })}</div>`;
+    return html`<div class="ord-list">${this._orders.map(o => this._orderRowHtml(o))}</div>`;
+  }
+
+  _orderRowHtml(order: BaristaOrder): TemplateResult {
+    const label = order.variant ? `${order.item} · ${order.variant}` : order.item;
+    const minsLeft = this._orderMinsLeft(order);
+    const open = (): void => { this._openOrderSheet(order.id); };
+    return html`<div class="ord-row ${order.status === 'pending' ? 'pending' : 'accepted'}" data-order-id=${order.id} role="button" tabindex="0" @click=${open} @keydown=${(e: Event) => {
+      const key = (e as KeyboardEvent).key;
+      if (key !== 'Enter' && key !== ' ') return;
+      e.preventDefault();   // Space would scroll the page
+      open();
+    }}><div class="ord-top"><span class="ord-item">${/* ICONS.of() emits fixed SVG markup */ unsafeHTML(ICONS.of('coffee'))} ${label}</span>${order.customer ? html`<span class="ord-who">${order.customer}</span>` : nothing}</div>${order.note ? html`<div class="ord-note">„${order.note}"</div>` : nothing}${order.status === 'accepted' ? html`<div class="ord-sub">${minsLeft != null ? T('ord_ready_in', String(minsLeft)) : T('ord_preparing')}</div>` : nothing}</div>`;
   }
 
   // One order in the shared sheet (#264): the same summary plus its waiting
