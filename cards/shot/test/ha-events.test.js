@@ -394,9 +394,11 @@ test('a rejected set ready-by drops the optimistic value and reports the failure
 });
 
 test('a cancel ready-by confirms with a success vibration and no toast', async () => {
+  // Far enough ahead that the schedule still counts as pending whenever the
+  // suite runs; the card offers Cancel for any future target.
   const card = makeCard(offHass({
-    [`${P}preheat_ready_by_target_at`]: { state: '2026-07-28T07:00:00.000Z' },
-    [`${P}preheat_planned_switch_on_at`]: { state: '2026-07-28T06:40:00.000Z' },
+    [`${P}preheat_ready_by_target_at`]: { state: '2030-07-28T07:00:00.000Z' },
+    [`${P}preheat_planned_switch_on_at`]: { state: '2030-07-28T06:40:00.000Z' },
   }));
   const seen = haEvents(card);
   const cancel = card.shadowRoot.querySelector('[data-action="cancel-ready-by"]');
