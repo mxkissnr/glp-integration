@@ -226,7 +226,6 @@ ${SHEET_STYLES}
     background: none; border: none;
     padding: 0; width: 32px; height: 32px;
     cursor: pointer; color: color-mix(in srgb, var(--text) 35%, transparent);
-    font-size: var(--glp-fs-5); line-height: 1;
     display: flex; align-items: center; justify-content: center;
     transition: color .15s; touch-action: manipulation; flex-shrink: 0;
   }
@@ -650,7 +649,6 @@ ${SHEET_STYLES}
     -webkit-appearance: none; appearance: none;
   }
   .footer-item svg { width: 11px; height: 11px; opacity: .8; flex-shrink: 0; }
-  .footer a .glp-i { vertical-align: -1px; }
   .footer a { color: var(--sub); text-decoration: none; }
   .footer a:hover { color: var(--text); }
 

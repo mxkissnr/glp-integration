@@ -934,7 +934,16 @@
     celebrate: '<path d="M12 3v3.5M12 17.5V21M21 12h-3.5M6.5 12H3M18.4 5.6l-2.5 2.5M8.1 15.9l-2.5 2.5M18.4 18.4l-2.5-2.5M8.1 8.1 5.6 5.6"/>',
     // Replaces the ★/☆ text characters in the rating row. The filled state is a
     // class on the element, not a second path — it is the same shape either way.
-    star: '<path d="M12 3.8l2.6 5.3 5.9.9-4.2 4.1 1 5.8-5.3-2.8-5.3 2.8 1-5.8L3.5 10l5.9-.9L12 3.8z"/>'
+    star: '<path d="M12 3.8l2.6 5.3 5.9.9-4.2 4.1 1 5.8-5.3-2.8-5.3 2.8 1-5.8L3.5 10l5.9-.9L12 3.8z"/>',
+    // --- direction and links ----------------------------------------------
+    // Replace the ‹ › ▾ ↗ text characters: those render in whichever font the
+    // platform picks, ignore the button's colour and sit off the text baseline,
+    // exactly the emoji problem these icons were introduced for.
+    "chevron-left": '<path d="M14.5 5.5 8 12l6.5 6.5"/>',
+    "chevron-right": '<path d="M9.5 5.5 16 12l-6.5 6.5"/>',
+    "chevron-down": '<path d="M5.5 9.5 12 16l6.5-6.5"/>',
+    // An arrow leaving a box: "this leaves the card" rather than a bare arrow.
+    "open-in-new": '<path d="M13.5 4.5h6v6"/><path d="M19.5 4.5 11 13"/><path d="M17 14v4.5a1.5 1.5 0 0 1-1.5 1.5h-10A1.5 1.5 0 0 1 4 18.5v-10A1.5 1.5 0 0 1 5.5 7H10"/>'
   };
   var ICONS = {
     has: /* @__PURE__ */ __name((name) => Object.prototype.hasOwnProperty.call(GLP_ICON_PATHS, name), "has"),
@@ -1810,8 +1819,7 @@ ${SHEET_STYLES}
   /* Score ring → typographic verdict (#120): the number carries the
      weight, the word names it, no circle/badge chrome. Score thresholds
      are unchanged (see the scoreCls computation in _render()) — only the
-     presentation changed here. Sans throughout, incl. the number: Fraunces
-     stays reserved for the bean name alone (see .shot-coffee below). */
+     presentation changed here. Sans throughout, incl. the number. */
   .verdict {
     flex-shrink: 0; display: flex; align-items: baseline; gap: 3px;
   }
@@ -1843,16 +1851,6 @@ ${SHEET_STYLES}
     white-space: nowrap; flex-shrink: 0;
   }
   .shot-coffee {
-    /* Fraunces stays scoped to exactly this element (#120) — not the shot
-       title (.shot-profile above, sans/800) and not the verdict. No
-       @font-face is bundled here: this is a single-file Lovelace element
-       with no font asset shipped alongside it (unlike the app, which
-       already bundles Fraunces in public-src/fonts/), and reaching out to
-       a font CDN from a HA custom card would add a network dependency this
-       file has never had. Falls back to the platform serif stack, which is
-       still the intended visual note (a warm serif against the sans
-       everywhere else) even where Fraunces itself isn't installed. */
-    font-family: Fraunces, Georgia, 'Times New Roman', serif;
     font-weight: 600;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
@@ -1877,10 +1875,10 @@ ${SHEET_STYLES}
     background: none; border: none;
     padding: 0; width: 32px; height: 32px;
     cursor: pointer; color: color-mix(in srgb, var(--text) 35%, transparent);
-    font-size: var(--glp-fs-5); line-height: 1;
     display: flex; align-items: center; justify-content: center;
     transition: color .15s; touch-action: manipulation; flex-shrink: 0;
   }
+  .nav-arrow svg { width: 21px; height: 21px; }
   .nav-arrow:active:not([disabled]) { color: var(--text); }
   .nav-arrow[disabled] { opacity: .12; cursor: default; pointer-events: none; }
   .nav-dots {
@@ -1912,20 +1910,11 @@ ${SHEET_STYLES}
   }
 
   /* ── guided metric line (#120) ──────────────────────────────────────────
-     Was two separate three-tile box rows (.metric-trio for a historical
-     shot, .live-stats for a brewing one) — the single clearest "generated
-     UI" tell in this file per two independent audits landing on the exact
-     same finding. One component now serves both call sites (_metricLineHtml()
-     in the render code below); which one is on screen is still driven by the
-     brewing flag, same as before.
-     The three roles (recipe = what was asked for, process = what happened,
-     result = what came out) stay legible without three separate boxes: they
-     are told apart by size/weight/color alone, not by grouping into cards —
-     recipe is the quietest (muted, regular weight), process is mid-weight,
-     result is the loudest (largest, full-contrast text or, for the historical
-     yield/ratio pairing, plain — see the role assignment at the call site for
-     why temp/pressure/weight map to recipe/process/result while brewing, and
-     ratio/duration/yield do so for a finished shot). */
+     The live brewing row only now (_liveStatsHtml()); a finished shot uses
+     .key-figures below. The three roles (recipe = what was asked for, process
+     = what happened, result = what came out) stay legible without three
+     separate boxes: they are told apart by size/weight/color alone, not by
+     grouping into cards. */
   .metric-line {
     display: flex; align-items: flex-end; gap: var(--glp-sp-5);
     margin-bottom: var(--glp-sp-3);
@@ -1938,14 +1927,31 @@ ${SHEET_STYLES}
   .metric-item.role-process .num { font-size: var(--glp-fs-4); font-weight: 700; color: var(--text); }
   .metric-item.role-result  .num { font-size: var(--glp-fs-5); font-weight: 700; color: var(--text); }
 
-  /* secondary stats — border diet (#120): not clickable, so grouping comes
-     from being inline text on the card's own background, not a nested box. */
-  .stats-secondary {
-    display: flex; gap: var(--glp-sp-5); margin-bottom: var(--glp-sp-3);
+  /* ── key figures ────────────────────────────────────────────────────────
+     All five finished-shot figures in one grid with one value style: ratio,
+     duration, yield, pressure and temperature differ in what they mean, not
+     in how loudly they are set. The column count follows the rendered count
+     (.figures-N, set from _keyFiguresHtml()) so a row is never left half
+     empty — five sit 3 + 2 at phone width, with the last two spanning the
+     full row; four sit 2 + 2 rather than 3 + 1. */
+  .key-figures {
+    display: grid; gap: var(--glp-sp-3) var(--glp-sp-4);
+    margin-bottom: var(--glp-sp-3);
+    grid-template-columns: repeat(6, minmax(0, 1fr));
   }
-  .stat-pill { display: flex; flex-direction: column; gap: 2px; }
-  .stat-pill-label { font-size: var(--glp-fs-1); color: var(--sub); }
-  .stat-pill-value { font-size: var(--glp-fs-3); font-weight: 700; letter-spacing: -.02em; }
+  .key-figure { grid-column: span 2; min-width: 0; }
+  .key-figures.figures-5 .key-figure:nth-child(4),
+  .key-figures.figures-5 .key-figure:nth-child(5) { grid-column: span 3; }
+  .key-figures:not(.figures-5) .key-figure { grid-column: auto; }
+  .key-figures.figures-4, .key-figures.figures-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .key-figures.figures-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .key-figures.figures-1 { grid-template-columns: minmax(0, 1fr); }
+  .kf-value {
+    font-size: var(--glp-fs-4); font-weight: 700; line-height: 1;
+    color: var(--text); letter-spacing: -.02em; font-variant-numeric: tabular-nums;
+  }
+  .kf-unit { font-size: var(--glp-fs-1); font-weight: 500; color: var(--sub); margin-left: 1px; }
+  .kf-label { font-size: var(--glp-fs-1); color: var(--sub); margin-top: 2px; }
 
   /* rating stars — drawn icons (ICONS.of('star')) replace the ★ text
      character; filled vs. empty is the .on class on the same shape. */
@@ -2062,9 +2068,10 @@ ${SHEET_STYLES}
   .profile-label-small { font-size: var(--glp-fs-1); color: var(--sub); font-weight: 500; }
   .profile-current-name { flex: 1; text-align: left; }
   .profile-chevron {
-    color: var(--sub); font-size: var(--glp-fs-1); margin-left: var(--glp-sp-2);
-    opacity: .6;
+    color: var(--sub); margin-left: var(--glp-sp-2); opacity: .6;
+    display: flex; align-items: center;
   }
+  .profile-chevron .glp-i { width: 15px; height: 15px; }
   /* The picker inside the shared sheet: a flat list, the active profile
      carrying the accent tint and a check icon. */
   .profile-sheet-list { display: flex; flex-direction: column; gap: var(--glp-sp-1); }
@@ -2450,7 +2457,7 @@ ${SHEET_STYLES}
       cfg_accent_gradient: "Akzent-Verlauf",
       cfg_accent_gradient_help: "Zwei Farben als #rrggbb, eine pro Zeile. Überschreibt Preset und Akzentfarbe.",
       cfg_glp_url: "GLP-URL",
-      cfg_glp_url_help: 'URL der Weboberfläche des GLP-Apps. Ergänzt einen "GLP ↗"-Link in der Fußzeile.',
+      cfg_glp_url_help: 'URL der Weboberfläche des GLP-Apps. Ergänzt einen Link "GLP" in der Fußzeile.',
       cfg_theme_none: "Kein Preset"
     },
     en: {
@@ -2558,7 +2565,7 @@ ${SHEET_STYLES}
       cfg_accent_gradient: "Accent gradient",
       cfg_accent_gradient_help: "Two #rrggbb colours, one per line. Overrides the preset and the accent colour.",
       cfg_glp_url: "GLP URL",
-      cfg_glp_url_help: `URL of the GLP app's web interface. Adds a "GLP ↗" link to the footer.`,
+      cfg_glp_url_help: `URL of the GLP app's web interface. Adds a "GLP" link to the footer.`,
       cfg_theme_none: "No preset"
     },
     it: {
@@ -2666,7 +2673,7 @@ ${SHEET_STYLES}
       cfg_accent_gradient: "Sfumatura d'accento",
       cfg_accent_gradient_help: "Due colori #rrggbb, uno per riga. Prevale sul preset e sul colore d'accento.",
       cfg_glp_url: "URL GLP",
-      cfg_glp_url_help: `URL dell'interfaccia web dell'app GLP. Aggiunge un link "GLP ↗" a piè di pagina.`,
+      cfg_glp_url_help: `URL dell'interfaccia web dell'app GLP. Aggiunge un link "GLP" a piè di pagina.`,
       cfg_theme_none: "Nessun preset"
     },
     fr: {
@@ -2774,7 +2781,7 @@ ${SHEET_STYLES}
       cfg_accent_gradient: "Dégradé d'accent",
       cfg_accent_gradient_help: "Deux couleurs #rrggbb, une par ligne. Prioritaire sur le préréglage et la couleur d'accent.",
       cfg_glp_url: "URL GLP",
-      cfg_glp_url_help: "URL de l'interface web de l'application GLP. Ajoute un lien « GLP ↗ » en pied de carte.",
+      cfg_glp_url_help: "URL de l'interface web de l'application GLP. Ajoute un lien « GLP » en pied de carte.",
       cfg_theme_none: "Aucun préréglage"
     },
     es: {
@@ -2882,7 +2889,7 @@ ${SHEET_STYLES}
       cfg_accent_gradient: "Degradado de acento",
       cfg_accent_gradient_help: "Dos colores #rrggbb, uno por línea. Tiene prioridad sobre el preset y el color de acento.",
       cfg_glp_url: "URL de GLP",
-      cfg_glp_url_help: 'URL de la interfaz web de la app GLP. Añade un enlace "GLP ↗" al pie.',
+      cfg_glp_url_help: 'URL de la interfaz web de la app GLP. Añade un enlace "GLP" al pie.',
       cfg_theme_none: "Sin preset"
     },
     nl: {
@@ -2990,7 +2997,7 @@ ${SHEET_STYLES}
       cfg_accent_gradient: "Accentverloop",
       cfg_accent_gradient_help: "Twee #rrggbb-kleuren, één per regel. Gaat voor op de preset en de accentkleur.",
       cfg_glp_url: "GLP-URL",
-      cfg_glp_url_help: 'URL van de webinterface van de GLP-app. Voegt een "GLP ↗"-link aan de voettekst toe.',
+      cfg_glp_url_help: 'URL van de webinterface van de GLP-app. Voegt een "GLP"-link aan de voettekst toe.',
       cfg_theme_none: "Geen preset"
     }
   };
@@ -3854,9 +3861,14 @@ ${SHEET_STYLES}
       let list;
       try {
         const r4 = await this._hass.fetchWithAuth("/api/glp/orders");
-        if (r4.status === 404) {
+        if (r4.status === 404 || r4.status === 403) {
           this._ordersOff = true;
           this._stopOrdersPoll();
+          if (this._orders.length) {
+            this._orders = [];
+            this._ordersSig = null;
+            this._render();
+          }
           return;
         }
         if (!r4.ok) return;
@@ -4670,7 +4682,7 @@ ${SHEET_STYLES}
       const syncTime = this._reltime("last_sync");
       const glpUrl = safeUrl(this._config.glp_url);
       const maintAvailable = this._maintAvailable();
-      const ordersTabAvail = this._orders.length > 0;
+      const ordersTabAvail = !this._ordersOff && this._orders.length > 0;
       if (brewing && this._activeTab === "maint") this._activeTab = "shot";
       if (this._activeTab === "orders" && !ordersTabAvail) this._activeTab = "shot";
       const showMaint = maintAvailable && !brewing && this._activeTab === "maint";
@@ -4826,12 +4838,14 @@ ${SHEET_STYLES}
           <button class="nav-arrow" data-nav="next" ?disabled=${nextDis} aria-label=${T2("nav_next")} @click=${(e6) => {
           if (e6.currentTarget.hasAttribute("disabled")) return;
           this._navShot("next");
-        }}>‹</button>
+        }}>${/* ICONS.of() emits fixed SVG markup */
+        o5(ICONS.of("chevron-left"))}</button>
           <div class="nav-dots">${dots}</div>
           <button class="nav-arrow" data-nav="prev" ?disabled=${prevDis} aria-label=${T2("nav_prev")} @click=${(e6) => {
           if (e6.currentTarget.hasAttribute("disabled")) return;
           this._navShot("prev");
-        }}>›</button>
+        }}>${/* ICONS.of() emits fixed SVG markup */
+        o5(ICONS.of("chevron-right"))}</button>
         </div>${tsLine}`;
       }
       return navHtml;
@@ -4848,7 +4862,8 @@ ${SHEET_STYLES}
             <span class="profile-label-small">${T2("profile_label")}</span>
             <span class="profile-current-name">${currentProfile || "—"}${profileSwitching ? b2`<span style="color:var(--amber);font-weight:500;font-size:var(--glp-fs-1)"> · ${T2("profile_switching")}</span>` : A}</span>
           </div>
-          <span class="profile-chevron">▾</span>
+          <span class="profile-chevron">${/* ICONS.of() emits fixed SVG markup */
+      o5(ICONS.of("chevron-down"))}</span>
         </button>
       </div>` : A;
     }
@@ -4900,31 +4915,22 @@ ${SHEET_STYLES}
     // Historical shot: ratio is the recipe target a profile is set to hit,
     // duration is what actually happened during the pull, yield is what
     // came out — recipe/process/result, see metricLineHtml() above.
-    _metricTrioHtml(vm) {
-      const { ratio, duration, weight } = vm;
-      return b2`${/* metricLineHtml() escapes its own input and emits fixed markup */
-      o5(metricLineHtml([
-        ratio ? { role: "recipe", num: `1:${ratio}`, unit: "", label: T2("m_ratio") } : null,
-        duration ? { role: "process", num: duration, unit: "s", label: T2("m_duration") } : null,
-        weight ? { role: "result", num: weight, unit: "g", label: T2("m_yield") } : null
-      ]))}`;
-    }
-    _secondaryHtml(vm) {
-      const { pressure, shotTemp } = vm;
-      return (() => {
-        const pills = [
-          pressure !== null ? { label: T2("m_pressure"), val: `${pressure} bar` } : null,
-          shotTemp !== null ? { label: T2("m_temp"), val: `${shotTemp}°` } : null
-        ].filter(Boolean);
-        if (!pills.length) return A;
-        return b2`<div class="stats-secondary">
-        ${pills.map((p3) => b2`
-          <div class="stat-pill">
-            <span class="stat-pill-label">${p3.label}</span>
-            <span class="stat-pill-value">${p3.val}</span>
-          </div>`)}
-      </div>`;
-      })();
+    // The five figures that describe one finished shot: recipe, process, result
+    // (ratio, duration, yield) plus the two averages (pressure, temperature).
+    // One grid with one value style — they used to be split into a three-item
+    // metric line and a two-pill row with a lighter, differently coloured value,
+    // which read as three numbers and two leftovers.
+    _keyFiguresHtml(vm) {
+      const { ratio, duration, weight, pressure, shotTemp } = vm;
+      const figures = [
+        ratio !== null ? { label: T2("m_ratio"), num: `1:${ratio}`, unit: "" } : null,
+        duration !== null ? { label: T2("m_duration"), num: duration, unit: "s" } : null,
+        weight !== null ? { label: T2("m_yield"), num: weight, unit: "g" } : null,
+        pressure !== null ? { label: T2("m_pressure"), num: pressure, unit: "bar" } : null,
+        shotTemp !== null ? { label: T2("m_temp"), num: shotTemp, unit: "°" } : null
+      ].filter((f3) => f3 !== null);
+      if (!figures.length) return A;
+      return b2`<div class="key-figures figures-${figures.length}">${figures.map((f3) => b2`<div class="key-figure"><div class="kf-value">${f3.num}${f3.unit ? b2`<span class="kf-unit">${f3.unit}</span>` : A}</div><div class="kf-label">${f3.label}</div></div>`)}</div>`;
     }
     _liveSvgHtml(vm) {
       const { brewing, liveDatapoints, liveDur } = vm;
@@ -4939,13 +4945,11 @@ ${SHEET_STYLES}
       o5(chartLegendHtml(histDp, shotObj?.duration))}` : A;
     }
     // ── live brewing stats ──────────────────────────────────────────────────
-    // Same metricLineHtml() component as the historical shot (metricTrioHtml
-    // above) — see the redesign note on .metric-line in STYLES. Roles while
-    // brewing: temp is the recipe's set point being held, pressure is the
-    // process happening right now, weight is the result accumulating in the
-    // cup. (labels were hardcoded German before this pass — T() is correct
-    // behavior here, not a scope change: these three tiles are the same
-    // per-shot stats as leg_temp/leg_pressure/leg_weight used elsewhere.)
+    // The metricLineHtml() row, which a finished shot no longer uses (it shows
+    // _keyFiguresHtml() instead) — see the note on .metric-line in STYLES.
+    // Roles while brewing: temp is the recipe's set point being held, pressure
+    // is the process happening right now, weight is the result accumulating in
+    // the cup.
     _liveStatsHtml(vm) {
       const { brewing, temp, livePressure, liveWeight } = vm;
       return brewing ? b2`${/* metricLineHtml() escapes its own input and emits fixed markup */
@@ -5010,8 +5014,7 @@ ${SHEET_STYLES}
             <div class="no-shot-hint">${T2("no_shot_hint")}</div>
           </div>`}
       ${this._ratingHtml(vm)}
-      ${this._metricTrioHtml(vm)}
-      ${this._secondaryHtml(vm)}
+      ${this._keyFiguresHtml(vm)}
       ${this._histSvgHtml(vm)}
     ` : A;
     }
@@ -5027,7 +5030,8 @@ ${SHEET_STYLES}
       o5(ICONS.of("droplet"))} ${waterLevel}%</button>` : b2`<span></span>`}
         <span class="footer-item">
           ${syncTime ? syncTime : A}
-          ${glpUrl ? b2`${syncTime ? " · " : ""}<a href=${glpUrl} target="_blank" rel="noopener noreferrer">GLP ↗</a>` : A}
+          ${glpUrl ? b2`${syncTime ? " · " : ""}<a href=${glpUrl} target="_blank" rel="noopener noreferrer">GLP ${/* ICONS.of() emits fixed SVG markup */
+      o5(ICONS.of("open-in-new", "ext"))}</a>` : A}
         </span>
       </div>`;
     }

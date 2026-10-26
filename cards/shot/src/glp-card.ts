@@ -1897,13 +1897,11 @@ class GlpCard extends HTMLElement {
   }
 
   // ── live brewing stats ──────────────────────────────────────────────────
-  // Same metricLineHtml() component as the historical shot (metricTrioHtml
-  // above) — see the redesign note on .metric-line in STYLES. Roles while
-  // brewing: temp is the recipe's set point being held, pressure is the
-  // process happening right now, weight is the result accumulating in the
-  // cup. (labels were hardcoded German before this pass — T() is correct
-  // behavior here, not a scope change: these three tiles are the same
-  // per-shot stats as leg_temp/leg_pressure/leg_weight used elsewhere.)
+  // The metricLineHtml() row, which a finished shot no longer uses (it shows
+  // _keyFiguresHtml() instead) — see the note on .metric-line in STYLES.
+  // Roles while brewing: temp is the recipe's set point being held, pressure
+  // is the process happening right now, weight is the result accumulating in
+  // the cup.
   _liveStatsHtml(vm: ViewModel): TemplateResult | typeof nothing {
     const { brewing, temp, livePressure, liveWeight } = vm;
     return brewing ? html`${/* metricLineHtml() escapes its own input and emits fixed markup */ unsafeHTML(metricLineHtml([
