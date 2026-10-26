@@ -14,6 +14,7 @@ import { applySemanticColorContrast } from '../../shared/contrast.ts';
 import { appMachineEntry, appMachineTheme, appMachineType, matchMachineStatusEntity } from '../../shared/machine.ts';
 import { moreInfo, toast, haptic } from '../../shared/ha-events.ts';
 import { GlpSheet } from '../../shared/sheet.ts';
+import type { GlpSheetContent } from '../../shared/sheet.ts';
 import { fmtUptime, buildShotChart, buildLiveChart, chartLegendHtml, metricLineHtml } from './charts.ts';
 import type { TemplateResult } from 'lit';
 import type {
@@ -185,8 +186,12 @@ class GlpCard extends HTMLElement {
   declare _beansInfoById: Map<number, BeanInfo> | null;
   declare _beansInfoAt: number;
   declare _beansInfoUnavailable: boolean;
-  declare _orderEtaFor: string | null;
-  declare _orderDeclineFor: string | null;
+  // The order the sheet is showing, plus which of its action steps is open and
+  // the data it was last rendered from.
+  declare _orderSheetId: string | null;
+  declare _orderSheetEta: boolean;
+  declare _orderSheetDecline: boolean;
+  declare _orderSheetSig: string;
   declare _switchEntity: string | null;
   declare _iconGradId: string;
   declare _readyByTimer: ReturnType<typeof setInterval> | null;
@@ -248,8 +253,10 @@ class GlpCard extends HTMLElement {
     this._beansInfoById = null;
     this._beansInfoAt = 0;
     this._beansInfoUnavailable = false;
-    this._orderEtaFor = null;
-    this._orderDeclineFor = null;
+    this._orderSheetId = null;
+    this._orderSheetEta = false;
+    this._orderSheetDecline = false;
+    this._orderSheetSig = '';
     this._switchEntity = this._readSwitchEntity();
     // Per-instance-unique SVG gradient id (#87) — a dashboard can render more
     // than one glp-card, and duplicate <linearGradient id> values across
@@ -471,9 +478,26 @@ class GlpCard extends HTMLElement {
   _sheetFor(): GlpSheet | null {
     const slot = this.shadowRoot?.querySelector<HTMLElement>('.glp-sheet-slot') ?? null;
     if (!slot) return null;
+    const previous = this._sheet;
     if (!this._sheet || this._sheetSlot !== slot || this._sheetLang !== getLang()) {
-      this._sheet?.close();
-      this._sheet = new GlpSheet(slot, { closeLabel: T('sheet_close') });
+      // Dropped before close(), so the old sheet's own onClose below sees that
+      // it is no longer the current one (and never touches the half-built
+      // replacement).
+      this._sheet = null;
+      previous?.close();
+      const sheet = new GlpSheet(slot, {
+        closeLabel: T('sheet_close'),
+        // However the sheet was closed, the order it showed is no longer the
+        // subject of any pending action step. A superseded sheet closes too
+        // (its slot or language is gone), and its slide-out finishes after the
+        // replacement is already showing the order, so only the current sheet
+        // may clear that state.
+        onClose: () => {
+          if (this._sheet !== sheet) return;
+          this._forgetOrderSheet();
+        },
+      });
+      this._sheet = sheet;
       this._sheetSlot = slot;
       this._sheetLang = getLang();
     }
@@ -711,45 +735,185 @@ class GlpCard extends HTMLElement {
     if (!force && sig === this._ordersSig) return;
     this._ordersSig = sig;
     this._orders = active;
-    this._render();
+    this._render();   // every render ends in _syncOrderSheet()
   }
 
+  // Keeps an open order sheet in step with the list: another device may have
+  // handled the order, in which case the sheet has nothing left to act on and
+  // closes silently; otherwise it is re-rendered so its waiting time and
+  // ready-in line follow the list. Runs at the end of every render because
+  // neither view may leave a sheet behind on a slot node it just replaced.
+  _syncOrderSheet(): void {
+    const id = this._orderSheetId;
+    if (id == null) return;
+    const order = this._orderById(id);
+    if (!order) { this._closeOrderSheet(); return; }
+    const previous = this._sheet;
+    // The id survives _sheetFor(): a rebuild drops the old sheet from the field
+    // before closing it, so the onClose that clears the state no longer fires.
+    const sheet = this._sheetFor();
+    if (!sheet) return;
+    // _sheetFor() rebuilds after a view switch or a language change, which
+    // closes the old sheet; the order then has to be handed to the new one.
+    const rebuilt = sheet !== previous;
+    // Not rebuilt and not open: a close is in progress (its slide-out has
+    // already flipped isOpen) or done, and re-opening would undo it.
+    if (!rebuilt && !sheet.isOpen) return;
+    const sig = this._orderSheetSigFor(order);
+    if (!rebuilt && sig === this._orderSheetSig) return;
+    this._orderSheetSig = sig;
+    sheet.open(this._orderSheetContent(id, order));
+  }
+
+  // What the sheet's body is derived from. The minute is in there because the
+  // waiting line is relative to now, so an open sheet follows it the same way
+  // the card's own minute-based render does.
+  _orderSheetSigFor(order: BaristaOrder): string {
+    return JSON.stringify([
+      order.status, order.eta, order.acceptedAt, order.item, order.variant,
+      order.customer, order.note, Math.floor(Date.now() / 60000),
+    ]);
+  }
+
+  // The sheet is shared, so its content stops being about an order whenever a
+  // picker or a maintenance task takes it over, and whenever the card closes it.
+  _forgetOrderSheet(): void {
+    this._orderSheetId = null;
+    this._orderSheetEta = false;
+    this._orderSheetDecline = false;
+    this._orderSheetSig = '';
+  }
+
+  // Forgets the order and closes the sheet. The sheet's own onClose does the
+  // same, but only once a phone's slide-out has finished.
+  _closeOrderSheet(): void {
+    this._forgetOrderSheet();
+    this._sheet?.close();
+  }
+
+  _orderById(id: string): BaristaOrder | null {
+    return this._orders.find(o => o.id === id) ?? null;
+  }
+
+  // Whole minutes left until the promised time, or null when the accepted
+  // order carries no eta.
+  _orderMinsLeft(order: BaristaOrder): number | null {
+    if (!order.acceptedAt || !order.eta) return null;
+    return Math.max(0, Math.ceil((order.acceptedAt + order.eta * 60000 - Date.now()) / 60000));
+  }
+
+  // How long the order has been waiting: "just now" under a minute, then whole
+  // minutes.
+  _orderWaitingText(createdAt: number | undefined): string {
+    const at = parseTs(createdAt);
+    if (!at) return T('ord_waiting_now');
+    const mins = Math.floor((Date.now() - at.getTime()) / 60000);
+    if (!(mins >= 1)) return T('ord_waiting_now');
+    return T('ord_waiting', String(mins));
+  }
+
+  // Runs one barista action. fetchWithAuth resolves on 4xx/5xx, so the response
+  // status decides success: an ok answer closes the sheet with a confirmation,
+  // a failed one keeps it open and reports itself. Either way the list is
+  // refetched so the card and an open sheet show what the app really has.
   async _orderAction(id: string, action: string, body: Record<string, unknown>): Promise<void> {
     if (!this._hass?.fetchWithAuth || !id) return;
-    this._orderEtaFor = null;
-    this._orderDeclineFor = null;
+    let ok = false;
     try {
-      await this._hass.fetchWithAuth(`/api/glp/orders/${encodeURIComponent(id)}/${action}`, {
+      ok = (await this._hass.fetchWithAuth(`/api/glp/orders/${encodeURIComponent(id)}/${action}`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body || {}),
-      });
-    } catch { /* ignore — next poll reconciles */ }
+      })).ok;
+    } catch { /* the request never landed, so the action failed */ }
+    if (ok) {
+      // State first: on a phone the close only flips isOpen and slides out, so
+      // the refetch below would otherwise see the order still marked open and
+      // re-open the sheet it just closed.
+      this._closeOrderSheet();
+      toast(this, action === 'accept'
+        ? T('toast_ord_accepted', String(body.eta ?? ''))
+        : action === 'complete' ? T('toast_ord_done') : T('toast_ord_declined'));
+      haptic(this, 'success');
+    } else {
+      toast(this, T('toast_action_failed'));
+      haptic(this, 'failure');
+    }
     await this._fetchOrders(true);
   }
 
+  // Every row is a read-only summary (#264): the barista actions live in the
+  // shared sheet, so a long queue no longer grows the card with a button row
+  // per order. The row itself is the tap target, keyboard included.
   _buildOrdersHtml(): TemplateResult {
     if (!this._orders.length) return html`<div class="unavailable">${T('orders_none')}</div>`;
-    const tap = (fn: () => void) => (e: Event) => { e.stopPropagation(); fn(); };
-    const cancel = tap(() => { this._orderEtaFor = null; this._orderDeclineFor = null; this._render(); });
-    const declineRow = (id: string) => html`<div class="ord-actions"><span class="ord-q">${T('ord_decline_q')}</span>
-      <button class="ord-btn danger" data-ord-decline-yes=${id} @click=${tap(() => this._orderAction(id, 'decline', {}))}>${/* ICONS.of() emits fixed SVG markup */ unsafeHTML(ICONS.of('check'))} ${T('ord_yes')}</button>
-      <button class="ord-btn ghost" data-ord-cancel="1" @click=${cancel}>${/* ICONS.of() emits fixed SVG markup */ unsafeHTML(ICONS.of('close'))}</button></div>`;
-    return html`<div class="ord-list">${this._orders.map(o => {
-      const label = o.variant ? `${o.item} · ${o.variant}` : o.item;
-      const head = html`<div class="ord-top"><span class="ord-item">${/* ICONS.of() emits fixed SVG markup */ unsafeHTML(ICONS.of('coffee'))} ${label}</span>${o.customer ? html`<span class="ord-who">${o.customer}</span>` : nothing}</div>
-        ${o.note ? html`<div class="ord-note">„${o.note}"</div>` : nothing}`;
-      if (o.status === 'pending') {
-        const actions = this._orderDeclineFor === o.id ? declineRow(o.id)
-          : this._orderEtaFor === o.id
-            ? html`<div class="ord-actions"><span class="ord-q">${T('ord_done_in')}</span>${[3,5,8,10].map(m => html`<button class="ord-btn eta" data-ord-accept=${o.id} data-eta=${m} @click=${tap(() => this._orderAction(o.id, 'accept', { eta: m }))}>${m} min</button>`)}<button class="ord-btn ghost" data-ord-cancel="1" @click=${cancel}>${/* ICONS.of() emits fixed SVG markup */ unsafeHTML(ICONS.of('close'))}</button></div>`
-            : html`<div class="ord-actions"><button class="ord-btn primary" data-ord-eta=${o.id} @click=${tap(() => { this._orderEtaFor = o.id; this._render(); })}>${/* ICONS.of() emits fixed SVG markup */ unsafeHTML(ICONS.of('check'))} ${T('ord_accept')}</button><button class="ord-btn ghost" data-ord-decline=${o.id} @click=${tap(() => { this._orderDeclineFor = o.id; this._render(); })}>${T('ord_decline')}</button></div>`;
-        return html`<div class="ord-row pending">${head}${actions}</div>`;
-      }
-      const minsLeft = (o.acceptedAt && o.eta) ? Math.max(0, Math.ceil((o.acceptedAt + o.eta * 60000 - Date.now()) / 60000)) : null;
-      const actions = this._orderDeclineFor === o.id ? declineRow(o.id)
-        : html`<div class="ord-actions"><button class="ord-btn primary" data-ord-done=${o.id} @click=${tap(() => this._orderAction(o.id, 'complete', {}))}>${/* ICONS.of() emits fixed SVG markup */ unsafeHTML(ICONS.of('check'))} ${T('ord_done')}</button><button class="ord-btn ghost" data-ord-decline=${o.id} @click=${tap(() => { this._orderDeclineFor = o.id; this._render(); })}>${T('ord_decline')}</button></div>`;
-      return html`<div class="ord-row accepted">${head}
-        <div class="ord-sub">${minsLeft != null ? T('ord_ready_in', minsLeft as unknown as string) : T('ord_preparing')}</div>${actions}</div>`;
-    })}</div>`;
+    return html`<div class="ord-list">${this._orders.map(o => this._orderRowHtml(o))}</div>`;
+  }
+
+  _orderRowHtml(order: BaristaOrder): TemplateResult {
+    const label = order.variant ? `${order.item} · ${order.variant}` : order.item;
+    const minsLeft = this._orderMinsLeft(order);
+    const open = (): void => { this._openOrderSheet(order.id); };
+    return html`<div class="ord-row ${order.status === 'pending' ? 'pending' : 'accepted'}" data-order-id=${order.id} role="button" tabindex="0" @click=${open} @keydown=${(e: Event) => {
+      const key = (e as KeyboardEvent).key;
+      if (key !== 'Enter' && key !== ' ') return;
+      e.preventDefault();   // Space would scroll the page
+      open();
+    }}><div class="ord-top"><span class="ord-item">${/* ICONS.of() emits fixed SVG markup */ unsafeHTML(ICONS.of('coffee'))} ${label}</span>${order.customer ? html`<span class="ord-who">${order.customer}</span>` : nothing}</div>${order.note ? html`<div class="ord-note">„${order.note}"</div>` : nothing}${order.status === 'accepted' ? html`<div class="ord-sub">${minsLeft != null ? T('ord_ready_in', String(minsLeft)) : T('ord_preparing')}</div>` : nothing}</div>`;
+  }
+
+  // One order in the shared sheet (#264): the same summary plus its waiting
+  // time, and the actions that used to sit in the row. Pending orders offer
+  // Accept (which swaps the actions to the ETA choice in place) and Decline; an
+  // accepted one offers Done and Decline. Decline first asks for a second tap,
+  // and Cancel there returns to the normal actions without closing the sheet.
+  _openOrderSheet(id: string): void {
+    const order = this._orderById(id);
+    if (!order) return;
+    const sheet = this._sheetFor();
+    if (!sheet) return;
+    this._orderSheetId = id;
+    this._orderSheetEta = false;
+    this._orderSheetDecline = false;
+    this._orderSheetSig = this._orderSheetSigFor(order);
+    sheet.open(this._orderSheetContent(id, order));
+  }
+
+  // Both callbacks read the order back from the live list, so a refresh after a
+  // poll shows the new status and waiting time even though the content object
+  // was built earlier.
+  _orderSheetContent(id: string, order: BaristaOrder): GlpSheetContent {
+    return {
+      title: order.variant ? `${order.item} · ${order.variant}` : order.item,
+      body: () => this._orderSheetBody(this._orderById(id) ?? order),
+      actions: () => this._orderSheetActions(this._orderById(id) ?? order),
+    };
+  }
+
+  _orderSheetBody(order: BaristaOrder): TemplateResult {
+    const minsLeft = this._orderMinsLeft(order);
+    return html`<div class="ord-detail">
+      ${order.variant ? html`<div class="ord-detail-val">${order.variant}</div>` : nothing}
+      ${order.customer ? html`<div class="ord-detail-who">${order.customer}</div>` : nothing}
+      ${order.note ? html`<div class="ord-note">„${order.note}"</div>` : nothing}
+      <div class="ord-sub">${this._orderWaitingText(order.createdAt)}</div>
+      ${order.status === 'accepted' ? html`<div class="ord-sub">${minsLeft != null ? T('ord_ready_in', String(minsLeft)) : T('ord_preparing')}</div>` : nothing}
+    </div>`;
+  }
+
+  _orderSheetActions(order: BaristaOrder): TemplateResult {
+    // The ETA choice and the decline question replace the actions in place:
+    // refresh() re-renders the sheet, so neither needs a second sheet.
+    if (this._orderSheetDecline) {
+      return html`<span class="ord-q">${T('ord_decline_q')}</span>
+        <button type="button" class="ord-btn danger" data-ord-decline-yes=${order.id} @click=${() => { this._orderAction(order.id, 'decline', {}); }}>${T('ord_yes')}</button>
+        <button type="button" class="ord-btn ghost" data-ord-cancel="1" @click=${() => { this._orderSheetDecline = false; this._sheet?.refresh(); }}>${T('sheet_cancel')}</button>`;
+    }
+    if (order.status === 'pending' && this._orderSheetEta) {
+      return html`<span class="ord-q">${T('ord_done_in')}</span>${[3, 5, 8, 10].map(m => html`<button type="button" class="ord-btn eta" data-ord-accept=${order.id} data-eta=${m} @click=${() => { this._orderAction(order.id, 'accept', { eta: m }); }}>${m} min</button>`)}<button type="button" class="ord-btn ghost" data-ord-cancel="1" @click=${() => { this._orderSheetEta = false; this._sheet?.refresh(); }}>${T('sheet_cancel')}</button>`;
+    }
+    const primary = order.status === 'pending'
+      ? html`<button type="button" class="ord-btn primary" data-ord-eta=${order.id} @click=${() => { this._orderSheetEta = true; this._sheet?.refresh(); }}>${/* ICONS.of() emits fixed SVG markup */ unsafeHTML(ICONS.of('check'))} ${T('ord_accept')}</button>`
+      : html`<button type="button" class="ord-btn primary" data-ord-done=${order.id} @click=${() => { this._orderAction(order.id, 'complete', {}); }}>${/* ICONS.of() emits fixed SVG markup */ unsafeHTML(ICONS.of('check'))} ${T('ord_done')}</button>`;
+    return html`${primary}<button type="button" class="ord-btn ghost" data-ord-decline=${order.id} @click=${() => { this._orderSheetDecline = true; this._sheet?.refresh(); }}>${T('ord_decline')}</button>`;
   }
 
   _navShot(dir: string): void {
@@ -1159,6 +1323,7 @@ class GlpCard extends HTMLElement {
   // counters and status pill the row shows, plus the two actions. The sensors
   // carry no interval, so the sheet does not claim one.
   _openMaintSheet(detail: MaintTaskDetail): void {
+    this._forgetOrderSheet();
     const sheet = this._sheetFor();
     if (!sheet) return;
     const cls: 'ok' | 'soon' | 'due' | 'never' =
@@ -1599,6 +1764,7 @@ class GlpCard extends HTMLElement {
     // marks the profile the card is showing, not the one the machine has yet
     // to confirm.
     const current = this._pendingProfile || entity?.state || null;
+    this._forgetOrderSheet();
     const sheet = this._sheetFor();
     if (!sheet) return;
     sheet.open({
@@ -1793,9 +1959,12 @@ class GlpCard extends HTMLElement {
     // ── machine off ──────────────────────────────────────────────────────────
     if (vm.machineOff) {
       // The profile picker and the maintenance tab do not exist in this view,
-      // so a sheet they opened has nothing left to act on.
-      this._sheet?.close();
+      // so a sheet they opened has nothing left to act on. Orders are listed
+      // here too, so an order sheet stays: _syncOrderSheet() re-mounts it on
+      // the slot this render just built.
+      if (this._orderSheetId == null) this._sheet?.close();
       render(this._machineOffHtml(vm), this.shadowRoot!);
+      this._syncOrderSheet();
       this._applyMachineTheme();
       this._applySemanticColorContrast();
       this._startReadyByTicker();
@@ -1850,6 +2019,9 @@ class GlpCard extends HTMLElement {
         ${this._footerHtml(vm)}
 
       </div></ha-card>${this._sheetSlotHtml()}`, this.shadowRoot!);
+    // An order sheet survives the machine-off view and back, both of which
+    // replace the slot it is mounted in.
+    this._syncOrderSheet();
     this._applyMachineTheme();
     this._applySemanticColorContrast();
     this._startUptimeTicker();

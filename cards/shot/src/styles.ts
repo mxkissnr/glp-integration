@@ -601,13 +601,22 @@ ${SHEET_STYLES}
     border-radius: var(--glp-radius-sm); padding: var(--glp-sp-3); display: flex; flex-direction: column; gap: 7px;
   }
   .ord-row.pending  { border: 1px solid color-mix(in srgb, var(--amber) 30%, transparent); }
+  /* The row opens the order in the shared sheet (#264), so it is a tap target
+     with the same keyboard affordances as a maintenance row. */
+  .ord-row[role="button"] { cursor: pointer; transition: border-color .15s, background .15s; }
+  .ord-row[role="button"]:hover { border-color: color-mix(in srgb, var(--text) 16%, transparent); }
+  .ord-row[role="button"]:focus-visible { outline: 2px solid var(--glp-aline); outline-offset: 2px; }
   .ord-top { display: flex; align-items: baseline; gap: var(--glp-sp-2); }
   .ord-top .glp-i { width: 13px; height: 13px; vertical-align: -1px; opacity: .8; }
   .ord-item { flex: 1; font-size: var(--glp-fs-3); font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .ord-who  { font-size: var(--glp-fs-1); color: var(--sub); white-space: nowrap; flex-shrink: 0; }
   .ord-note { font-size: var(--glp-fs-1); color: var(--sub); font-style: italic; }
   .ord-sub  { font-size: var(--glp-fs-1); color: var(--green); font-weight: 600; }
-  .ord-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin-top: 2px; }
+  /* The sheet body restates what the order is: variant, customer, note, the
+     waiting time and, for an accepted order, the ready-in line. */
+  .ord-detail { display: flex; flex-direction: column; align-items: flex-start; gap: var(--glp-sp-2); }
+  .ord-detail-val { font-size: var(--glp-fs-3); font-weight: 700; }
+  .ord-detail-who { font-size: var(--glp-fs-2); color: var(--sub); }
   .ord-q { font-size: var(--glp-fs-1); color: var(--sub); margin-right: 2px; }
   .ord-btn {
     border: none; border-radius: var(--glp-radius-sm); font-family: inherit; font-weight: 700;
