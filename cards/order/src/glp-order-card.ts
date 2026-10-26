@@ -686,19 +686,23 @@ class GlpOrderCard extends HTMLElement {
   // The sheet's host element, rendered after the card. It has its own node so
   // the card's template re-renders (Lit clears everything it committed) never
   // eject an open sheet from the shadow root.
-  _sheetSlot(): HTMLElement | ShadowRoot {
-    return this.shadowRoot?.querySelector<HTMLElement>('.glp-sheet-slot') ?? this.shadowRoot!;
+  _sheetSlot(): HTMLElement | null {
+    return this.shadowRoot?.querySelector<HTMLElement>('.glp-sheet-slot') ?? null;
   }
 
   // One sheet per card, created on first use and mounted into the card's own
-  // shadow root so it inherits this card's --glp-* tokens.
+  // shadow root so it inherits this card's --glp-* tokens. A language change
+  // replaces it: the close label is fixed at construction, and the old host is
+  // cleared so the shadow root never holds two close buttons.
   _sheetFor(lang: string): GlpSheet {
+    const slot = this._sheetSlot();
     if (this._sheet && this._sheetLang !== lang) {
       this._sheet.close();
       this._sheet = null;
+      slot?.replaceChildren();
     }
     if (!this._sheet) {
-      this._sheet = new GlpSheet(this._sheetSlot(), { closeLabel: _s('sheet_close', lang) });
+      this._sheet = new GlpSheet(slot ?? this.shadowRoot!, { closeLabel: _s('sheet_close', lang) });
       this._sheetLang = lang;
     }
     return this._sheet;

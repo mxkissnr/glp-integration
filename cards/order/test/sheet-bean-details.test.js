@@ -66,14 +66,14 @@ loadCard({
   },
 });
 
-// happy-dom's <dialog> may not implement the modal methods; a stub keeps the
-// controller's showModal()/close() path exercised either way (same approach as
+// The card is not attached to the document here (attaching would start its
+// poll), so showModal() is stubbed to the one effect the sheet relies on:
+// the dialog becomes open. close() stays real when happy-dom provides it, so
+// the sheet's own close path runs unchanged (same approach as
 // cards/shot/test/sheet.test.js).
-const dialogProto = window.HTMLDialogElement && window.HTMLDialogElement.prototype;
-if (dialogProto && typeof dialogProto.showModal !== 'function') {
-  dialogProto.showModal = function showModal() { this.setAttribute('open', ''); };
-}
-if (dialogProto && typeof dialogProto.close !== 'function') {
+const dialogProto = window.HTMLDialogElement.prototype;
+dialogProto.showModal = function showModal() { this.setAttribute('open', ''); };
+if (typeof dialogProto.close !== 'function') {
   dialogProto.close = function close() { this.removeAttribute('open'); };
 }
 spyHistory();
