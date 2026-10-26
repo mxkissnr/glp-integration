@@ -9,7 +9,10 @@ import { GLP_ICON_PATHS, ICONS as SHARED_ICONS, MACHINE_BODY, MACHINE_ICON_MINI 
 // details button on a variant chip), so it lives here instead of widening
 // GLP_ICON_PATHS for both cards. Same 24x24 stroke-drawn style, so the base
 // .glp-i rule draws it exactly like every shared icon.
-const INFO_ICON = '<circle cx="12" cy="12" r="8"/><path d="M12 11v5"/><circle cx="12" cy="7.7" r="0.6"/>';
+// The dot is a zero-length round-capped stroke, like the shared set's dots —
+// a tiny filled <circle> would need a fill attribute the base .glp-i rule
+// (fill:none) then erases.
+const INFO_ICON = '<circle cx="12" cy="12" r="8.2"/><path d="M12 11.2v5"/><path d="M12 8.2v.01" stroke-linecap="round"/>';
 
 const ICONS = {
   has: (name: string): boolean => name === 'info' || SHARED_ICONS.has(name),

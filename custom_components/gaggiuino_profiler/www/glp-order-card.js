@@ -1892,7 +1892,7 @@ ${SHEET_STYLES}
   }
 
   // order/src/icons.ts
-  var INFO_ICON = '<circle cx="12" cy="12" r="8"/><path d="M12 11v5"/><circle cx="12" cy="7.7" r="0.6"/>';
+  var INFO_ICON = '<circle cx="12" cy="12" r="8.2"/><path d="M12 11.2v5"/><path d="M12 8.2v.01" stroke-linecap="round"/>';
   var ICONS2 = {
     has: (name) => name === "info" || ICONS.has(name),
     of: (name, cls = "") => name === "info" ? `<svg class="glp-i${cls ? " " + cls : ""}" viewBox="0 0 24 24" aria-hidden="true" focusable="false">${INFO_ICON}</svg>` : ICONS.of(name, cls)

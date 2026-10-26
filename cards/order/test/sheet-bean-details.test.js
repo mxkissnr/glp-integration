@@ -71,10 +71,12 @@ loadCard({
 // the dialog becomes open. close() stays real when happy-dom provides it, so
 // the sheet's own close path runs unchanged (same approach as
 // cards/shot/test/sheet.test.js).
-const dialogProto = window.HTMLDialogElement.prototype;
-dialogProto.showModal = function showModal() { this.setAttribute('open', ''); };
-if (typeof dialogProto.close !== 'function') {
-  dialogProto.close = function close() { this.removeAttribute('open'); };
+const dialogProto = window.HTMLDialogElement && window.HTMLDialogElement.prototype;
+if (dialogProto) {
+  dialogProto.showModal = function showModal() { this.setAttribute('open', ''); };
+  if (typeof dialogProto.close !== 'function') {
+    dialogProto.close = function close() { this.removeAttribute('open'); };
+  }
 }
 spyHistory();
 
