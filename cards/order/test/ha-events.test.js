@@ -53,6 +53,7 @@ function recordEvents(card) {
 }
 
 const details = (events, type) => events.filter((e) => e.type === type).map((e) => e.detail);
+const messages = (events) => details(events, 'hass-notification').map((d) => d.message);
 
 test('selecting a drink fires a selection haptic, deselecting fires none', () => {
   const card = makeCard();
@@ -89,7 +90,7 @@ test('a created order toasts the drink and variant and fires a success haptic', 
 
   await card._placeOrder();
 
-  assert.deepEqual(details(events, 'hass-notification'), ['Order sent: Latte · Oat']);
+  assert.deepEqual(messages(events), ['Order sent: Latte · Oat']);
   assert.deepEqual(details(events, 'haptic'), ['success']);
   assert.equal(card._orderError, null);
 });
@@ -102,7 +103,7 @@ test('a non-ok response toasts the failure, fires a failure haptic and keeps the
 
   await card._placeOrder();
 
-  assert.deepEqual(details(events, 'hass-notification'), ['Order could not be sent. Please try again.']);
+  assert.deepEqual(messages(events), ['Order could not be sent. Please try again.']);
   assert.deepEqual(details(events, 'haptic'), ['failure']);
   assert.equal(card._orderError, 'Order could not be sent. Please try again.');
   assert.equal(card._selected, 'Latte', 'the selection stays so the customer can retry');
@@ -116,7 +117,7 @@ test('a thrown fetch toasts the failure, fires a failure haptic and keeps the in
 
   await card._placeOrder();
 
-  assert.deepEqual(details(events, 'hass-notification'), ['Order could not be sent. Please try again.']);
+  assert.deepEqual(messages(events), ['Order could not be sent. Please try again.']);
   assert.deepEqual(details(events, 'haptic'), ['failure']);
   assert.equal(card._orderError, 'Order could not be sent. Please try again.');
 });
