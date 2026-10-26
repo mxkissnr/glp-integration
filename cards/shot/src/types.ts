@@ -46,7 +46,8 @@ export interface CardConfig {
   machine?: string | null;
   theme?: string | null;
   accent_color?: string | null;
-  accent_gradient?: string[] | null;
+  // string[] in YAML, one raw string from the visual editor's multi-line field.
+  accent_gradient?: string[] | string | null;
   new_badge_days?: string | null;
 }
 

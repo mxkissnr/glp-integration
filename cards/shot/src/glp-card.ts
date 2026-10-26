@@ -7,7 +7,7 @@ import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 import { unsafeSVG } from 'lit/directives/unsafe-svg.js';
 import { ifDefined } from 'lit/directives/if-defined.js';
 import { STYLES } from './styles.ts';
-import { T, SUPPORTED_LANGS, setLang, getLang } from './i18n.ts';
+import { T, TIn, SUPPORTED_LANGS, setLang, getLang } from './i18n.ts';
 import { roastAgeDays, esc, safeUrl, parseTs, THEME_PRESETS, HEX_COLOR_RE } from './helpers.ts';
 import { MACHINE_ICON_MINI, ICONS } from './icons.ts';
 import { applySemanticColorContrast } from '../../shared/contrast.ts';
@@ -15,6 +15,7 @@ import { appMachineEntry, appMachineTheme, appMachineType, matchMachineStatusEnt
 import { moreInfo, toast, haptic } from '../../shared/ha-events.ts';
 import { GlpSheet } from '../../shared/sheet.ts';
 import type { GlpSheetContent } from '../../shared/sheet.ts';
+import { normalizeFormConfig } from '../../shared/config-form.ts';
 import { fmtUptime, buildShotChart, buildLiveChart, chartLegendHtml, metricLineHtml } from './charts.ts';
 import type { TemplateResult } from 'lit';
 import type {
@@ -50,6 +51,25 @@ function resolveLang(hass: Hass | null | undefined): string {
 // nothing else. A typo (or a non-string from YAML) would otherwise silently
 // fall back to "no entity found" and render an empty card.
 const ENTITY_PREFIX_RE = /^sensor\.[a-z0-9_]+$/;
+
+// Ha-form hands the compute callbacks a single schema entry.
+type ConfigFormEntry = { name?: string };
+
+// The visual editor's labels follow the card's language resolution: the hass
+// language when one is around, otherwise the browser's, English for anything
+// the card has no table for.
+function editorLang(hass?: Hass | null): string {
+  const code = hass?.language || hass?.locale?.language
+    || (typeof navigator === 'undefined' ? '' : navigator.language);
+  const lang = String(code || 'en').slice(0, 2).toLowerCase();
+  return SUPPORTED_LANGS.includes(lang) ? lang : 'en';
+}
+
+// Options that come from the visual editor's text selectors; a cleared field
+// arrives as '' and must mean "not set" instead.
+const SHOT_CONFIG_TEXT_KEYS = [
+  'title', 'entity_prefix', 'machine', 'switch_entity', 'theme', 'accent_color', 'glp_url',
+] as const;
 
 // A tile in the live-machine panel below the profile picker.
 interface LmTile {
@@ -961,6 +981,32 @@ class GlpCard extends HTMLElement {
     }));
   }
 
+  // Home Assistant's visual card editor renders this schema with its own
+  // ha-form; there is no custom editor element. Every documented option in
+  // DOCS.md ("Shot Card options") appears here once, in the same order.
+  static getConfigForm(hass?: Hass | null) {
+    const themeOptions = [
+      { value: 'none', label: TIn(editorLang(hass), 'cfg_theme_none') },
+      ...Object.keys(THEME_PRESETS).map(key => ({ value: key, label: key })),
+    ];
+    return {
+      schema: [
+        { name: 'title', selector: { text: {} } },
+        { name: 'entity_prefix', selector: { text: {} } },
+        { name: 'machine', selector: { text: {} } },
+        { name: 'switch_entity', selector: { entity: { domain: 'switch' } } },
+        { name: 'theme', selector: { select: { mode: 'dropdown', options: themeOptions } } },
+        { name: 'accent_color', selector: { text: {} } },
+        { name: 'accent_gradient', selector: { text: { multiple: true } } },
+        { name: 'glp_url', selector: { text: { type: 'url' } } },
+      ],
+      // Resolved per call, so a language change reaches the labels without
+      // building the form again.
+      computeLabel: (entry: ConfigFormEntry) => TIn(editorLang(hass), `cfg_${entry.name}`),
+      computeHelper: (entry: ConfigFormEntry) => TIn(editorLang(hass), `cfg_${entry.name}_help`),
+    };
+  }
+
   // setConfig() also accepts the optional per-machine colour theme keys
   // (#87): `theme` (one of the THEME_PRESETS keys), `accent_color` (a flat
   // custom #rrggbb), and `accent_gradient` (a [start, end] #rrggbb pair) —
@@ -969,12 +1015,18 @@ class GlpCard extends HTMLElement {
   // standalone/no-app YAML fallback; the app's own stored theme (#701, see
   // _appMachineTheme() below) takes precedence over these once available.
   setConfig(config: CardConfig): void {
-    const prefix = config?.entity_prefix;
+    // Accepts both the YAML shape and what getConfigForm()'s form produces
+    // ('' from emptied text fields, 'none' from the theme dropdown, one string
+    // from the multi-line gradient field) without changing what an existing
+    // YAML config means. An emptied entity_prefix counts as "not set", so the
+    // card auto-detects its machine instead of rejecting the prefix.
+    const normalized = normalizeFormConfig<CardConfig>(config || {}, SHOT_CONFIG_TEXT_KEYS);
+    const prefix = normalized.entity_prefix;
     if (prefix != null && (typeof prefix !== 'string' || !ENTITY_PREFIX_RE.test(prefix))) {
       // Home Assistant shows a thrown message as the card's error text.
       throw new Error('entity_prefix must be a sensor entity id, for example sensor.gaggiuino_local_profiler_');
     }
-    this._config = { title: 'Gaggiuino', ...config };
+    this._config = { title: 'Gaggiuino', ...normalized };
     // New config can change the prefix, the language-independent theme or the
     // switch entity, so nothing cached from the previous config may survive;
     // clearing the render inputs also makes the next hass render unconditionally.

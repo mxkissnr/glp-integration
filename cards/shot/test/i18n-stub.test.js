@@ -171,7 +171,10 @@ test('getStubConfig() is empty so the picker card finds its machine by itself', 
 
 test('setConfig() rejects an entity_prefix that is not a sensor entity id', () => {
   const card = window.document.createElement('glp-card');
-  for (const bad of [42, '', 'light.x', 'sensor.', 'Sensor.gaggiuino_', 'sensor.Gaggiuino_']) {
+  // '' is not in this list: the visual card editor saves a cleared text field
+  // as '', which means "not set" so the card auto-detects its machine
+  // (see test/config-form.test.js).
+  for (const bad of [42, 'light.x', 'sensor.', 'Sensor.gaggiuino_', 'sensor.Gaggiuino_']) {
     assert.throws(() => card.setConfig({ entity_prefix: bad }), /entity_prefix/, `entity_prefix ${JSON.stringify(bad)} must be rejected`);
   }
 });
