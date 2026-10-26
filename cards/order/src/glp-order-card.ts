@@ -61,6 +61,9 @@ class GlpOrderCard extends HTMLElement {
   declare _instanceId: number;
   declare _hass: Hass | null;
   declare _sheet: GlpSheet | null;
+  // The language the sheet's close label was built with; a language change
+  // (hass.language) rebuilds the sheet rather than keeping a stale label.
+  declare _sheetLang: string | null;
 
   constructor() {
     super();
@@ -83,6 +86,7 @@ class GlpOrderCard extends HTMLElement {
     this._lang = this._normalizeLang(navigator.language);
     this._instanceId = ++_glpOrderCardInstanceSeq;
     this._sheet = null;
+    this._sheetLang = null;
   }
 
   // First two letters, lower case, falling back to English for a language this
@@ -617,7 +621,7 @@ class GlpOrderCard extends HTMLElement {
 
   _getVariants(item: MenuItem | undefined): string[] {
     if (!item) return [];
-    if (item.useBeans) return (this._activeBeans || []).map(b => b.decaf ? `${b.name} · Decaf` : b.name);
+    if (item.useBeans) return (this._activeBeans || []).map(b => this._beanLabel(b));
     return Array.isArray(item.variants)
       ? item.variants.filter((v): v is string => typeof v === 'string')
       : [];
@@ -689,8 +693,13 @@ class GlpOrderCard extends HTMLElement {
   // One sheet per card, created on first use and mounted into the card's own
   // shadow root so it inherits this card's --glp-* tokens.
   _sheetFor(lang: string): GlpSheet {
+    if (this._sheet && this._sheetLang !== lang) {
+      this._sheet.close();
+      this._sheet = null;
+    }
     if (!this._sheet) {
       this._sheet = new GlpSheet(this._sheetSlot(), { closeLabel: _s('sheet_close', lang) });
+      this._sheetLang = lang;
     }
     return this._sheet;
   }

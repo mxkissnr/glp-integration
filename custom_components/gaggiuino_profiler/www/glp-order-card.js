@@ -1813,13 +1813,11 @@ ${TOKENS}
   .bean-info-btn:hover { color: var(--oc-text); background: color-mix(in srgb, var(--oc-text) 7%, transparent); }
   .bean-info-btn:focus-visible { outline: 2px solid var(--glp-aline); outline-offset: 1px; }
 
-  /* Bean description, rendered as the details sheet's body (#274) — not
-     clickable, so it groups through the surface fill alone, no border. */
-  .bean-info {
-    background: var(--oc-surface);
-    border-radius: var(--glp-radius-sm); padding: var(--glp-sp-2) var(--glp-sp-3); margin: 0;
-    font-size: var(--glp-fs-1); line-height: 1.45; color: var(--oc-sub);
-  }
+  /* Bean description, rendered as the details sheet's body (#274). The sheet
+     panel is already a surface with its own padding, so this block adds none
+     of its own — a second card inside a card would read as a nesting level
+     that does not exist. */
+  .bean-info { margin: 0; }
   .bean-info-notes { color: var(--oc-text); font-style: italic; margin-bottom: 3px; }
   .bean-info-row { display: flex; gap: var(--glp-sp-1); }
   .bean-info-label {
@@ -2274,6 +2272,7 @@ ${SHEET_STYLES}
       this._lang = this._normalizeLang(navigator.language);
       this._instanceId = ++_glpOrderCardInstanceSeq;
       this._sheet = null;
+      this._sheetLang = null;
     }
     // First two letters, lower case, falling back to English for a language this
     // card has no strings for.
@@ -2740,7 +2739,7 @@ ${SHEET_STYLES}
     }
     _getVariants(item) {
       if (!item) return [];
-      if (item.useBeans) return (this._activeBeans || []).map((b3) => b3.decaf ? `${b3.name} · Decaf` : b3.name);
+      if (item.useBeans) return (this._activeBeans || []).map((b3) => this._beanLabel(b3));
       return Array.isArray(item.variants) ? item.variants.filter((v2) => typeof v2 === "string") : [];
     }
     // Second, orthogonal grouping axis on top of _getVariants() (#36): non-bean
@@ -2804,8 +2803,13 @@ ${SHEET_STYLES}
     // One sheet per card, created on first use and mounted into the card's own
     // shadow root so it inherits this card's --glp-* tokens.
     _sheetFor(lang) {
+      if (this._sheet && this._sheetLang !== lang) {
+        this._sheet.close();
+        this._sheet = null;
+      }
       if (!this._sheet) {
         this._sheet = new GlpSheet(this._sheetSlot(), { closeLabel: _s("sheet_close", lang) });
+        this._sheetLang = lang;
       }
       return this._sheet;
     }
