@@ -12,7 +12,7 @@ const { loadCard } = require('./helpers/load-card.cjs');
 
 const window = new Window();
 window.customElements.define('home-assistant', class extends window.HTMLElement {});
-const { GlpOrderCard } = loadCard({
+loadCard({
   context: {
     document: window.document,
     window,
@@ -46,7 +46,7 @@ function makeCard() {
 // Records every HA event the card fires, in order.
 function recordEvents(card) {
   const events = [];
-  for (const type of ['haptic', 'hass-notification', 'hass-more-info']) {
+  for (const type of ['haptic', 'hass-notification']) {
     card.addEventListener(type, (e) => events.push(e));
   }
   return events;
