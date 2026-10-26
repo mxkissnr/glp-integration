@@ -2,11 +2,13 @@
 
 ## [Unreleased]
 ### Added
+- **The Order Card can now be set up in Home Assistant's visual card editor instead of YAML.** Refs #272
 - **On the Shot Card a tap on a live value opens its Home Assistant history, a long press on the header opens the machine, and every action confirms with a short message and a vibration.** Refs #266
 - **The Order Card confirms a sent or failed order with a short Home Assistant message and a vibration on phones.** Refs #275
 - **Development builds of the integration and both cards are published as beta versions in HACS, for anyone who wants to test upcoming changes.** Refs #256
 
 ### Changed
+- **On the Shot Card a tap on an order opens its details with accept, done and decline in a sheet, and every action confirms with a short message.** Refs #264
 - **The Order Card fills the popular row with a single drink, keeps the order button on one line and needs one heading less above the bean choice.** Refs #273
 - **On the Shot Card the profile list and the maintenance confirmation now open in a sheet from the bottom of the screen instead of stretching the card.** Refs #265
 - **The Order Card shows bean details behind a small info button in a sheet, so the menu stays short.** Refs #274

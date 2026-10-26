@@ -2241,13 +2241,22 @@ ${SHEET_STYLES}
     border-radius: var(--glp-radius-sm); padding: var(--glp-sp-3); display: flex; flex-direction: column; gap: 7px;
   }
   .ord-row.pending  { border: 1px solid color-mix(in srgb, var(--amber) 30%, transparent); }
+  /* The row opens the order in the shared sheet (#264), so it is a tap target
+     with the same keyboard affordances as a maintenance row. */
+  .ord-row[role="button"] { cursor: pointer; transition: border-color .15s, background .15s; }
+  .ord-row[role="button"]:hover { border-color: color-mix(in srgb, var(--text) 16%, transparent); }
+  .ord-row[role="button"]:focus-visible { outline: 2px solid var(--glp-aline); outline-offset: 2px; }
   .ord-top { display: flex; align-items: baseline; gap: var(--glp-sp-2); }
   .ord-top .glp-i { width: 13px; height: 13px; vertical-align: -1px; opacity: .8; }
   .ord-item { flex: 1; font-size: var(--glp-fs-3); font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .ord-who  { font-size: var(--glp-fs-1); color: var(--sub); white-space: nowrap; flex-shrink: 0; }
   .ord-note { font-size: var(--glp-fs-1); color: var(--sub); font-style: italic; }
   .ord-sub  { font-size: var(--glp-fs-1); color: var(--green); font-weight: 600; }
-  .ord-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin-top: 2px; }
+  /* The sheet body restates what the order is: variant, customer, note, the
+     waiting time and, for an accepted order, the ready-in line. */
+  .ord-detail { display: flex; flex-direction: column; align-items: flex-start; gap: var(--glp-sp-2); }
+  .ord-detail-val { font-size: var(--glp-fs-3); font-weight: 700; }
+  .ord-detail-who { font-size: var(--glp-fs-2); color: var(--sub); }
   .ord-q { font-size: var(--glp-fs-1); color: var(--sub); margin-right: 2px; }
   .ord-btn {
     border: none; border-radius: var(--glp-radius-sm); font-family: inherit; font-weight: 700;
@@ -2348,6 +2357,8 @@ ${SHEET_STYLES}
       ord_done: "Fertig",
       ord_ready_in: /* @__PURE__ */ __name((n4) => `fertig in ~${n4} min`, "ord_ready_in"),
       ord_preparing: "in Zubereitung",
+      ord_waiting: /* @__PURE__ */ __name((n4) => `wartet seit ${n4} Min`, "ord_waiting"),
+      ord_waiting_now: "gerade eingegangen",
       just_now: "gerade eben",
       mins_ago: /* @__PURE__ */ __name((n4) => `vor ${n4} Min`, "mins_ago"),
       hours_ago: /* @__PURE__ */ __name((n4) => `vor ${n4} Std`, "hours_ago"),
@@ -2419,6 +2430,9 @@ ${SHEET_STYLES}
       toast_profile: /* @__PURE__ */ __name((p3) => `Profil ${p3} gewählt`, "toast_profile"),
       toast_ready_by: /* @__PURE__ */ __name((hhmm) => `Brühbereit bis ${hhmm}`, "toast_ready_by"),
       toast_maint_done: /* @__PURE__ */ __name((t5) => `${t5} als erledigt markiert`, "toast_maint_done"),
+      toast_ord_accepted: /* @__PURE__ */ __name((d3) => `Bestellung angenommen · fertig in ${d3} min`, "toast_ord_accepted"),
+      toast_ord_done: "Bestellung fertig",
+      toast_ord_declined: "Bestellung abgelehnt",
       toast_action_failed: "Aktion fehlgeschlagen",
       lm_history: "Verlauf anzeigen"
     },
@@ -2434,6 +2448,8 @@ ${SHEET_STYLES}
       ord_done: "Done",
       ord_ready_in: /* @__PURE__ */ __name((n4) => `ready in ~${n4} min`, "ord_ready_in"),
       ord_preparing: "being prepared",
+      ord_waiting: /* @__PURE__ */ __name((n4) => `waiting ${n4} min`, "ord_waiting"),
+      ord_waiting_now: "just now",
       just_now: "just now",
       mins_ago: /* @__PURE__ */ __name((n4) => `${n4} min ago`, "mins_ago"),
       hours_ago: /* @__PURE__ */ __name((n4) => `${n4} h ago`, "hours_ago"),
@@ -2505,6 +2521,9 @@ ${SHEET_STYLES}
       toast_profile: /* @__PURE__ */ __name((p3) => `Profile ${p3} selected`, "toast_profile"),
       toast_ready_by: /* @__PURE__ */ __name((hhmm) => `Ready by ${hhmm}`, "toast_ready_by"),
       toast_maint_done: /* @__PURE__ */ __name((t5) => `${t5} marked as done`, "toast_maint_done"),
+      toast_ord_accepted: /* @__PURE__ */ __name((d3) => `Order accepted · ready in ${d3} min`, "toast_ord_accepted"),
+      toast_ord_done: "Order done",
+      toast_ord_declined: "Order declined",
       toast_action_failed: "Action failed",
       lm_history: "Show history"
     },
@@ -2520,6 +2539,8 @@ ${SHEET_STYLES}
       ord_done: "Fatto",
       ord_ready_in: /* @__PURE__ */ __name((n4) => `pronto tra ~${n4} min`, "ord_ready_in"),
       ord_preparing: "in preparazione",
+      ord_waiting: /* @__PURE__ */ __name((n4) => `in attesa da ${n4} min`, "ord_waiting"),
+      ord_waiting_now: "appena arrivato",
       just_now: "proprio ora",
       mins_ago: /* @__PURE__ */ __name((n4) => `${n4} min fa`, "mins_ago"),
       hours_ago: /* @__PURE__ */ __name((n4) => `${n4} h fa`, "hours_ago"),
@@ -2591,6 +2612,9 @@ ${SHEET_STYLES}
       toast_profile: /* @__PURE__ */ __name((p3) => `Profilo ${p3} selezionato`, "toast_profile"),
       toast_ready_by: /* @__PURE__ */ __name((hhmm) => `Pronto entro le ${hhmm}`, "toast_ready_by"),
       toast_maint_done: /* @__PURE__ */ __name((t5) => `${t5} segnato come fatto`, "toast_maint_done"),
+      toast_ord_accepted: /* @__PURE__ */ __name((d3) => `Ordine accettato · pronto tra ${d3} min`, "toast_ord_accepted"),
+      toast_ord_done: "Ordine completato",
+      toast_ord_declined: "Ordine rifiutato",
       toast_action_failed: "Azione non riuscita",
       lm_history: "Mostra cronologia"
     },
@@ -2606,6 +2630,8 @@ ${SHEET_STYLES}
       ord_done: "Terminé",
       ord_ready_in: /* @__PURE__ */ __name((n4) => `prêt dans ~${n4} min`, "ord_ready_in"),
       ord_preparing: "en préparation",
+      ord_waiting: /* @__PURE__ */ __name((n4) => `en attente depuis ${n4} min`, "ord_waiting"),
+      ord_waiting_now: "à l'instant",
       just_now: "à l'instant",
       mins_ago: /* @__PURE__ */ __name((n4) => `il y a ${n4} min`, "mins_ago"),
       hours_ago: /* @__PURE__ */ __name((n4) => `il y a ${n4} h`, "hours_ago"),
@@ -2677,6 +2703,9 @@ ${SHEET_STYLES}
       toast_profile: /* @__PURE__ */ __name((p3) => `Profil ${p3} sélectionné`, "toast_profile"),
       toast_ready_by: /* @__PURE__ */ __name((hhmm) => `Prêt avant ${hhmm}`, "toast_ready_by"),
       toast_maint_done: /* @__PURE__ */ __name((t5) => `${t5} marqué comme fait`, "toast_maint_done"),
+      toast_ord_accepted: /* @__PURE__ */ __name((d3) => `Commande acceptée · prêt dans ${d3} min`, "toast_ord_accepted"),
+      toast_ord_done: "Commande terminée",
+      toast_ord_declined: "Commande refusée",
       toast_action_failed: "Échec de l'action",
       lm_history: "Afficher l'historique"
     },
@@ -2692,6 +2721,8 @@ ${SHEET_STYLES}
       ord_done: "Listo",
       ord_ready_in: /* @__PURE__ */ __name((n4) => `listo en ~${n4} min`, "ord_ready_in"),
       ord_preparing: "en preparación",
+      ord_waiting: /* @__PURE__ */ __name((n4) => `esperando ${n4} min`, "ord_waiting"),
+      ord_waiting_now: "recién llegado",
       just_now: "justo ahora",
       mins_ago: /* @__PURE__ */ __name((n4) => `hace ${n4} min`, "mins_ago"),
       hours_ago: /* @__PURE__ */ __name((n4) => `hace ${n4} h`, "hours_ago"),
@@ -2763,6 +2794,9 @@ ${SHEET_STYLES}
       toast_profile: /* @__PURE__ */ __name((p3) => `Perfil ${p3} seleccionado`, "toast_profile"),
       toast_ready_by: /* @__PURE__ */ __name((hhmm) => `Listo antes de las ${hhmm}`, "toast_ready_by"),
       toast_maint_done: /* @__PURE__ */ __name((t5) => `${t5} marcado como hecho`, "toast_maint_done"),
+      toast_ord_accepted: /* @__PURE__ */ __name((d3) => `Pedido aceptado · listo en ${d3} min`, "toast_ord_accepted"),
+      toast_ord_done: "Pedido completado",
+      toast_ord_declined: "Pedido rechazado",
       toast_action_failed: "La acción ha fallado",
       lm_history: "Mostrar historial"
     },
@@ -2778,6 +2812,8 @@ ${SHEET_STYLES}
       ord_done: "Klaar",
       ord_ready_in: /* @__PURE__ */ __name((n4) => `klaar over ~${n4} min`, "ord_ready_in"),
       ord_preparing: "in bereiding",
+      ord_waiting: /* @__PURE__ */ __name((n4) => `wacht ${n4} min`, "ord_waiting"),
+      ord_waiting_now: "zojuist",
       just_now: "zojuist",
       mins_ago: /* @__PURE__ */ __name((n4) => `${n4} min geleden`, "mins_ago"),
       hours_ago: /* @__PURE__ */ __name((n4) => `${n4} u geleden`, "hours_ago"),
@@ -2849,6 +2885,9 @@ ${SHEET_STYLES}
       toast_profile: /* @__PURE__ */ __name((p3) => `Profiel ${p3} geselecteerd`, "toast_profile"),
       toast_ready_by: /* @__PURE__ */ __name((hhmm) => `Klaar voor ${hhmm}`, "toast_ready_by"),
       toast_maint_done: /* @__PURE__ */ __name((t5) => `${t5} als voltooid gemarkeerd`, "toast_maint_done"),
+      toast_ord_accepted: /* @__PURE__ */ __name((d3) => `Bestelling geaccepteerd · klaar over ${d3} min`, "toast_ord_accepted"),
+      toast_ord_done: "Bestelling klaar",
+      toast_ord_declined: "Bestelling afgewezen",
       toast_action_failed: "Actie mislukt",
       lm_history: "Geschiedenis tonen"
     }
@@ -3267,8 +3306,10 @@ ${SHEET_STYLES}
       this._beansInfoById = null;
       this._beansInfoAt = 0;
       this._beansInfoUnavailable = false;
-      this._orderEtaFor = null;
-      this._orderDeclineFor = null;
+      this._orderSheetId = null;
+      this._orderSheetEta = false;
+      this._orderSheetDecline = false;
+      this._orderSheetSig = "";
       this._switchEntity = this._readSwitchEntity();
       this._iconGradId = `glp-icon-${Math.random().toString(36).slice(2, 10)}`;
       this._readyByTimer = null;
@@ -3456,9 +3497,23 @@ ${SHEET_STYLES}
     _sheetFor() {
       const slot = this.shadowRoot?.querySelector(".glp-sheet-slot") ?? null;
       if (!slot) return null;
+      const previous = this._sheet;
       if (!this._sheet || this._sheetSlot !== slot || this._sheetLang !== getLang()) {
-        this._sheet?.close();
-        this._sheet = new GlpSheet(slot, { closeLabel: T2("sheet_close") });
+        this._sheet = null;
+        previous?.close();
+        const sheet = new GlpSheet(slot, {
+          closeLabel: T2("sheet_close"),
+          // However the sheet was closed, the order it showed is no longer the
+          // subject of any pending action step. A superseded sheet closes too
+          // (its slot or language is gone), and its slide-out finishes after the
+          // replacement is already showing the order, so only the current sheet
+          // may clear that state.
+          onClose: /* @__PURE__ */ __name(() => {
+            if (this._sheet !== sheet) return;
+            this._forgetOrderSheet();
+          }, "onClose")
+        });
+        this._sheet = sheet;
         this._sheetSlot = slot;
         this._sheetLang = getLang();
       }
@@ -3676,62 +3731,189 @@ ${SHEET_STYLES}
       this._orders = active;
       this._render();
     }
+    // Keeps an open order sheet in step with the list: another device may have
+    // handled the order, in which case the sheet has nothing left to act on and
+    // closes silently; otherwise it is re-rendered so its waiting time and
+    // ready-in line follow the list. Runs at the end of every render because
+    // neither view may leave a sheet behind on a slot node it just replaced.
+    _syncOrderSheet() {
+      const id = this._orderSheetId;
+      if (id == null) return;
+      const order = this._orderById(id);
+      if (!order) {
+        this._closeOrderSheet();
+        return;
+      }
+      const previous = this._sheet;
+      const sheet = this._sheetFor();
+      if (!sheet) return;
+      const rebuilt = sheet !== previous;
+      if (!rebuilt && !sheet.isOpen) return;
+      const sig = this._orderSheetSigFor(order);
+      if (!rebuilt && sig === this._orderSheetSig) return;
+      this._orderSheetSig = sig;
+      sheet.open(this._orderSheetContent(id, order));
+    }
+    // What the sheet's body is derived from. The minute is in there because the
+    // waiting line is relative to now, so an open sheet follows it the same way
+    // the card's own minute-based render does.
+    _orderSheetSigFor(order) {
+      return JSON.stringify([
+        order.status,
+        order.eta,
+        order.acceptedAt,
+        order.item,
+        order.variant,
+        order.customer,
+        order.note,
+        Math.floor(Date.now() / 6e4)
+      ]);
+    }
+    // The sheet is shared, so its content stops being about an order whenever a
+    // picker or a maintenance task takes it over, and whenever the card closes it.
+    _forgetOrderSheet() {
+      this._orderSheetId = null;
+      this._orderSheetEta = false;
+      this._orderSheetDecline = false;
+      this._orderSheetSig = "";
+    }
+    // Forgets the order and closes the sheet. The sheet's own onClose does the
+    // same, but only once a phone's slide-out has finished.
+    _closeOrderSheet() {
+      this._forgetOrderSheet();
+      this._sheet?.close();
+    }
+    _orderById(id) {
+      return this._orders.find((o8) => o8.id === id) ?? null;
+    }
+    // Whole minutes left until the promised time, or null when the accepted
+    // order carries no eta.
+    _orderMinsLeft(order) {
+      if (!order.acceptedAt || !order.eta) return null;
+      return Math.max(0, Math.ceil((order.acceptedAt + order.eta * 6e4 - Date.now()) / 6e4));
+    }
+    // How long the order has been waiting: "just now" under a minute, then whole
+    // minutes.
+    _orderWaitingText(createdAt) {
+      const at = parseTs(createdAt);
+      if (!at) return T2("ord_waiting_now");
+      const mins = Math.floor((Date.now() - at.getTime()) / 6e4);
+      if (!(mins >= 1)) return T2("ord_waiting_now");
+      return T2("ord_waiting", String(mins));
+    }
+    // Runs one barista action. fetchWithAuth resolves on 4xx/5xx, so the response
+    // status decides success: an ok answer closes the sheet with a confirmation,
+    // a failed one keeps it open and reports itself. Either way the list is
+    // refetched so the card and an open sheet show what the app really has.
     async _orderAction(id, action, body) {
       if (!this._hass?.fetchWithAuth || !id) return;
-      this._orderEtaFor = null;
-      this._orderDeclineFor = null;
+      let ok = false;
       try {
-        await this._hass.fetchWithAuth(`/api/glp/orders/${encodeURIComponent(id)}/${action}`, {
+        ok = (await this._hass.fetchWithAuth(`/api/glp/orders/${encodeURIComponent(id)}/${action}`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(body || {})
-        });
+        })).ok;
       } catch {
+      }
+      if (ok) {
+        this._closeOrderSheet();
+        toast(this, action === "accept" ? T2("toast_ord_accepted", String(body.eta ?? "")) : action === "complete" ? T2("toast_ord_done") : T2("toast_ord_declined"));
+        haptic(this, "success");
+      } else {
+        toast(this, T2("toast_action_failed"));
+        haptic(this, "failure");
       }
       await this._fetchOrders(true);
     }
+    // Every row is a read-only summary (#264): the barista actions live in the
+    // shared sheet, so a long queue no longer grows the card with a button row
+    // per order. The row itself is the tap target, keyboard included.
     _buildOrdersHtml() {
       if (!this._orders.length) return b2`<div class="unavailable">${T2("orders_none")}</div>`;
-      const tap = /* @__PURE__ */ __name((fn) => (e6) => {
-        e6.stopPropagation();
-        fn();
-      }, "tap");
-      const cancel = tap(() => {
-        this._orderEtaFor = null;
-        this._orderDeclineFor = null;
-        this._render();
-      });
-      const declineRow = /* @__PURE__ */ __name((id) => b2`<div class="ord-actions"><span class="ord-q">${T2("ord_decline_q")}</span>
-      <button class="ord-btn danger" data-ord-decline-yes=${id} @click=${tap(() => this._orderAction(id, "decline", {}))}>${/* ICONS.of() emits fixed SVG markup */
-      o5(ICONS.of("check"))} ${T2("ord_yes")}</button>
-      <button class="ord-btn ghost" data-ord-cancel="1" @click=${cancel}>${/* ICONS.of() emits fixed SVG markup */
-      o5(ICONS.of("close"))}</button></div>`, "declineRow");
-      return b2`<div class="ord-list">${this._orders.map((o8) => {
-        const label = o8.variant ? `${o8.item} · ${o8.variant}` : o8.item;
-        const head = b2`<div class="ord-top"><span class="ord-item">${/* ICONS.of() emits fixed SVG markup */
-        o5(ICONS.of("coffee"))} ${label}</span>${o8.customer ? b2`<span class="ord-who">${o8.customer}</span>` : A}</div>
-        ${o8.note ? b2`<div class="ord-note">„${o8.note}"</div>` : A}`;
-        if (o8.status === "pending") {
-          const actions2 = this._orderDeclineFor === o8.id ? declineRow(o8.id) : this._orderEtaFor === o8.id ? b2`<div class="ord-actions"><span class="ord-q">${T2("ord_done_in")}</span>${[3, 5, 8, 10].map((m2) => b2`<button class="ord-btn eta" data-ord-accept=${o8.id} data-eta=${m2} @click=${tap(() => this._orderAction(o8.id, "accept", { eta: m2 }))}>${m2} min</button>`)}<button class="ord-btn ghost" data-ord-cancel="1" @click=${cancel}>${/* ICONS.of() emits fixed SVG markup */
-          o5(ICONS.of("close"))}</button></div>` : b2`<div class="ord-actions"><button class="ord-btn primary" data-ord-eta=${o8.id} @click=${tap(() => {
-            this._orderEtaFor = o8.id;
-            this._render();
-          })}>${/* ICONS.of() emits fixed SVG markup */
-          o5(ICONS.of("check"))} ${T2("ord_accept")}</button><button class="ord-btn ghost" data-ord-decline=${o8.id} @click=${tap(() => {
-            this._orderDeclineFor = o8.id;
-            this._render();
-          })}>${T2("ord_decline")}</button></div>`;
-          return b2`<div class="ord-row pending">${head}${actions2}</div>`;
-        }
-        const minsLeft = o8.acceptedAt && o8.eta ? Math.max(0, Math.ceil((o8.acceptedAt + o8.eta * 6e4 - Date.now()) / 6e4)) : null;
-        const actions = this._orderDeclineFor === o8.id ? declineRow(o8.id) : b2`<div class="ord-actions"><button class="ord-btn primary" data-ord-done=${o8.id} @click=${tap(() => this._orderAction(o8.id, "complete", {}))}>${/* ICONS.of() emits fixed SVG markup */
-        o5(ICONS.of("check"))} ${T2("ord_done")}</button><button class="ord-btn ghost" data-ord-decline=${o8.id} @click=${tap(() => {
-          this._orderDeclineFor = o8.id;
-          this._render();
-        })}>${T2("ord_decline")}</button></div>`;
-        return b2`<div class="ord-row accepted">${head}
-        <div class="ord-sub">${minsLeft != null ? T2("ord_ready_in", minsLeft) : T2("ord_preparing")}</div>${actions}</div>`;
-      })}</div>`;
+      return b2`<div class="ord-list">${this._orders.map((o8) => this._orderRowHtml(o8))}</div>`;
+    }
+    _orderRowHtml(order) {
+      const label = order.variant ? `${order.item} · ${order.variant}` : order.item;
+      const minsLeft = this._orderMinsLeft(order);
+      const open = /* @__PURE__ */ __name(() => {
+        this._openOrderSheet(order.id);
+      }, "open");
+      return b2`<div class="ord-row ${order.status === "pending" ? "pending" : "accepted"}" data-order-id=${order.id} role="button" tabindex="0" @click=${open} @keydown=${(e6) => {
+        const key = e6.key;
+        if (key !== "Enter" && key !== " ") return;
+        e6.preventDefault();
+        open();
+      }}><div class="ord-top"><span class="ord-item">${/* ICONS.of() emits fixed SVG markup */
+      o5(ICONS.of("coffee"))} ${label}</span>${order.customer ? b2`<span class="ord-who">${order.customer}</span>` : A}</div>${order.note ? b2`<div class="ord-note">„${order.note}"</div>` : A}${order.status === "accepted" ? b2`<div class="ord-sub">${minsLeft != null ? T2("ord_ready_in", String(minsLeft)) : T2("ord_preparing")}</div>` : A}</div>`;
+    }
+    // One order in the shared sheet (#264): the same summary plus its waiting
+    // time, and the actions that used to sit in the row. Pending orders offer
+    // Accept (which swaps the actions to the ETA choice in place) and Decline; an
+    // accepted one offers Done and Decline. Decline first asks for a second tap,
+    // and Cancel there returns to the normal actions without closing the sheet.
+    _openOrderSheet(id) {
+      const order = this._orderById(id);
+      if (!order) return;
+      const sheet = this._sheetFor();
+      if (!sheet) return;
+      this._orderSheetId = id;
+      this._orderSheetEta = false;
+      this._orderSheetDecline = false;
+      this._orderSheetSig = this._orderSheetSigFor(order);
+      sheet.open(this._orderSheetContent(id, order));
+    }
+    // Both callbacks read the order back from the live list, so a refresh after a
+    // poll shows the new status and waiting time even though the content object
+    // was built earlier.
+    _orderSheetContent(id, order) {
+      return {
+        title: order.variant ? `${order.item} · ${order.variant}` : order.item,
+        body: /* @__PURE__ */ __name(() => this._orderSheetBody(this._orderById(id) ?? order), "body"),
+        actions: /* @__PURE__ */ __name(() => this._orderSheetActions(this._orderById(id) ?? order), "actions")
+      };
+    }
+    _orderSheetBody(order) {
+      const minsLeft = this._orderMinsLeft(order);
+      return b2`<div class="ord-detail">
+      ${order.variant ? b2`<div class="ord-detail-val">${order.variant}</div>` : A}
+      ${order.customer ? b2`<div class="ord-detail-who">${order.customer}</div>` : A}
+      ${order.note ? b2`<div class="ord-note">„${order.note}"</div>` : A}
+      <div class="ord-sub">${this._orderWaitingText(order.createdAt)}</div>
+      ${order.status === "accepted" ? b2`<div class="ord-sub">${minsLeft != null ? T2("ord_ready_in", String(minsLeft)) : T2("ord_preparing")}</div>` : A}
+    </div>`;
+    }
+    _orderSheetActions(order) {
+      if (this._orderSheetDecline) {
+        return b2`<span class="ord-q">${T2("ord_decline_q")}</span>
+        <button type="button" class="ord-btn danger" data-ord-decline-yes=${order.id} @click=${() => {
+          this._orderAction(order.id, "decline", {});
+        }}>${T2("ord_yes")}</button>
+        <button type="button" class="ord-btn ghost" data-ord-cancel="1" @click=${() => {
+          this._orderSheetDecline = false;
+          this._sheet?.refresh();
+        }}>${T2("sheet_cancel")}</button>`;
+      }
+      if (order.status === "pending" && this._orderSheetEta) {
+        return b2`<span class="ord-q">${T2("ord_done_in")}</span>${[3, 5, 8, 10].map((m2) => b2`<button type="button" class="ord-btn eta" data-ord-accept=${order.id} data-eta=${m2} @click=${() => {
+          this._orderAction(order.id, "accept", { eta: m2 });
+        }}>${m2} min</button>`)}<button type="button" class="ord-btn ghost" data-ord-cancel="1" @click=${() => {
+          this._orderSheetEta = false;
+          this._sheet?.refresh();
+        }}>${T2("sheet_cancel")}</button>`;
+      }
+      const primary = order.status === "pending" ? b2`<button type="button" class="ord-btn primary" data-ord-eta=${order.id} @click=${() => {
+        this._orderSheetEta = true;
+        this._sheet?.refresh();
+      }}>${/* ICONS.of() emits fixed SVG markup */
+      o5(ICONS.of("check"))} ${T2("ord_accept")}</button>` : b2`<button type="button" class="ord-btn primary" data-ord-done=${order.id} @click=${() => {
+        this._orderAction(order.id, "complete", {});
+      }}>${/* ICONS.of() emits fixed SVG markup */
+      o5(ICONS.of("check"))} ${T2("ord_done")}</button>`;
+      return b2`${primary}<button type="button" class="ord-btn ghost" data-ord-decline=${order.id} @click=${() => {
+        this._orderSheetDecline = true;
+        this._sheet?.refresh();
+      }}>${T2("ord_decline")}</button>`;
     }
     _navShot(dir) {
       if (this._activeTab !== "shot") return;
@@ -4083,6 +4265,7 @@ ${SHEET_STYLES}
     // counters and status pill the row shows, plus the two actions. The sensors
     // carry no interval, so the sheet does not claim one.
     _openMaintSheet(detail) {
+      this._forgetOrderSheet();
       const sheet = this._sheetFor();
       if (!sheet) return;
       const cls = detail.status === "ok" || detail.status === "soon" || detail.status === "due" ? detail.status : "never";
@@ -4512,6 +4695,7 @@ ${SHEET_STYLES}
       const options = entity?.attributes?.options || null;
       if (!Array.isArray(options) || !options.length) return;
       const current = this._pendingProfile || entity?.state || null;
+      this._forgetOrderSheet();
       const sheet = this._sheetFor();
       if (!sheet) return;
       sheet.open({
@@ -4687,8 +4871,9 @@ ${SHEET_STYLES}
       const vm = this._viewModel();
       const machineType = appMachineType(this._machineEntry());
       if (vm.machineOff) {
-        this._sheet?.close();
+        if (this._orderSheetId == null) this._sheet?.close();
         D(this._machineOffHtml(vm), this.shadowRoot);
+        this._syncOrderSheet();
         this._applyMachineTheme();
         this._applySemanticColorContrast();
         this._startReadyByTicker();
@@ -4751,6 +4936,7 @@ ${SHEET_STYLES}
         ${this._footerHtml(vm)}
 
       </div></ha-card>${this._sheetSlotHtml()}`, this.shadowRoot);
+      this._syncOrderSheet();
       this._applyMachineTheme();
       this._applySemanticColorContrast();
       this._startUptimeTicker();
