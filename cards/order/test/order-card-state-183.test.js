@@ -18,6 +18,9 @@ const { GlpOrderCard } = loadCard({
     HTMLElement: window.HTMLElement,
     customElements: window.customElements,
     navigator: window.navigator,
+    // _selectItem()/_placeOrder() now dispatch HA events on the card, so the
+    // CustomEvent they construct has to be happy-dom's.
+    CustomEvent: window.CustomEvent,
     getComputedStyle: window.getComputedStyle.bind(window),
   },
 });

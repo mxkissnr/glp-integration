@@ -16,6 +16,7 @@ import { _esc, _originHtml, _safeUrl, THEME_PRESETS, _validHex } from './helpers
 import { MACHINE_ICON_MINI, ICONS, _menuIconHtml } from './icons.ts';
 import { applySemanticColorContrast } from '../../shared/contrast.ts';
 import { appMachineEntry, appMachineTheme, appMachineType, matchMachineStatusEntity } from '../../shared/machine.ts';
+import { haptic, toast } from '../../shared/ha-events.ts';
 import { STRINGS, _s } from './i18n.ts';
 import type { TemplateResult } from 'lit';
 import type {
@@ -583,6 +584,7 @@ class GlpOrderCard extends HTMLElement {
     this._selected = this._selected === name ? null : name;
     if (this._selected !== prev) { this._selectedVariant = null; this._selectedBeanId = null; }
     this._orderError = null;
+    if (this._selected) haptic(this, 'selection');
     this._render();
   }
 
@@ -591,6 +593,7 @@ class GlpOrderCard extends HTMLElement {
     this._selectedVariant = wasSelected ? null : variant;
     this._selectedBeanId  = wasSelected ? null : (beanId != null ? Number(beanId) : null);
     this._orderError = null;
+    if (!wasSelected) haptic(this, 'selection');
     this._render();
   }
 
@@ -685,8 +688,21 @@ class GlpOrderCard extends HTMLElement {
     return html`<div class="bean-info" id="oc-bean-info">${rows}</div>`;
   }
 
+  // The inline message stays the primary feedback; the toast and the
+  // vibration repeat it for people who are looking at the machine.
+  _failOrder(): void {
+    const message = _s('order_failed', this._lang);
+    this._orderError = message;
+    toast(this, message);
+    haptic(this, 'failure');
+  }
+
   async _placeOrder(): Promise<void> {
     if (!this._selected || this._submitting) return;
+    // Captured up front: a successful order clears the selection before the
+    // confirmation toast is built.
+    const requestedItem = this._selected;
+    const variant       = this._selectedVariant;
     const noteEl = this.shadowRoot!.getElementById('oc-note') as HTMLInputElement | null;
     const note   = noteEl?.value?.trim() || '';
     const haUser = this._hass?.user;
@@ -715,17 +731,20 @@ class GlpOrderCard extends HTMLElement {
       const order = res.ok ? await res.json() as Order : null;
 
       if (order?.id) {
+        const sentLabel = variant ? `${requestedItem} · ${variant}` : requestedItem;
         this._activeOrder = order;
         this._orderError  = null;
         this._selected    = null;
         this._selectedVariant = null;
         this._selectedBeanId  = null;
+        toast(this, _s('toast_order_sent', this._lang, sentLabel));
+        haptic(this, 'success');
       } else {
         // Keep the selection so the customer can retry without re-picking.
-        this._orderError = _s('order_failed', this._lang);
+        this._failOrder();
       }
     } catch {
-      this._orderError = _s('order_failed', this._lang);
+      this._failOrder();
     }
     this._submitting = false;
     this._render();

@@ -170,6 +170,7 @@ A theme set in the app (Settings → Machines) is read live from the `machines` 
 - Drink menu configured in the app's **Orders** tab — a "Trending" section for marked drinks, a NEW badge on items added within `new_badge_days`, and the rest under "All drinks"
 - Bean variants from the coffee library for drinks that use beans — only beans still in stock, grouped into Speciality and Normal; selecting one shows its taste notes, origin (multi-origin blends as parsed countries), variety and processing
 - An optional note field, and an order button labelled with the selected drink and variant
+- A short Home Assistant notification and a vibration on phones when the order was sent or failed — both use Home Assistant's documented card events, so they appear wherever Home Assistant shows its own messages
 - Order status: waiting for confirmation with the queue position and estimated time, accepted with a live ETA countdown, ready with a confirmation plus the finished shot and its curve when the order carries a shot id, declined with the reason
 - A "machine is off" or "orders paused" view instead of the menu when the barista or the machine says so
 
