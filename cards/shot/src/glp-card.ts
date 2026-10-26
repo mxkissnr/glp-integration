@@ -744,7 +744,7 @@ class GlpCard extends HTMLElement {
     const id = this._orderSheetId;
     if (id == null) return;
     const order = this._orderById(id);
-    if (!order) { this._sheet?.close(); return; }
+    if (!order) { this._closeOrderSheet(); return; }
     const previous = this._sheet;
     const sheet = this._sheetFor();
     if (!sheet) return;
@@ -757,6 +757,8 @@ class GlpCard extends HTMLElement {
     const sig = this._orderSheetSigFor(order);
     if (!rebuilt && sig === this._orderSheetSig) return;
     this._orderSheetSig = sig;
+    // The rebuild above closed the old sheet, which cleared the id with it.
+    this._orderSheetId = id;
     sheet.open(this._orderSheetContent(id, order));
   }
 
@@ -768,6 +770,15 @@ class GlpCard extends HTMLElement {
       order.status, order.eta, order.acceptedAt, order.item, order.variant,
       order.customer, order.note, Math.floor(Date.now() / 60000),
     ]);
+  }
+
+  // Forgets the order the sheet is showing and closes it. The sheet's own
+  // onClose does the same, but only once a phone's slide-out has finished.
+  _closeOrderSheet(): void {
+    this._orderSheetId = null;
+    this._orderSheetEta = false;
+    this._orderSheetDecline = false;
+    this._sheet?.close();
   }
 
   _orderById(id: string): BaristaOrder | null {
@@ -804,7 +815,10 @@ class GlpCard extends HTMLElement {
       })).ok;
     } catch { /* the request never landed, so the action failed */ }
     if (ok) {
-      this._sheet?.close();
+      // State first: on a phone the close only flips isOpen and slides out, so
+      // the refetch below would otherwise see the order still marked open and
+      // re-open the sheet it just closed.
+      this._closeOrderSheet();
       toast(this, action === 'accept'
         ? T('toast_ord_accepted', String(body.eta ?? ''))
         : action === 'complete' ? T('toast_ord_done') : T('toast_ord_declined'));

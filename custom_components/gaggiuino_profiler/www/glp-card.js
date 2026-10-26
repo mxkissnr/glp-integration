@@ -3741,7 +3741,7 @@ ${SHEET_STYLES}
       if (id == null) return;
       const order = this._orderById(id);
       if (!order) {
-        this._sheet?.close();
+        this._closeOrderSheet();
         return;
       }
       const previous = this._sheet;
@@ -3752,6 +3752,7 @@ ${SHEET_STYLES}
       const sig = this._orderSheetSigFor(order);
       if (!rebuilt && sig === this._orderSheetSig) return;
       this._orderSheetSig = sig;
+      this._orderSheetId = id;
       sheet.open(this._orderSheetContent(id, order));
     }
     // What the sheet's body is derived from. The minute is in there because the
@@ -3768,6 +3769,14 @@ ${SHEET_STYLES}
         order.note,
         Math.floor(Date.now() / 6e4)
       ]);
+    }
+    // Forgets the order the sheet is showing and closes it. The sheet's own
+    // onClose does the same, but only once a phone's slide-out has finished.
+    _closeOrderSheet() {
+      this._orderSheetId = null;
+      this._orderSheetEta = false;
+      this._orderSheetDecline = false;
+      this._sheet?.close();
     }
     _orderById(id) {
       return this._orders.find((o8) => o8.id === id) ?? null;
@@ -3803,7 +3812,7 @@ ${SHEET_STYLES}
       } catch {
       }
       if (ok) {
-        this._sheet?.close();
+        this._closeOrderSheet();
         toast(this, action === "accept" ? T2("toast_ord_accepted", String(body.eta ?? "")) : action === "complete" ? T2("toast_ord_done") : T2("toast_ord_declined"));
         haptic(this, "success");
       } else {
