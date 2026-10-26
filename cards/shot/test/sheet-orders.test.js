@@ -78,12 +78,12 @@ function recordingFetch(orders, actionResponse = () => okJson({})) {
   return fetchWithAuth;
 }
 
-function hass(fetchWithAuth) {
+function hass(fetchWithAuth, { machineState = 'on' } = {}) {
   return {
     language: 'en',
     fetchWithAuth,
     states: {
-      'switch.gaggiuino': { state: 'on' },
+      'switch.gaggiuino': { state: machineState },
       [`${P}machine_status`]: { state: 'online', attributes: { recent_shots: [] } },
       [`${P}preheat_elapsed`]: { state: '600' },
     },
@@ -342,6 +342,20 @@ test('a poll that keeps the open order refreshes the sheet in place', async () =
   assert.equal(card.shadowRoot.querySelectorAll('dialog').length, 1, 'one sheet, refreshed');
   assert.match(card.shadowRoot.querySelector('.glp-sheet-actions').textContent, /Done/,
     'the actions follow the new status');
+});
+
+test('the machine-off view keeps the order sheet, it lists orders too', () => {
+  const { card } = makeCard([pending()]);
+  click(row(card, 'o1'));
+  assert.equal(card._sheet?.isOpen, true);
+
+  // Machine off builds a different template, so this replaces the slot the
+  // sheet is mounted in; the order is still shown on the new one.
+  card.hass = hass(card._hass.fetchWithAuth, { machineState: 'off' });
+
+  assert.equal(card._sheet?.isOpen, true, 'orders are listed in this view, so the sheet stays');
+  assert.equal(sheetTitle(card), 'Coffee · Single');
+  assert.equal(card.shadowRoot.querySelectorAll('dialog').length, 1, 'one sheet on the new slot');
 });
 
 test('tapping a row whose order is already gone opens nothing', () => {

@@ -478,8 +478,13 @@ class GlpCard extends HTMLElement {
   _sheetFor(): GlpSheet | null {
     const slot = this.shadowRoot?.querySelector<HTMLElement>('.glp-sheet-slot') ?? null;
     if (!slot) return null;
+    const previous = this._sheet;
     if (!this._sheet || this._sheetSlot !== slot || this._sheetLang !== getLang()) {
-      this._sheet?.close();
+      // Dropped before close(), so the old sheet's own onClose below sees that
+      // it is no longer the current one (and never touches the half-built
+      // replacement).
+      this._sheet = null;
+      previous?.close();
       const sheet = new GlpSheet(slot, {
         closeLabel: T('sheet_close'),
         // However the sheet was closed, the order it showed is no longer the
@@ -489,9 +494,7 @@ class GlpCard extends HTMLElement {
         // may clear that state.
         onClose: () => {
           if (this._sheet !== sheet) return;
-          this._orderSheetId = null;
-          this._orderSheetEta = false;
-          this._orderSheetDecline = false;
+          this._forgetOrderSheet();
         },
       });
       this._sheet = sheet;
@@ -746,6 +749,8 @@ class GlpCard extends HTMLElement {
     const order = this._orderById(id);
     if (!order) { this._closeOrderSheet(); return; }
     const previous = this._sheet;
+    // The id survives _sheetFor(): a rebuild drops the old sheet from the field
+    // before closing it, so the onClose that clears the state no longer fires.
     const sheet = this._sheetFor();
     if (!sheet) return;
     // _sheetFor() rebuilds after a view switch or a language change, which
@@ -757,8 +762,6 @@ class GlpCard extends HTMLElement {
     const sig = this._orderSheetSigFor(order);
     if (!rebuilt && sig === this._orderSheetSig) return;
     this._orderSheetSig = sig;
-    // The rebuild above closed the old sheet, which cleared the id with it.
-    this._orderSheetId = id;
     sheet.open(this._orderSheetContent(id, order));
   }
 
@@ -772,12 +775,19 @@ class GlpCard extends HTMLElement {
     ]);
   }
 
-  // Forgets the order the sheet is showing and closes it. The sheet's own
-  // onClose does the same, but only once a phone's slide-out has finished.
-  _closeOrderSheet(): void {
+  // The sheet is shared, so its content stops being about an order whenever a
+  // picker or a maintenance task takes it over, and whenever the card closes it.
+  _forgetOrderSheet(): void {
     this._orderSheetId = null;
     this._orderSheetEta = false;
     this._orderSheetDecline = false;
+    this._orderSheetSig = '';
+  }
+
+  // Forgets the order and closes the sheet. The sheet's own onClose does the
+  // same, but only once a phone's slide-out has finished.
+  _closeOrderSheet(): void {
+    this._forgetOrderSheet();
     this._sheet?.close();
   }
 
@@ -857,8 +867,9 @@ class GlpCard extends HTMLElement {
   // and Cancel there returns to the normal actions without closing the sheet.
   _openOrderSheet(id: string): void {
     const order = this._orderById(id);
+    if (!order) return;
     const sheet = this._sheetFor();
-    if (!order || !sheet) return;
+    if (!sheet) return;
     this._orderSheetId = id;
     this._orderSheetEta = false;
     this._orderSheetDecline = false;
@@ -1312,6 +1323,7 @@ class GlpCard extends HTMLElement {
   // counters and status pill the row shows, plus the two actions. The sensors
   // carry no interval, so the sheet does not claim one.
   _openMaintSheet(detail: MaintTaskDetail): void {
+    this._forgetOrderSheet();
     const sheet = this._sheetFor();
     if (!sheet) return;
     const cls: 'ok' | 'soon' | 'due' | 'never' =
@@ -1752,6 +1764,7 @@ class GlpCard extends HTMLElement {
     // marks the profile the card is showing, not the one the machine has yet
     // to confirm.
     const current = this._pendingProfile || entity?.state || null;
+    this._forgetOrderSheet();
     const sheet = this._sheetFor();
     if (!sheet) return;
     sheet.open({

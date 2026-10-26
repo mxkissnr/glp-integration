@@ -3497,8 +3497,10 @@ ${SHEET_STYLES}
     _sheetFor() {
       const slot = this.shadowRoot?.querySelector(".glp-sheet-slot") ?? null;
       if (!slot) return null;
+      const previous = this._sheet;
       if (!this._sheet || this._sheetSlot !== slot || this._sheetLang !== getLang()) {
-        this._sheet?.close();
+        this._sheet = null;
+        previous?.close();
         const sheet = new GlpSheet(slot, {
           closeLabel: T2("sheet_close"),
           // However the sheet was closed, the order it showed is no longer the
@@ -3508,9 +3510,7 @@ ${SHEET_STYLES}
           // may clear that state.
           onClose: /* @__PURE__ */ __name(() => {
             if (this._sheet !== sheet) return;
-            this._orderSheetId = null;
-            this._orderSheetEta = false;
-            this._orderSheetDecline = false;
+            this._forgetOrderSheet();
           }, "onClose")
         });
         this._sheet = sheet;
@@ -3752,7 +3752,6 @@ ${SHEET_STYLES}
       const sig = this._orderSheetSigFor(order);
       if (!rebuilt && sig === this._orderSheetSig) return;
       this._orderSheetSig = sig;
-      this._orderSheetId = id;
       sheet.open(this._orderSheetContent(id, order));
     }
     // What the sheet's body is derived from. The minute is in there because the
@@ -3770,12 +3769,18 @@ ${SHEET_STYLES}
         Math.floor(Date.now() / 6e4)
       ]);
     }
-    // Forgets the order the sheet is showing and closes it. The sheet's own
-    // onClose does the same, but only once a phone's slide-out has finished.
-    _closeOrderSheet() {
+    // The sheet is shared, so its content stops being about an order whenever a
+    // picker or a maintenance task takes it over, and whenever the card closes it.
+    _forgetOrderSheet() {
       this._orderSheetId = null;
       this._orderSheetEta = false;
       this._orderSheetDecline = false;
+      this._orderSheetSig = "";
+    }
+    // Forgets the order and closes the sheet. The sheet's own onClose does the
+    // same, but only once a phone's slide-out has finished.
+    _closeOrderSheet() {
+      this._forgetOrderSheet();
       this._sheet?.close();
     }
     _orderById(id) {
@@ -3849,8 +3854,9 @@ ${SHEET_STYLES}
     // and Cancel there returns to the normal actions without closing the sheet.
     _openOrderSheet(id) {
       const order = this._orderById(id);
+      if (!order) return;
       const sheet = this._sheetFor();
-      if (!order || !sheet) return;
+      if (!sheet) return;
       this._orderSheetId = id;
       this._orderSheetEta = false;
       this._orderSheetDecline = false;
@@ -4259,6 +4265,7 @@ ${SHEET_STYLES}
     // counters and status pill the row shows, plus the two actions. The sensors
     // carry no interval, so the sheet does not claim one.
     _openMaintSheet(detail) {
+      this._forgetOrderSheet();
       const sheet = this._sheetFor();
       if (!sheet) return;
       const cls = detail.status === "ok" || detail.status === "soon" || detail.status === "due" ? detail.status : "never";
@@ -4688,6 +4695,7 @@ ${SHEET_STYLES}
       const options = entity?.attributes?.options || null;
       if (!Array.isArray(options) || !options.length) return;
       const current = this._pendingProfile || entity?.state || null;
+      this._forgetOrderSheet();
       const sheet = this._sheetFor();
       if (!sheet) return;
       sheet.open({
