@@ -16,6 +16,7 @@
 - **The integration test suite now fails when a test hits an endpoint it did not mock, and several tests check what their names promise.** Refs #238
 
 ### Fixed
+- **Only Home Assistant admins can list all coffee orders, the shot proxy accepts numeric shot ids only, and diagnostics downloads hide addresses, tokens and names.** Refs #239
 - **The Shot Card now writes every label and both of its dates in the Home Assistant language, and a card added from the card picker finds its machine by itself.** Refs #269
 - **With reduced motion switched on the Shot Card no longer animates, the order buttons and badges are easier to read, and screen readers announce the shot arrows and the power button.** Refs #269
 - **A card set to one machine no longer switches another machine on or off, and a machine called "Kitchen" is no longer mixed up with "Kitchen 2".** Refs #269
