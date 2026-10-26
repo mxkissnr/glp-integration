@@ -139,15 +139,22 @@ test('the theme options are the shared presets plus a "none" entry', () => {
 
 // _applyThemeVars() writes to a style object; a plain stub reads the values
 // back verbatim, unlike a real CSSStyleDeclaration that may normalise them.
+// The stub has to be defined as an own property: the class extends happy-dom's
+// HTMLElement, whose `style` accessor would otherwise receive the stub in its
+// setter and try to parse it as cssText.
 function themeVars(config) {
   const props = new Map();
   const inst = Object.create(GlpOrderCard.prototype);
   inst._config = config;
   inst._hass = { states: {} };
-  inst.style = {
-    setProperty(name, value) { props.set(name, value); },
-    getPropertyValue(name) { return props.get(name) || ''; },
-  };
+  Object.defineProperty(inst, 'style', {
+    value: {
+      setProperty(name, value) { props.set(name, value); },
+      getPropertyValue(name) { return props.get(name) || ''; },
+    },
+    configurable: true,
+    writable: true,
+  });
   inst._applyThemeVars();
   return props;
 }
