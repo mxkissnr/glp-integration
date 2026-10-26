@@ -215,6 +215,21 @@ test('removing the card closes an open sheet', (t) => {
   assert.equal(card._sheet.isOpen, false, 'the sheet does not outlive the card');
 });
 
+test('the sheet follows a card language change', (t) => {
+  const card = makeCardFor(t);
+  card._render();
+  infoButtonFor(card, 'Ethiopia').click();
+  assert.equal(card.shadowRoot.querySelector('.glp-sheet-close').getAttribute('aria-label'), 'Close');
+
+  // hass.language lands in _lang; the rebuilt sheet speaks the new language.
+  card._lang = 'de';
+  card._render();
+  infoButtonFor(card, 'Ethiopia').click();
+  assert.equal(card.shadowRoot.querySelector('.glp-sheet-close').getAttribute('aria-label'), 'Schließen');
+  assert.equal(card.shadowRoot.querySelector('.glp-sheet-title').textContent, 'Ethiopia',
+    'the bean name is data, not translated');
+});
+
 test('bean text in the sheet is escaped, never markup', (t) => {
   const card = makeCardFor(t, {
     beans: [{ id: 3, name: 'Mystery', notes: NOTE_PAYLOAD, origins: [] }],
