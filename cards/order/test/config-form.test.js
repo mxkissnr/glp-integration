@@ -27,8 +27,9 @@ const { GlpOrderCard } = loadCard({
 
 const LANGS = ['de', 'en', 'it', 'fr', 'es', 'nl'];
 
-// Every option DOCS.md lists under "Order Card options", in the order the
-// editor must show them (the advanced pair sits inside the expandable).
+// Mirrors CardConfig (src/types.ts) and the options DOCS.md lists under
+// "Order Card options", in the order the editor must show them — the advanced
+// pair sits inside the expandable. Keep all three in step.
 const OPTION_KEYS = [
   'title', 'machine', 'switch_entity', 'new_badge_days', 'theme',
   'accent_color', 'accent_gradient', 'glp_url', 'glp_token',
