@@ -21,17 +21,18 @@ const NOTE_PAYLOAD = '<script>alert(1)</script>';
 const window = new Window();
 // The sheet only drags and slides on phone widths; a desktop-width window
 // keeps every open/close synchronous between the click and its assertions.
-Object.defineProperty(window, 'matchMedia', {
-  configurable: true,
-  writable: true,
-  value: (query) => ({
-    matches: false,
-    media: query,
-    onchange: null,
-    addEventListener() {}, removeEventListener() {},
-    addListener() {}, removeListener() {}, dispatchEvent() { return false; },
-  }),
+const desktopMedia = (query) => ({
+  matches: false,
+  media: query,
+  onchange: null,
+  addEventListener() {}, removeEventListener() {},
+  addListener() {}, removeListener() {}, dispatchEvent() { return false; },
 });
+try {
+  Object.defineProperty(window, 'matchMedia', { configurable: true, writable: true, value: desktopMedia });
+} catch {
+  window.matchMedia = desktopMedia;
+}
 // The sheet pushes and trims a history entry per open. Counters instead of the
 // real object keep the open/close pairs independent of navigation behaviour.
 function spyHistory() {
@@ -43,10 +44,12 @@ function spyHistory() {
   try {
     Object.defineProperty(window, 'history', { configurable: true, writable: true, value: fake });
   } catch {
-    // happy-dom may expose history as a non-configurable own property; patch
-    // the method slots instead.
-    window.history.pushState = fake.pushState;
-    window.history.back = fake.back;
+    // A non-configurable history still works for the sheet: it guards
+    // pushState itself, and back() only has to not throw.
+    try {
+      window.history.pushState = fake.pushState;
+      window.history.back = fake.back;
+    } catch { /* leave the real history in place */ }
   }
   return calls;
 }
@@ -116,13 +119,17 @@ function chipFor(card, label) {
     .find(chip => chip.getAttribute('data-variant') === label);
 }
 
+// Scoped to the chip's own wrapper: a bare chip's parent is the shared grid,
+// where a neighbouring bean's button would otherwise be found.
 function infoButtonFor(card, label) {
-  const chip = chipFor(card, label);
-  return chip?.parentElement?.querySelector('.bean-info-btn') ?? null;
+  const wrap = chipFor(card, label)?.closest('.variant-chip-wrap') ?? null;
+  return wrap?.querySelector('.bean-info-btn') ?? null;
 }
 
 test('a bean chip with details renders an info button next to the chip', (t) => {
-  const card = makeCardFor(t);
+  const card = makeCardFor(t, {
+    beans: [BEAN_WITH_DETAILS, BEAN_WITHOUT_DETAILS],
+  });
   card._render();
 
   const chip = chipFor(card, 'Ethiopia');
@@ -135,6 +142,8 @@ test('a bean chip with details renders an info button next to the chip', (t) => 
   assert.match(button.getAttribute('aria-label'), /Ethiopia/,
     'the button names the bean it describes');
   assert.equal(chip.textContent, 'Ethiopia', 'the chip itself stays a plain select button');
+  assert.equal(infoButtonFor(card, 'House Blend'), null,
+    'the button belongs to its own chip, not to the neighbouring bean');
 });
 
 test('a bean chip without details and a non-bean variant get no info button', (t) => {
