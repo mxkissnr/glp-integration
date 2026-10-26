@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 ### Added
+- **The Order Card confirms a sent or failed order with a short Home Assistant message and a vibration on phones.** Refs #275
 - **Development builds of the integration and both cards are published as beta versions in HACS, for anyone who wants to test upcoming changes.** Refs #256
 
 ### Changed
