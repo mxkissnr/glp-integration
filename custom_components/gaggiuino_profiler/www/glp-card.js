@@ -3309,6 +3309,7 @@ ${SHEET_STYLES}
       this._orderSheetId = null;
       this._orderSheetEta = false;
       this._orderSheetDecline = false;
+      this._orderSheetSig = "";
       this._switchEntity = this._readSwitchEntity();
       this._iconGradId = `glp-icon-${Math.random().toString(36).slice(2, 10)}`;
       this._readyByTimer = null;
@@ -3498,16 +3499,21 @@ ${SHEET_STYLES}
       if (!slot) return null;
       if (!this._sheet || this._sheetSlot !== slot || this._sheetLang !== getLang()) {
         this._sheet?.close();
-        this._sheet = new GlpSheet(slot, {
+        const sheet = new GlpSheet(slot, {
           closeLabel: T2("sheet_close"),
           // However the sheet was closed, the order it showed is no longer the
-          // subject of any pending action step.
+          // subject of any pending action step. A superseded sheet closes too
+          // (its slot or language is gone), and its slide-out finishes after the
+          // replacement is already showing the order, so only the current sheet
+          // may clear that state.
           onClose: /* @__PURE__ */ __name(() => {
+            if (this._sheet !== sheet) return;
             this._orderSheetId = null;
             this._orderSheetEta = false;
             this._orderSheetDecline = false;
           }, "onClose")
         });
+        this._sheet = sheet;
         this._sheetSlot = slot;
         this._sheetLang = getLang();
       }
@@ -3723,21 +3729,45 @@ ${SHEET_STYLES}
       if (!force && sig === this._ordersSig) return;
       this._ordersSig = sig;
       this._orders = active;
-      this._syncOrderSheet();
       this._render();
     }
-    // A new list while an order is open in the sheet: another device may have
-    // handled it, in which case the sheet has nothing left to act on and closes
-    // silently; otherwise it re-renders so its waiting time and ready-in line
-    // follow the list.
+    // Keeps an open order sheet in step with the list: another device may have
+    // handled the order, in which case the sheet has nothing left to act on and
+    // closes silently; otherwise it is re-rendered so its waiting time and
+    // ready-in line follow the list. Runs at the end of every render because
+    // neither view may leave a sheet behind on a slot node it just replaced.
     _syncOrderSheet() {
       const id = this._orderSheetId;
-      if (id == null || !this._sheet?.isOpen) return;
-      if (!this._orderById(id)) {
-        this._sheet.close();
+      if (id == null) return;
+      const order = this._orderById(id);
+      if (!order) {
+        this._sheet?.close();
         return;
       }
-      this._sheet.refresh();
+      const previous = this._sheet;
+      const sheet = this._sheetFor();
+      if (!sheet) return;
+      const rebuilt = sheet !== previous;
+      if (!rebuilt && !sheet.isOpen) return;
+      const sig = this._orderSheetSigFor(order);
+      if (!rebuilt && sig === this._orderSheetSig) return;
+      this._orderSheetSig = sig;
+      sheet.open(this._orderSheetContent(id, order));
+    }
+    // What the sheet's body is derived from. The minute is in there because the
+    // waiting line is relative to now, so an open sheet follows it the same way
+    // the card's own minute-based render does.
+    _orderSheetSigFor(order) {
+      return JSON.stringify([
+        order.status,
+        order.eta,
+        order.acceptedAt,
+        order.item,
+        order.variant,
+        order.customer,
+        order.note,
+        Math.floor(Date.now() / 6e4)
+      ]);
     }
     _orderById(id) {
       return this._orders.find((o8) => o8.id === id) ?? null;
@@ -3815,11 +3845,18 @@ ${SHEET_STYLES}
       this._orderSheetId = id;
       this._orderSheetEta = false;
       this._orderSheetDecline = false;
-      sheet.open({
+      this._orderSheetSig = this._orderSheetSigFor(order);
+      sheet.open(this._orderSheetContent(id, order));
+    }
+    // Both callbacks read the order back from the live list, so a refresh after a
+    // poll shows the new status and waiting time even though the content object
+    // was built earlier.
+    _orderSheetContent(id, order) {
+      return {
         title: order.variant ? `${order.item} · ${order.variant}` : order.item,
         body: /* @__PURE__ */ __name(() => this._orderSheetBody(this._orderById(id) ?? order), "body"),
         actions: /* @__PURE__ */ __name(() => this._orderSheetActions(this._orderById(id) ?? order), "actions")
-      });
+      };
     }
     _orderSheetBody(order) {
       const minsLeft = this._orderMinsLeft(order);
@@ -3836,13 +3873,11 @@ ${SHEET_STYLES}
         return b2`<span class="ord-q">${T2("ord_decline_q")}</span>
         <button type="button" class="ord-btn danger" data-ord-decline-yes=${order.id} @click=${() => {
           this._orderAction(order.id, "decline", {});
-        }}>${/* ICONS.of() emits fixed SVG markup */
-        o5(ICONS.of("check"))} ${T2("ord_yes")}</button>
+        }}>${T2("ord_yes")}</button>
         <button type="button" class="ord-btn ghost" data-ord-cancel="1" @click=${() => {
           this._orderSheetDecline = false;
           this._sheet?.refresh();
-        }}>${/* ICONS.of() emits fixed SVG markup */
-        o5(ICONS.of("close"))}</button>`;
+        }}>${T2("sheet_cancel")}</button>`;
       }
       if (order.status === "pending" && this._orderSheetEta) {
         return b2`<span class="ord-q">${T2("ord_done_in")}</span>${[3, 5, 8, 10].map((m2) => b2`<button type="button" class="ord-btn eta" data-ord-accept=${order.id} data-eta=${m2} @click=${() => {
@@ -3850,8 +3885,7 @@ ${SHEET_STYLES}
         }}>${m2} min</button>`)}<button type="button" class="ord-btn ghost" data-ord-cancel="1" @click=${() => {
           this._orderSheetEta = false;
           this._sheet?.refresh();
-        }}>${/* ICONS.of() emits fixed SVG markup */
-        o5(ICONS.of("close"))}</button>`;
+        }}>${T2("sheet_cancel")}</button>`;
       }
       const primary = order.status === "pending" ? b2`<button type="button" class="ord-btn primary" data-ord-eta=${order.id} @click=${() => {
         this._orderSheetEta = true;
@@ -4820,8 +4854,9 @@ ${SHEET_STYLES}
       const vm = this._viewModel();
       const machineType = appMachineType(this._machineEntry());
       if (vm.machineOff) {
-        this._sheet?.close();
+        if (this._orderSheetId == null) this._sheet?.close();
         D(this._machineOffHtml(vm), this.shadowRoot);
+        this._syncOrderSheet();
         this._applyMachineTheme();
         this._applySemanticColorContrast();
         this._startReadyByTicker();
@@ -4884,6 +4919,7 @@ ${SHEET_STYLES}
         ${this._footerHtml(vm)}
 
       </div></ha-card>${this._sheetSlotHtml()}`, this.shadowRoot);
+      this._syncOrderSheet();
       this._applyMachineTheme();
       this._applySemanticColorContrast();
       this._startUptimeTicker();

@@ -14,6 +14,7 @@ import { applySemanticColorContrast } from '../../shared/contrast.ts';
 import { appMachineEntry, appMachineTheme, appMachineType, matchMachineStatusEntity } from '../../shared/machine.ts';
 import { moreInfo, toast, haptic } from '../../shared/ha-events.ts';
 import { GlpSheet } from '../../shared/sheet.ts';
+import type { GlpSheetContent } from '../../shared/sheet.ts';
 import { fmtUptime, buildShotChart, buildLiveChart, chartLegendHtml, metricLineHtml } from './charts.ts';
 import type { TemplateResult } from 'lit';
 import type {
@@ -185,10 +186,12 @@ class GlpCard extends HTMLElement {
   declare _beansInfoById: Map<number, BeanInfo> | null;
   declare _beansInfoAt: number;
   declare _beansInfoUnavailable: boolean;
-  // The order the sheet is showing, plus which of its action steps is open.
+  // The order the sheet is showing, plus which of its action steps is open and
+  // the data it was last rendered from.
   declare _orderSheetId: string | null;
   declare _orderSheetEta: boolean;
   declare _orderSheetDecline: boolean;
+  declare _orderSheetSig: string;
   declare _switchEntity: string | null;
   declare _iconGradId: string;
   declare _readyByTimer: ReturnType<typeof setInterval> | null;
@@ -253,6 +256,7 @@ class GlpCard extends HTMLElement {
     this._orderSheetId = null;
     this._orderSheetEta = false;
     this._orderSheetDecline = false;
+    this._orderSheetSig = '';
     this._switchEntity = this._readSwitchEntity();
     // Per-instance-unique SVG gradient id (#87) — a dashboard can render more
     // than one glp-card, and duplicate <linearGradient id> values across
@@ -476,16 +480,21 @@ class GlpCard extends HTMLElement {
     if (!slot) return null;
     if (!this._sheet || this._sheetSlot !== slot || this._sheetLang !== getLang()) {
       this._sheet?.close();
-      this._sheet = new GlpSheet(slot, {
+      const sheet = new GlpSheet(slot, {
         closeLabel: T('sheet_close'),
         // However the sheet was closed, the order it showed is no longer the
-        // subject of any pending action step.
+        // subject of any pending action step. A superseded sheet closes too
+        // (its slot or language is gone), and its slide-out finishes after the
+        // replacement is already showing the order, so only the current sheet
+        // may clear that state.
         onClose: () => {
+          if (this._sheet !== sheet) return;
           this._orderSheetId = null;
           this._orderSheetEta = false;
           this._orderSheetDecline = false;
         },
       });
+      this._sheet = sheet;
       this._sheetSlot = slot;
       this._sheetLang = getLang();
     }
@@ -723,19 +732,42 @@ class GlpCard extends HTMLElement {
     if (!force && sig === this._ordersSig) return;
     this._ordersSig = sig;
     this._orders = active;
-    this._syncOrderSheet();
-    this._render();
+    this._render();   // every render ends in _syncOrderSheet()
   }
 
-  // A new list while an order is open in the sheet: another device may have
-  // handled it, in which case the sheet has nothing left to act on and closes
-  // silently; otherwise it re-renders so its waiting time and ready-in line
-  // follow the list.
+  // Keeps an open order sheet in step with the list: another device may have
+  // handled the order, in which case the sheet has nothing left to act on and
+  // closes silently; otherwise it is re-rendered so its waiting time and
+  // ready-in line follow the list. Runs at the end of every render because
+  // neither view may leave a sheet behind on a slot node it just replaced.
   _syncOrderSheet(): void {
     const id = this._orderSheetId;
-    if (id == null || !this._sheet?.isOpen) return;
-    if (!this._orderById(id)) { this._sheet.close(); return; }
-    this._sheet.refresh();
+    if (id == null) return;
+    const order = this._orderById(id);
+    if (!order) { this._sheet?.close(); return; }
+    const previous = this._sheet;
+    const sheet = this._sheetFor();
+    if (!sheet) return;
+    // _sheetFor() rebuilds after a view switch or a language change, which
+    // closes the old sheet; the order then has to be handed to the new one.
+    const rebuilt = sheet !== previous;
+    // Not rebuilt and not open: a close is in progress (its slide-out has
+    // already flipped isOpen) or done, and re-opening would undo it.
+    if (!rebuilt && !sheet.isOpen) return;
+    const sig = this._orderSheetSigFor(order);
+    if (!rebuilt && sig === this._orderSheetSig) return;
+    this._orderSheetSig = sig;
+    sheet.open(this._orderSheetContent(id, order));
+  }
+
+  // What the sheet's body is derived from. The minute is in there because the
+  // waiting line is relative to now, so an open sheet follows it the same way
+  // the card's own minute-based render does.
+  _orderSheetSigFor(order: BaristaOrder): string {
+    return JSON.stringify([
+      order.status, order.eta, order.acceptedAt, order.item, order.variant,
+      order.customer, order.note, Math.floor(Date.now() / 60000),
+    ]);
   }
 
   _orderById(id: string): BaristaOrder | null {
@@ -816,11 +848,19 @@ class GlpCard extends HTMLElement {
     this._orderSheetId = id;
     this._orderSheetEta = false;
     this._orderSheetDecline = false;
-    sheet.open({
+    this._orderSheetSig = this._orderSheetSigFor(order);
+    sheet.open(this._orderSheetContent(id, order));
+  }
+
+  // Both callbacks read the order back from the live list, so a refresh after a
+  // poll shows the new status and waiting time even though the content object
+  // was built earlier.
+  _orderSheetContent(id: string, order: BaristaOrder): GlpSheetContent {
+    return {
       title: order.variant ? `${order.item} · ${order.variant}` : order.item,
       body: () => this._orderSheetBody(this._orderById(id) ?? order),
       actions: () => this._orderSheetActions(this._orderById(id) ?? order),
-    });
+    };
   }
 
   _orderSheetBody(order: BaristaOrder): TemplateResult {
@@ -839,11 +879,11 @@ class GlpCard extends HTMLElement {
     // refresh() re-renders the sheet, so neither needs a second sheet.
     if (this._orderSheetDecline) {
       return html`<span class="ord-q">${T('ord_decline_q')}</span>
-        <button type="button" class="ord-btn danger" data-ord-decline-yes=${order.id} @click=${() => { this._orderAction(order.id, 'decline', {}); }}>${/* ICONS.of() emits fixed SVG markup */ unsafeHTML(ICONS.of('check'))} ${T('ord_yes')}</button>
-        <button type="button" class="ord-btn ghost" data-ord-cancel="1" @click=${() => { this._orderSheetDecline = false; this._sheet?.refresh(); }}>${/* ICONS.of() emits fixed SVG markup */ unsafeHTML(ICONS.of('close'))}</button>`;
+        <button type="button" class="ord-btn danger" data-ord-decline-yes=${order.id} @click=${() => { this._orderAction(order.id, 'decline', {}); }}>${T('ord_yes')}</button>
+        <button type="button" class="ord-btn ghost" data-ord-cancel="1" @click=${() => { this._orderSheetDecline = false; this._sheet?.refresh(); }}>${T('sheet_cancel')}</button>`;
     }
     if (order.status === 'pending' && this._orderSheetEta) {
-      return html`<span class="ord-q">${T('ord_done_in')}</span>${[3, 5, 8, 10].map(m => html`<button type="button" class="ord-btn eta" data-ord-accept=${order.id} data-eta=${m} @click=${() => { this._orderAction(order.id, 'accept', { eta: m }); }}>${m} min</button>`)}<button type="button" class="ord-btn ghost" data-ord-cancel="1" @click=${() => { this._orderSheetEta = false; this._sheet?.refresh(); }}>${/* ICONS.of() emits fixed SVG markup */ unsafeHTML(ICONS.of('close'))}</button>`;
+      return html`<span class="ord-q">${T('ord_done_in')}</span>${[3, 5, 8, 10].map(m => html`<button type="button" class="ord-btn eta" data-ord-accept=${order.id} data-eta=${m} @click=${() => { this._orderAction(order.id, 'accept', { eta: m }); }}>${m} min</button>`)}<button type="button" class="ord-btn ghost" data-ord-cancel="1" @click=${() => { this._orderSheetEta = false; this._sheet?.refresh(); }}>${T('sheet_cancel')}</button>`;
     }
     const primary = order.status === 'pending'
       ? html`<button type="button" class="ord-btn primary" data-ord-eta=${order.id} @click=${() => { this._orderSheetEta = true; this._sheet?.refresh(); }}>${/* ICONS.of() emits fixed SVG markup */ unsafeHTML(ICONS.of('check'))} ${T('ord_accept')}</button>`
@@ -1892,9 +1932,12 @@ class GlpCard extends HTMLElement {
     // ── machine off ──────────────────────────────────────────────────────────
     if (vm.machineOff) {
       // The profile picker and the maintenance tab do not exist in this view,
-      // so a sheet they opened has nothing left to act on.
-      this._sheet?.close();
+      // so a sheet they opened has nothing left to act on. Orders are listed
+      // here too, so an order sheet stays: _syncOrderSheet() re-mounts it on
+      // the slot this render just built.
+      if (this._orderSheetId == null) this._sheet?.close();
       render(this._machineOffHtml(vm), this.shadowRoot!);
+      this._syncOrderSheet();
       this._applyMachineTheme();
       this._applySemanticColorContrast();
       this._startReadyByTicker();
@@ -1949,6 +1992,9 @@ class GlpCard extends HTMLElement {
         ${this._footerHtml(vm)}
 
       </div></ha-card>${this._sheetSlotHtml()}`, this.shadowRoot!);
+    // An order sheet survives the machine-off view and back, both of which
+    // replace the slot it is mounted in.
+    this._syncOrderSheet();
     this._applyMachineTheme();
     this._applySemanticColorContrast();
     this._startUptimeTicker();
