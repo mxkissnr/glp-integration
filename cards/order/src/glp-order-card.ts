@@ -400,7 +400,8 @@ class GlpOrderCard extends HTMLElement {
           </div>
           ${body}
         </div>
-      </ha-card>`, this.shadowRoot!);
+      </ha-card>
+      <div class="glp-sheet-slot"></div>`, this.shadowRoot!);
 
     this._applySemanticColorContrast();
   }
@@ -668,20 +669,28 @@ class GlpOrderCard extends HTMLElement {
     // Only a bean-backed chip has details to show: a plain drink's variant
     // could share a name with a bean, but it is not that bean.
     if (!this._usesBeans() || !bean || !this._beanHasDetails(bean)) return chip;
-    const label = _s('bean_details', lang) + this._beanLabel(bean);
+    const withDetails: Bean = bean;
+    const label = _s('bean_details', lang) + this._beanLabel(withDetails);
     return html`<span class="variant-chip-wrap">${chip}<button
         type="button" class="bean-info-btn"
         aria-label=${label}
-        @click=${(e: Event) => { e.stopPropagation(); this._openBeanSheet(bean, lang); }}>
+        @click=${(e: Event) => { e.stopPropagation(); this._openBeanSheet(withDetails, lang); }}>
         ${/* ICONS.of() emits fixed SVG markup */ unsafeHTML(ICONS.of('info'))}
       </button></span>`;
+  }
+
+  // The sheet's host element, rendered after the card. It has its own node so
+  // the card's template re-renders (Lit clears everything it committed) never
+  // eject an open sheet from the shadow root.
+  _sheetSlot(): HTMLElement | ShadowRoot {
+    return this.shadowRoot?.querySelector<HTMLElement>('.glp-sheet-slot') ?? this.shadowRoot!;
   }
 
   // One sheet per card, created on first use and mounted into the card's own
   // shadow root so it inherits this card's --glp-* tokens.
   _sheetFor(lang: string): GlpSheet {
     if (!this._sheet) {
-      this._sheet = new GlpSheet(this.shadowRoot!, { closeLabel: _s('sheet_close', lang) });
+      this._sheet = new GlpSheet(this._sheetSlot(), { closeLabel: _s('sheet_close', lang) });
     }
     return this._sheet;
   }

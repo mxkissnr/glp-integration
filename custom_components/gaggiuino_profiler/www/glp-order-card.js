@@ -1840,6 +1840,10 @@ ${TOKENS}
     }
   }
 
+  /* The sheet's mount point: an empty div after the card, so a re-render
+     cannot take an open sheet down with it. The dialog inside is fixed. */
+  .glp-sheet-slot { display: block; }
+
   /* The shared bottom sheet (#274): appended last so its rules win over the
      card's own, and so it resolves this card's --glp-* tokens. */
 ${SHEET_STYLES}
@@ -2555,7 +2559,8 @@ ${SHEET_STYLES}
           </div>
           ${body}
         </div>
-      </ha-card>`, this.shadowRoot);
+      </ha-card>
+      <div class="glp-sheet-slot"></div>`, this.shadowRoot);
       this._applySemanticColorContrast();
     }
     _renderOrderForm(lang) {
@@ -2777,23 +2782,30 @@ ${SHEET_STYLES}
       const beanId = bean?.id ?? null;
       const chip = b2`<button type="button" class="variant-chip${this._selectedVariant === v2 ? " selected" : ""}" data-variant=${v2} data-bean-id=${o6(beanId ?? void 0)} @click=${() => this._selectVariant(v2, beanId)}>${v2}</button>`;
       if (!this._usesBeans() || !bean || !this._beanHasDetails(bean)) return chip;
-      const label = _s("bean_details", lang) + this._beanLabel(bean);
+      const withDetails = bean;
+      const label = _s("bean_details", lang) + this._beanLabel(withDetails);
       return b2`<span class="variant-chip-wrap">${chip}<button
         type="button" class="bean-info-btn"
         aria-label=${label}
         @click=${(e6) => {
         e6.stopPropagation();
-        this._openBeanSheet(bean, lang);
+        this._openBeanSheet(withDetails, lang);
       }}>
         ${/* ICONS.of() emits fixed SVG markup */
       o5(ICONS2.of("info"))}
       </button></span>`;
     }
+    // The sheet's host element, rendered after the card. It has its own node so
+    // the card's template re-renders (Lit clears everything it committed) never
+    // eject an open sheet from the shadow root.
+    _sheetSlot() {
+      return this.shadowRoot?.querySelector(".glp-sheet-slot") ?? this.shadowRoot;
+    }
     // One sheet per card, created on first use and mounted into the card's own
     // shadow root so it inherits this card's --glp-* tokens.
     _sheetFor(lang) {
       if (!this._sheet) {
-        this._sheet = new GlpSheet(this.shadowRoot, { closeLabel: _s("sheet_close", lang) });
+        this._sheet = new GlpSheet(this._sheetSlot(), { closeLabel: _s("sheet_close", lang) });
       }
       return this._sheet;
     }

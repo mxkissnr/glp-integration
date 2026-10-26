@@ -7,6 +7,7 @@
 - **Development builds of the integration and both cards are published as beta versions in HACS, for anyone who wants to test upcoming changes.** Refs #256
 
 ### Changed
+- **The Order Card shows bean details behind a small info button in a sheet, so the menu stays short.** Refs #274
 - **The Shot Card only redraws when its own machine data or the theme changes, which keeps wall tablets and Raspberry Pi kiosks responsive on busy Home Assistant instances.** Refs #270
 - **The Shot Card and the Order Card are now developed in this repository and ship with every integration release.** Refs #256
 - **Both cards got a shared bottom sheet that later changes use for pickers and details.** Refs #266

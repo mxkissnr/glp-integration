@@ -267,6 +267,10 @@ ${TOKENS}
     }
   }
 
+  /* The sheet's mount point: an empty div after the card, so a re-render
+     cannot take an open sheet down with it. The dialog inside is fixed. */
+  .glp-sheet-slot { display: block; }
+
   /* The shared bottom sheet (#274): appended last so its rules win over the
      card's own, and so it resolves this card's --glp-* tokens. */
 ${SHEET_STYLES}
