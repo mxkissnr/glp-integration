@@ -147,6 +147,8 @@ theme: ember-espresso
 | `accent_color` | Eigene, einfarbige Akzentfarbe als `#rrggbb` statt eines Presets. Überschreibt `theme`. Werte, die keine sechsstellige Hex-Farbe sind, werden ignoriert. | *(keine)* |
 | `accent_gradient` | Eigener Verlauf mit zwei Stopps als `["#rrggbb", "#rrggbb"]`. Überschreibt `theme` und `accent_color`. Werte, die keine sechsstelligen Hex-Farben sind, werden ignoriert. | *(keine)* |
 
+Jede der obigen Optionen lässt sich auch im visuellen Karten-Editor von Home Assistant einstellen; er zeigt dieselben Bezeichnungen und unter jedem Feld einen kurzen Hilfetext. Die beiden Optionen für die direkte URL stehen im Abschnitt "Erweitert / direkte URL".
+
 ### Farbthema pro Maschine
 
 Die Order Card nutzt dieselben acht Presets und dieselbe Rangfolge wie die Shot Card:
