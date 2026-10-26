@@ -35,6 +35,9 @@ const OPTION_KEYS = [
   'accent_color', 'accent_gradient', 'glp_url', 'glp_token',
 ];
 
+// What _applyThemeVars() writes when no preset and no custom colour resolve.
+const THEME_NONE_STYLE = 'var(--primary-color, #f59e0b)';
+
 // getConfigForm() reads navigator.language exactly like the card's
 // constructor; the harness leaves the global writable, so a test can swap it.
 function withLanguage(lang, fn) {
