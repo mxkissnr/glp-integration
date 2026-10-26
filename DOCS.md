@@ -70,6 +70,8 @@ theme: ember-espresso
 | `accent_color` | Custom flat accent colour as `#rrggbb`, instead of a preset. Overrides `theme`. Values that aren't a six-digit hex colour are ignored. | *(none)* |
 | `accent_gradient` | Custom two-stop gradient as `["#rrggbb", "#rrggbb"]`. Overrides `theme` and `accent_color`. Values that aren't six-digit hex colours are ignored. | *(none)* |
 
+Every option above can also be set in Home Assistant's visual card editor instead of YAML.
+
 ### Machine colour theme
 
 The card's accent colour can be themed per machine, so machines are easy to tell apart on a dashboard that shows more than one:
