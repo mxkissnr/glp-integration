@@ -426,13 +426,13 @@ class GlpOrderCard extends HTMLElement {
     const newThreshold = (parseFloat(this._config?.new_badge_days as string) || NEW_BADGE_DAYS_DEFAULT) * 24 * 60 * 60 * 1000;
     const now = Date.now();
 
-    const renderItem = (m: MenuItem) => {
+    const renderItem = (m: MenuItem, fullRow = false) => {
       const isNew      = m.createdAt && (now - m.createdAt) < newThreshold;
       const newBadge   = isNew ? html`<span class="menu-badge menu-badge-new">NEW</span>` : nothing;
       const trendBadge = m.trending
         ? html`<span class="menu-badge menu-badge-trend">${/* ICONS.of() emits fixed SVG markup */ unsafeHTML(ICONS.of('heat'))}</span>`
         : nothing;
-      return html`<button type="button" class="menu-item${this._selected === m.name ? ' selected' : ''}" data-item=${m.name} @click=${() => this._selectItem(m.name)}>
+      return html`<button type="button" class="menu-item${fullRow ? ' menu-item-full' : ''}${this._selected === m.name ? ' selected' : ''}" data-item=${m.name} @click=${() => this._selectItem(m.name)}>
         <div class="menu-item-icon">${/* _menuIconHtml() returns a fixed icon or an escaped emoji */ unsafeHTML(_menuIconHtml(m))}</div>
         <div class="menu-item-name">${m.name}${trendBadge}${newBadge}</div>
       </button>`;
@@ -441,35 +441,45 @@ class GlpOrderCard extends HTMLElement {
     const trending = visibleMenu.filter(m => m.trending);
     const regular  = visibleMenu.filter(m => !m.trending);
 
+    // A lone popular drink would leave half of the two-column row empty, so it
+    // spans the whole row instead; two or more stay in the normal grid.
     const trendSection = trending.length ? html`
       <p class="menu-section-title">${/* ICONS.of() emits fixed SVG markup */ unsafeHTML(ICONS.of('heat'))} ${_s('trending_title', lang)}</p>
-      <div class="menu-grid">${trending.map(renderItem)}</div>` : nothing;
+      <div class="menu-grid">${trending.map(m => renderItem(m, trending.length === 1))}</div>` : nothing;
     const regularSection = regular.length ? html`
       ${trending.length ? html`<p class="menu-section-title" style="margin-top:var(--glp-sp-3)">${_s('menu_all', lang)}</p>` : nothing}
-      <div class="menu-grid">${regular.map(renderItem)}</div>` : nothing;
+      <div class="menu-grid">${regular.map(m => renderItem(m))}</div>` : nothing;
 
     const selectedItem = visibleMenu.find(m => m.name === this._selected);
     const variants = this._getVariants(selectedItem);
     const needsVariant = variants.length > 0 && !this._selectedVariant;
     const groupedVariants = this._getVariantsGrouped(selectedItem);
+    // When both bean groups are shown, their own headings already carry the
+    // word "Variant" ("Variant · Speciality"), so the standalone heading above
+    // them would only repeat it.
+    const mergedHeadings = this._hasBothBeanGroups(groupedVariants);
     const variantSection = (this._selected && variants.length > 0) ? html`
-      <p class="variant-label">${_s('variant_label', lang)}</p>
+      ${mergedHeadings ? nothing : html`<p class="variant-label">${_s('variant_label', lang)}</p>`}
       <div id="oc-variants" class=${groupedVariants.flat ? 'variant-grid' : ''}>
-        ${this._variantInnerHtml(groupedVariants, lang)}
+        ${this._variantInnerHtml(groupedVariants, lang, mergedHeadings)}
       </div>` : nothing;
-    const itemLabel = (this._selected && this._selectedVariant)
+    const fullLabel = (this._selected && this._selectedVariant)
       ? `${this._selected} · ${this._selectedVariant}`
-      : this._selected || null;
-    const btnLabel = itemLabel ? _s('order_btn', lang, itemLabel)
-      : needsVariant ? _s('variant_select', lang)
-      : _s('order_btn_select', lang);
+      : null;
+    // The button label names the drink only and stays on one line; the chosen
+    // variant is already visible in the chip above, so the complete
+    // "drink · variant" moves into the title and the accessible name.
+    const btnLabel = this._selected ? _s('order_btn', lang, this._selected) : needsVariant ? _s('variant_select', lang) : _s('order_btn_select', lang);
+    const fullBtnLabel = fullLabel ? _s('order_btn', lang, fullLabel) : undefined;
     return html`
       <div class="order-form">
         ${trendSection}${regularSection}
         ${variantSection}
         <input class="note-input" id="oc-note" placeholder=${_s('note_ph', lang)} maxlength="200">
-        <button class="order-btn" id="oc-submit" ?disabled=${!this._selected || this._submitting || needsVariant} @click=${() => this._placeOrder()}>
-          ${itemLabel ? html`${/* ICONS.of() emits fixed SVG markup */ unsafeHTML(ICONS.of('coffee'))} ` : nothing}${btnLabel}
+        <button class="order-btn" id="oc-submit" ?disabled=${!this._selected || this._submitting || needsVariant}
+          title=${ifDefined(fullLabel || undefined)} aria-label=${ifDefined(fullBtnLabel)}
+          @click=${() => this._placeOrder()}>
+          ${this._selected ? html`${/* ICONS.of() emits fixed SVG markup */ unsafeHTML(ICONS.of('coffee'))}` : nothing}<span class="order-btn-label">${btnLabel}</span>
         </button>
         ${this._orderError ? html`<div class="order-error" role="alert">${this._orderError}</div>` : nothing}
       </div>`;
@@ -641,6 +651,14 @@ class GlpOrderCard extends HTMLElement {
     };
   }
 
+  // True only when both bean groups are rendered, i.e. exactly the case that
+  // shows group headings at all (#273).
+  _hasBothBeanGroups(grouped: GroupedVariants): boolean {
+    if (grouped.flat) return false;
+    const { speciality, normal } = grouped as { speciality: string[]; normal: string[] };
+    return speciality.length > 0 && normal.length > 0;
+  }
+
   // The chip label plus the decaf suffix — the one place the two spellings
   // are derived, so selection, grouping and the details sheet cannot drift.
   _beanLabel(bean: Bean): string {
@@ -717,15 +735,21 @@ class GlpOrderCard extends HTMLElement {
   // Mirrors the trending/regular section pattern (~line 650): headings shown
   // only when both groups are non-empty — a single-group list (e.g. all beans
   // untagged) renders as one plain grid, no noisy "Normal" label.
-  _variantInnerHtml(grouped: GroupedVariants, lang: string): TemplateResult {
+  // `mergedHeadings` folds the standalone "Variant" heading into each group
+  // heading ("Variant · Speciality" / "Variant · Normal"), built from the
+  // existing keys so no new translation strings are needed.
+  _variantInnerHtml(grouped: GroupedVariants, lang: string, mergedHeadings = false): TemplateResult {
     if (grouped.flat) return html`${grouped.flat.map(v => this._variantChipHtml(v, lang))}`;
     const { speciality, normal } = grouped as { speciality: string[]; normal: string[] };
     const showHeadings = speciality.length > 0 && normal.length > 0;
+    const heading = (key: string) => mergedHeadings
+      ? `${_s('variant_label', lang)} · ${_s(key, lang)}`
+      : _s(key, lang);
     const specialitySection = speciality.length ? html`
-      ${showHeadings ? html`<p class="menu-section-title">${_s('variant_speciality', lang)}</p>` : nothing}
+      ${showHeadings ? html`<p class="menu-section-title">${heading('variant_speciality')}</p>` : nothing}
       <div class="variant-grid">${speciality.map(v => this._variantChipHtml(v, lang))}</div>` : nothing;
     const normalSection = normal.length ? html`
-      ${showHeadings ? html`<p class="menu-section-title" style="margin-top:var(--glp-sp-3)">${_s('variant_normal', lang)}</p>` : nothing}
+      ${showHeadings ? html`<p class="menu-section-title" style="margin-top:var(--glp-sp-3)">${heading('variant_normal')}</p>` : nothing}
       <div class="variant-grid">${normal.map(v => this._variantChipHtml(v, lang))}</div>` : nothing;
     return html`${specialitySection}${normalSection}`;
   }

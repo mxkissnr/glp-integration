@@ -106,10 +106,16 @@ test('order button becomes enabled after selecting an item + variant', async () 
 
     const submit = await page.evaluate(() => {
       const btn = document.querySelector('glp-order-card').shadowRoot.getElementById('oc-submit');
-      return { disabled: btn.disabled, text: btn.textContent };
+      return { disabled: btn.disabled, text: btn.textContent, title: btn.title, ariaLabel: btn.getAttribute('aria-label') };
     });
     assert.equal(submit.disabled, false);
-    assert.match(submit.text, /Single/);
+    // #273: the label names the drink only; the variant stays in the title
+    // and the accessible name.
+    assert.match(submit.text, /Flat White/);
+    assert.doesNotMatch(submit.text, /Single/);
+    assert.match(submit.title, /Flat White/);
+    assert.match(submit.title, /Single/);
+    assert.match(submit.ariaLabel, /Single/);
   } finally {
     await tearDown(ctx);
   }
