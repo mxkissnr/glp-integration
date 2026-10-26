@@ -2048,6 +2048,23 @@ ${SHEET_STYLES}
   var toast = (node, message) => fireHaEvent(node, "hass-notification", { message });
   var haptic = (node, type) => fireHaEvent(node, "haptic", type);
 
+  // shared/config-form.ts
+  function normalizeFormConfig(config, textKeys) {
+    const out = { ...config };
+    for (const key of textKeys) {
+      const value = out[key];
+      if (typeof value === "string" && value.trim() === "") delete out[key];
+    }
+    if (out.theme === "none") delete out.theme;
+    const gradient = out.accent_gradient;
+    if (typeof gradient === "string") {
+      const stops = gradient.split(/[\s,]+/).filter(Boolean);
+      if (stops.length > 0) out.accent_gradient = stops;
+      else delete out.accent_gradient;
+    }
+    return out;
+  }
+
   // order/src/i18n.ts
   var STRINGS = {
     de: {
@@ -2388,20 +2405,9 @@ ${SHEET_STYLES}
     const lang = String(code || "").slice(0, 2).toLowerCase();
     return STRINGS[lang] ? lang : "en";
   }
+  var ORDER_CONFIG_TEXT_KEYS = ["title", "machine", "switch_entity", "theme", "accent_color", "glp_url", "glp_token"];
   function _normalizeConfig(config) {
-    const out = { ...config };
-    const textKeys = ["title", "machine", "switch_entity", "theme", "accent_color", "glp_url", "glp_token"];
-    for (const key of textKeys) {
-      if (typeof out[key] === "string" && out[key].trim() === "") delete out[key];
-    }
-    if (out.theme === "none") delete out.theme;
-    const gradient = out.accent_gradient;
-    if (typeof gradient === "string") {
-      const stops = gradient.split(/[\s,]+/).filter(Boolean);
-      if (stops.length > 0) out.accent_gradient = stops;
-      else delete out.accent_gradient;
-    }
-    return out;
+    return normalizeFormConfig(config, ORDER_CONFIG_TEXT_KEYS);
   }
   var _glpOrderCardInstanceSeq = 0;
   var GlpOrderCard = class extends HTMLElement {
