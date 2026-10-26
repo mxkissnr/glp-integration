@@ -173,7 +173,7 @@ test('every live tile opens its own entity history', () => {
     `${P}machine_live_pressure`,
     `${P}machine_live_weight`,
   ];
-  tiles.forEach((tile, i) => click(tile));
+  tiles.forEach(tile => click(tile));
 
   assert.deepEqual(seen.only('hass-more-info').map(e => e.detail), expected.map(id => ({ entityId: id })));
   releaseTimers(card);
