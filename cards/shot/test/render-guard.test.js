@@ -100,6 +100,7 @@ test('an open profile picker sheet survives a hass update', () => {
   assert.equal(card._sheet?.isOpen, true, 'the picker is still open after a hass update');
   assert.equal(card.shadowRoot.querySelectorAll('.profile-sheet-opt').length, 2,
     'the options are still there');
+  card._sheet.close();
   stopTickers(card);
 });
 
@@ -119,6 +120,7 @@ test('an open maintenance confirmation sheet survives a hass update', () => {
 
   assert.equal(card._sheet?.isOpen, true,
     'the confirmation sheet is still shown after a hass update');
+  card._sheet.close();
   stopTickers(card);
 });
 

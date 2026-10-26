@@ -155,6 +155,7 @@ test('Enter on a maintenance row opens the confirmation sheet', () => {
   assert.equal(card.shadowRoot.querySelector('.glp-sheet-title').textContent, 'Backflush');
   assert.ok(card.shadowRoot.querySelector('[data-maint-done="backflush"]'),
     'the sheet carries the done action for this task');
+  card._sheet.close();
 });
 
 test('Space on a maintenance row opens the sheet and prevents page scroll', () => {
@@ -165,6 +166,7 @@ test('Space on a maintenance row opens the sheet and prevents page scroll', () =
 
   assert.equal(card._sheet?.isOpen, true, 'Space activates the row');
   assert.equal(ev.defaultPrevented, true, 'Space must not scroll the page');
+  card._sheet.close();
 });
 
 test('a maintenance row without a task is not focusable', () => {

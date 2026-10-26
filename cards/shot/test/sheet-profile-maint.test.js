@@ -71,7 +71,6 @@ function hass({ calls = [], machineState = 'on', lastDate = '2026-07-20T09:15:00
 function makeCard(h, { tab = 'shot' } = {}) {
   const card = window.document.createElement('glp-card');
   card._config = { title: 'Gaggiuino', entity_prefix: P, switch_entity: 'switch.gaggiuino' };
-  card._hass = h;
   card._activeTab = tab;
   // A render arms the poll/ticker intervals that would otherwise keep
   // node --test alive; this suite drives the sheets only.
@@ -80,8 +79,17 @@ function makeCard(h, { tab = 'shot' } = {}) {
   card._startUptimeTicker = () => {};
   // Connected, so focus() lands in the document the way a real dashboard does.
   window.document.body.appendChild(card);
-  card._render();
+  // Through the real setter, so the card's language is set the way a dashboard
+  // push sets it.
+  card.hass = h;
   return card;
+}
+
+// A profile selection arms the 8s optimistic-state timer; leaving it running
+// would hold node --test open after the assertion has passed.
+function releaseTimers(card) {
+  clearTimeout(card._pendingProfileTimer);
+  card._pendingProfileTimer = null;
 }
 
 function keydown(el, key) {
@@ -174,6 +182,7 @@ test('choosing an option calls select.select_option once and closes the sheet', 
     { entity_id: 'select.gaggiuino_local_profiler_profile', option: 'Turbo' },
   ]);
   assert.equal(card._sheet?.isOpen, false, 'the sheet closes on selection');
+  releaseTimers(card);
 });
 
 test('the picker opens on the active option', (t) => {
@@ -227,10 +236,7 @@ test('Enter selects the focused option and closes the sheet', (t) => {
 
   keydown(opts[1], 'ArrowDown');            // active is index 1 → focus Turbo
   assert.equal(focus.last, opts[2]);
-  // A native <button> turns Enter into a click; happy-dom does not synthesize
-  // one, so the activation is dispatched the way the browser would.
   keydown(opts[2], 'Enter');
-  click(opts[2]);
 
   assert.equal(calls.length, 1, 'Enter activates the focused option once');
   assert.deepEqual(calls[0][2], {
@@ -238,6 +244,7 @@ test('Enter selects the focused option and closes the sheet', (t) => {
     option: 'Turbo',
   });
   assert.equal(card._sheet?.isOpen, false);
+  releaseTimers(card);
 });
 
 test('Escape closes the picker without selecting anything', () => {

@@ -481,10 +481,18 @@ class GlpCard extends HTMLElement {
   }
 
   // Arrow/Home/End move focus between the options of an open picker, wrapping
-  // at both ends. Enter and Space are a native button activation, so the
-  // browser already selects the focused option.
+  // at both ends. Enter and Space select the focused option: preventing the
+  // key default stops the browser from firing its own click on top of the one
+  // dispatched here, so a key press is exactly one selection.
   _sheetOptionKeyNav(e: KeyboardEvent): void {
     const key = e.key;
+    if (key === 'Enter' || key === ' ') {
+      const option = (e.target as HTMLElement | null)?.closest<HTMLElement>('[role="option"]');
+      if (!option) return;
+      e.preventDefault();
+      option.click();
+      return;
+    }
     if (key !== 'ArrowDown' && key !== 'ArrowUp' && key !== 'Home' && key !== 'End') return;
     const opts = Array.from((e.currentTarget as HTMLElement).querySelectorAll<HTMLElement>('[role="option"]'));
     if (!opts.length) return;

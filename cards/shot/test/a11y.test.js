@@ -11,6 +11,21 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const { Window } = require('happy-dom');
 const { loadCard } = require('./helpers/load-card.cjs');
+
+// The stylesheet now pulls in the shared sheet, which imports Lit; Lit binds
+// to whatever global `document` exists when it is first evaluated, so the
+// happy-dom window has to be installed before the stylesheet is required. A
+// bare `document` stub here would leave Lit holding an object without
+// createComment(), and every later render would throw.
+const window = new Window();
+for (const name of ['document', 'window', 'HTMLElement', 'customElements', 'navigator']) {
+  Object.defineProperty(globalThis, name, {
+    value: name === 'document' ? window.document : window[name],
+    configurable: true,
+    writable: true,
+  });
+}
+
 const { STYLES } = require('../src/styles.ts');
 const { TOKENS } = require('../../shared/tokens.ts');
 
@@ -195,7 +210,6 @@ for (const selector of ['.tab-badge', '.ord-btn.primary', '.ord-btn.danger']) {
 
 // ── Accessible names for the icon-only controls ───────────────────────────
 
-const window = new Window();
 window.customElements.define('home-assistant', class extends window.HTMLElement {});
 const { GlpCard } = loadCard({
   context: {

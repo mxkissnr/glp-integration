@@ -3465,10 +3465,18 @@ ${SHEET_STYLES}
       return this._sheet;
     }
     // Arrow/Home/End move focus between the options of an open picker, wrapping
-    // at both ends. Enter and Space are a native button activation, so the
-    // browser already selects the focused option.
+    // at both ends. Enter and Space select the focused option: preventing the
+    // key default stops the browser from firing its own click on top of the one
+    // dispatched here, so a key press is exactly one selection.
     _sheetOptionKeyNav(e6) {
       const key = e6.key;
+      if (key === "Enter" || key === " ") {
+        const option = e6.target?.closest('[role="option"]');
+        if (!option) return;
+        e6.preventDefault();
+        option.click();
+        return;
+      }
       if (key !== "ArrowDown" && key !== "ArrowUp" && key !== "Home" && key !== "End") return;
       const opts = Array.from(e6.currentTarget.querySelectorAll('[role="option"]'));
       if (!opts.length) return;
