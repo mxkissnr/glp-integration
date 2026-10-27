@@ -11,6 +11,7 @@ from custom_components.gaggiuino_profiler.settings_coordinator import (
     SETTINGS_CATEGORIES,
     GlpSettingsCoordinator,
 )
+from tests.common import mock_all_coordinator_endpoints
 
 URL = "http://glp.example.com"
 
@@ -21,15 +22,15 @@ def _make_coordinator(hass) -> GlpSettingsCoordinator:
     return GlpSettingsCoordinator(hass, session, URL, auth)
 
 
-def _mock_all_categories(aioclient_mock, **overrides) -> None:
-    for category in SETTINGS_CATEGORIES:
-        if category in overrides:
-            continue
-        aioclient_mock.get(f"{URL}/api/machine/settings?category={category}", json={"ok": category})
+def _settings_url(category: str) -> str:
+    return f"{URL}/api/machine/settings?category={category}"
+
+
+SETTINGS_PAYLOADS = {name: {"ok": name} for name in SETTINGS_CATEGORIES}
 
 
 async def test_fetches_every_category(hass, aioclient_mock) -> None:
-    _mock_all_categories(aioclient_mock)
+    mock_all_coordinator_endpoints(aioclient_mock, URL, settings=SETTINGS_PAYLOADS)
     coordinator = _make_coordinator(hass)
 
     data = await coordinator._async_update_data()
@@ -40,8 +41,10 @@ async def test_fetches_every_category(hass, aioclient_mock) -> None:
 
 
 async def test_isolates_a_single_category_failure(hass, aioclient_mock) -> None:
-    _mock_all_categories(aioclient_mock, scales=None)
-    aioclient_mock.get(f"{URL}/api/machine/settings?category=scales", exc=aiohttp.ClientConnectionError)
+    # aioclient_mock answers with the first matching registration, so the
+    # failing category goes in before the shared set.
+    aioclient_mock.get(_settings_url("scales"), exc=aiohttp.ClientConnectionError)
+    mock_all_coordinator_endpoints(aioclient_mock, URL, settings=SETTINGS_PAYLOADS)
     coordinator = _make_coordinator(hass)
 
     data = await coordinator._async_update_data()
@@ -53,8 +56,8 @@ async def test_isolates_a_single_category_failure(hass, aioclient_mock) -> None:
 async def test_isolates_a_501_response(hass, aioclient_mock) -> None:
     """501 == machine type doesn't support the settings proxy for that
     category (or at all, on a non-Gaggiuino machine)."""
-    _mock_all_categories(aioclient_mock, system=None)
-    aioclient_mock.get(f"{URL}/api/machine/settings?category=system", status=501)
+    aioclient_mock.get(_settings_url("system"), status=501)
+    mock_all_coordinator_endpoints(aioclient_mock, URL, settings=SETTINGS_PAYLOADS)
     coordinator = _make_coordinator(hass)
 
     data = await coordinator._async_update_data()
@@ -64,7 +67,9 @@ async def test_isolates_a_501_response(hass, aioclient_mock) -> None:
 
 async def test_every_category_unreachable_returns_empty_dict(hass, aioclient_mock) -> None:
     for category in SETTINGS_CATEGORIES:
-        aioclient_mock.get(f"{URL}/api/machine/settings?category={category}", exc=aiohttp.ClientConnectionError)
+        aioclient_mock.get(_settings_url(category), exc=aiohttp.ClientConnectionError)
+    # The categories above win over the shared set's defaults (first match).
+    mock_all_coordinator_endpoints(aioclient_mock, URL, settings=SETTINGS_PAYLOADS)
     coordinator = _make_coordinator(hass)
 
     data = await coordinator._async_update_data()

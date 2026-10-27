@@ -1,9 +1,11 @@
 import { TOKENS } from '../../shared/tokens.ts';
+import { SHEET_STYLES } from '../../shared/sheet.ts';
 
 // ─── styles ───────────────────────────────────────────────────────────────────
 
 export const STYLES: string = `
 ${TOKENS}
+${SHEET_STYLES}
 
   /* legacy internal aliases — rest of this file still reads these names;
      hybrid theming happens one level up, in the GLP-TOKENS block above */
@@ -168,8 +170,7 @@ ${TOKENS}
   /* Score ring → typographic verdict (#120): the number carries the
      weight, the word names it, no circle/badge chrome. Score thresholds
      are unchanged (see the scoreCls computation in _render()) — only the
-     presentation changed here. Sans throughout, incl. the number: Fraunces
-     stays reserved for the bean name alone (see .shot-coffee below). */
+     presentation changed here. Sans throughout, incl. the number. */
   .verdict {
     flex-shrink: 0; display: flex; align-items: baseline; gap: 3px;
   }
@@ -201,16 +202,6 @@ ${TOKENS}
     white-space: nowrap; flex-shrink: 0;
   }
   .shot-coffee {
-    /* Fraunces stays scoped to exactly this element (#120) — not the shot
-       title (.shot-profile above, sans/800) and not the verdict. No
-       @font-face is bundled here: this is a single-file Lovelace element
-       with no font asset shipped alongside it (unlike the app, which
-       already bundles Fraunces in public-src/fonts/), and reaching out to
-       a font CDN from a HA custom card would add a network dependency this
-       file has never had. Falls back to the platform serif stack, which is
-       still the intended visual note (a warm serif against the sans
-       everywhere else) even where Fraunces itself isn't installed. */
-    font-family: Fraunces, Georgia, 'Times New Roman', serif;
     font-weight: 600;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
@@ -235,10 +226,10 @@ ${TOKENS}
     background: none; border: none;
     padding: 0; width: 32px; height: 32px;
     cursor: pointer; color: color-mix(in srgb, var(--text) 35%, transparent);
-    font-size: var(--glp-fs-5); line-height: 1;
     display: flex; align-items: center; justify-content: center;
     transition: color .15s; touch-action: manipulation; flex-shrink: 0;
   }
+  .nav-arrow svg { width: 21px; height: 21px; }
   .nav-arrow:active:not([disabled]) { color: var(--text); }
   .nav-arrow[disabled] { opacity: .12; cursor: default; pointer-events: none; }
   .nav-dots {
@@ -270,20 +261,11 @@ ${TOKENS}
   }
 
   /* ── guided metric line (#120) ──────────────────────────────────────────
-     Was two separate three-tile box rows (.metric-trio for a historical
-     shot, .live-stats for a brewing one) — the single clearest "generated
-     UI" tell in this file per two independent audits landing on the exact
-     same finding. One component now serves both call sites (_metricLineHtml()
-     in the render code below); which one is on screen is still driven by the
-     brewing flag, same as before.
-     The three roles (recipe = what was asked for, process = what happened,
-     result = what came out) stay legible without three separate boxes: they
-     are told apart by size/weight/color alone, not by grouping into cards —
-     recipe is the quietest (muted, regular weight), process is mid-weight,
-     result is the loudest (largest, full-contrast text or, for the historical
-     yield/ratio pairing, plain — see the role assignment at the call site for
-     why temp/pressure/weight map to recipe/process/result while brewing, and
-     ratio/duration/yield do so for a finished shot). */
+     The live brewing row only now (_liveStatsHtml()); a finished shot uses
+     .key-figures below. The three roles (recipe = what was asked for, process
+     = what happened, result = what came out) stay legible without three
+     separate boxes: they are told apart by size/weight/color alone, not by
+     grouping into cards. */
   .metric-line {
     display: flex; align-items: flex-end; gap: var(--glp-sp-5);
     margin-bottom: var(--glp-sp-3);
@@ -296,14 +278,31 @@ ${TOKENS}
   .metric-item.role-process .num { font-size: var(--glp-fs-4); font-weight: 700; color: var(--text); }
   .metric-item.role-result  .num { font-size: var(--glp-fs-5); font-weight: 700; color: var(--text); }
 
-  /* secondary stats — border diet (#120): not clickable, so grouping comes
-     from being inline text on the card's own background, not a nested box. */
-  .stats-secondary {
-    display: flex; gap: var(--glp-sp-5); margin-bottom: var(--glp-sp-3);
+  /* ── key figures ────────────────────────────────────────────────────────
+     All five finished-shot figures in one grid with one value style: ratio,
+     duration, yield, pressure and temperature differ in what they mean, not
+     in how loudly they are set. The column count follows the rendered count
+     (.figures-N, set from _keyFiguresHtml()) so a row is never left half
+     empty — five sit 3 + 2 at phone width, with the last two spanning the
+     full row; four sit 2 + 2 rather than 3 + 1. */
+  .key-figures {
+    display: grid; gap: var(--glp-sp-3) var(--glp-sp-4);
+    margin-bottom: var(--glp-sp-3);
+    grid-template-columns: repeat(6, minmax(0, 1fr));
   }
-  .stat-pill { display: flex; flex-direction: column; gap: 2px; }
-  .stat-pill-label { font-size: var(--glp-fs-1); color: var(--sub); }
-  .stat-pill-value { font-size: var(--glp-fs-3); font-weight: 700; letter-spacing: -.02em; }
+  .key-figure { grid-column: span 2; min-width: 0; }
+  .key-figures.figures-5 .key-figure:nth-child(4),
+  .key-figures.figures-5 .key-figure:nth-child(5) { grid-column: span 3; }
+  .key-figures:not(.figures-5) .key-figure { grid-column: auto; }
+  .key-figures.figures-4, .key-figures.figures-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .key-figures.figures-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .key-figures.figures-1 { grid-template-columns: minmax(0, 1fr); }
+  .kf-value {
+    font-size: var(--glp-fs-4); font-weight: 700; line-height: 1;
+    color: var(--text); letter-spacing: -.02em; font-variant-numeric: tabular-nums;
+  }
+  .kf-unit { font-size: var(--glp-fs-1); font-weight: 500; color: var(--sub); margin-left: 1px; }
+  .kf-label { font-size: var(--glp-fs-1); color: var(--sub); margin-top: 2px; }
 
   /* rating stars — drawn icons (ICONS.of('star')) replace the ★ text
      character; filled vs. empty is the .on class on the same shape. */
@@ -384,12 +383,18 @@ ${TOKENS}
     50%      { opacity: .35; }
   }
   .lm-tiles { display: flex; gap: var(--glp-sp-2); }
-  /* Border diet (#120): static readouts, not clickable — grouped by fill,
-     no border. The warming state still needs to stand out, so it keeps a
-     tinted background instead of a tinted border. */
+  /* Border diet (#120): readouts group by fill, no border. The warming state
+     still needs to stand out, so it keeps a tinted background instead of a
+     tinted border. Each tile is a <button> (a tap opens its history), so the
+     native button chrome is reset to keep the drawn look identical. */
   .lm-tile {
     flex: 1; background: var(--surface);
-    border-radius: var(--glp-radius-sm); padding: var(--glp-sp-2) 6px; text-align: center;
+    border: none; border-radius: var(--glp-radius-sm); padding: var(--glp-sp-2) 6px;
+    text-align: center; font: inherit; color: inherit; cursor: pointer;
+    -webkit-appearance: none; appearance: none;
+  }
+  .lm-tile:focus-visible, .footer-history:focus-visible {
+    outline: 2px solid var(--glp-aline); outline-offset: 2px;
   }
   .lm-tile.warming { background: color-mix(in srgb, var(--amber) 12%, var(--surface)); }
   .lm-val { font-size: var(--glp-fs-4); font-weight: 700; color: var(--text); letter-spacing: -.02em; line-height: 1.1; }
@@ -411,41 +416,32 @@ ${TOKENS}
     touch-action: manipulation; transition: all .15s;
   }
   .profile-current-btn:active { background: var(--s2); }
-  .profile-current-btn.open {
-    border-color: color-mix(in srgb, var(--text) 18%, transparent);
-    border-bottom-left-radius: 4px; border-bottom-right-radius: 4px;
-  }
   .profile-label-small { font-size: var(--glp-fs-1); color: var(--sub); font-weight: 500; }
   .profile-current-name { flex: 1; text-align: left; }
   .profile-chevron {
-    color: var(--sub); font-size: var(--glp-fs-1); margin-left: var(--glp-sp-2);
-    transition: transform .2s; opacity: .6;
+    color: var(--sub); margin-left: var(--glp-sp-2); opacity: .6;
+    display: flex; align-items: center;
   }
-  .profile-chevron.open { transform: rotate(180deg); }
-  /* Border diet (#120): this panel is a dropdown surface, not itself
-     clickable — dropping its border (previously bordered on all 4 sides,
-     nested inside the card's own border, with the .profile-opt buttons
-     bordered again inside THAT) was the "three levels deep" case from the
-     redesign notes. The buttons below keep their border; they're what's
-     actually clickable. */
-  .profile-opts {
-    display: flex; flex-wrap: wrap; gap: 6px;
-    padding: var(--glp-sp-3) var(--glp-sp-3) var(--glp-sp-3);
-    background: var(--surface);
-    border-bottom-left-radius: var(--glp-radius-sm); border-bottom-right-radius: var(--glp-radius-sm);
+  .profile-chevron .glp-i { width: 15px; height: 15px; }
+  /* The picker inside the shared sheet: a flat list, the active profile
+     carrying the accent tint and a check icon. */
+  .profile-sheet-list { display: flex; flex-direction: column; gap: var(--glp-sp-1); }
+  .profile-sheet-opt {
+    display: flex; align-items: center; gap: var(--glp-sp-2); width: 100%;
+    background: transparent; border: 1px solid transparent; border-radius: var(--glp-radius-sm);
+    padding: var(--glp-sp-3); min-height: 40px; cursor: pointer; color: var(--text);
+    font-family: inherit; font-size: var(--glp-fs-2); font-weight: 500; text-align: left;
+    touch-action: manipulation;
   }
-  .profile-opt {
-    background: color-mix(in srgb, var(--text) 6%, transparent); border: 1px solid var(--border);
-    border-radius: var(--glp-radius-sm); padding: var(--glp-sp-2) var(--glp-sp-4); min-height: 34px;
-    cursor: pointer; color: var(--text);
-    font-family: inherit; font-size: var(--glp-fs-1); font-weight: 500;
-    touch-action: manipulation; transition: all .15s; white-space: nowrap;
-  }
-  .profile-opt:active { background: color-mix(in srgb, var(--text) 12%, transparent); }
-  .profile-opt.active {
+  .profile-sheet-opt:active { background: color-mix(in srgb, var(--text) 8%, transparent); }
+  .profile-sheet-opt:focus-visible { outline: 2px solid var(--glp-aline); outline-offset: -1px; }
+  .profile-sheet-opt.active {
     background: color-mix(in srgb, var(--accent) 15%, transparent);
-    border-color: color-mix(in srgb, var(--accent) 45%, transparent); color: var(--accent); font-weight: 700;
+    border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+    color: var(--accent); font-weight: 700;
   }
+  .profile-sheet-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .profile-sheet-opt .glp-i { width: 14px; height: 14px; }
 
   /* ── banners ── border diet (#120): status text, not clickable — the
      tinted background alone carries the semantic color now. */
@@ -563,49 +559,77 @@ ${TOKENS}
   .section-label, .maint-section-label { font-size: var(--glp-fs-1); color: var(--sub); font-weight: 600; margin-top: var(--glp-sp-1); }
   .maint-row[role="button"] { cursor: pointer; transition: border-color .15s, background .15s; }
   .maint-row[role="button"]:hover { border-color: color-mix(in srgb, var(--text) 16%, transparent); }
-  .maint-row.confirming { border: 1px solid color-mix(in srgb, var(--amber) 40%, transparent); background: color-mix(in srgb, var(--amber) 6%, transparent); }
-  .maint-confirm { display: flex; align-items: center; gap: var(--glp-sp-2); margin-top: var(--glp-sp-1); }
-  .maint-confirm-q { flex: 1; font-size: var(--glp-fs-1); color: var(--sub); }
-  .maint-confirm-yes, .maint-confirm-no {
+  /* The row is reachable with Tab (#267); the outline is the same accent-as-
+     thin-line token the order card uses for its focus ring. */
+  .maint-row[role="button"]:focus-visible { outline: 2px solid var(--glp-aline); outline-offset: 2px; }
+  /* The row's confirmation is the shared sheet now (#265): the body reuses
+     the row's own .maint-sub and .maint-pill, plus the last-done date. */
+  .maint-detail { display: flex; flex-direction: column; align-items: flex-start; gap: var(--glp-sp-2); }
+  .maint-detail-row { display: flex; align-items: baseline; gap: var(--glp-sp-2); width: 100%; }
+  .maint-detail-lbl { font-size: var(--glp-fs-1); color: var(--sub); }
+  .maint-detail-val { font-size: var(--glp-fs-2); font-weight: 600; margin-left: auto; }
+  .maint-sheet-done, .maint-sheet-cancel {
     border: none; border-radius: var(--glp-radius-sm); font-family: inherit; font-weight: 700;
-    font-size: var(--glp-fs-1); padding: 5px var(--glp-sp-3); cursor: pointer;
-    display: inline-flex; align-items: center; gap: 4px;
+    font-size: var(--glp-fs-1); padding: 7px var(--glp-sp-3); min-height: 34px; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;
+    touch-action: manipulation;
   }
-  .maint-confirm-yes { background: color-mix(in srgb, var(--green) 14%, transparent); color: var(--green); }
-  .maint-confirm-no  { background: var(--surface); color: var(--sub); }
-  .maint-confirm-no svg { width: 11px; height: 11px; }
+  .maint-sheet-done { background: color-mix(in srgb, var(--green) 14%, transparent); color: var(--green); }
+  .maint-sheet-cancel { background: transparent; border: 1px solid var(--border); color: var(--sub); }
+  .maint-sheet-done svg { width: 11px; height: 11px; }
 
   /* ── orders tab ── */
+  /* Fill is the accent darkened by 15% (#269): white on the raw --glp-err
+     values measures 3.76:1 (dark) / only the light one clears AA — the mix
+     lifts both to >=4.99:1 while keeping the hue. --accent itself is left
+     alone; only these elements use the darkened fill. */
   .tab-badge {
     display: inline-block; min-width: 16px; padding: 0 var(--glp-sp-1); margin-left: var(--glp-sp-1);
     font-size: var(--glp-fs-1); font-weight: 600; line-height: 16px; text-align: center;
-    border-radius: var(--glp-radius-sm); background: var(--accent); color: #fff;
+    border-radius: var(--glp-radius-sm);
+    background: color-mix(in srgb, var(--accent) 85%, #000); color: #fff;
   }
   /* Border diet (#120): accepted rows group via fill only; a pending order
      keeps a border, but as a semantic "needs your attention" state marker
-     (like maint-row.confirming above), not a default box around content. */
+     (like the maintenance "due" pill above), not a default box around
+     content. */
   .ord-list { display: flex; flex-direction: column; gap: var(--glp-sp-2); margin-bottom: var(--glp-sp-3); }
   .ord-row {
     background: var(--surface);
     border-radius: var(--glp-radius-sm); padding: var(--glp-sp-3); display: flex; flex-direction: column; gap: 7px;
   }
   .ord-row.pending  { border: 1px solid color-mix(in srgb, var(--amber) 30%, transparent); }
+  /* The row opens the order in the shared sheet (#264), so it is a tap target
+     with the same keyboard affordances as a maintenance row. */
+  .ord-row[role="button"] { cursor: pointer; transition: border-color .15s, background .15s; }
+  .ord-row[role="button"]:hover { border-color: color-mix(in srgb, var(--text) 16%, transparent); }
+  .ord-row[role="button"]:focus-visible { outline: 2px solid var(--glp-aline); outline-offset: 2px; }
   .ord-top { display: flex; align-items: baseline; gap: var(--glp-sp-2); }
   .ord-top .glp-i { width: 13px; height: 13px; vertical-align: -1px; opacity: .8; }
   .ord-item { flex: 1; font-size: var(--glp-fs-3); font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .ord-who  { font-size: var(--glp-fs-1); color: var(--sub); white-space: nowrap; flex-shrink: 0; }
   .ord-note { font-size: var(--glp-fs-1); color: var(--sub); font-style: italic; }
   .ord-sub  { font-size: var(--glp-fs-1); color: var(--green); font-weight: 600; }
-  .ord-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin-top: 2px; }
+  /* The sheet body restates what the order is: variant, customer, note, the
+     waiting time and, for an accepted order, the ready-in line. */
+  .ord-detail { display: flex; flex-direction: column; align-items: flex-start; gap: var(--glp-sp-2); }
+  .ord-detail-val { font-size: var(--glp-fs-3); font-weight: 700; }
+  .ord-detail-who { font-size: var(--glp-fs-2); color: var(--sub); }
   .ord-q { font-size: var(--glp-fs-1); color: var(--sub); margin-right: 2px; }
   .ord-btn {
     border: none; border-radius: var(--glp-radius-sm); font-family: inherit; font-weight: 700;
     font-size: var(--glp-fs-1); padding: 6px var(--glp-sp-3); cursor: pointer; min-height: 32px;
     display: inline-flex; align-items: center; gap: 4px;
   }
-  .ord-btn.primary { background: var(--green); color: #06210f; }
+  /* Readable order-button fills (#269): dark ink on the raw --glp-ok light
+     value measured 3.40:1, white on the raw --glp-err dark value 3.76:1.
+     White ink on the fill darkened by 35% (green) / 15% (accent) clears AA
+     for both of each token's two possible values (>=5.01:1 / >=4.99:1)
+     without turning green or red into a different hue; --green and --accent
+     are unchanged, only these buttons mix them darker. */
+  .ord-btn.primary { background: color-mix(in srgb, var(--green) 65%, #000); color: #fff; }
   .ord-btn.eta     { background: color-mix(in srgb, var(--text) 9%, transparent); color: var(--text); }
-  .ord-btn.danger  { background: var(--accent); color: #fff; }
+  .ord-btn.danger  { background: color-mix(in srgb, var(--accent) 85%, #000); color: #fff; }
   .ord-btn.ghost   { background: transparent; border: 1px solid var(--border); color: var(--sub); }
   .ord-btn svg { width: 12px; height: 12px; }
 
@@ -617,6 +641,13 @@ ${TOKENS}
     padding-top: var(--glp-sp-2); margin-top: 6px; gap: var(--glp-sp-2);
   }
   .footer-item { display: flex; align-items: center; gap: 4px; }
+  /* The water level is a <button> now; reset the native chrome so it still
+     sits inline with the plain footer text. */
+  .footer-history {
+    background: none; border: none; padding: 0; margin: 0;
+    font: inherit; color: inherit; text-align: inherit; cursor: pointer;
+    -webkit-appearance: none; appearance: none;
+  }
   .footer-item svg { width: 11px; height: 11px; opacity: .8; flex-shrink: 0; }
   .footer a { color: var(--sub); text-decoration: none; }
   .footer a:hover { color: var(--text); }
@@ -636,27 +667,36 @@ ${TOKENS}
     .nav-arrow { width: 40px; height: 40px; font-size: var(--glp-fs-5); }
     .tab-btn   { min-height: 44px; }
     .profile-current-btn { min-height: 50px; }
-    .profile-opt { min-height: 40px; padding: 9px 18px; }
+    .profile-sheet-opt { min-height: 44px; }
     .power-btn { min-height: 42px; }
     .metric-item.role-result .num { font-size: var(--glp-fs-6); }
   }
 
-  /* ── prefers-reduced-motion (#120) ── previously covered one of the four
-     animated effects in this file (.lm-live-dot only); now complete. Each
-     entry disables the animation AND pins the element to the state the
-     animation would have ended at — for .lm-live-dot/.status-dot.brewing
-     that's just their static (already-defined) base rule, so "animation:
-     none" alone is enough; the nav-dot width/radius is likewise already
-     fixed by .nav-dot.active outside the keyframe. The curve draw-in is the
-     one case where "no animation" would otherwise mean "invisible forever"
-     (stroke-dashoffset stuck at 900, opacity stuck at 0), so those three
-     properties get pinned to their finished values explicitly. */
+  /* ── prefers-reduced-motion (#120, completed for every animation in this
+     file by #269) ── each entry turns the animation off AND pins the element
+     to the state the animation would have ended at, since "no animation"
+     alone can leave an element at its keyframe start.
+       - .lm-live-dot, .status-dot.brewing, .descaling-banner svg and
+         .nav-dot.active.changed all animate opacity/width only, so their
+         static base rule is already the finished state: "animation: none"
+         is enough, and the .nav-dot.active width/radius is fixed outside the
+         keyframes anyway.
+       - the curve draw-in needs its three animated selectors at the SAME
+         specificity the animation rule uses (.glp-anim ...): a bare
+         .glp-curve-line rule loses to .glp-anim .glp-curve-line and the
+         draw-in would still play. Without the animation the line would stay
+         invisible (stroke-dashoffset stuck at 900, opacity stuck at 0), so
+         the finished values are pinned explicitly. */
   @media (prefers-reduced-motion: reduce) {
     .lm-live-dot { animation: none; }
     .status-dot.brewing { animation: none; }
+    .descaling-banner svg { animation: none; }
     .nav-dot.active.changed { animation: none; }
-    .glp-curve-line, .glp-curve-phase, .glp-curve-endpoint { animation: none; }
-    .glp-curve-line { stroke-dashoffset: 0; }
-    .glp-curve-phase, .glp-curve-endpoint { opacity: 1; }
+    .glp-anim .glp-curve-line,
+    .glp-anim .glp-curve-phase,
+    .glp-anim .glp-curve-endpoint { animation: none; }
+    .glp-anim .glp-curve-line { stroke-dashoffset: 0; }
+    .glp-anim .glp-curve-phase,
+    .glp-anim .glp-curve-endpoint { opacity: 1; }
   }
 `;

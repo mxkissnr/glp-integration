@@ -62,8 +62,9 @@ for `api/orders/menu`, `api/orders/settings`, `api/orders/queue-eta`,
 `api/orders/active-beans`, `api/orders/mine`, `api/shots/<id>` and
 `POST api/orders` to place an order — the card's `api/` prefix is rewritten
 to `/api/glp/`. With an explicit `glp_url` it talks to the app directly
-instead, sending `X-GLP-Token` from the `glp_token` YAML option or from the
-app's `/api/token` endpoint.
+instead, sending `X-GLP-Token` from the `glp_token` YAML option. It does not
+ask the app for a token there: `/api/token` answers Supervisor-originating
+requests, so a browser on the LAN would only get a 401 back.
 
 Home Assistant's auth token is never stored by either card: it is passed per
 request to `hass.fetchWithAuth`, which adds the bearer header in the browser.

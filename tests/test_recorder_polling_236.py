@@ -12,22 +12,9 @@ from custom_components.gaggiuino_profiler.binary_sensor import IsBrewingSensor
 from custom_components.gaggiuino_profiler.coordinator import GlpDataCoordinator
 from custom_components.gaggiuino_profiler.select import GlpProfileSelect
 from custom_components.gaggiuino_profiler.sensor import GlpSensor
+from tests.common import mock_all_coordinator_endpoints
 
 URL = "http://glp.example.com"
-
-
-def _mock_endpoints(aioclient_mock, *, status=None, status_status=200) -> None:
-    if status_status < 400:
-        aioclient_mock.get(f"{URL}/api/status", json=status or {})
-    else:
-        aioclient_mock.get(f"{URL}/api/status", status=status_status)
-    aioclient_mock.get(f"{URL}/api/token", json={"apiToken": "test-token"})
-    aioclient_mock.get(f"{URL}/api/maintenance", json={})
-    aioclient_mock.get(f"{URL}/api/preheat", json={})
-    aioclient_mock.get(f"{URL}/api/machine/profiles", json={})
-    aioclient_mock.get(f"{URL}/api/menu", json=[])
-    aioclient_mock.get(f"{URL}/api/version", json={})
-    aioclient_mock.get(f"{URL}/api/machine/firmware/version", json={})
 
 
 async def _coordinator(hass):
@@ -51,7 +38,9 @@ def test_recent_shots_attributes_are_unrecorded() -> None:
 
 
 async def test_poll_uses_limit_and_header_count(hass, aioclient_mock) -> None:
-    _mock_endpoints(aioclient_mock)
+    # The shots endpoint is registered per test: the header it must send
+    # (X-Shots-Today) is not something the shared helper can express.
+    mock_all_coordinator_endpoints(aioclient_mock, URL, skip=("shots",))
     aioclient_mock.get(
         f"{URL}/shots.json?limit=10",
         json=[_shot(7, dt_util.now().isoformat())],
@@ -68,7 +57,7 @@ async def test_poll_uses_limit_and_header_count(hass, aioclient_mock) -> None:
 
 async def test_old_app_counts_full_list_on_first_and_later_polls(hass, aioclient_mock) -> None:
     now = dt_util.now().isoformat()
-    _mock_endpoints(aioclient_mock)
+    mock_all_coordinator_endpoints(aioclient_mock, URL, skip=("shots",))
     aioclient_mock.get(f"{URL}/shots.json?limit=10", json=[_shot(3, now)])
     aioclient_mock.get(
         f"{URL}/shots.json",
@@ -92,7 +81,9 @@ async def test_old_app_counts_full_list_on_first_and_later_polls(hass, aioclient
 
 
 async def test_failing_status_still_raises_update_failed(hass, aioclient_mock) -> None:
-    _mock_endpoints(aioclient_mock, status_status=500)
+    mock_all_coordinator_endpoints(
+        aioclient_mock, URL, skip=("shots",), statuses={"status": 500}
+    )
     aioclient_mock.get(f"{URL}/shots.json?limit=10", json=[], headers={"X-Shots-Today": "0"})
 
     with pytest.raises(UpdateFailed):

@@ -18,11 +18,21 @@ export interface HassUser {
   id: string;
 }
 
+// Home Assistant's active frontend theme, as the card reads it: the contrast
+// pass depends on the theme's colours, so a theme or dark-mode switch is a
+// reason to re-run it.
+export interface HassThemes {
+  selectedTheme?: string | null;
+  theme?: string | null;
+  darkMode?: boolean;
+}
+
 export interface Hass {
   states: Record<string, HassStateObject>;
   language?: string;
   locale?: HassLocale;
   user?: HassUser;
+  themes?: HassThemes;
   callService?: (domain: string, service: string, data?: Record<string, unknown>) => unknown;
   fetchWithAuth?: (path: string, init?: RequestInit) => Promise<Response>;
 }
@@ -36,7 +46,8 @@ export interface CardConfig {
   machine?: string | null;
   theme?: string | null;
   accent_color?: string | null;
-  accent_gradient?: string[] | null;
+  // string[] in YAML, one raw string from the visual editor's multi-line field.
+  accent_gradient?: string[] | string | null;
   new_badge_days?: string | null;
 }
 
@@ -89,6 +100,18 @@ export interface GrinderEntry {
   days_since?: number;
   shots_since?: number;
   task?: string;
+  last_date?: string | null;
+}
+
+// What the Shot Card's maintenance sheet shows for one task: the values the
+// row already has, gathered so the sheet body and its actions take one object.
+export interface MaintTaskDetail {
+  task: string;
+  name: string;
+  status: string;
+  daysSince: number | null;
+  shotsSince: number | null;
+  lastDate: string | null;
 }
 
 // The colour and machine-lookup shapes now live in cards/shared/types.ts;

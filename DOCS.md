@@ -21,7 +21,7 @@ Integrates the [Gaggiuino Local Profiler](https://github.com/mxkissnr/gaggiuino-
 
 ### Beta versions
 
-To test upcoming changes, open this integration in HACS, choose the three-dot menu, then *Redownload*, and enable *Show beta versions*. You then get the development build of the integration and both cards. It is for testing only and may be broken. To go back, disable *Show beta versions* and redownload the latest stable version.
+To test upcoming changes, open this integration in HACS, open the three-dot menu and choose *Redownload*, then expand *Need a different version?* and pick the beta release from the *Release* list (tags like `v1.33.2b1`). Choose *Download* and restart Home Assistant. You then get the development build of the integration and both cards. It is for testing only and may be broken. To go back, open the same dialog and pick the newest stable release.
 
 ## Setup
 
@@ -70,6 +70,8 @@ theme: ember-espresso
 | `accent_color` | Custom flat accent colour as `#rrggbb`, instead of a preset. Overrides `theme`. Values that aren't a six-digit hex colour are ignored. | *(none)* |
 | `accent_gradient` | Custom two-stop gradient as `["#rrggbb", "#rrggbb"]`. Overrides `theme` and `accent_color`. Values that aren't six-digit hex colours are ignored. | *(none)* |
 
+Every option above can also be set in Home Assistant's visual card editor instead of YAML.
+
 ### Machine colour theme
 
 The card's accent colour can be themed per machine, so machines are easy to tell apart on a dashboard that shows more than one:
@@ -96,13 +98,15 @@ A theme set in the app (Settings → Machines) is read live from the `machines` 
 - Shot navigation — arrows and up to ten dot indicators for the recent shots in the `machine_status` sensor's `recent_shots` attribute, plus swipe left/right on touch devices; resets to the newest shot when a new one arrives
 - Shot chart — pressure and flow on the left axis, boiler temperature and weight on the right axis, with a legend of the peak and final values, for the displayed shot and for the running shot
 - Live machine tiles while the machine is on — boiler temperature with its target (highlighted while heating), live pressure and live scale weight; during a shot the same values as mini-stats
-- Profile picker for `select.*_profile` — stays open across state updates and is hidden when the entity is missing
-- Orders tab when the app has open barista orders, with a count badge and accept/decline/complete actions
-- Maintenance tab when the maintenance sensors exist — the five maintenance tasks plus a row per grinder, each with a status pill, days/shots since the last service and a progress bar; tap a task to mark it done through `gaggiuino_profiler.maintenance_done`
+- Profile picker for `select.*_profile` — opens in a sheet from the bottom of the screen, stays open across state updates and is hidden when the entity is missing
+- Orders tab when the app has open barista orders, with a count badge; a tap on an order opens its details in a sheet with accept, done and decline
+- Maintenance tab when the maintenance sensors exist — the five maintenance tasks plus a row per grinder, each with a status pill, days/shots since the last service and a progress bar; tap a task and confirm in a sheet to mark it done through `gaggiuino_profiler.maintenance_done`; the row can also be reached and confirmed with the keyboard
 - Steam banner while the steam switch is on, descaling banner while the machine runs its descale program
 - Water level in the footer with a warning banner below 20 %
 - Last shot: profile, drink type, coffee with the bean's variety and roast age from the coffee library, grinder and grind setting, star rating, score verdict, brew ratio, duration, yield, average pressure and brew temperature
 - Shots pulled today
+- Shortcuts — a tap on a live value (temperature, pressure, weight) opens its Home Assistant history, and a long press on the header opens the machine
+- Feedback — every action confirms with a short Home Assistant message, and phones vibrate. Both use Home Assistant's documented card events, so they appear wherever Home Assistant shows its own messages
 
 ### Shot Card languages
 
@@ -119,6 +123,8 @@ Minimal configuration — no options are needed in a standard Home Assistant set
 ```yaml
 type: custom:glp-order-card
 ```
+
+Without `glp_url` the card goes through the integration proxy, which Home Assistant authenticates with your own session — no token is stored anywhere. That is the recommended setup. Only set `glp_url` (and then `glp_token`) when the card has to reach the app directly, for example on a dashboard outside Home Assistant.
 
 Full configuration (only needed for direct access outside Home Assistant):
 
@@ -137,13 +143,15 @@ theme: ember-espresso
 |---|---|---|
 | `title` | Card header title | *(localised — `Order`, `Bestellen`, …)* |
 | `glp_url` | URL of the GLP app on port 8099. Only needed when the card is used outside Home Assistant or ingress auto-detection doesn't apply. | *(auto — HA ingress)* |
-| `glp_token` | API token of the GLP app, for direct-URL mode where the card cannot fetch one itself. | *(none)* |
+| `glp_token` | API token of the GLP app, only for direct-URL mode. Warning: every Home Assistant user who can open the dashboard can read it in the YAML. | *(none)* |
 | `switch_entity` | Switch entity of the machine. The card shows an "off" view while it reports `off` or `unavailable`. | *(auto — from the `machine_status` sensor's `switch_entity` attribute)* |
 | `machine` | Name or id of one machine from the app's multi-machine registry. Selects which machine's `*_machine_status` entity provides `switch_entity`, tags each placed order with the machine name, and scopes the machine theme. | *(auto — first Gaggiuino-named machine, else the first one found)* |
 | `new_badge_days` | How many days a newly added menu item keeps its NEW badge. | `7` |
 | `theme` | One of the eight colour presets below. Colours the order button, the selection highlights and the machine icon. | *(none — Home Assistant's `--primary-color`)* |
 | `accent_color` | Custom flat accent colour as `#rrggbb`, instead of a preset. Overrides `theme`. Values that aren't a six-digit hex colour are ignored. | *(none)* |
 | `accent_gradient` | Custom two-stop gradient as `["#rrggbb", "#rrggbb"]`. Overrides `theme` and `accent_color`. Values that aren't six-digit hex colours are ignored. | *(none)* |
+
+Every option above can also be set in Home Assistant's visual card editor, which shows the same labels and a short help text under each field. The two direct-URL options sit in an "Advanced / direct URL" section.
 
 ### Machine colour theme
 
@@ -166,8 +174,9 @@ A theme set in the app (Settings → Machines) is read live from the `machines` 
 ### What the Order Card shows
 
 - Drink menu configured in the app's **Orders** tab — a "Trending" section for marked drinks, a NEW badge on items added within `new_badge_days`, and the rest under "All drinks"
-- Bean variants from the coffee library for drinks that use beans — only beans still in stock, grouped into Speciality and Normal; selecting one shows its taste notes, origin (multi-origin blends as parsed countries), variety and processing
+- Bean variants from the coffee library for drinks that use beans — only beans still in stock, grouped into Speciality and Normal; a bean with taste notes, origin (multi-origin blends as parsed countries), variety or processing gets a small info button that opens its details in a bottom sheet
 - An optional note field, and an order button labelled with the selected drink and variant
+- A short Home Assistant notification and a vibration on phones when the order was sent or failed — both use Home Assistant's documented card events, so they appear wherever Home Assistant shows its own messages
 - Order status: waiting for confirmation with the queue position and estimated time, accepted with a live ETA countdown, ready with a confirmation plus the finished shot and its curve when the order carries a shot id, declined with the reason
 - A "machine is off" or "orders paused" view instead of the menu when the barista or the machine says so
 

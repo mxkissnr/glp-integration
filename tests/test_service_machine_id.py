@@ -15,6 +15,7 @@ from pytest_homeassistant_custom_component.common import MockConfigEntry
 from custom_components.gaggiuino_profiler.auth import GlpAuth
 from custom_components.gaggiuino_profiler.const import DOMAIN
 from custom_components.gaggiuino_profiler.machine_coordinator import GlpMachineCoordinator
+from tests.common import mock_all_coordinator_endpoints
 
 URL = "http://glp.example.com"
 
@@ -31,25 +32,8 @@ MACHINES_ONE = [
 ]
 
 
-def _mock_all_coordinator_endpoints(aioclient_mock) -> None:
-    """Mock every endpoint the coordinators poll on first refresh so
-    async_setup_entry completes and the data coordinator lands in hass.data
-    (the service handlers look it up from there)."""
-    aioclient_mock.get(f"{URL}/api/status", json={"machines": MACHINES_ONE})
-    aioclient_mock.get(f"{URL}/api/token", json={"apiToken": "test-token"})
-    aioclient_mock.get(f"{URL}/shots.json?limit=10", json=[])
-    aioclient_mock.get(f"{URL}/shots.json", json=[])
-    aioclient_mock.get(f"{URL}/api/maintenance", json={})
-    aioclient_mock.get(f"{URL}/api/preheat", json={})
-    aioclient_mock.get(f"{URL}/api/machine/profiles", json={})
-    aioclient_mock.get(f"{URL}/api/menu", json=[])
-    aioclient_mock.get(f"{URL}/api/version", json={})
-    aioclient_mock.get(f"{URL}/api/live/data", json={})
-    aioclient_mock.get(f"{URL}/api/machine/status", json={"available": False})
-
-
-async def _setup_entry(hass, aioclient_mock):
-    _mock_all_coordinator_endpoints(aioclient_mock)
+async def _setup_entry(hass, strict_aioclient_mock):
+    mock_all_coordinator_endpoints(strict_aioclient_mock, URL, status={"machines": MACHINES_ONE})
     entry = MockConfigEntry(domain=DOMAIN, data={"url": URL})
     entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(entry.entry_id)
@@ -57,63 +41,63 @@ async def _setup_entry(hass, aioclient_mock):
     return entry
 
 
-def _calls(aioclient_mock, method: str):
-    return [c for c in aioclient_mock.mock_calls if c[0].lower() == method]
+def _calls(strict_aioclient_mock, method: str):
+    return [c for c in strict_aioclient_mock.mock_calls if c[0].lower() == method]
 
 
-async def test_maintenance_done_sends_machine_id_query_param(hass, aioclient_mock) -> None:
-    await _setup_entry(hass, aioclient_mock)
-    aioclient_mock.post(f"{URL}/api/maintenance/descaling/done?machineId=2", json={"ok": True})
+async def test_maintenance_done_sends_machine_id_query_param(hass, strict_aioclient_mock) -> None:
+    await _setup_entry(hass, strict_aioclient_mock)
+    strict_aioclient_mock.post(f"{URL}/api/maintenance/descaling/done?machineId=2", json={"ok": True})
 
     await hass.services.async_call(
         DOMAIN, "maintenance_done", {"task": "descaling", "machine": 2}, blocking=True
     )
     await hass.async_block_till_done()
 
-    posts = _calls(aioclient_mock, "post")
+    posts = _calls(strict_aioclient_mock, "post")
     assert len(posts) == 1
     assert str(posts[0][1]) == f"{URL}/api/maintenance/descaling/done?machineId=2"
 
 
-async def test_maintenance_done_without_machine_sends_no_query(hass, aioclient_mock) -> None:
-    await _setup_entry(hass, aioclient_mock)
-    aioclient_mock.post(f"{URL}/api/maintenance/descaling/done", json={"ok": True})
+async def test_maintenance_done_without_machine_sends_no_query(hass, strict_aioclient_mock) -> None:
+    await _setup_entry(hass, strict_aioclient_mock)
+    strict_aioclient_mock.post(f"{URL}/api/maintenance/descaling/done", json={"ok": True})
 
     await hass.services.async_call(DOMAIN, "maintenance_done", {"task": "descaling"}, blocking=True)
     await hass.async_block_till_done()
 
-    posts = _calls(aioclient_mock, "post")
+    posts = _calls(strict_aioclient_mock, "post")
     assert len(posts) == 1
     assert str(posts[0][1]) == f"{URL}/api/maintenance/descaling/done"
 
 
-async def test_backup_sends_machine_id_query_param(hass, aioclient_mock) -> None:
-    await _setup_entry(hass, aioclient_mock)
-    aioclient_mock.get(f"{URL}/api/backup?machineId=3", json={"shots": []})
+async def test_backup_sends_machine_id_query_param(hass, strict_aioclient_mock) -> None:
+    await _setup_entry(hass, strict_aioclient_mock)
+    strict_aioclient_mock.get(f"{URL}/api/backup?machineId=3", json={"shots": []})
 
     await hass.services.async_call(DOMAIN, "backup", {"machine": 3}, blocking=True)
     await hass.async_block_till_done()
 
-    gets = [c for c in _calls(aioclient_mock, "get") if str(c[1]).startswith(f"{URL}/api/backup")]
+    gets = [c for c in _calls(strict_aioclient_mock, "get") if str(c[1]).startswith(f"{URL}/api/backup")]
     assert len(gets) == 1
     assert str(gets[0][1]) == f"{URL}/api/backup?machineId=3"
 
 
-async def test_set_ready_by_sends_machine_id_query_param(hass, aioclient_mock) -> None:
-    await _setup_entry(hass, aioclient_mock)
-    aioclient_mock.post(f"{URL}/api/preheat/ready-by?machineId=3", json={"ready": False})
+async def test_set_ready_by_sends_machine_id_query_param(hass, strict_aioclient_mock) -> None:
+    await _setup_entry(hass, strict_aioclient_mock)
+    strict_aioclient_mock.post(f"{URL}/api/preheat/ready-by?machineId=3", json={"ready": False})
 
     await hass.services.async_call(DOMAIN, "set_ready_by", {"machine": 3}, blocking=True)
     await hass.async_block_till_done()
 
-    posts = [c for c in _calls(aioclient_mock, "post") if str(c[1]).startswith(f"{URL}/api/preheat/ready-by")]
+    posts = [c for c in _calls(strict_aioclient_mock, "post") if str(c[1]).startswith(f"{URL}/api/preheat/ready-by")]
     assert len(posts) == 1
     assert str(posts[0][1]) == f"{URL}/api/preheat/ready-by?machineId=3"
 
 
-async def test_machine_coordinator_status_request_uses_machine_id(hass, aioclient_mock) -> None:
-    aioclient_mock.get(f"{URL}/api/token", json={"apiToken": "test-token"})
-    aioclient_mock.get(f"{URL}/api/machine/status?machineId=2", json={"available": False})
+async def test_machine_coordinator_status_request_uses_machine_id(hass, strict_aioclient_mock) -> None:
+    mock_all_coordinator_endpoints(strict_aioclient_mock, URL, skip=("machine_status",))
+    strict_aioclient_mock.get(f"{URL}/api/machine/status?machineId=2", json={"available": False})
     session = async_get_clientsession(hass)
     coordinator = GlpMachineCoordinator(hass, session, URL, GlpAuth(session, URL), machine_id=2)
 
@@ -121,6 +105,6 @@ async def test_machine_coordinator_status_request_uses_machine_id(hass, aioclien
 
     assert data == {}
     status_gets = [
-        str(c[1]) for c in _calls(aioclient_mock, "get") if "/api/machine/status" in str(c[1])
+        str(c[1]) for c in _calls(strict_aioclient_mock, "get") if "/api/machine/status" in str(c[1])
     ]
     assert status_gets == [f"{URL}/api/machine/status?machineId=2"]

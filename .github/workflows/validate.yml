@@ -21,14 +21,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
+      # Called directly: the former retry wrapper was a third-party action
+      # pinned to a branch commit that ran this one nested (#239). A flaky
+      # HACS run is rerun by hand instead.
       - name: HACS validation
-        uses: Wandalen/wretry.action@e94c43bf2e865e7dbbd90b0c1061053f5888932a # master
+        uses: hacs/action@1ebf01c408f29afcb6406bd431bc98fd8cbb15aa # main
         with:
-          action: hacs/action@1ebf01c408f29afcb6406bd431bc98fd8cbb15aa # main
-          attempt_limit: 3
-          attempt_delay: 2000
-          with: |
-            category: integration
+          category: integration
 
   hassfest:
     name: Hassfest
@@ -38,7 +37,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Hassfest validation
-        uses: home-assistant/actions/hassfest@06749dd8c0b54f350bc69c8752456cee498808a3 # master
+        uses: home-assistant/actions/hassfest@cd6f3635a740c84d8a14f6121a90068b8ece6bf6 # master
 
   pytest:
     name: Pytest
@@ -48,7 +47,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Set up Python
-        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
         with:
           python-version: "3.15"
 
@@ -92,13 +91,20 @@ jobs:
         # apt-get (triggered by --with-deps) has hung indefinitely before when
         # the runner's regional Ubuntu mirror was unreachable -- a short
         # per-attempt timeout + retry lets a single mirror hiccup self-heal
-        # within this run instead of needing a manual rerun.
+        # within this run instead of needing a manual rerun. apt gets its own
+        # retries and a short HTTP timeout, and a failed attempt stops the
+        # apt-get it leaves behind: `timeout` only ends npx, the root apt-get
+        # survives and holds the dpkg lock, so every retry failed (#305).
         run: |
+          printf 'Acquire::Retries "3";\nAcquire::http::Timeout "30";\nAcquire::https::Timeout "30";\n' | sudo tee /etc/apt/apt.conf.d/80-ci-retries >/dev/null
           for attempt in 1 2 3; do
             if timeout 300 npx playwright install --with-deps chromium; then
               exit 0
             fi
             echo "Playwright install attempt $attempt/3 failed or timed out, retrying..."
+            sudo pkill -x apt-get || true
+            while sudo fuser /var/lib/dpkg/lock-frontend >/dev/null 2>&1; do sleep 2; done
+            sudo dpkg --configure -a || true
             sleep 10
           done
           echo "::error::Playwright Chromium install failed after 3 attempts"

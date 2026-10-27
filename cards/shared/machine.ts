@@ -3,11 +3,37 @@
 import { THEME_PRESETS } from './helpers.ts';
 import type { MachineEntry, MachineHass, ThemeStops } from './types.ts';
 
+// True when `id` carries `<needleSlug>_machine_status` as a whole token — the
+// slug starts the object id, or another underscore precedes it. "Kitchen" then
+// matches sensor.kitchen_machine_status but not sensor.kitchen_2_machine_status,
+// which a plain `includes` would.
+function hasExactStatusId(id: string, needleSlug: string): boolean {
+  const lower = id.toLowerCase();
+  const suffix = `${needleSlug}_machine_status`;
+  if (!lower.endsWith(suffix)) return false;
+  if (lower.length === suffix.length) return true;
+  const boundary = lower[lower.length - suffix.length - 1];
+  return boundary === '.' || boundary === '_';
+}
+
+// True when the friendly name is exactly this machine's status name — the
+// needle alone, or the needle plus the English " Machine Status" tail, which
+// is the only tail we can recognise (other languages are translated). A bare
+// prefix match would make "Kitchen 2 Machine Status" answer for "Kitchen".
+function hasExactFriendlyName(id: string, hass: MachineHass, needle: string): boolean {
+  const friendly = String(hass.states[id]?.attributes?.friendly_name ?? '').toLowerCase();
+  return friendly === needle || friendly === `${needle} machine status`;
+}
+
 // Picks the *_machine_status entity matching this card's configured
 // `machine` — the same "name or id" needle way both cards have always
 // matched it: the entity's friendly_name contains the needle, or its id
-// contains the same needle slugified. What each card does with the match
-// (a prefix here, the raw entity id there) stays with the caller.
+// contains the same needle slugified. An exact match wins first, so a
+// machine called "Kitchen" cannot resolve to another machine's "Kitchen 2"
+// just by coming first in hass.states; the contains-match stays as the
+// fallback that keeps existing setups (and partial names) working. What each
+// card does with the match (a prefix here, the raw entity id there) stays
+// with the caller.
 function matchMachineStatusEntity(
   hass: MachineHass,
   candidates: string[],
@@ -15,6 +41,9 @@ function matchMachineStatusEntity(
 ): string | undefined {
   const needle = String(machine).toLowerCase();
   const needleSlug = needle.replace(/\s+/g, '_');
+  const exact = candidates.find(id =>
+    hasExactStatusId(id, needleSlug) || hasExactFriendlyName(id, hass, needle));
+  if (exact) return exact;
   return candidates.find(id =>
     (hass.states[id]?.attributes?.friendly_name as string)?.toLowerCase().includes(needle) ||
     id.toLowerCase().includes(needleSlug));

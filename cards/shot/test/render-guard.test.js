@@ -5,8 +5,9 @@
 // render() patches the existing DOM in place, so those deferral guards are gone
 // and interactive state simply survives the update. These tests render the card
 // into a real DOM (happy-dom, like test/render-escaping.test.js) and prove that
-// an open profile picker, a pending maintenance confirmation and a typed
-// ready-by time each survive a `hass` update.
+// an open sheet (the profile picker and the maintenance confirmation moved into
+// the shared bottom sheet in #265) and a typed ready-by time each survive a
+// `hass` update.
 'use strict';
 
 const test = require('node:test');
@@ -88,35 +89,38 @@ function stopTickers(card) {
   }
 }
 
-test('an open profile picker survives a hass update', () => {
+test('an open profile picker sheet survives a hass update', () => {
   const card = makeCard(onStates());
   card._render();
-  card._toggleProfilePicker();
-  assert.ok(card.shadowRoot.querySelector('.profile-opts'), 'the profile picker opens');
+  card._openProfileSheet();
+  assert.equal(card._sheet?.isOpen, true, 'the profile picker opens');
 
   pushHass(card, onStates({ [`${P}machine_temperature`]: { state: '93.0' } }));
 
-  assert.ok(card.shadowRoot.querySelector('.profile-opts'),
-    'the picker is still open after a hass update');
+  assert.equal(card._sheet?.isOpen, true, 'the picker is still open after a hass update');
+  assert.equal(card.shadowRoot.querySelectorAll('.profile-sheet-opt').length, 2,
+    'the options are still there');
+  card._sheet.close();
   stopTickers(card);
 });
 
-test('a pending maintenance confirmation survives a hass update', () => {
+test('an open maintenance confirmation sheet survives a hass update', () => {
   const card = makeCard(onStates({
     [`${P}maintenance_backflush`]: { state: 'ok', attributes: { pct: 0.2, days_since: 3, shots_since: 12 } },
   }));
   card._activeTab = 'maint';
   card._render();
-  card._maintConfirm = 'backflush';   // what the row's click handler sets
-  card._render();
-  assert.ok(card.shadowRoot.querySelector('.maint-confirm'), 'the confirmation prompt is shown');
+  card.shadowRoot.querySelector('.maint-row[data-maint-task="backflush"]')
+    .dispatchEvent(new window.Event('click', { bubbles: true, cancelable: true, composed: true }));
+  assert.equal(card._sheet?.isOpen, true, 'the confirmation sheet is shown');
 
   pushHass(card, onStates({
     [`${P}maintenance_backflush`]: { state: 'ok', attributes: { pct: 0.2, days_since: 3, shots_since: 12 } },
   }));
 
-  assert.ok(card.shadowRoot.querySelector('.maint-confirm'),
-    'the confirmation prompt is still shown after a hass update');
+  assert.equal(card._sheet?.isOpen, true,
+    'the confirmation sheet is still shown after a hass update');
+  card._sheet.close();
   stopTickers(card);
 });
 

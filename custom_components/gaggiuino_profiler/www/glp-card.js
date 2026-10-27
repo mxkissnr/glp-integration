@@ -804,9 +804,857 @@
     --glp-series-weight: #009e73;
   }`;
 
+  // shared/icons.ts
+  var MACHINE_BODY = /* @__PURE__ */ __name((id, mini, type = "gaggiuino") => `
+    <!-- Seitenwand rechts inkl. Kantenlicht, volle Hoehe -->
+    <path d="M72.2 2.3 L100 11 L100 130 L88 153 L72.2 153 Z" fill="url(#${id})"/>
+    <path d="M72.2 2.3 L100 11 L100 130 L88 153 L72.2 153 Z" fill="#000" opacity=".26"/>
+    <path d="M93.2 8.6 L100 11 L100 130 L90 149 L93.2 142 Z" fill="#fff" opacity=".13"/>
+
+    <!-- Frontflaeche Korpus -->
+    <path d="M13 2.4 L72.2 2.3 L72.2 71.9 L10.2 71.9 L10.2 5.2 A2.8 2.8 0 0 1 13 2.4 Z" fill="url(#${id})"/>
+    <path d="M72.2 3 L72.2 71" stroke="#fff" opacity=".22" stroke-width="3"/>
+
+    <!-- Mittelblock: Korpus kragt links darueber, dort ragt der Siebtraeger ins Freie -->
+    <path d="M20 72 L94 72 L94 122 L24 122 Z" fill="#2b2b31"/>
+    <path d="M20 72 L94 72 L94 77 L20.6 77 Z" fill="#000" opacity=".3"/>
+
+    <!-- Bruehgruppe + Siebtraeger (ragt nach links ins Freie) -->
+    <rect x="42" y="71.5" width="16" height="10.5" rx="2.2" fill="#b9bec5"/>
+    ${mini ? "" : '<path d="M47 82 L53 82 L52 87.5 L48 87.5 Z" fill="#8f959d"/>'}
+    <path d="M20.5 91 L45 84" stroke="#26262c" stroke-width="6.6" stroke-linecap="round"/>
+    <circle cx="18.6" cy="91.6" r="5.9" fill="#ded8ca" stroke="#26262c" stroke-width="1.2"/>
+
+    <!-- Dampflanze RECHTS: Gummimanschette oben, Chromrohr nach unten -->
+    <path d="M84.2 72 C85.2 78 84.6 82 84 88" stroke="#26262c" stroke-width="5" stroke-linecap="round"/>
+    <path d="M84 88 C83.5 101 83 115 83.5 130" stroke="#a3a9b1" stroke-width="2.6" stroke-linecap="round"/>
+    ${mini ? "" : '<path d="M21.5 97 L21.5 130" stroke="#9aa0a8" stroke-width="2" stroke-linecap="round"/>'}
+
+    <!-- Tropfschale: silbernes Lochblech in dunklem Rahmen, breiter als der Korpus -->
+    <path d="M17 122 L93 122 L80 134 L0 134 Z" fill="#25252b"/>
+    <path d="M20.5 123.4 L88.5 123.4 L77 132.6 L4 132.6 Z" fill="url(#${id}-steel)"/>
+    ${mini ? "" : `
+    <circle cx="28" cy="126" r="1.5" fill="#4a4a52"/>
+    <circle cx="39" cy="126" r="1.5" fill="#4a4a52"/>
+    <circle cx="50" cy="126" r="1.5" fill="#4a4a52"/>
+    <circle cx="61" cy="126" r="1.5" fill="#4a4a52"/>
+    <circle cx="72" cy="126" r="1.5" fill="#4a4a52"/>
+    <circle cx="21" cy="130.4" r="1.5" fill="#4a4a52"/>
+    <circle cx="32" cy="130.4" r="1.5" fill="#4a4a52"/>
+    <circle cx="43" cy="130.4" r="1.5" fill="#4a4a52"/>
+    <circle cx="54" cy="130.4" r="1.5" fill="#4a4a52"/>
+    <circle cx="65" cy="130.4" r="1.5" fill="#4a4a52"/>`}
+
+    <!-- Sockelfront: senkrecht, rechte Kante trifft die Seitenwand -->
+    <path d="M0 134 L80 134 L84 155 L0 155 Z" fill="#2b2b31"/>
+    <path d="M0 134 L80 134 L80.8 138 L0 138 Z" fill="#fff" opacity=".07"/>
+
+    <!-- Fuesse -->
+    <rect x="4.5" y="155" width="7.5" height="4.4" rx="1.5" fill="#26262c"/>
+    <rect x="66" y="155" width="7.5" height="4.4" rx="1.5" fill="#26262c"/>
+
+    ${type === "gaggimate" ? `
+    <!-- GaggiMate: runder Puck mit Chromgehaeuse ersetzt Wipptasten +
+         Dampfknopf (mxkissnr/glp-lovelace-card#127 / mxkissnr/glp-order-card#97) -->
+    <circle cx="41" cy="24" r="14" fill="#cfd4d9"/>
+    <circle cx="41" cy="24" r="14" fill="none" stroke="#8f959d" stroke-width=".9"/>
+    <circle cx="41" cy="24" r="11.4" fill="#17171b"/>
+    <circle cx="41" cy="24" r="10.2" fill="#0b0d12"/>
+    ${mini ? "" : `
+    <path d="M31.1 14.1 A14 14 0 0 1 45 10.6" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" opacity=".65"/>
+    <path d="M33.4 16.4 A10.7 10.7 0 0 1 48.6 16.4" fill="none" stroke="#e8452a" stroke-width="1.3" stroke-linecap="round" opacity=".9"/>
+    <path d="M42.6 13.4 A10.7 10.7 0 0 1 48.6 16.4" fill="none" stroke="#6aa9d8" stroke-width="1.3" stroke-linecap="round"/>`}` : `
+    <!-- Bedienfeld: 3 Wipptasten -->
+    <rect x="20.5" y="13.6" width="9" height="14.8" rx="2.1" fill="#26262c"/>
+    <rect x="33" y="13.6" width="9" height="14.8" rx="2.1" fill="#26262c"/>
+    <rect x="45.5" y="13.6" width="9" height="14.8" rx="2.1" fill="#26262c"/>
+    ${mini ? "" : `
+    <rect x="21.6" y="14.9" width="6.8" height="5.4" rx="1.4" fill="#fff" opacity=".13"/>
+    <rect x="34.1" y="14.9" width="6.8" height="5.4" rx="1.4" fill="#fff" opacity=".13"/>
+    <rect x="46.6" y="14.9" width="6.8" height="5.4" rx="1.4" fill="#fff" opacity=".13"/>
+    <rect x="23.7" y="31.8" width="2.6" height="2.2" rx=".8" fill="#d9422e"/>
+    <rect x="36.2" y="31.8" width="2.6" height="2.2" rx=".8" fill="#d9422e"/>
+    <rect x="48.7" y="31.8" width="2.6" height="2.2" rx=".8" fill="#d9422e"/>`}
+
+    <!-- Dampfknopf: liegender Zylinder auf der Seitenwand -->
+    <rect x="74" y="23.4" width="9" height="8" fill="#26262c"/>
+    <rect x="80.7" y="20.5" width="17" height="13.6" rx="6.8" fill="#212126"/>
+    <ellipse cx="82.6" cy="27.3" rx="2.4" ry="6.8" fill="#3b3b43"/>
+    ${mini ? "" : '<rect x="81.4" y="23.4" width="1.7" height="7.8" rx=".85" fill="#fff" opacity=".2"/>'}`}`, "MACHINE_BODY");
+  var MACHINE_ICON_MINI = /* @__PURE__ */ __name((id, type = "gaggiuino") => `
+    <svg viewBox="0 0 100 162" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="${id}" x1="6" y1="0" x2="92" y2="145" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stop-color="var(--glp-accent-start)"/>
+          <stop offset="1" stop-color="var(--glp-accent-end)"/>
+        </linearGradient>
+        <linearGradient id="${id}-steel" x1="0" y1="123" x2="0" y2="133" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stop-color="#d3d6db"/>
+          <stop offset="1" stop-color="#9ba1a9"/>
+        </linearGradient>
+      </defs>
+      ${MACHINE_BODY(id, true, type)}
+    </svg>`, "MACHINE_ICON_MINI");
+  var GLP_ICON_PATHS = {
+    // --- drinks -----------------------------------------------------------
+    // One shared demitasse silhouette for the three straight espresso drinks;
+    // they differ only in fill level, which is the honest difference between
+    // them (same basket, same cup, more or less water through it).
+    ristretto: '<path d="M16.5 8.5h1a2.5 2.5 0 0 1 0 5h-1"/><path d="M5 8.5h11.5v5a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4v-5z"/><path d="M6.5 15.2h8.6"/>',
+    espresso: '<path d="M16.5 8.5h1a2.5 2.5 0 0 1 0 5h-1"/><path d="M5 8.5h11.5v5a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4v-5z"/><path d="M5.6 13.2h10.4"/>',
+    lungo: '<path d="M16.5 8.5h1a2.5 2.5 0 0 1 0 5h-1"/><path d="M5 8.5h11.5v5a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4v-5z"/><path d="M5.1 10.6h11.2"/>',
+    // Cappuccino: domed foam cap standing proud of the rim.
+    cappuccino: '<path d="M16.5 8.5h1a2.5 2.5 0 0 1 0 5h-1"/><path d="M5 8.5h11.5v5a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4v-5z"/><path d="M5.4 8.5a5.8 5.8 0 0 1 11 0"/><path d="M5.8 12h10"/>',
+    // Latte macchiato: tall glass, layered.
+    latte: '<path d="M7.5 4.5h9l-1 14a2 2 0 0 1-2 1.8h-3a2 2 0 0 1-2-1.8l-1-14z"/><path d="M7.9 9h8.2M8.2 13h7.6"/>',
+    // Flat white: wide shallow cup, thin microfoam layer, latte-art dot.
+    flat_white: '<path d="M17.5 9.5h1a2.2 2.2 0 0 1 0 4.4h-1"/><path d="M3.5 9.5h14v3.6a4.4 4.4 0 0 1-4.4 4.4H7.9a4.4 4.4 0 0 1-4.4-4.4V9.5z"/><path d="M4.2 12h12.6"/><circle cx="10.5" cy="14.4" r="1.1"/>',
+    // --- state, action, status --------------------------------------------
+    coffee: '<path d="M17 8h1a3 3 0 0 1 0 6h-1M4 8h13v7a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4V8z"/><path d="M8 2v2M12 2v2"/>',
+    check: '<path d="M4.5 12.5 9.5 17.5 19.5 6.5"/>',
+    close: '<path d="M6 6l12 12M18 6 6 18"/>',
+    heat: '<path d="M12 3.5c3 3.2 4.5 5.8 4.5 8a4.5 4.5 0 0 1-9 0c0-2.2 1.5-4.8 4.5-8z"/><path d="M9.5 20.5h5"/>',
+    droplet: '<path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/>',
+    steam: '<path d="M7 20c0-2 1.6-2.4 1.6-4.4S7 12.6 7 10.6"/><path d="M12 20c0-2.4 1.8-2.9 1.8-5.3S12 10.3 12 8"/><path d="M17 20c0-2 1.6-2.4 1.6-4.4S17 12.6 17 10.6"/>',
+    warning: '<path d="M12 4.5 21 19.5H3L12 4.5z"/><path d="M12 10v4"/><circle cx="12" cy="16.8" r="0.6"/>',
+    gear: '<circle cx="12" cy="12" r="3.2"/><path d="M12 3.5v2.2M12 18.3v2.2M20.5 12h-2.2M5.7 12H3.5M18 6l-1.6 1.6M7.6 16.4 6 18M18 18l-1.6-1.6M7.6 7.6 6 6"/>',
+    plug: '<path d="M9 3.5v5M15 3.5v5"/><path d="M6.5 8.5h11v3a5.5 5.5 0 0 1-11 0v-3z"/><path d="M12 17v3.5"/>',
+    cart: '<path d="M3 4.5h2.2l2.3 10.4h9.6l2.1-7.4H6.4"/><circle cx="9" cy="19" r="1.4"/><circle cx="16.5" cy="19" r="1.4"/>',
+    shower: '<path d="M4.5 8.5h15v2.6a3 3 0 0 1-3 3h-9a3 3 0 0 1-3-3V8.5z"/><path d="M8 17.5v2M12 17.5v3M16 17.5v2"/>',
+    wrench: '<path d="M14.7 6.3a4 4 0 0 1-5.4 5.4L4 17l3 3 5.3-5.3a4 4 0 0 1 5.4-5.4l-2.5 2.5-2-2z"/>',
+    refresh: '<path d="M20 12a8 8 0 1 1-2.6-5.9"/><path d="M20 4v4.5h-4.5"/>',
+    circle: '<circle cx="12" cy="12" r="8"/>',
+    // Waiting/queued. An hourglass rather than a clock: a clock reads as "when",
+    // an hourglass as "not yet" — and this marks an order sitting unconfirmed,
+    // not a time of day.
+    hourglass: '<path d="M7 3.5h10M7 20.5h10"/><path d="M8 3.5v3.2c0 1.6 1.2 2.9 4 5.3 2.8-2.4 4-3.7 4-5.3V3.5"/><path d="M8 20.5v-3.2c0-1.6 1.2-2.9 4-5.3 2.8 2.4 4 3.7 4 5.3v3.2"/>',
+    flask: '<path d="M10 3.5v6L5.2 18a2 2 0 0 0 1.7 3h10.2a2 2 0 0 0 1.7-3L14 9.5v-6"/><path d="M9 3.5h6"/><path d="M7.4 14h9.2"/>',
+    // Not a party popper — a small burst, so it still reads at 16px and keeps
+    // the card's tone. Used for the completed-order confirmation.
+    celebrate: '<path d="M12 3v3.5M12 17.5V21M21 12h-3.5M6.5 12H3M18.4 5.6l-2.5 2.5M8.1 15.9l-2.5 2.5M18.4 18.4l-2.5-2.5M8.1 8.1 5.6 5.6"/>',
+    // Replaces the ★/☆ text characters in the rating row. The filled state is a
+    // class on the element, not a second path — it is the same shape either way.
+    star: '<path d="M12 3.8l2.6 5.3 5.9.9-4.2 4.1 1 5.8-5.3-2.8-5.3 2.8 1-5.8L3.5 10l5.9-.9L12 3.8z"/>',
+    // --- direction and links ----------------------------------------------
+    // Replace the ‹ › ▾ ↗ text characters: those render in whichever font the
+    // platform picks, ignore the button's colour and sit off the text baseline,
+    // exactly the emoji problem these icons were introduced for.
+    "chevron-left": '<path d="M14.5 5.5 8 12l6.5 6.5"/>',
+    "chevron-right": '<path d="M9.5 5.5 16 12l-6.5 6.5"/>',
+    "chevron-down": '<path d="M5.5 9.5 12 16l6.5-6.5"/>',
+    // An arrow leaving a box: "this leaves the card" rather than a bare arrow.
+    "open-in-new": '<path d="M13.5 4.5h6v6"/><path d="M19.5 4.5 11 13"/><path d="M17 14v4.5a1.5 1.5 0 0 1-1.5 1.5h-10A1.5 1.5 0 0 1 4 18.5v-10A1.5 1.5 0 0 1 5.5 7H10"/>'
+  };
+  var ICONS = {
+    has: /* @__PURE__ */ __name((name) => Object.prototype.hasOwnProperty.call(GLP_ICON_PATHS, name), "has"),
+    // Returns '' for an unknown name rather than an empty <svg>: callers fall
+    // back to other content (e.g. a stored emoji on a user-created menu entry),
+    // and an empty string is what makes `ICONS.of(x) || fallback` work.
+    of: /* @__PURE__ */ __name((name, cls = "") => ICONS.has(name) ? `<svg class="glp-i${cls ? " " + cls : ""}" viewBox="0 0 24 24" aria-hidden="true" focusable="false">${GLP_ICON_PATHS[name]}</svg>` : "", "of")
+  };
+
+  // shared/sheet.ts
+  var DISMISS_FRACTION = 0.25;
+  var DISMISS_MIN_PX = 80;
+  var DISMISS_VELOCITY_PX_PER_MS = 0.5;
+  var FLICK_WINDOW_MS = 100;
+  var DRAG_START_SLOP_PX = 6;
+  var SPRING_BACK_MS = 200;
+  var RUBBER_BAND_MAX_PX = 24;
+  var RUBBER_BAND_FACTOR = 0.5;
+  var SHEET_OUT_MS = 220;
+  var SHEET_OUT_MIN_MS = 120;
+  var SHEET_OUT_BEZIER = "cubic-bezier(.2,0,0,1)";
+  var HALF_VIEWPORT = 0.5;
+  var FULL_VIEWPORT = 0.92;
+  var SNAP_FRACTION = 0.12;
+  var SNAP_MIN_PX = 40;
+  var SNAP_MAX_PX = 72;
+  function dismissDistance(sheetHeight) {
+    if (!(sheetHeight > 0)) return DISMISS_MIN_PX;
+    return Math.min(sheetHeight * DISMISS_FRACTION, DISMISS_MIN_PX);
+  }
+  __name(dismissDistance, "dismissDistance");
+  function recentVelocity(samples, windowMs = FLICK_WINDOW_MS) {
+    if (samples.length < 2) return 0;
+    const last = samples[samples.length - 1];
+    if (!last) return 0;
+    let first = last;
+    for (let i6 = samples.length - 2; i6 >= 0; i6--) {
+      const sample = samples[i6];
+      if (sample && last.t - sample.t <= windowMs) first = sample;
+      else break;
+    }
+    const dt = last.t - first.t;
+    return dt > 0 ? (last.y - first.y) / dt : 0;
+  }
+  __name(recentVelocity, "recentVelocity");
+  function shouldDismissSheet(dy, sheetHeight, velocityPxPerMs) {
+    if (dy <= 0) return false;
+    if (dy >= dismissDistance(sheetHeight)) return true;
+    return velocityPxPerMs >= DISMISS_VELOCITY_PX_PER_MS;
+  }
+  __name(shouldDismissSheet, "shouldDismissSheet");
+  function rubberBand(up) {
+    if (up <= 0) return 0;
+    return -Math.min(RUBBER_BAND_MAX_PX, up * RUBBER_BAND_FACTOR);
+  }
+  __name(rubberBand, "rubberBand");
+  function allowsBodyDrag(scrollTop, dy, interactiveTarget) {
+    return scrollTop <= 0 && dy > 0 && !interactiveTarget;
+  }
+  __name(allowsBodyDrag, "allowsBodyDrag");
+  function snapDistance(sheetHeight) {
+    if (!(sheetHeight > 0)) return SNAP_MIN_PX;
+    return Math.min(Math.max(sheetHeight * SNAP_FRACTION, SNAP_MIN_PX), SNAP_MAX_PX);
+  }
+  __name(snapDistance, "snapDistance");
+  function sheetSnap(dy, height, velocity, expanded) {
+    if (dy > 0) {
+      if (shouldDismissSheet(dy, height, velocity)) return "close";
+      return "half";
+    }
+    if (dy < 0) {
+      const promotes = -dy >= snapDistance(height) || -velocity >= DISMISS_VELOCITY_PX_PER_MS;
+      if (!expanded && promotes) return "full";
+      return expanded ? "full" : "half";
+    }
+    return expanded ? "full" : "half";
+  }
+  __name(sheetSnap, "sheetSnap");
+  var _sheetSeq = 0;
+  function _now() {
+    return typeof performance !== "undefined" && typeof performance.now === "function" ? performance.now() : Date.now();
+  }
+  __name(_now, "_now");
+  function _isInteractiveTarget(target) {
+    const el = target;
+    return !!el?.closest?.(
+      'button, a, input, select, textarea, summary, canvas, [role="slider"], [contenteditable="true"]'
+    );
+  }
+  __name(_isInteractiveTarget, "_isInteractiveTarget");
+  function _translateY(el) {
+    const transform = el.style?.transform;
+    if (!transform || transform === "none") return 0;
+    const match = /translateY\((-?[\d.]+)px\)/.exec(transform);
+    return match && match[1] ? parseFloat(match[1]) : 0;
+  }
+  __name(_translateY, "_translateY");
+  function _findTouch(list, id) {
+    for (let i6 = 0; i6 < list.length; i6++) {
+      const touch = list[i6];
+      if (touch && touch.identifier === id) return touch;
+    }
+    return null;
+  }
+  __name(_findTouch, "_findTouch");
+  function _isPhoneWidth(win) {
+    if (!win || typeof win.matchMedia !== "function") return false;
+    try {
+      return win.matchMedia("(max-width: 899px)").matches;
+    } catch {
+      return false;
+    }
+  }
+  __name(_isPhoneWidth, "_isPhoneWidth");
+  function _motionOk(win) {
+    if (!win || typeof win.matchMedia !== "function") return true;
+    try {
+      return !win.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    } catch {
+      return true;
+    }
+  }
+  __name(_motionOk, "_motionOk");
+  var GlpSheet = class {
+    static {
+      __name(this, "GlpSheet");
+    }
+    _root;
+    _doc;
+    _win;
+    _options;
+    _titleId;
+    _host = null;
+    _dialog = null;
+    _panel = null;
+    _bodyEl = null;
+    _content = null;
+    _open = false;
+    _expanded = false;
+    // True while this sheet still owns a history entry, so a close path can
+    // tell whether back() has to remove one.
+    _historyPushed = false;
+    _cleanup = [];
+    _dragCleanup = [];
+    // A close that is still sliding out, if any, taking whether it should trim
+    // the history entry. open() settles it first, so a re-open can never be
+    // wiped by the previous close's transition timer.
+    _pendingClose = null;
+    // Bumped on every open, so a slide-out timer from an earlier close cannot
+    // touch the DOM of a sheet that was reopened since.
+    _generation = 0;
+    constructor(root, options = {}) {
+      this._root = root;
+      this._doc = root.ownerDocument ?? document;
+      this._win = this._doc.defaultView ?? (typeof window !== "undefined" ? window : null);
+      this._options = options;
+      this._titleId = `glp-sheet-title-${++_sheetSeq}`;
+    }
+    get isOpen() {
+      return this._open;
+    }
+    open(content) {
+      this._content = content;
+      if (this._open) {
+        this.refresh();
+        return;
+      }
+      const reuseEntry = this._pendingClose !== null && this._historyPushed;
+      this._settleClose(reuseEntry);
+      if (!this._root || typeof this._root.appendChild !== "function") return;
+      if (!this._host) {
+        this._host = this._doc.createElement("div");
+        this._host.className = "glp-sheet-host";
+        this._root.appendChild(this._host);
+      }
+      this._open = true;
+      this._expanded = false;
+      this._historyPushed = reuseEntry;
+      this._generation += 1;
+      this._render();
+      const dialog = this._dialog;
+      if (dialog) {
+        if (typeof dialog.showModal === "function") {
+          if (!dialog.open) {
+            try {
+              dialog.showModal();
+            } catch {
+              dialog.setAttribute("open", "");
+            }
+          }
+        } else {
+          dialog.setAttribute("open", "");
+        }
+      }
+      this._playEnter();
+      this._listen();
+      if (!reuseEntry) this._pushHistory();
+    }
+    close() {
+      this._close(true);
+    }
+    // Re-renders body and actions while open, so live data (a shot list, a
+    // picker's selection) updates without closing the sheet.
+    refresh() {
+      if (!this._open) return;
+      this._render();
+    }
+    _render() {
+      const host = this._host;
+      const content = this._content;
+      if (!host || !content) return;
+      const label = this._options.closeLabel ?? "Close";
+      D(b2`
+      <dialog
+        class="glp-sheet"
+        data-snap=${this._expanded ? "full" : "half"}
+        aria-labelledby=${this._titleId}
+        @cancel=${(e6) => {
+        e6.preventDefault();
+        this._close(true);
+      }}
+        @click=${(e6) => {
+        if (e6.target === this._dialog) this._close(true);
+      }}
+      >
+        <div class="glp-sheet-backdrop" @click=${() => this._close(true)}></div>
+        <div class="glp-sheet-panel">
+          <div class="glp-sheet-grab" aria-hidden="true"></div>
+          <div class="glp-sheet-bar">
+            <button class="glp-sheet-close" type="button" aria-label=${label} @click=${() => this._close(true)}>
+              ${/* ICONS.of() emits fixed SVG markup */
+      o5(ICONS.of("close"))}
+            </button>
+            <h2 class="glp-sheet-title" id=${this._titleId}>${content.title}</h2>
+            <div class="glp-sheet-actions">${content.actions ? content.actions() : A}</div>
+          </div>
+          <div class="glp-sheet-body">${content.body()}</div>
+        </div>
+      </dialog>
+    `, host);
+      this._dialog = host.querySelector("dialog");
+      this._panel = host.querySelector(".glp-sheet-panel");
+      this._bodyEl = host.querySelector(".glp-sheet-body");
+      this._attachDrag();
+    }
+    // Restarts the phone slide-in. The dialog node survives across opens, so the
+    // attribute has to be cleared first for the animation to run again.
+    _playEnter() {
+      const dialog = this._dialog;
+      if (!dialog || !_isPhoneWidth(this._win) || !_motionOk(this._win)) return;
+      dialog.removeAttribute("data-entering");
+      dialog.setAttribute("data-entering", "1");
+      const clear = /* @__PURE__ */ __name(() => {
+        dialog.removeAttribute("data-entering");
+      }, "clear");
+      if (this._win && typeof this._win.setTimeout === "function") this._win.setTimeout(clear, 280);
+      else setTimeout(clear, 280);
+    }
+    _listen() {
+      this._detachListeners();
+      const win = this._win;
+      if (!win || typeof win.addEventListener !== "function") return;
+      const onPop = /* @__PURE__ */ __name(() => {
+        this._historyPushed = false;
+        if (this._open) this._close(false);
+      }, "onPop");
+      win.addEventListener("popstate", onPop);
+      this._cleanup.push(() => win.removeEventListener("popstate", onPop));
+    }
+    _detachListeners() {
+      for (const off of this._cleanup) off();
+      this._cleanup = [];
+    }
+    _history() {
+      const fromWin = this._win?.history;
+      if (fromWin) return fromWin;
+      if (typeof history !== "undefined") return history;
+      return null;
+    }
+    _pushHistory() {
+      const hist = this._history();
+      const push = hist?.pushState;
+      if (!hist || typeof push !== "function") return;
+      try {
+        const href = this._win?.location?.href;
+        if (href) push.call(hist, { glpSheet: true }, "", href);
+        else push.call(hist, { glpSheet: true }, "");
+        this._historyPushed = true;
+      } catch {
+        this._historyPushed = false;
+      }
+    }
+    _close(trimHistory) {
+      if (!this._open) return;
+      this._open = false;
+      this._expanded = false;
+      this._detachDrag();
+      this._settleClose();
+      let pending = true;
+      const finish = /* @__PURE__ */ __name((trim) => {
+        if (!pending) return;
+        pending = false;
+        this._pendingClose = null;
+        this._finishClose(trim);
+      }, "finish");
+      this._pendingClose = finish;
+      this._animateOut(() => finish(trimHistory));
+    }
+    // Immediately completes a close that is still sliding out, so its timer
+    // cannot tear down a sheet that was reopened in the meantime. With
+    // `reuseHistory` the entry the closing sheet still owns is kept for the
+    // re-open instead of being trimmed.
+    _settleClose(reuseHistory = false) {
+      const pending = this._pendingClose;
+      if (!pending) return;
+      this._pendingClose = null;
+      pending(!reuseHistory);
+    }
+    _finishClose(trimHistory) {
+      this._detachListeners();
+      const dialog = this._dialog;
+      if (dialog) {
+        try {
+          dialog.close();
+        } catch {
+          dialog.removeAttribute("open");
+        }
+        if (dialog.open) dialog.removeAttribute("open");
+      }
+      const hadEntry = this._historyPushed;
+      this._historyPushed = false;
+      if (trimHistory && hadEntry) {
+        const hist = this._history();
+        const back = hist?.back;
+        if (hist && typeof back === "function") back.call(hist);
+      }
+      const onClose = this._options.onClose;
+      if (typeof onClose === "function") onClose();
+    }
+    // Slides the panel out from wherever the drag left it. Phones with motion
+    // allowed only; everywhere else the close is instant.
+    _animateOut(done) {
+      const panel = this._panel;
+      const backdrop = this._host?.querySelector(".glp-sheet-backdrop") ?? null;
+      if (!panel || !_isPhoneWidth(this._win) || !_motionOk(this._win)) {
+        done();
+        return;
+      }
+      const height = (typeof panel.getBoundingClientRect === "function" ? panel.getBoundingClientRect().height : 0) || panel.offsetHeight || 0;
+      const startY = Math.max(0, _translateY(panel));
+      const distance = Math.max(1, height - startY);
+      const duration = Math.max(SHEET_OUT_MIN_MS, Math.round(SHEET_OUT_MS * (distance / Math.max(1, height))));
+      const generation = this._generation;
+      panel.style.transition = "none";
+      if (height > 0) panel.style.height = `${Math.round(height)}px`;
+      panel.style.transform = startY > 0 ? `translateY(${Math.round(startY)}px)` : "";
+      void panel.offsetHeight;
+      let finished = false;
+      let timer = null;
+      const finish = /* @__PURE__ */ __name(() => {
+        if (finished) return;
+        finished = true;
+        if (timer) clearTimeout(timer);
+        panel.removeEventListener("transitionend", onEnd);
+        if (generation === this._generation) this._resetPanelStyles();
+        done();
+      }, "finish");
+      const onEnd = /* @__PURE__ */ __name((e6) => {
+        if (e6.target === panel) finish();
+      }, "onEnd");
+      panel.addEventListener("transitionend", onEnd);
+      panel.style.transition = `transform ${duration}ms ${SHEET_OUT_BEZIER}`;
+      panel.style.transform = `translateY(${Math.max(1, height)}px)`;
+      if (backdrop) {
+        backdrop.style.transition = `opacity ${duration}ms ${SHEET_OUT_BEZIER}`;
+        backdrop.style.opacity = "0";
+      }
+      timer = setTimeout(finish, duration + 60);
+    }
+    _resetPanelStyles() {
+      const panel = this._panel;
+      if (panel) {
+        panel.style.transition = "";
+        panel.style.transform = "";
+        panel.style.height = "";
+      }
+      const backdrop = this._host?.querySelector(".glp-sheet-backdrop") ?? null;
+      if (backdrop) {
+        backdrop.style.transition = "";
+        backdrop.style.opacity = "";
+      }
+    }
+    // Settles on a detent after a drag: the destination's max-height (50vh or
+    // 92vh) is applied by data-snap first, then the height animates from where
+    // the finger left it to the measured destination, and the inline styles are
+    // cleared so the detent's own rule owns the size again.
+    _settle(expanded, target) {
+      const before = this._panel;
+      const start = before && typeof before.getBoundingClientRect === "function" ? before.getBoundingClientRect().height : 0;
+      this._expanded = expanded;
+      this._render();
+      const panel = this._panel;
+      if (!panel) return;
+      const backdrop = this._host?.querySelector(".glp-sheet-backdrop") ?? null;
+      if (target > 0 && start > 0 && Math.abs(start - target) >= 1) {
+        panel.style.transition = "none";
+        panel.style.transform = "";
+        panel.style.height = `${Math.round(start)}px`;
+        void panel.offsetHeight;
+        panel.style.transition = `height ${SPRING_BACK_MS}ms ${SHEET_OUT_BEZIER}`;
+        panel.style.height = `${Math.round(target)}px`;
+      }
+      if (backdrop) {
+        backdrop.style.transition = `opacity ${SPRING_BACK_MS}ms ${SHEET_OUT_BEZIER}`;
+        backdrop.style.opacity = "";
+      }
+      const reset = /* @__PURE__ */ __name(() => {
+        this._resetPanelStyles();
+      }, "reset");
+      if (this._win && typeof this._win.setTimeout === "function") this._win.setTimeout(reset, SPRING_BACK_MS + 40);
+      else setTimeout(reset, SPRING_BACK_MS + 40);
+    }
+    _detachDrag() {
+      for (const off of this._dragCleanup) off();
+      this._dragCleanup = [];
+    }
+    // Touch drag on the sheet: the grab pill, the header and the content all
+    // drag, as long as the content is scrolled to the top, or the sheet is
+    // already expanded (where the next downward gesture must be able to shrink
+    // it). Touch events (not pointer) keep native `pan-y` scrolling working; the
+    // browser scroll is only suppressed with preventDefault once the drag
+    // starts. Wider viewports get no drag at all, matching the centred dialog.
+    _attachDrag() {
+      const host = this._host;
+      if (this._dragCleanup.length || !host || !_isPhoneWidth(this._win)) return;
+      if (typeof host.addEventListener !== "function") return;
+      let active = false;
+      let touchId = null;
+      let startY = 0;
+      let interactive = false;
+      let dragging = false;
+      let lastDy = 0;
+      let samples = [];
+      let halfH = 0;
+      let fullH = 0;
+      const panel = /* @__PURE__ */ __name(() => this._panel, "panel");
+      const backdrop = /* @__PURE__ */ __name(() => this._host?.querySelector(".glp-sheet-backdrop") ?? null, "backdrop");
+      const heightOf = /* @__PURE__ */ __name((el) => {
+        if (!el) return 0;
+        const rect = typeof el.getBoundingClientRect === "function" ? el.getBoundingClientRect() : null;
+        return rect?.height || el.offsetHeight || 0;
+      }, "heightOf");
+      const measure = /* @__PURE__ */ __name(() => {
+        const el = panel();
+        const bodyEl = this._bodyEl;
+        const cur = heightOf(el);
+        const vh = this._win?.innerHeight || 0;
+        const extra = bodyEl ? Math.max(0, bodyEl.scrollHeight - bodyEl.clientHeight) : 0;
+        if (this._expanded) {
+          halfH = Math.min(cur, vh * HALF_VIEWPORT);
+          fullH = cur;
+        } else {
+          halfH = cur;
+          fullH = Math.max(cur, Math.min(cur + extra, vh * FULL_VIEWPORT));
+        }
+      }, "measure");
+      const applyTransform = /* @__PURE__ */ __name(() => {
+        const el = panel();
+        if (!el) return;
+        const dy = lastDy;
+        const delta = Math.max(0, fullH - halfH);
+        el.style.transition = "none";
+        if (dy >= 0) {
+          if (this._expanded && delta > 0 && dy < delta) {
+            el.style.height = `${Math.round(fullH - dy)}px`;
+            el.style.transform = "";
+          } else {
+            const out = this._expanded ? dy - delta : dy;
+            el.style.height = delta > 0 ? `${Math.round(halfH)}px` : "";
+            el.style.transform = out > 0 ? `translateY(${Math.round(out)}px)` : "";
+          }
+        } else {
+          const up = -dy;
+          if (!this._expanded && delta > 0 && up < delta) {
+            el.style.height = `${Math.round(halfH + up)}px`;
+            el.style.transform = "";
+          } else {
+            const beyond = !this._expanded && delta > 0 ? up - delta : up;
+            el.style.height = delta > 0 ? `${Math.round(fullH)}px` : "";
+            const band = rubberBand(beyond);
+            el.style.transform = band < 0 ? `translateY(${Math.round(band)}px)` : "";
+          }
+        }
+        const shade = backdrop();
+        if (shade) {
+          const height = heightOf(el) || 1;
+          shade.style.opacity = String(Math.max(0, 1 - Math.max(0, dy) / height));
+        }
+      }, "applyTransform");
+      const onTouchStart = /* @__PURE__ */ __name((e6) => {
+        if (!this._open || e6.touches.length !== 1) return;
+        const t5 = e6.touches[0];
+        if (!t5) return;
+        touchId = t5.identifier;
+        startY = t5.clientY;
+        interactive = _isInteractiveTarget(e6.target);
+        active = true;
+        dragging = false;
+        lastDy = 0;
+        samples = [{ t: _now(), y: 0 }];
+        measure();
+      }, "onTouchStart");
+      const onTouchMove = /* @__PURE__ */ __name((e6) => {
+        if (!active || touchId === null) return;
+        const el = panel();
+        if (!el) return;
+        const t5 = _findTouch(e6.touches, touchId);
+        if (!t5) return;
+        const dy = t5.clientY - startY;
+        const bodyEl = this._bodyEl;
+        const scrollTop = bodyEl ? bodyEl.scrollTop : 0;
+        if (!dragging) {
+          if (interactive) return;
+          const fromBody = !!bodyEl && typeof bodyEl.contains === "function" && bodyEl.contains(e6.target);
+          if (dy > 0 && (scrollTop > 0 || fromBody && !allowsBodyDrag(scrollTop, dy, interactive))) return;
+          if (Math.abs(dy) < DRAG_START_SLOP_PX) return;
+          dragging = true;
+          el.style.transition = "none";
+        }
+        e6.preventDefault();
+        lastDy = dy;
+        samples.push({ t: _now(), y: dy });
+        if (samples.length > 40) samples.shift();
+        applyTransform();
+      }, "onTouchMove");
+      const onTouchEnd = /* @__PURE__ */ __name((cancelled) => {
+        if (!active) return;
+        active = false;
+        touchId = null;
+        if (!dragging) {
+          this._resetPanelStyles();
+          return;
+        }
+        dragging = false;
+        const dy = lastDy;
+        const velocity = recentVelocity(samples);
+        const at = this._expanded ? fullH : halfH;
+        const snap = cancelled ? this._expanded ? "full" : "half" : sheetSnap(dy, at, velocity, this._expanded);
+        if (snap === "close") {
+          this._close(true);
+          return;
+        }
+        this._settle(snap === "full", snap === "full" ? fullH : halfH);
+      }, "onTouchEnd");
+      const onStart = /* @__PURE__ */ __name((e6) => onTouchStart(e6), "onStart");
+      const onMove = /* @__PURE__ */ __name((e6) => onTouchMove(e6), "onMove");
+      const onEnd = /* @__PURE__ */ __name(() => onTouchEnd(false), "onEnd");
+      const onCancel = /* @__PURE__ */ __name(() => onTouchEnd(true), "onCancel");
+      host.addEventListener("touchstart", onStart, { passive: true });
+      host.addEventListener("touchmove", onMove, { passive: false });
+      host.addEventListener("touchend", onEnd);
+      host.addEventListener("touchcancel", onCancel);
+      this._dragCleanup.push(() => {
+        host.removeEventListener("touchstart", onStart);
+        host.removeEventListener("touchmove", onMove);
+        host.removeEventListener("touchend", onEnd);
+        host.removeEventListener("touchcancel", onCancel);
+      });
+    }
+  };
+  var SHEET_STYLES = `
+  .glp-sheet {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    max-height: none;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    overflow: hidden;
+    color: var(--glp-text);
+    font-family: var(--paper-font-body1_-_font-family, -apple-system, sans-serif);
+  }
+  .glp-sheet::backdrop { background: transparent; }
+  .glp-sheet-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+  }
+  .glp-sheet-panel {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    background: var(--glp-surface);
+    color: var(--glp-text);
+    border: 1px solid var(--glp-border);
+    border-bottom: none;
+    border-radius: var(--glp-radius) var(--glp-radius) 0 0;
+    box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.35);
+    max-height: 92vh;
+    will-change: transform;
+  }
+  /* Half is the opening detent; full is the panel's own 92vh max-height. */
+  .glp-sheet[data-snap="half"] .glp-sheet-panel { max-height: 50vh; }
+  .glp-sheet-grab {
+    display: block;
+    flex: 0 0 auto;
+    width: 36px;
+    height: 4px;
+    margin: var(--glp-sp-2) auto var(--glp-sp-1);
+    border-radius: 2px;
+    background: var(--glp-border);
+  }
+  .glp-sheet-bar {
+    display: flex;
+    align-items: center;
+    gap: var(--glp-sp-2);
+    flex: 0 0 auto;
+    padding: var(--glp-sp-2) var(--glp-sp-4) var(--glp-sp-3);
+    border-bottom: 1px solid var(--glp-border);
+  }
+  .glp-sheet-title {
+    flex: 1 1 auto;
+    min-width: 0;
+    margin: 0;
+    font-size: var(--glp-fs-4);
+    font-weight: 600;
+    line-height: 1.3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .glp-sheet-close {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: 0;
+    border-radius: var(--glp-radius-sm);
+    background: transparent;
+    color: var(--glp-sub);
+    font-size: var(--glp-fs-4);
+    cursor: pointer;
+  }
+  .glp-sheet-close:hover { color: var(--glp-text); background: var(--glp-border); }
+  .glp-sheet-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--glp-sp-2);
+    flex: 0 0 auto;
+  }
+  .glp-sheet-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: var(--glp-sp-4);
+    font-size: var(--glp-fs-2);
+    line-height: 1.45;
+    touch-action: pan-y;
+  }
+  /* The cards' base .glp-i rule lives in their own stylesheet; the sheet does
+     not assume it, so the close icon still draws as a stroke path here. */
+  .glp-sheet .glp-i {
+    width: 1em;
+    height: 1em;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 1.8;
+    flex-shrink: 0;
+  }
+  /* Phone slide-in, restarted per open by _playEnter(); reduced motion gets
+     no animation at all. */
+  @media (prefers-reduced-motion: no-preference) and (max-width: 899px) {
+    .glp-sheet[data-entering="1"] .glp-sheet-panel { animation: glp-sheet-in 240ms cubic-bezier(.2,0,0,1); }
+    .glp-sheet[data-entering="1"] .glp-sheet-backdrop { animation: glp-sheet-fade 240ms cubic-bezier(.2,0,0,1); }
+  }
+  @keyframes glp-sheet-in { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  @keyframes glp-sheet-fade { from { opacity: 0; } to { opacity: 1; } }
+  /* Wider viewports: a centred dialog, no grab pill and no drag. */
+  @media (min-width: 900px) {
+    .glp-sheet-panel {
+      left: 50%;
+      top: 50%;
+      right: auto;
+      bottom: auto;
+      transform: translate(-50%, -50%);
+      width: min(560px, calc(100vw - 32px));
+      max-height: min(80vh, 720px);
+      border-bottom: 1px solid var(--glp-border);
+      border-radius: var(--glp-radius);
+    }
+    .glp-sheet[data-snap="half"] .glp-sheet-panel { max-height: min(80vh, 720px); }
+    .glp-sheet-grab { display: none; }
+  }
+`;
+
   // shot/src/styles.ts
   var STYLES = `
 ${TOKENS}
+${SHEET_STYLES}
 
   /* legacy internal aliases — rest of this file still reads these names;
      hybrid theming happens one level up, in the GLP-TOKENS block above */
@@ -971,8 +1819,7 @@ ${TOKENS}
   /* Score ring → typographic verdict (#120): the number carries the
      weight, the word names it, no circle/badge chrome. Score thresholds
      are unchanged (see the scoreCls computation in _render()) — only the
-     presentation changed here. Sans throughout, incl. the number: Fraunces
-     stays reserved for the bean name alone (see .shot-coffee below). */
+     presentation changed here. Sans throughout, incl. the number. */
   .verdict {
     flex-shrink: 0; display: flex; align-items: baseline; gap: 3px;
   }
@@ -1004,16 +1851,6 @@ ${TOKENS}
     white-space: nowrap; flex-shrink: 0;
   }
   .shot-coffee {
-    /* Fraunces stays scoped to exactly this element (#120) — not the shot
-       title (.shot-profile above, sans/800) and not the verdict. No
-       @font-face is bundled here: this is a single-file Lovelace element
-       with no font asset shipped alongside it (unlike the app, which
-       already bundles Fraunces in public-src/fonts/), and reaching out to
-       a font CDN from a HA custom card would add a network dependency this
-       file has never had. Falls back to the platform serif stack, which is
-       still the intended visual note (a warm serif against the sans
-       everywhere else) even where Fraunces itself isn't installed. */
-    font-family: Fraunces, Georgia, 'Times New Roman', serif;
     font-weight: 600;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
@@ -1038,10 +1875,10 @@ ${TOKENS}
     background: none; border: none;
     padding: 0; width: 32px; height: 32px;
     cursor: pointer; color: color-mix(in srgb, var(--text) 35%, transparent);
-    font-size: var(--glp-fs-5); line-height: 1;
     display: flex; align-items: center; justify-content: center;
     transition: color .15s; touch-action: manipulation; flex-shrink: 0;
   }
+  .nav-arrow svg { width: 21px; height: 21px; }
   .nav-arrow:active:not([disabled]) { color: var(--text); }
   .nav-arrow[disabled] { opacity: .12; cursor: default; pointer-events: none; }
   .nav-dots {
@@ -1073,20 +1910,11 @@ ${TOKENS}
   }
 
   /* ── guided metric line (#120) ──────────────────────────────────────────
-     Was two separate three-tile box rows (.metric-trio for a historical
-     shot, .live-stats for a brewing one) — the single clearest "generated
-     UI" tell in this file per two independent audits landing on the exact
-     same finding. One component now serves both call sites (_metricLineHtml()
-     in the render code below); which one is on screen is still driven by the
-     brewing flag, same as before.
-     The three roles (recipe = what was asked for, process = what happened,
-     result = what came out) stay legible without three separate boxes: they
-     are told apart by size/weight/color alone, not by grouping into cards —
-     recipe is the quietest (muted, regular weight), process is mid-weight,
-     result is the loudest (largest, full-contrast text or, for the historical
-     yield/ratio pairing, plain — see the role assignment at the call site for
-     why temp/pressure/weight map to recipe/process/result while brewing, and
-     ratio/duration/yield do so for a finished shot). */
+     The live brewing row only now (_liveStatsHtml()); a finished shot uses
+     .key-figures below. The three roles (recipe = what was asked for, process
+     = what happened, result = what came out) stay legible without three
+     separate boxes: they are told apart by size/weight/color alone, not by
+     grouping into cards. */
   .metric-line {
     display: flex; align-items: flex-end; gap: var(--glp-sp-5);
     margin-bottom: var(--glp-sp-3);
@@ -1099,14 +1927,31 @@ ${TOKENS}
   .metric-item.role-process .num { font-size: var(--glp-fs-4); font-weight: 700; color: var(--text); }
   .metric-item.role-result  .num { font-size: var(--glp-fs-5); font-weight: 700; color: var(--text); }
 
-  /* secondary stats — border diet (#120): not clickable, so grouping comes
-     from being inline text on the card's own background, not a nested box. */
-  .stats-secondary {
-    display: flex; gap: var(--glp-sp-5); margin-bottom: var(--glp-sp-3);
+  /* ── key figures ────────────────────────────────────────────────────────
+     All five finished-shot figures in one grid with one value style: ratio,
+     duration, yield, pressure and temperature differ in what they mean, not
+     in how loudly they are set. The column count follows the rendered count
+     (.figures-N, set from _keyFiguresHtml()) so a row is never left half
+     empty — five sit 3 + 2 at phone width, with the last two spanning the
+     full row; four sit 2 + 2 rather than 3 + 1. */
+  .key-figures {
+    display: grid; gap: var(--glp-sp-3) var(--glp-sp-4);
+    margin-bottom: var(--glp-sp-3);
+    grid-template-columns: repeat(6, minmax(0, 1fr));
   }
-  .stat-pill { display: flex; flex-direction: column; gap: 2px; }
-  .stat-pill-label { font-size: var(--glp-fs-1); color: var(--sub); }
-  .stat-pill-value { font-size: var(--glp-fs-3); font-weight: 700; letter-spacing: -.02em; }
+  .key-figure { grid-column: span 2; min-width: 0; }
+  .key-figures.figures-5 .key-figure:nth-child(4),
+  .key-figures.figures-5 .key-figure:nth-child(5) { grid-column: span 3; }
+  .key-figures:not(.figures-5) .key-figure { grid-column: auto; }
+  .key-figures.figures-4, .key-figures.figures-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .key-figures.figures-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .key-figures.figures-1 { grid-template-columns: minmax(0, 1fr); }
+  .kf-value {
+    font-size: var(--glp-fs-4); font-weight: 700; line-height: 1;
+    color: var(--text); letter-spacing: -.02em; font-variant-numeric: tabular-nums;
+  }
+  .kf-unit { font-size: var(--glp-fs-1); font-weight: 500; color: var(--sub); margin-left: 1px; }
+  .kf-label { font-size: var(--glp-fs-1); color: var(--sub); margin-top: 2px; }
 
   /* rating stars — drawn icons (ICONS.of('star')) replace the ★ text
      character; filled vs. empty is the .on class on the same shape. */
@@ -1187,12 +2032,18 @@ ${TOKENS}
     50%      { opacity: .35; }
   }
   .lm-tiles { display: flex; gap: var(--glp-sp-2); }
-  /* Border diet (#120): static readouts, not clickable — grouped by fill,
-     no border. The warming state still needs to stand out, so it keeps a
-     tinted background instead of a tinted border. */
+  /* Border diet (#120): readouts group by fill, no border. The warming state
+     still needs to stand out, so it keeps a tinted background instead of a
+     tinted border. Each tile is a <button> (a tap opens its history), so the
+     native button chrome is reset to keep the drawn look identical. */
   .lm-tile {
     flex: 1; background: var(--surface);
-    border-radius: var(--glp-radius-sm); padding: var(--glp-sp-2) 6px; text-align: center;
+    border: none; border-radius: var(--glp-radius-sm); padding: var(--glp-sp-2) 6px;
+    text-align: center; font: inherit; color: inherit; cursor: pointer;
+    -webkit-appearance: none; appearance: none;
+  }
+  .lm-tile:focus-visible, .footer-history:focus-visible {
+    outline: 2px solid var(--glp-aline); outline-offset: 2px;
   }
   .lm-tile.warming { background: color-mix(in srgb, var(--amber) 12%, var(--surface)); }
   .lm-val { font-size: var(--glp-fs-4); font-weight: 700; color: var(--text); letter-spacing: -.02em; line-height: 1.1; }
@@ -1214,41 +2065,32 @@ ${TOKENS}
     touch-action: manipulation; transition: all .15s;
   }
   .profile-current-btn:active { background: var(--s2); }
-  .profile-current-btn.open {
-    border-color: color-mix(in srgb, var(--text) 18%, transparent);
-    border-bottom-left-radius: 4px; border-bottom-right-radius: 4px;
-  }
   .profile-label-small { font-size: var(--glp-fs-1); color: var(--sub); font-weight: 500; }
   .profile-current-name { flex: 1; text-align: left; }
   .profile-chevron {
-    color: var(--sub); font-size: var(--glp-fs-1); margin-left: var(--glp-sp-2);
-    transition: transform .2s; opacity: .6;
+    color: var(--sub); margin-left: var(--glp-sp-2); opacity: .6;
+    display: flex; align-items: center;
   }
-  .profile-chevron.open { transform: rotate(180deg); }
-  /* Border diet (#120): this panel is a dropdown surface, not itself
-     clickable — dropping its border (previously bordered on all 4 sides,
-     nested inside the card's own border, with the .profile-opt buttons
-     bordered again inside THAT) was the "three levels deep" case from the
-     redesign notes. The buttons below keep their border; they're what's
-     actually clickable. */
-  .profile-opts {
-    display: flex; flex-wrap: wrap; gap: 6px;
-    padding: var(--glp-sp-3) var(--glp-sp-3) var(--glp-sp-3);
-    background: var(--surface);
-    border-bottom-left-radius: var(--glp-radius-sm); border-bottom-right-radius: var(--glp-radius-sm);
+  .profile-chevron .glp-i { width: 15px; height: 15px; }
+  /* The picker inside the shared sheet: a flat list, the active profile
+     carrying the accent tint and a check icon. */
+  .profile-sheet-list { display: flex; flex-direction: column; gap: var(--glp-sp-1); }
+  .profile-sheet-opt {
+    display: flex; align-items: center; gap: var(--glp-sp-2); width: 100%;
+    background: transparent; border: 1px solid transparent; border-radius: var(--glp-radius-sm);
+    padding: var(--glp-sp-3); min-height: 40px; cursor: pointer; color: var(--text);
+    font-family: inherit; font-size: var(--glp-fs-2); font-weight: 500; text-align: left;
+    touch-action: manipulation;
   }
-  .profile-opt {
-    background: color-mix(in srgb, var(--text) 6%, transparent); border: 1px solid var(--border);
-    border-radius: var(--glp-radius-sm); padding: var(--glp-sp-2) var(--glp-sp-4); min-height: 34px;
-    cursor: pointer; color: var(--text);
-    font-family: inherit; font-size: var(--glp-fs-1); font-weight: 500;
-    touch-action: manipulation; transition: all .15s; white-space: nowrap;
-  }
-  .profile-opt:active { background: color-mix(in srgb, var(--text) 12%, transparent); }
-  .profile-opt.active {
+  .profile-sheet-opt:active { background: color-mix(in srgb, var(--text) 8%, transparent); }
+  .profile-sheet-opt:focus-visible { outline: 2px solid var(--glp-aline); outline-offset: -1px; }
+  .profile-sheet-opt.active {
     background: color-mix(in srgb, var(--accent) 15%, transparent);
-    border-color: color-mix(in srgb, var(--accent) 45%, transparent); color: var(--accent); font-weight: 700;
+    border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+    color: var(--accent); font-weight: 700;
   }
+  .profile-sheet-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .profile-sheet-opt .glp-i { width: 14px; height: 14px; }
 
   /* ── banners ── border diet (#120): status text, not clickable — the
      tinted background alone carries the semantic color now. */
@@ -1366,49 +2208,77 @@ ${TOKENS}
   .section-label, .maint-section-label { font-size: var(--glp-fs-1); color: var(--sub); font-weight: 600; margin-top: var(--glp-sp-1); }
   .maint-row[role="button"] { cursor: pointer; transition: border-color .15s, background .15s; }
   .maint-row[role="button"]:hover { border-color: color-mix(in srgb, var(--text) 16%, transparent); }
-  .maint-row.confirming { border: 1px solid color-mix(in srgb, var(--amber) 40%, transparent); background: color-mix(in srgb, var(--amber) 6%, transparent); }
-  .maint-confirm { display: flex; align-items: center; gap: var(--glp-sp-2); margin-top: var(--glp-sp-1); }
-  .maint-confirm-q { flex: 1; font-size: var(--glp-fs-1); color: var(--sub); }
-  .maint-confirm-yes, .maint-confirm-no {
+  /* The row is reachable with Tab (#267); the outline is the same accent-as-
+     thin-line token the order card uses for its focus ring. */
+  .maint-row[role="button"]:focus-visible { outline: 2px solid var(--glp-aline); outline-offset: 2px; }
+  /* The row's confirmation is the shared sheet now (#265): the body reuses
+     the row's own .maint-sub and .maint-pill, plus the last-done date. */
+  .maint-detail { display: flex; flex-direction: column; align-items: flex-start; gap: var(--glp-sp-2); }
+  .maint-detail-row { display: flex; align-items: baseline; gap: var(--glp-sp-2); width: 100%; }
+  .maint-detail-lbl { font-size: var(--glp-fs-1); color: var(--sub); }
+  .maint-detail-val { font-size: var(--glp-fs-2); font-weight: 600; margin-left: auto; }
+  .maint-sheet-done, .maint-sheet-cancel {
     border: none; border-radius: var(--glp-radius-sm); font-family: inherit; font-weight: 700;
-    font-size: var(--glp-fs-1); padding: 5px var(--glp-sp-3); cursor: pointer;
-    display: inline-flex; align-items: center; gap: 4px;
+    font-size: var(--glp-fs-1); padding: 7px var(--glp-sp-3); min-height: 34px; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;
+    touch-action: manipulation;
   }
-  .maint-confirm-yes { background: color-mix(in srgb, var(--green) 14%, transparent); color: var(--green); }
-  .maint-confirm-no  { background: var(--surface); color: var(--sub); }
-  .maint-confirm-no svg { width: 11px; height: 11px; }
+  .maint-sheet-done { background: color-mix(in srgb, var(--green) 14%, transparent); color: var(--green); }
+  .maint-sheet-cancel { background: transparent; border: 1px solid var(--border); color: var(--sub); }
+  .maint-sheet-done svg { width: 11px; height: 11px; }
 
   /* ── orders tab ── */
+  /* Fill is the accent darkened by 15% (#269): white on the raw --glp-err
+     values measures 3.76:1 (dark) / only the light one clears AA — the mix
+     lifts both to >=4.99:1 while keeping the hue. --accent itself is left
+     alone; only these elements use the darkened fill. */
   .tab-badge {
     display: inline-block; min-width: 16px; padding: 0 var(--glp-sp-1); margin-left: var(--glp-sp-1);
     font-size: var(--glp-fs-1); font-weight: 600; line-height: 16px; text-align: center;
-    border-radius: var(--glp-radius-sm); background: var(--accent); color: #fff;
+    border-radius: var(--glp-radius-sm);
+    background: color-mix(in srgb, var(--accent) 85%, #000); color: #fff;
   }
   /* Border diet (#120): accepted rows group via fill only; a pending order
      keeps a border, but as a semantic "needs your attention" state marker
-     (like maint-row.confirming above), not a default box around content. */
+     (like the maintenance "due" pill above), not a default box around
+     content. */
   .ord-list { display: flex; flex-direction: column; gap: var(--glp-sp-2); margin-bottom: var(--glp-sp-3); }
   .ord-row {
     background: var(--surface);
     border-radius: var(--glp-radius-sm); padding: var(--glp-sp-3); display: flex; flex-direction: column; gap: 7px;
   }
   .ord-row.pending  { border: 1px solid color-mix(in srgb, var(--amber) 30%, transparent); }
+  /* The row opens the order in the shared sheet (#264), so it is a tap target
+     with the same keyboard affordances as a maintenance row. */
+  .ord-row[role="button"] { cursor: pointer; transition: border-color .15s, background .15s; }
+  .ord-row[role="button"]:hover { border-color: color-mix(in srgb, var(--text) 16%, transparent); }
+  .ord-row[role="button"]:focus-visible { outline: 2px solid var(--glp-aline); outline-offset: 2px; }
   .ord-top { display: flex; align-items: baseline; gap: var(--glp-sp-2); }
   .ord-top .glp-i { width: 13px; height: 13px; vertical-align: -1px; opacity: .8; }
   .ord-item { flex: 1; font-size: var(--glp-fs-3); font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .ord-who  { font-size: var(--glp-fs-1); color: var(--sub); white-space: nowrap; flex-shrink: 0; }
   .ord-note { font-size: var(--glp-fs-1); color: var(--sub); font-style: italic; }
   .ord-sub  { font-size: var(--glp-fs-1); color: var(--green); font-weight: 600; }
-  .ord-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin-top: 2px; }
+  /* The sheet body restates what the order is: variant, customer, note, the
+     waiting time and, for an accepted order, the ready-in line. */
+  .ord-detail { display: flex; flex-direction: column; align-items: flex-start; gap: var(--glp-sp-2); }
+  .ord-detail-val { font-size: var(--glp-fs-3); font-weight: 700; }
+  .ord-detail-who { font-size: var(--glp-fs-2); color: var(--sub); }
   .ord-q { font-size: var(--glp-fs-1); color: var(--sub); margin-right: 2px; }
   .ord-btn {
     border: none; border-radius: var(--glp-radius-sm); font-family: inherit; font-weight: 700;
     font-size: var(--glp-fs-1); padding: 6px var(--glp-sp-3); cursor: pointer; min-height: 32px;
     display: inline-flex; align-items: center; gap: 4px;
   }
-  .ord-btn.primary { background: var(--green); color: #06210f; }
+  /* Readable order-button fills (#269): dark ink on the raw --glp-ok light
+     value measured 3.40:1, white on the raw --glp-err dark value 3.76:1.
+     White ink on the fill darkened by 35% (green) / 15% (accent) clears AA
+     for both of each token's two possible values (>=5.01:1 / >=4.99:1)
+     without turning green or red into a different hue; --green and --accent
+     are unchanged, only these buttons mix them darker. */
+  .ord-btn.primary { background: color-mix(in srgb, var(--green) 65%, #000); color: #fff; }
   .ord-btn.eta     { background: color-mix(in srgb, var(--text) 9%, transparent); color: var(--text); }
-  .ord-btn.danger  { background: var(--accent); color: #fff; }
+  .ord-btn.danger  { background: color-mix(in srgb, var(--accent) 85%, #000); color: #fff; }
   .ord-btn.ghost   { background: transparent; border: 1px solid var(--border); color: var(--sub); }
   .ord-btn svg { width: 12px; height: 12px; }
 
@@ -1420,6 +2290,13 @@ ${TOKENS}
     padding-top: var(--glp-sp-2); margin-top: 6px; gap: var(--glp-sp-2);
   }
   .footer-item { display: flex; align-items: center; gap: 4px; }
+  /* The water level is a <button> now; reset the native chrome so it still
+     sits inline with the plain footer text. */
+  .footer-history {
+    background: none; border: none; padding: 0; margin: 0;
+    font: inherit; color: inherit; text-align: inherit; cursor: pointer;
+    -webkit-appearance: none; appearance: none;
+  }
   .footer-item svg { width: 11px; height: 11px; opacity: .8; flex-shrink: 0; }
   .footer a { color: var(--sub); text-decoration: none; }
   .footer a:hover { color: var(--text); }
@@ -1439,28 +2316,37 @@ ${TOKENS}
     .nav-arrow { width: 40px; height: 40px; font-size: var(--glp-fs-5); }
     .tab-btn   { min-height: 44px; }
     .profile-current-btn { min-height: 50px; }
-    .profile-opt { min-height: 40px; padding: 9px 18px; }
+    .profile-sheet-opt { min-height: 44px; }
     .power-btn { min-height: 42px; }
     .metric-item.role-result .num { font-size: var(--glp-fs-6); }
   }
 
-  /* ── prefers-reduced-motion (#120) ── previously covered one of the four
-     animated effects in this file (.lm-live-dot only); now complete. Each
-     entry disables the animation AND pins the element to the state the
-     animation would have ended at — for .lm-live-dot/.status-dot.brewing
-     that's just their static (already-defined) base rule, so "animation:
-     none" alone is enough; the nav-dot width/radius is likewise already
-     fixed by .nav-dot.active outside the keyframe. The curve draw-in is the
-     one case where "no animation" would otherwise mean "invisible forever"
-     (stroke-dashoffset stuck at 900, opacity stuck at 0), so those three
-     properties get pinned to their finished values explicitly. */
+  /* ── prefers-reduced-motion (#120, completed for every animation in this
+     file by #269) ── each entry turns the animation off AND pins the element
+     to the state the animation would have ended at, since "no animation"
+     alone can leave an element at its keyframe start.
+       - .lm-live-dot, .status-dot.brewing, .descaling-banner svg and
+         .nav-dot.active.changed all animate opacity/width only, so their
+         static base rule is already the finished state: "animation: none"
+         is enough, and the .nav-dot.active width/radius is fixed outside the
+         keyframes anyway.
+       - the curve draw-in needs its three animated selectors at the SAME
+         specificity the animation rule uses (.glp-anim ...): a bare
+         .glp-curve-line rule loses to .glp-anim .glp-curve-line and the
+         draw-in would still play. Without the animation the line would stay
+         invisible (stroke-dashoffset stuck at 900, opacity stuck at 0), so
+         the finished values are pinned explicitly. */
   @media (prefers-reduced-motion: reduce) {
     .lm-live-dot { animation: none; }
     .status-dot.brewing { animation: none; }
+    .descaling-banner svg { animation: none; }
     .nav-dot.active.changed { animation: none; }
-    .glp-curve-line, .glp-curve-phase, .glp-curve-endpoint { animation: none; }
-    .glp-curve-line { stroke-dashoffset: 0; }
-    .glp-curve-phase, .glp-curve-endpoint { opacity: 1; }
+    .glp-anim .glp-curve-line,
+    .glp-anim .glp-curve-phase,
+    .glp-anim .glp-curve-endpoint { animation: none; }
+    .glp-anim .glp-curve-line { stroke-dashoffset: 0; }
+    .glp-anim .glp-curve-phase,
+    .glp-anim .glp-curve-endpoint { opacity: 1; }
   }
 `;
 
@@ -1478,6 +2364,8 @@ ${TOKENS}
       ord_done: "Fertig",
       ord_ready_in: /* @__PURE__ */ __name((n4) => `fertig in ~${n4} min`, "ord_ready_in"),
       ord_preparing: "in Zubereitung",
+      ord_waiting: /* @__PURE__ */ __name((n4) => `wartet seit ${n4} Min`, "ord_waiting"),
+      ord_waiting_now: "gerade eingegangen",
       just_now: "gerade eben",
       mins_ago: /* @__PURE__ */ __name((n4) => `vor ${n4} Min`, "mins_ago"),
       hours_ago: /* @__PURE__ */ __name((n4) => `vor ${n4} Std`, "hours_ago"),
@@ -1493,11 +2381,16 @@ ${TOKENS}
       pill_due: "Fällig",
       pill_never: "Nie erledigt",
       maint_today: "heute",
-      maint_confirm_q: "Als erledigt markieren?",
+      maint_last_done: "Zuletzt erledigt",
+      maint_done_today: "Heute erledigt",
+      sheet_close: "Schließen",
+      sheet_cancel: "Abbrechen",
       maint_none: "Keine Wartungsdaten verfügbar",
       power_on: "Einschalten",
       power_off: "Ausschalten",
       off_label: "Aus",
+      nav_prev: "Vorheriger Shot",
+      nav_next: "Nächster Shot",
       profile_label: "Profil",
       profile_switching: "wechselt …",
       lm_live: "Maschine live",
@@ -1521,6 +2414,14 @@ ${TOKENS}
       m_yield: "Ausbeute",
       m_pressure: "Druck Ø",
       m_temp: "Temp",
+      tab_shot: "Shot",
+      m_ratio: "Ratio",
+      lm_temp: "Temp",
+      lm_temp_off: "Temp · Boiler aus",
+      lm_temp_target: /* @__PURE__ */ __name((t5) => `Temp · Ziel ${t5}°`, "lm_temp_target"),
+      lm_pressure: "Druck",
+      lm_weight: "Waage",
+      maint_shots: /* @__PURE__ */ __name((n4) => `${n4} Shots`, "maint_shots"),
       leg_pressure: "Druck",
       leg_flow: "Flow",
       leg_temp: "Temp",
@@ -1532,7 +2433,32 @@ ${TOKENS}
       bean_roasted_ago: /* @__PURE__ */ __name((d3) => `Geröstet vor ${d3} Tagen`, "bean_roasted_ago"),
       verdict_high: "stark",
       verdict_mid: "gut",
-      verdict_low: "schwach"
+      verdict_low: "schwach",
+      toast_profile: /* @__PURE__ */ __name((p3) => `Profil ${p3} gewählt`, "toast_profile"),
+      toast_ready_by: /* @__PURE__ */ __name((hhmm) => `Brühbereit bis ${hhmm}`, "toast_ready_by"),
+      toast_maint_done: /* @__PURE__ */ __name((t5) => `${t5} als erledigt markiert`, "toast_maint_done"),
+      toast_ord_accepted: /* @__PURE__ */ __name((d3) => `Bestellung angenommen · fertig in ${d3} min`, "toast_ord_accepted"),
+      toast_ord_done: "Bestellung fertig",
+      toast_ord_declined: "Bestellung abgelehnt",
+      toast_action_failed: "Aktion fehlgeschlagen",
+      lm_history: "Verlauf anzeigen",
+      cfg_title: "Titel",
+      cfg_title_help: "Titel im Kartenkopf. Leer lassen für den Standard.",
+      cfg_entity_prefix: "Entity-Präfix",
+      cfg_entity_prefix_help: "Präfix der Entities dieser Integration. Leer lassen, damit die Karte die Maschine selbst findet.",
+      cfg_machine: "Maschine",
+      cfg_machine_help: "Name oder ID einer Maschine aus dem Maschinen-Register des Apps.",
+      cfg_switch_entity: "Switch-Entity",
+      cfg_switch_entity_help: "Switch-Entity der smarten Steckdose der Maschine. Der Power-Knopf im Kopf schaltet sie.",
+      cfg_theme: "Farb-Preset",
+      cfg_theme_help: "Preset für die Akzentfarben der Karte und das Maschinen-Icon.",
+      cfg_accent_color: "Akzentfarbe",
+      cfg_accent_color_help: "Eigene Farbe als #rrggbb statt eines Presets. Ungültige Werte werden ignoriert.",
+      cfg_accent_gradient: "Akzent-Verlauf",
+      cfg_accent_gradient_help: "Zwei Farben als #rrggbb, eine pro Zeile. Überschreibt Preset und Akzentfarbe.",
+      cfg_glp_url: "GLP-URL",
+      cfg_glp_url_help: 'URL der Weboberfläche des GLP-Apps. Ergänzt einen Link "GLP" in der Fußzeile.',
+      cfg_theme_none: "Kein Preset"
     },
     en: {
       tab_orders: "Orders",
@@ -1546,6 +2472,8 @@ ${TOKENS}
       ord_done: "Done",
       ord_ready_in: /* @__PURE__ */ __name((n4) => `ready in ~${n4} min`, "ord_ready_in"),
       ord_preparing: "being prepared",
+      ord_waiting: /* @__PURE__ */ __name((n4) => `waiting ${n4} min`, "ord_waiting"),
+      ord_waiting_now: "just now",
       just_now: "just now",
       mins_ago: /* @__PURE__ */ __name((n4) => `${n4} min ago`, "mins_ago"),
       hours_ago: /* @__PURE__ */ __name((n4) => `${n4} h ago`, "hours_ago"),
@@ -1561,11 +2489,16 @@ ${TOKENS}
       pill_due: "Due",
       pill_never: "Never done",
       maint_today: "today",
-      maint_confirm_q: "Mark as done?",
+      maint_last_done: "Last done",
+      maint_done_today: "Done today",
+      sheet_close: "Close",
+      sheet_cancel: "Cancel",
       maint_none: "No maintenance data available",
       power_on: "Turn on",
       power_off: "Turn off",
       off_label: "Off",
+      nav_prev: "Previous shot",
+      nav_next: "Next shot",
       profile_label: "Profile",
       profile_switching: "switching …",
       lm_live: "Machine live",
@@ -1589,6 +2522,14 @@ ${TOKENS}
       m_yield: "Yield",
       m_pressure: "Pressure Ø",
       m_temp: "Temp",
+      tab_shot: "Shot",
+      m_ratio: "Ratio",
+      lm_temp: "Temp",
+      lm_temp_off: "Temp · Boiler off",
+      lm_temp_target: /* @__PURE__ */ __name((t5) => `Temp · Target ${t5}°`, "lm_temp_target"),
+      lm_pressure: "Pressure",
+      lm_weight: "Scale",
+      maint_shots: /* @__PURE__ */ __name((n4) => `${n4} shots`, "maint_shots"),
       leg_pressure: "Pressure",
       leg_flow: "Flow",
       leg_temp: "Temp",
@@ -1600,7 +2541,32 @@ ${TOKENS}
       bean_roasted_ago: /* @__PURE__ */ __name((d3) => `Roasted ${d3} days ago`, "bean_roasted_ago"),
       verdict_high: "great",
       verdict_mid: "good",
-      verdict_low: "weak"
+      verdict_low: "weak",
+      toast_profile: /* @__PURE__ */ __name((p3) => `Profile ${p3} selected`, "toast_profile"),
+      toast_ready_by: /* @__PURE__ */ __name((hhmm) => `Ready by ${hhmm}`, "toast_ready_by"),
+      toast_maint_done: /* @__PURE__ */ __name((t5) => `${t5} marked as done`, "toast_maint_done"),
+      toast_ord_accepted: /* @__PURE__ */ __name((d3) => `Order accepted · ready in ${d3} min`, "toast_ord_accepted"),
+      toast_ord_done: "Order done",
+      toast_ord_declined: "Order declined",
+      toast_action_failed: "Action failed",
+      lm_history: "Show history",
+      cfg_title: "Title",
+      cfg_title_help: "Title in the card header. Leave empty for the default.",
+      cfg_entity_prefix: "Entity prefix",
+      cfg_entity_prefix_help: "Prefix shared by this integration's entities. Leave empty so the card finds the machine itself.",
+      cfg_machine: "Machine",
+      cfg_machine_help: "Name or id of one machine from the app's machine registry.",
+      cfg_switch_entity: "Switch entity",
+      cfg_switch_entity_help: "Switch entity of the machine's smart plug. The header power button toggles it.",
+      cfg_theme: "Colour preset",
+      cfg_theme_help: "Preset for the card's accent colours and the machine icon.",
+      cfg_accent_color: "Accent colour",
+      cfg_accent_color_help: "Custom #rrggbb colour instead of a preset. Invalid values are ignored.",
+      cfg_accent_gradient: "Accent gradient",
+      cfg_accent_gradient_help: "Two #rrggbb colours, one per line. Overrides the preset and the accent colour.",
+      cfg_glp_url: "GLP URL",
+      cfg_glp_url_help: `URL of the GLP app's web interface. Adds a "GLP" link to the footer.`,
+      cfg_theme_none: "No preset"
     },
     it: {
       tab_orders: "Ordini",
@@ -1614,6 +2580,8 @@ ${TOKENS}
       ord_done: "Fatto",
       ord_ready_in: /* @__PURE__ */ __name((n4) => `pronto tra ~${n4} min`, "ord_ready_in"),
       ord_preparing: "in preparazione",
+      ord_waiting: /* @__PURE__ */ __name((n4) => `in attesa da ${n4} min`, "ord_waiting"),
+      ord_waiting_now: "appena arrivato",
       just_now: "proprio ora",
       mins_ago: /* @__PURE__ */ __name((n4) => `${n4} min fa`, "mins_ago"),
       hours_ago: /* @__PURE__ */ __name((n4) => `${n4} h fa`, "hours_ago"),
@@ -1629,11 +2597,16 @@ ${TOKENS}
       pill_due: "Scaduto",
       pill_never: "Mai fatto",
       maint_today: "oggi",
-      maint_confirm_q: "Segnare come fatto?",
+      maint_last_done: "Ultima volta",
+      maint_done_today: "Fatto oggi",
+      sheet_close: "Chiudi",
+      sheet_cancel: "Annulla",
       maint_none: "Nessun dato di manutenzione disponibile",
       power_on: "Accendi",
       power_off: "Spegni",
       off_label: "Spento",
+      nav_prev: "Shot precedente",
+      nav_next: "Shot successivo",
       profile_label: "Profilo",
       profile_switching: "cambio in corso …",
       lm_live: "Macchina in diretta",
@@ -1657,6 +2630,14 @@ ${TOKENS}
       m_yield: "Resa",
       m_pressure: "Pressione Ø",
       m_temp: "Temp",
+      tab_shot: "Shot",
+      m_ratio: "Rapporto",
+      lm_temp: "Temp",
+      lm_temp_off: "Temp · Caldaia spenta",
+      lm_temp_target: /* @__PURE__ */ __name((t5) => `Temp · Obiettivo ${t5}°`, "lm_temp_target"),
+      lm_pressure: "Pressione",
+      lm_weight: "Bilancia",
+      maint_shots: /* @__PURE__ */ __name((n4) => `${n4} shot`, "maint_shots"),
       leg_pressure: "Pressione",
       leg_flow: "Flusso",
       leg_temp: "Temp",
@@ -1668,7 +2649,32 @@ ${TOKENS}
       bean_roasted_ago: /* @__PURE__ */ __name((d3) => `Tostato ${d3} giorni fa`, "bean_roasted_ago"),
       verdict_high: "ottimo",
       verdict_mid: "buono",
-      verdict_low: "debole"
+      verdict_low: "debole",
+      toast_profile: /* @__PURE__ */ __name((p3) => `Profilo ${p3} selezionato`, "toast_profile"),
+      toast_ready_by: /* @__PURE__ */ __name((hhmm) => `Pronto entro le ${hhmm}`, "toast_ready_by"),
+      toast_maint_done: /* @__PURE__ */ __name((t5) => `${t5} segnato come fatto`, "toast_maint_done"),
+      toast_ord_accepted: /* @__PURE__ */ __name((d3) => `Ordine accettato · pronto tra ${d3} min`, "toast_ord_accepted"),
+      toast_ord_done: "Ordine completato",
+      toast_ord_declined: "Ordine rifiutato",
+      toast_action_failed: "Azione non riuscita",
+      lm_history: "Mostra cronologia",
+      cfg_title: "Titolo",
+      cfg_title_help: "Titolo nell'intestazione della scheda. Vuoto per il valore predefinito.",
+      cfg_entity_prefix: "Prefisso entità",
+      cfg_entity_prefix_help: "Prefisso delle entità di questa integrazione. Vuoto perché la scheda trovi la macchina da sola.",
+      cfg_machine: "Macchina",
+      cfg_machine_help: "Nome o ID di una macchina dal registro macchine dell'app.",
+      cfg_switch_entity: "Entità switch",
+      cfg_switch_entity_help: "Entità switch della presa smart della macchina. Il pulsante di accensione nell'intestazione la commuta.",
+      cfg_theme: "Preset di colore",
+      cfg_theme_help: "Preset per i colori d'accento della scheda e l'icona della macchina.",
+      cfg_accent_color: "Colore d'accento",
+      cfg_accent_color_help: "Colore #rrggbb personalizzato invece di un preset. I valori non validi vengono ignorati.",
+      cfg_accent_gradient: "Sfumatura d'accento",
+      cfg_accent_gradient_help: "Due colori #rrggbb, uno per riga. Prevale sul preset e sul colore d'accento.",
+      cfg_glp_url: "URL GLP",
+      cfg_glp_url_help: `URL dell'interfaccia web dell'app GLP. Aggiunge un link "GLP" a piè di pagina.`,
+      cfg_theme_none: "Nessun preset"
     },
     fr: {
       tab_orders: "Commandes",
@@ -1682,6 +2688,8 @@ ${TOKENS}
       ord_done: "Terminé",
       ord_ready_in: /* @__PURE__ */ __name((n4) => `prêt dans ~${n4} min`, "ord_ready_in"),
       ord_preparing: "en préparation",
+      ord_waiting: /* @__PURE__ */ __name((n4) => `en attente depuis ${n4} min`, "ord_waiting"),
+      ord_waiting_now: "à l'instant",
       just_now: "à l'instant",
       mins_ago: /* @__PURE__ */ __name((n4) => `il y a ${n4} min`, "mins_ago"),
       hours_ago: /* @__PURE__ */ __name((n4) => `il y a ${n4} h`, "hours_ago"),
@@ -1697,11 +2705,16 @@ ${TOKENS}
       pill_due: "Requis",
       pill_never: "Jamais fait",
       maint_today: "aujourd'hui",
-      maint_confirm_q: "Marquer comme fait ?",
+      maint_last_done: "Dernière fois",
+      maint_done_today: "Fait aujourd'hui",
+      sheet_close: "Fermer",
+      sheet_cancel: "Annuler",
       maint_none: "Aucune donnée d'entretien disponible",
       power_on: "Allumer",
       power_off: "Éteindre",
       off_label: "Éteint",
+      nav_prev: "Shot précédent",
+      nav_next: "Shot suivant",
       profile_label: "Profil",
       profile_switching: "changement …",
       lm_live: "Machine en direct",
@@ -1725,6 +2738,14 @@ ${TOKENS}
       m_yield: "Rendement",
       m_pressure: "Pression Ø",
       m_temp: "Temp",
+      tab_shot: "Shot",
+      m_ratio: "Ratio",
+      lm_temp: "Temp",
+      lm_temp_off: "Temp · Chauffe éteinte",
+      lm_temp_target: /* @__PURE__ */ __name((t5) => `Temp · Cible ${t5}°`, "lm_temp_target"),
+      lm_pressure: "Pression",
+      lm_weight: "Balance",
+      maint_shots: /* @__PURE__ */ __name((n4) => `${n4} shots`, "maint_shots"),
       leg_pressure: "Pression",
       leg_flow: "Débit",
       leg_temp: "Temp",
@@ -1736,7 +2757,32 @@ ${TOKENS}
       bean_roasted_ago: /* @__PURE__ */ __name((d3) => `Torréfié il y a ${d3} jours`, "bean_roasted_ago"),
       verdict_high: "excellent",
       verdict_mid: "bon",
-      verdict_low: "faible"
+      verdict_low: "faible",
+      toast_profile: /* @__PURE__ */ __name((p3) => `Profil ${p3} sélectionné`, "toast_profile"),
+      toast_ready_by: /* @__PURE__ */ __name((hhmm) => `Prêt avant ${hhmm}`, "toast_ready_by"),
+      toast_maint_done: /* @__PURE__ */ __name((t5) => `${t5} marqué comme fait`, "toast_maint_done"),
+      toast_ord_accepted: /* @__PURE__ */ __name((d3) => `Commande acceptée · prêt dans ${d3} min`, "toast_ord_accepted"),
+      toast_ord_done: "Commande terminée",
+      toast_ord_declined: "Commande refusée",
+      toast_action_failed: "Échec de l'action",
+      lm_history: "Afficher l'historique",
+      cfg_title: "Titre",
+      cfg_title_help: "Titre dans l'en-tête de la carte. Laisser vide pour la valeur par défaut.",
+      cfg_entity_prefix: "Préfixe d'entité",
+      cfg_entity_prefix_help: "Préfixe des entités de cette intégration. Laisser vide pour que la carte trouve la machine elle-même.",
+      cfg_machine: "Machine",
+      cfg_machine_help: "Nom ou identifiant d'une machine du registre des machines de l'application.",
+      cfg_switch_entity: "Entité switch",
+      cfg_switch_entity_help: "Entité switch de la prise connectée de la machine. Le bouton d'alimentation de l'en-tête la bascule.",
+      cfg_theme: "Préréglage de couleur",
+      cfg_theme_help: "Préréglage pour les couleurs d'accent de la carte et l'icône de la machine.",
+      cfg_accent_color: "Couleur d'accent",
+      cfg_accent_color_help: "Couleur #rrggbb personnalisée au lieu d'un préréglage. Les valeurs invalides sont ignorées.",
+      cfg_accent_gradient: "Dégradé d'accent",
+      cfg_accent_gradient_help: "Deux couleurs #rrggbb, une par ligne. Prioritaire sur le préréglage et la couleur d'accent.",
+      cfg_glp_url: "URL GLP",
+      cfg_glp_url_help: "URL de l'interface web de l'application GLP. Ajoute un lien « GLP » en pied de carte.",
+      cfg_theme_none: "Aucun préréglage"
     },
     es: {
       tab_orders: "Pedidos",
@@ -1750,6 +2796,8 @@ ${TOKENS}
       ord_done: "Listo",
       ord_ready_in: /* @__PURE__ */ __name((n4) => `listo en ~${n4} min`, "ord_ready_in"),
       ord_preparing: "en preparación",
+      ord_waiting: /* @__PURE__ */ __name((n4) => `esperando ${n4} min`, "ord_waiting"),
+      ord_waiting_now: "recién llegado",
       just_now: "justo ahora",
       mins_ago: /* @__PURE__ */ __name((n4) => `hace ${n4} min`, "mins_ago"),
       hours_ago: /* @__PURE__ */ __name((n4) => `hace ${n4} h`, "hours_ago"),
@@ -1765,11 +2813,16 @@ ${TOKENS}
       pill_due: "Pendiente",
       pill_never: "Nunca hecho",
       maint_today: "hoy",
-      maint_confirm_q: "¿Marcar como hecho?",
+      maint_last_done: "Última vez",
+      maint_done_today: "Hecho hoy",
+      sheet_close: "Cerrar",
+      sheet_cancel: "Cancelar",
       maint_none: "No hay datos de mantenimiento disponibles",
       power_on: "Encender",
       power_off: "Apagar",
       off_label: "Apagado",
+      nav_prev: "Shot anterior",
+      nav_next: "Shot siguiente",
       profile_label: "Perfil",
       profile_switching: "cambiando …",
       lm_live: "Máquina en directo",
@@ -1793,6 +2846,14 @@ ${TOKENS}
       m_yield: "Rendimiento",
       m_pressure: "Presión Ø",
       m_temp: "Temp",
+      tab_shot: "Shot",
+      m_ratio: "Proporción",
+      lm_temp: "Temp",
+      lm_temp_off: "Temp · Caldera apagada",
+      lm_temp_target: /* @__PURE__ */ __name((t5) => `Temp · Objetivo ${t5}°`, "lm_temp_target"),
+      lm_pressure: "Presión",
+      lm_weight: "Báscula",
+      maint_shots: /* @__PURE__ */ __name((n4) => `${n4} shots`, "maint_shots"),
       leg_pressure: "Presión",
       leg_flow: "Flujo",
       leg_temp: "Temp",
@@ -1804,7 +2865,32 @@ ${TOKENS}
       bean_roasted_ago: /* @__PURE__ */ __name((d3) => `Tostado hace ${d3} días`, "bean_roasted_ago"),
       verdict_high: "excelente",
       verdict_mid: "bueno",
-      verdict_low: "débil"
+      verdict_low: "débil",
+      toast_profile: /* @__PURE__ */ __name((p3) => `Perfil ${p3} seleccionado`, "toast_profile"),
+      toast_ready_by: /* @__PURE__ */ __name((hhmm) => `Listo antes de las ${hhmm}`, "toast_ready_by"),
+      toast_maint_done: /* @__PURE__ */ __name((t5) => `${t5} marcado como hecho`, "toast_maint_done"),
+      toast_ord_accepted: /* @__PURE__ */ __name((d3) => `Pedido aceptado · listo en ${d3} min`, "toast_ord_accepted"),
+      toast_ord_done: "Pedido completado",
+      toast_ord_declined: "Pedido rechazado",
+      toast_action_failed: "La acción ha fallado",
+      lm_history: "Mostrar historial",
+      cfg_title: "Título",
+      cfg_title_help: "Título en la cabecera de la tarjeta. Déjalo vacío para el valor por defecto.",
+      cfg_entity_prefix: "Prefijo de entidad",
+      cfg_entity_prefix_help: "Prefijo de las entidades de esta integración. Déjalo vacío para que la tarjeta encuentre la máquina sola.",
+      cfg_machine: "Máquina",
+      cfg_machine_help: "Nombre o ID de una máquina del registro de máquinas de la app.",
+      cfg_switch_entity: "Entidad switch",
+      cfg_switch_entity_help: "Entidad switch del enchufe inteligente de la máquina. El botón de encendido de la cabecera lo conmuta.",
+      cfg_theme: "Preset de color",
+      cfg_theme_help: "Preset para los colores de acento de la tarjeta y el icono de la máquina.",
+      cfg_accent_color: "Color de acento",
+      cfg_accent_color_help: "Color #rrggbb propio en lugar de un preset. Los valores no válidos se ignoran.",
+      cfg_accent_gradient: "Degradado de acento",
+      cfg_accent_gradient_help: "Dos colores #rrggbb, uno por línea. Tiene prioridad sobre el preset y el color de acento.",
+      cfg_glp_url: "URL de GLP",
+      cfg_glp_url_help: 'URL de la interfaz web de la app GLP. Añade un enlace "GLP" al pie.',
+      cfg_theme_none: "Sin preset"
     },
     nl: {
       tab_orders: "Bestellingen",
@@ -1818,6 +2904,8 @@ ${TOKENS}
       ord_done: "Klaar",
       ord_ready_in: /* @__PURE__ */ __name((n4) => `klaar over ~${n4} min`, "ord_ready_in"),
       ord_preparing: "in bereiding",
+      ord_waiting: /* @__PURE__ */ __name((n4) => `wacht ${n4} min`, "ord_waiting"),
+      ord_waiting_now: "zojuist",
       just_now: "zojuist",
       mins_ago: /* @__PURE__ */ __name((n4) => `${n4} min geleden`, "mins_ago"),
       hours_ago: /* @__PURE__ */ __name((n4) => `${n4} u geleden`, "hours_ago"),
@@ -1833,11 +2921,16 @@ ${TOKENS}
       pill_due: "Nodig",
       pill_never: "Nooit gedaan",
       maint_today: "vandaag",
-      maint_confirm_q: "Als voltooid markeren?",
+      maint_last_done: "Laatst gedaan",
+      maint_done_today: "Vandaag gedaan",
+      sheet_close: "Sluiten",
+      sheet_cancel: "Annuleren",
       maint_none: "Geen onderhoudsgegevens beschikbaar",
       power_on: "Inschakelen",
       power_off: "Uitschakelen",
       off_label: "Uit",
+      nav_prev: "Vorige shot",
+      nav_next: "Volgende shot",
       profile_label: "Profiel",
       profile_switching: "wisselt …",
       lm_live: "Machine live",
@@ -1861,6 +2954,14 @@ ${TOKENS}
       m_yield: "Opbrengst",
       m_pressure: "Druk Ø",
       m_temp: "Temp",
+      tab_shot: "Shot",
+      m_ratio: "Verhouding",
+      lm_temp: "Temp",
+      lm_temp_off: "Temp · Boiler uit",
+      lm_temp_target: /* @__PURE__ */ __name((t5) => `Temp · Doel ${t5}°`, "lm_temp_target"),
+      lm_pressure: "Druk",
+      lm_weight: "Weegschaal",
+      maint_shots: /* @__PURE__ */ __name((n4) => `${n4} shots`, "maint_shots"),
       leg_pressure: "Druk",
       leg_flow: "Flow",
       leg_temp: "Temp",
@@ -1872,11 +2973,36 @@ ${TOKENS}
       bean_roasted_ago: /* @__PURE__ */ __name((d3) => `${d3} dagen geleden gebrand`, "bean_roasted_ago"),
       verdict_high: "sterk",
       verdict_mid: "goed",
-      verdict_low: "zwak"
+      verdict_low: "zwak",
+      toast_profile: /* @__PURE__ */ __name((p3) => `Profiel ${p3} geselecteerd`, "toast_profile"),
+      toast_ready_by: /* @__PURE__ */ __name((hhmm) => `Klaar voor ${hhmm}`, "toast_ready_by"),
+      toast_maint_done: /* @__PURE__ */ __name((t5) => `${t5} als voltooid gemarkeerd`, "toast_maint_done"),
+      toast_ord_accepted: /* @__PURE__ */ __name((d3) => `Bestelling geaccepteerd · klaar over ${d3} min`, "toast_ord_accepted"),
+      toast_ord_done: "Bestelling klaar",
+      toast_ord_declined: "Bestelling afgewezen",
+      toast_action_failed: "Actie mislukt",
+      lm_history: "Geschiedenis tonen",
+      cfg_title: "Titel",
+      cfg_title_help: "Titel in de kop van de kaart. Leeg laten voor de standaardtekst.",
+      cfg_entity_prefix: "Entiteitsprefix",
+      cfg_entity_prefix_help: "Prefix van de entiteiten van deze integratie. Leeg laten zodat de kaart de machine zelf vindt.",
+      cfg_machine: "Machine",
+      cfg_machine_help: "Naam of id van een machine uit het machineregister van de app.",
+      cfg_switch_entity: "Switch-entiteit",
+      cfg_switch_entity_help: "Switch-entiteit van de slimme stekker van de machine. De aan-uitknop in de kop schakelt hem.",
+      cfg_theme: "Kleurpreset",
+      cfg_theme_help: "Preset voor de accentkleuren van de kaart en het machine-icoon.",
+      cfg_accent_color: "Accentkleur",
+      cfg_accent_color_help: "Eigen #rrggbb-kleur in plaats van een preset. Ongeldige waarden worden genegeerd.",
+      cfg_accent_gradient: "Accentverloop",
+      cfg_accent_gradient_help: "Twee #rrggbb-kleuren, één per regel. Gaat voor op de preset en de accentkleur.",
+      cfg_glp_url: "GLP-URL",
+      cfg_glp_url_help: 'URL van de webinterface van de GLP-app. Voegt een "GLP"-link aan de voettekst toe.',
+      cfg_theme_none: "Geen preset"
     }
   };
   var SUPPORTED_LANGS = ["de", "en", "it", "fr", "es", "nl"];
-  var LANG = "de";
+  var LANG = "en";
   function setLang(lang) {
     LANG = lang;
   }
@@ -1890,6 +3016,11 @@ ${TOKENS}
     return typeof v2 === "function" ? v2(...args) : v2;
   }
   __name(T2, "T");
+  function TIn(lang, key, ...args) {
+    const v2 = (STRINGS[lang] ?? STRINGS.en)[key] ?? STRINGS.en[key] ?? key;
+    return typeof v2 === "function" ? v2(...args) : v2;
+  }
+  __name(TIn, "TIn");
 
   // shared/helpers.ts
   function esc(s4) {
@@ -1951,146 +3082,6 @@ ${TOKENS}
   __name(downsample, "downsample");
   var CC = { pres: "#0072b2", flow: "#c77000", temp: "#c0392b", wt: "#009e73" };
   var HEX_COLOR_RE = /^#[0-9a-fA-F]{6}$/;
-
-  // shared/icons.ts
-  var MACHINE_BODY = /* @__PURE__ */ __name((id, mini, type = "gaggiuino") => `
-    <!-- Seitenwand rechts inkl. Kantenlicht, volle Hoehe -->
-    <path d="M72.2 2.3 L100 11 L100 130 L88 153 L72.2 153 Z" fill="url(#${id})"/>
-    <path d="M72.2 2.3 L100 11 L100 130 L88 153 L72.2 153 Z" fill="#000" opacity=".26"/>
-    <path d="M93.2 8.6 L100 11 L100 130 L90 149 L93.2 142 Z" fill="#fff" opacity=".13"/>
-
-    <!-- Frontflaeche Korpus -->
-    <path d="M13 2.4 L72.2 2.3 L72.2 71.9 L10.2 71.9 L10.2 5.2 A2.8 2.8 0 0 1 13 2.4 Z" fill="url(#${id})"/>
-    <path d="M72.2 3 L72.2 71" stroke="#fff" opacity=".22" stroke-width="3"/>
-
-    <!-- Mittelblock: Korpus kragt links darueber, dort ragt der Siebtraeger ins Freie -->
-    <path d="M20 72 L94 72 L94 122 L24 122 Z" fill="#2b2b31"/>
-    <path d="M20 72 L94 72 L94 77 L20.6 77 Z" fill="#000" opacity=".3"/>
-
-    <!-- Bruehgruppe + Siebtraeger (ragt nach links ins Freie) -->
-    <rect x="42" y="71.5" width="16" height="10.5" rx="2.2" fill="#b9bec5"/>
-    ${mini ? "" : '<path d="M47 82 L53 82 L52 87.5 L48 87.5 Z" fill="#8f959d"/>'}
-    <path d="M20.5 91 L45 84" stroke="#26262c" stroke-width="6.6" stroke-linecap="round"/>
-    <circle cx="18.6" cy="91.6" r="5.9" fill="#ded8ca" stroke="#26262c" stroke-width="1.2"/>
-
-    <!-- Dampflanze RECHTS: Gummimanschette oben, Chromrohr nach unten -->
-    <path d="M84.2 72 C85.2 78 84.6 82 84 88" stroke="#26262c" stroke-width="5" stroke-linecap="round"/>
-    <path d="M84 88 C83.5 101 83 115 83.5 130" stroke="#a3a9b1" stroke-width="2.6" stroke-linecap="round"/>
-    ${mini ? "" : '<path d="M21.5 97 L21.5 130" stroke="#9aa0a8" stroke-width="2" stroke-linecap="round"/>'}
-
-    <!-- Tropfschale: silbernes Lochblech in dunklem Rahmen, breiter als der Korpus -->
-    <path d="M17 122 L93 122 L80 134 L0 134 Z" fill="#25252b"/>
-    <path d="M20.5 123.4 L88.5 123.4 L77 132.6 L4 132.6 Z" fill="url(#${id}-steel)"/>
-    ${mini ? "" : `
-    <circle cx="28" cy="126" r="1.5" fill="#4a4a52"/>
-    <circle cx="39" cy="126" r="1.5" fill="#4a4a52"/>
-    <circle cx="50" cy="126" r="1.5" fill="#4a4a52"/>
-    <circle cx="61" cy="126" r="1.5" fill="#4a4a52"/>
-    <circle cx="72" cy="126" r="1.5" fill="#4a4a52"/>
-    <circle cx="21" cy="130.4" r="1.5" fill="#4a4a52"/>
-    <circle cx="32" cy="130.4" r="1.5" fill="#4a4a52"/>
-    <circle cx="43" cy="130.4" r="1.5" fill="#4a4a52"/>
-    <circle cx="54" cy="130.4" r="1.5" fill="#4a4a52"/>
-    <circle cx="65" cy="130.4" r="1.5" fill="#4a4a52"/>`}
-
-    <!-- Sockelfront: senkrecht, rechte Kante trifft die Seitenwand -->
-    <path d="M0 134 L80 134 L84 155 L0 155 Z" fill="#2b2b31"/>
-    <path d="M0 134 L80 134 L80.8 138 L0 138 Z" fill="#fff" opacity=".07"/>
-
-    <!-- Fuesse -->
-    <rect x="4.5" y="155" width="7.5" height="4.4" rx="1.5" fill="#26262c"/>
-    <rect x="66" y="155" width="7.5" height="4.4" rx="1.5" fill="#26262c"/>
-
-    ${type === "gaggimate" ? `
-    <!-- GaggiMate: runder Puck mit Chromgehaeuse ersetzt Wipptasten +
-         Dampfknopf (mxkissnr/glp-lovelace-card#127 / mxkissnr/glp-order-card#97) -->
-    <circle cx="41" cy="24" r="14" fill="#cfd4d9"/>
-    <circle cx="41" cy="24" r="14" fill="none" stroke="#8f959d" stroke-width=".9"/>
-    <circle cx="41" cy="24" r="11.4" fill="#17171b"/>
-    <circle cx="41" cy="24" r="10.2" fill="#0b0d12"/>
-    ${mini ? "" : `
-    <path d="M31.1 14.1 A14 14 0 0 1 45 10.6" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" opacity=".65"/>
-    <path d="M33.4 16.4 A10.7 10.7 0 0 1 48.6 16.4" fill="none" stroke="#e8452a" stroke-width="1.3" stroke-linecap="round" opacity=".9"/>
-    <path d="M42.6 13.4 A10.7 10.7 0 0 1 48.6 16.4" fill="none" stroke="#6aa9d8" stroke-width="1.3" stroke-linecap="round"/>`}` : `
-    <!-- Bedienfeld: 3 Wipptasten -->
-    <rect x="20.5" y="13.6" width="9" height="14.8" rx="2.1" fill="#26262c"/>
-    <rect x="33" y="13.6" width="9" height="14.8" rx="2.1" fill="#26262c"/>
-    <rect x="45.5" y="13.6" width="9" height="14.8" rx="2.1" fill="#26262c"/>
-    ${mini ? "" : `
-    <rect x="21.6" y="14.9" width="6.8" height="5.4" rx="1.4" fill="#fff" opacity=".13"/>
-    <rect x="34.1" y="14.9" width="6.8" height="5.4" rx="1.4" fill="#fff" opacity=".13"/>
-    <rect x="46.6" y="14.9" width="6.8" height="5.4" rx="1.4" fill="#fff" opacity=".13"/>
-    <rect x="23.7" y="31.8" width="2.6" height="2.2" rx=".8" fill="#d9422e"/>
-    <rect x="36.2" y="31.8" width="2.6" height="2.2" rx=".8" fill="#d9422e"/>
-    <rect x="48.7" y="31.8" width="2.6" height="2.2" rx=".8" fill="#d9422e"/>`}
-
-    <!-- Dampfknopf: liegender Zylinder auf der Seitenwand -->
-    <rect x="74" y="23.4" width="9" height="8" fill="#26262c"/>
-    <rect x="80.7" y="20.5" width="17" height="13.6" rx="6.8" fill="#212126"/>
-    <ellipse cx="82.6" cy="27.3" rx="2.4" ry="6.8" fill="#3b3b43"/>
-    ${mini ? "" : '<rect x="81.4" y="23.4" width="1.7" height="7.8" rx=".85" fill="#fff" opacity=".2"/>'}`}`, "MACHINE_BODY");
-  var MACHINE_ICON_MINI = /* @__PURE__ */ __name((id, type = "gaggiuino") => `
-    <svg viewBox="0 0 100 162" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <linearGradient id="${id}" x1="6" y1="0" x2="92" y2="145" gradientUnits="userSpaceOnUse">
-          <stop offset="0" stop-color="var(--glp-accent-start)"/>
-          <stop offset="1" stop-color="var(--glp-accent-end)"/>
-        </linearGradient>
-        <linearGradient id="${id}-steel" x1="0" y1="123" x2="0" y2="133" gradientUnits="userSpaceOnUse">
-          <stop offset="0" stop-color="#d3d6db"/>
-          <stop offset="1" stop-color="#9ba1a9"/>
-        </linearGradient>
-      </defs>
-      ${MACHINE_BODY(id, true, type)}
-    </svg>`, "MACHINE_ICON_MINI");
-  var GLP_ICON_PATHS = {
-    // --- drinks -----------------------------------------------------------
-    // One shared demitasse silhouette for the three straight espresso drinks;
-    // they differ only in fill level, which is the honest difference between
-    // them (same basket, same cup, more or less water through it).
-    ristretto: '<path d="M16.5 8.5h1a2.5 2.5 0 0 1 0 5h-1"/><path d="M5 8.5h11.5v5a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4v-5z"/><path d="M6.5 15.2h8.6"/>',
-    espresso: '<path d="M16.5 8.5h1a2.5 2.5 0 0 1 0 5h-1"/><path d="M5 8.5h11.5v5a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4v-5z"/><path d="M5.6 13.2h10.4"/>',
-    lungo: '<path d="M16.5 8.5h1a2.5 2.5 0 0 1 0 5h-1"/><path d="M5 8.5h11.5v5a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4v-5z"/><path d="M5.1 10.6h11.2"/>',
-    // Cappuccino: domed foam cap standing proud of the rim.
-    cappuccino: '<path d="M16.5 8.5h1a2.5 2.5 0 0 1 0 5h-1"/><path d="M5 8.5h11.5v5a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4v-5z"/><path d="M5.4 8.5a5.8 5.8 0 0 1 11 0"/><path d="M5.8 12h10"/>',
-    // Latte macchiato: tall glass, layered.
-    latte: '<path d="M7.5 4.5h9l-1 14a2 2 0 0 1-2 1.8h-3a2 2 0 0 1-2-1.8l-1-14z"/><path d="M7.9 9h8.2M8.2 13h7.6"/>',
-    // Flat white: wide shallow cup, thin microfoam layer, latte-art dot.
-    flat_white: '<path d="M17.5 9.5h1a2.2 2.2 0 0 1 0 4.4h-1"/><path d="M3.5 9.5h14v3.6a4.4 4.4 0 0 1-4.4 4.4H7.9a4.4 4.4 0 0 1-4.4-4.4V9.5z"/><path d="M4.2 12h12.6"/><circle cx="10.5" cy="14.4" r="1.1"/>',
-    // --- state, action, status --------------------------------------------
-    coffee: '<path d="M17 8h1a3 3 0 0 1 0 6h-1M4 8h13v7a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4V8z"/><path d="M8 2v2M12 2v2"/>',
-    check: '<path d="M4.5 12.5 9.5 17.5 19.5 6.5"/>',
-    close: '<path d="M6 6l12 12M18 6 6 18"/>',
-    heat: '<path d="M12 3.5c3 3.2 4.5 5.8 4.5 8a4.5 4.5 0 0 1-9 0c0-2.2 1.5-4.8 4.5-8z"/><path d="M9.5 20.5h5"/>',
-    droplet: '<path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/>',
-    steam: '<path d="M7 20c0-2 1.6-2.4 1.6-4.4S7 12.6 7 10.6"/><path d="M12 20c0-2.4 1.8-2.9 1.8-5.3S12 10.3 12 8"/><path d="M17 20c0-2 1.6-2.4 1.6-4.4S17 12.6 17 10.6"/>',
-    warning: '<path d="M12 4.5 21 19.5H3L12 4.5z"/><path d="M12 10v4"/><circle cx="12" cy="16.8" r="0.6"/>',
-    gear: '<circle cx="12" cy="12" r="3.2"/><path d="M12 3.5v2.2M12 18.3v2.2M20.5 12h-2.2M5.7 12H3.5M18 6l-1.6 1.6M7.6 16.4 6 18M18 18l-1.6-1.6M7.6 7.6 6 6"/>',
-    plug: '<path d="M9 3.5v5M15 3.5v5"/><path d="M6.5 8.5h11v3a5.5 5.5 0 0 1-11 0v-3z"/><path d="M12 17v3.5"/>',
-    cart: '<path d="M3 4.5h2.2l2.3 10.4h9.6l2.1-7.4H6.4"/><circle cx="9" cy="19" r="1.4"/><circle cx="16.5" cy="19" r="1.4"/>',
-    shower: '<path d="M4.5 8.5h15v2.6a3 3 0 0 1-3 3h-9a3 3 0 0 1-3-3V8.5z"/><path d="M8 17.5v2M12 17.5v3M16 17.5v2"/>',
-    wrench: '<path d="M14.7 6.3a4 4 0 0 1-5.4 5.4L4 17l3 3 5.3-5.3a4 4 0 0 1 5.4-5.4l-2.5 2.5-2-2z"/>',
-    refresh: '<path d="M20 12a8 8 0 1 1-2.6-5.9"/><path d="M20 4v4.5h-4.5"/>',
-    circle: '<circle cx="12" cy="12" r="8"/>',
-    // Waiting/queued. An hourglass rather than a clock: a clock reads as "when",
-    // an hourglass as "not yet" — and this marks an order sitting unconfirmed,
-    // not a time of day.
-    hourglass: '<path d="M7 3.5h10M7 20.5h10"/><path d="M8 3.5v3.2c0 1.6 1.2 2.9 4 5.3 2.8-2.4 4-3.7 4-5.3V3.5"/><path d="M8 20.5v-3.2c0-1.6 1.2-2.9 4-5.3 2.8 2.4 4 3.7 4 5.3v3.2"/>',
-    flask: '<path d="M10 3.5v6L5.2 18a2 2 0 0 0 1.7 3h10.2a2 2 0 0 0 1.7-3L14 9.5v-6"/><path d="M9 3.5h6"/><path d="M7.4 14h9.2"/>',
-    // Not a party popper — a small burst, so it still reads at 16px and keeps
-    // the card's tone. Used for the completed-order confirmation.
-    celebrate: '<path d="M12 3v3.5M12 17.5V21M21 12h-3.5M6.5 12H3M18.4 5.6l-2.5 2.5M8.1 15.9l-2.5 2.5M18.4 18.4l-2.5-2.5M8.1 8.1 5.6 5.6"/>',
-    // Replaces the ★/☆ text characters in the rating row. The filled state is a
-    // class on the element, not a second path — it is the same shape either way.
-    star: '<path d="M12 3.8l2.6 5.3 5.9.9-4.2 4.1 1 5.8-5.3-2.8-5.3 2.8 1-5.8L3.5 10l5.9-.9L12 3.8z"/>'
-  };
-  var ICONS = {
-    has: /* @__PURE__ */ __name((name) => Object.prototype.hasOwnProperty.call(GLP_ICON_PATHS, name), "has"),
-    // Returns '' for an unknown name rather than an empty <svg>: callers fall
-    // back to other content (e.g. a stored emoji on a user-created menu entry),
-    // and an empty string is what makes `ICONS.of(x) || fallback` work.
-    of: /* @__PURE__ */ __name((name, cls = "") => ICONS.has(name) ? `<svg class="glp-i${cls ? " " + cls : ""}" viewBox="0 0 24 24" aria-hidden="true" focusable="false">${GLP_ICON_PATHS[name]}</svg>` : "", "of")
-  };
 
   // shot/src/icons.ts
   GLP_ICON_PATHS.descale = '<path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/><path d="M8.3 13.6l1.5 1.7 1.4-2.3 1.5 1.7 1.5-2.3"/>';
@@ -2176,9 +3167,25 @@ ${TOKENS}
   __name(applyAccentLineContrast, "applyAccentLineContrast");
 
   // shared/machine.ts
+  function hasExactStatusId(id, needleSlug) {
+    const lower = id.toLowerCase();
+    const suffix = `${needleSlug}_machine_status`;
+    if (!lower.endsWith(suffix)) return false;
+    if (lower.length === suffix.length) return true;
+    const boundary = lower[lower.length - suffix.length - 1];
+    return boundary === "." || boundary === "_";
+  }
+  __name(hasExactStatusId, "hasExactStatusId");
+  function hasExactFriendlyName(id, hass, needle) {
+    const friendly = String(hass.states[id]?.attributes?.friendly_name ?? "").toLowerCase();
+    return friendly === needle || friendly === `${needle} machine status`;
+  }
+  __name(hasExactFriendlyName, "hasExactFriendlyName");
   function matchMachineStatusEntity(hass, candidates, machine) {
     const needle = String(machine).toLowerCase();
     const needleSlug = needle.replace(/\s+/g, "_");
+    const exact = candidates.find((id) => hasExactStatusId(id, needleSlug) || hasExactFriendlyName(id, hass, needle));
+    if (exact) return exact;
     return candidates.find((id) => hass.states[id]?.attributes?.friendly_name?.toLowerCase().includes(needle) || id.toLowerCase().includes(needleSlug));
   }
   __name(matchMachineStatusEntity, "matchMachineStatusEntity");
@@ -2220,6 +3227,33 @@ ${TOKENS}
     return type === "gaggimate" ? "gaggimate" : "gaggiuino";
   }
   __name(appMachineType, "appMachineType");
+
+  // shared/ha-events.ts
+  function fireHaEvent(node, type, detail) {
+    node.dispatchEvent(new CustomEvent(type, { detail, bubbles: true, composed: true }));
+  }
+  __name(fireHaEvent, "fireHaEvent");
+  var moreInfo = /* @__PURE__ */ __name((node, entityId) => fireHaEvent(node, "hass-more-info", { entityId }), "moreInfo");
+  var toast = /* @__PURE__ */ __name((node, message) => fireHaEvent(node, "hass-notification", { message }), "toast");
+  var haptic = /* @__PURE__ */ __name((node, type) => fireHaEvent(node, "haptic", type), "haptic");
+
+  // shared/config-form.ts
+  function normalizeFormConfig(config, textKeys) {
+    const out = { ...config };
+    for (const key of textKeys) {
+      const value = out[key];
+      if (typeof value === "string" && value.trim() === "") delete out[key];
+    }
+    if (out.theme === "none") delete out.theme;
+    const gradient = out.accent_gradient;
+    if (typeof gradient === "string") {
+      const stops = gradient.split(/[\s,]+/).filter(Boolean);
+      if (stops.length > 0) out.accent_gradient = stops;
+      else delete out.accent_gradient;
+    }
+    return out;
+  }
+  __name(normalizeFormConfig, "normalizeFormConfig");
 
   // shot/src/charts.ts
   function _scale(arr) {
@@ -2363,8 +3397,31 @@ ${TOKENS}
   __name(metricLineHtml, "metricLineHtml");
 
   // shot/src/glp-card.ts
-  var GLP_CARD_VERSION = "2.22.0";
+  var GLP_CARD_VERSION = "2.23.0";
   var READY_BY_PENDING_FALLBACK_MS = 6e4;
+  var HEADER_LONG_PRESS_MS = 500;
+  var HEADER_PRESS_MOVE_PX = 10;
+  function resolveLang(hass) {
+    const l3 = String(hass?.language || hass?.locale?.language || "en").slice(0, 2).toLowerCase();
+    return SUPPORTED_LANGS.includes(l3) ? l3 : "en";
+  }
+  __name(resolveLang, "resolveLang");
+  var ENTITY_PREFIX_RE = /^sensor\.[a-z0-9_]+$/;
+  function editorLang(hass) {
+    const code = hass?.language || hass?.locale?.language || (typeof navigator === "undefined" ? "" : navigator.language);
+    const lang = String(code || "en").slice(0, 2).toLowerCase();
+    return SUPPORTED_LANGS.includes(lang) ? lang : "en";
+  }
+  __name(editorLang, "editorLang");
+  var SHOT_CONFIG_TEXT_KEYS = [
+    "title",
+    "entity_prefix",
+    "machine",
+    "switch_entity",
+    "theme",
+    "accent_color",
+    "glp_url"
+  ];
   var GlpCard = class _GlpCard extends HTMLElement {
     static {
       __name(this, "GlpCard");
@@ -2372,7 +3429,9 @@ ${TOKENS}
     constructor() {
       super();
       this.attachShadow({ mode: "open" });
-      this._profileOpen = false;
+      this._sheet = null;
+      this._sheetSlot = null;
+      this._sheetLang = null;
       this._shotIndex = 0;
       this._prevShotIndex = -1;
       this._recentShots = [];
@@ -2382,32 +3441,52 @@ ${TOKENS}
       this._lastChartShotKey = null;
       this._activeTab = "shot";
       this._pendingProfile = null;
-      this._maintConfirm = null;
+      this._pendingProfileTimer = null;
       this._machineOnSince = null;
       this._uptimeTimer = null;
       this._orders = [];
       this._ordersSig = null;
       this._ordersPoll = null;
+      this._ordersRetry = null;
+      this._ordersOff = false;
       this._beansInfo = null;
       this._beansInfoById = null;
       this._beansInfoAt = 0;
       this._beansInfoUnavailable = false;
-      this._orderEtaFor = null;
-      this._orderDeclineFor = null;
-      this._switchEntity = localStorage.getItem("glp_switch_entity") || null;
+      this._orderSheetId = null;
+      this._orderSheetEta = false;
+      this._orderSheetDecline = false;
+      this._orderSheetSig = "";
+      this._switchEntity = this._readSwitchEntity();
       this._iconGradId = `glp-icon-${Math.random().toString(36).slice(2, 10)}`;
       this._readyByTimer = null;
       this._readyByPlannedAt = null;
       this._readyByTargetAt = null;
       this._pendingReadyByTargetAt = null;
       this._pendingReadyByTimer = null;
+      this._headerPressTimer = null;
+      this._headerPressX = 0;
+      this._headerPressY = 0;
       this._lastKnownReadyByTargetAt = null;
       this._lastKnownReadyByPlannedAt = null;
+      this._stateKeysStates = null;
+      this._stateKeysCache = null;
+      this._prefixStates = null;
+      this._prefixConfig = null;
+      this._prefixValue = null;
+      this._machineEntryCached = false;
+      this._machineEntryStates = null;
+      this._machineEntryMachine = void 0;
+      this._machineEntryValue = null;
+      this._renderInputs = null;
+      this._contrastKey = null;
       this.shadowRoot.addEventListener("click", (e6) => {
         if (e6.target.closest('[data-action="toggle-switch"]')) {
           e6.stopPropagation();
           if (this._hass && this._switchEntity)
-            this._hass.callService("switch", "toggle", { entity_id: this._switchEntity });
+            this._callService("switch", "toggle", { entity_id: this._switchEntity }, () => {
+              haptic(this, "success");
+            });
           return;
         }
         if (e6.target.closest('[data-action="set-ready-by"]')) {
@@ -2415,10 +3494,14 @@ ${TOKENS}
           const input = this.shadowRoot.getElementById("glp-readyby-input");
           const target = this._resolveReadyByTarget(input?.value, /* @__PURE__ */ new Date());
           if (this._hass && target) {
-            this._hass.callService("gaggiuino_profiler", "set_ready_by", {
+            const hhmm = target.toLocaleTimeString(this._locale(), { hour: "2-digit", minute: "2-digit" });
+            this._callService("gaggiuino_profiler", "set_ready_by", {
               target_time: target.toISOString(),
               ...this._config?.machine != null ? { machine: this._config.machine } : {}
-            });
+            }, () => {
+              toast(this, T2("toast_ready_by", hhmm));
+              haptic(this, "success");
+            }, () => this._clearPendingReadyBy());
             this._pendingReadyByTargetAt = target;
             clearTimeout(this._pendingReadyByTimer);
             this._pendingReadyByTimer = setTimeout(() => {
@@ -2432,9 +3515,11 @@ ${TOKENS}
         if (e6.target.closest('[data-action="cancel-ready-by"]')) {
           e6.stopPropagation();
           if (this._hass) {
-            this._hass.callService("gaggiuino_profiler", "set_ready_by", {
+            this._callService("gaggiuino_profiler", "set_ready_by", {
               ...this._config?.machine != null ? { machine: this._config.machine } : {}
-            });
+            }, () => {
+              haptic(this, "success");
+            }, () => this._clearPendingReadyBy());
             this._pendingReadyByTargetAt = false;
             clearTimeout(this._pendingReadyByTimer);
             this._pendingReadyByTimer = setTimeout(() => {
@@ -2445,18 +3530,52 @@ ${TOKENS}
           }
         }
       });
+      this.shadowRoot.addEventListener("pointerdown", (e6) => {
+        const target = e6.target;
+        if (!target || typeof target.closest !== "function") return;
+        if (!target.closest(".header")) return;
+        if (target.closest("button")) return;
+        const pe = e6;
+        this._headerPressX = pe.clientX;
+        this._headerPressY = pe.clientY;
+        clearTimeout(this._headerPressTimer);
+        this._headerPressTimer = setTimeout(() => {
+          this._headerPressTimer = null;
+          this._longPressHeader();
+        }, HEADER_LONG_PRESS_MS);
+      });
+      const endHeaderPress = /* @__PURE__ */ __name(() => {
+        if (!this._headerPressTimer) return;
+        clearTimeout(this._headerPressTimer);
+        this._headerPressTimer = null;
+      }, "endHeaderPress");
+      this.shadowRoot.addEventListener("pointerup", endHeaderPress);
+      this.shadowRoot.addEventListener("pointercancel", endHeaderPress);
+      this.shadowRoot.addEventListener("pointerleave", endHeaderPress, true);
+      this.shadowRoot.addEventListener("pointermove", (e6) => {
+        if (!this._headerPressTimer) return;
+        const pe = e6;
+        const dx = pe.clientX - this._headerPressX;
+        const dy = pe.clientY - this._headerPressY;
+        if (Number.isFinite(dx) && Number.isFinite(dy) && Math.hypot(dx, dy) > HEADER_PRESS_MOVE_PX) endHeaderPress();
+      });
     }
     // Handlers bound from the Lit templates (elements survive renders now, so
     // per-render addEventListener wiring would stack listeners). The delegated
     // power/ready-by buttons stay on the constructor's shadowRoot listener.
-    _toggleProfilePicker() {
-      this._profileOpen = !this._profileOpen;
-      this._render();
-    }
     _selectProfile(val) {
       if (this._hass) {
         const entityId = this._resolvePrefix().replace(/^sensor\./, "select.") + "profile";
-        this._hass.callService("select", "select_option", { entity_id: entityId, option: val });
+        haptic(this, "selection");
+        this._callService("select", "select_option", { entity_id: entityId, option: val }, () => {
+          toast(this, T2("toast_profile", val));
+          haptic(this, "success");
+        }, () => {
+          this._pendingProfile = null;
+          clearTimeout(this._pendingProfileTimer);
+          this._pendingProfileTimer = null;
+          this._render();
+        });
         this._pendingProfile = val;
         clearTimeout(this._pendingProfileTimer);
         this._pendingProfileTimer = setTimeout(() => {
@@ -2464,46 +3583,156 @@ ${TOKENS}
           this._render();
         }, 8e3);
       }
-      this._profileOpen = false;
       this._render();
     }
     _selectTab(tab) {
       if (tab !== this._activeTab) {
         this._activeTab = tab;
-        this._maintConfirm = null;
+        haptic(this, "selection");
         this._render();
       }
     }
     _startUptimeTicker() {
-      if (this._uptimeTimer) return;
+      if (this._uptimeTimer || !this.isConnected) return;
       this._uptimeTimer = setInterval(() => {
         const el = this.shadowRoot.getElementById("glp-uptime-text");
         if (el && this._machineOnSince) el.textContent = fmtUptime(Date.now() - this._machineOnSince);
       }, 1e3);
     }
     _startReadyByTicker() {
-      if (this._readyByTimer) return;
+      if (this._readyByTimer || !this.isConnected) return;
       this._readyByTimer = setInterval(() => {
         const el = this.shadowRoot.getElementById("glp-readyby-countdown");
         if (el) el.textContent = this._readyByCountdownText(this._readyByPlannedAt, this._readyByTargetAt);
       }, 1e3);
     }
+    // Restarts the orders poll when the card is re-attached (dashboard edit
+    // mode, view switch): hass stops arriving, and the setter only starts a
+    // poll while connected. The render puts back whichever ticker the current
+    // view needs, since disconnectedCallback cleared it.
     connectedCallback() {
       this._startOrdersPoll();
+      this._contrastKey = null;
+      if (this._hass) this._render();
     }
+    // Every timer this card owns must stop here: a detached card gets no more
+    // hass pushes, so nothing else would ever clear them.
     disconnectedCallback() {
-      if (this._uptimeTimer) {
-        clearInterval(this._uptimeTimer);
-        this._uptimeTimer = null;
+      if (this._uptimeTimer) clearInterval(this._uptimeTimer);
+      this._uptimeTimer = null;
+      this._stopOrdersPoll();
+      if (this._readyByTimer) clearInterval(this._readyByTimer);
+      this._readyByTimer = null;
+      if (this._pendingProfileTimer) clearTimeout(this._pendingProfileTimer);
+      this._pendingProfileTimer = null;
+      if (this._pendingReadyByTimer) clearTimeout(this._pendingReadyByTimer);
+      this._pendingReadyByTimer = null;
+      if (this._headerPressTimer) clearTimeout(this._headerPressTimer);
+      this._headerPressTimer = null;
+      this._sheet?.close();
+    }
+    // ── bottom sheet (shared GlpSheet) ────────────────────────────────────────
+    // The sheet mounts into a slot node the card template renders after the
+    // card. Anything appended straight to the shadow root would be dropped by
+    // the next Lit render, which clears everything it did not commit itself.
+    _sheetSlotHtml() {
+      return b2`<div class="glp-sheet-slot"></div>`;
+    }
+    // One sheet per card, created on first use. A view switch (machine on/off)
+    // replaces the slot node, and a language change makes the cached sheet's
+    // close label stale, so either rebuilds it.
+    _sheetFor() {
+      const slot = this.shadowRoot?.querySelector(".glp-sheet-slot") ?? null;
+      if (!slot) return null;
+      const previous = this._sheet;
+      if (!this._sheet || this._sheetSlot !== slot || this._sheetLang !== getLang()) {
+        this._sheet = null;
+        previous?.close();
+        const sheet = new GlpSheet(slot, {
+          closeLabel: T2("sheet_close"),
+          // However the sheet was closed, the order it showed is no longer the
+          // subject of any pending action step. A superseded sheet closes too
+          // (its slot or language is gone), and its slide-out finishes after the
+          // replacement is already showing the order, so only the current sheet
+          // may clear that state.
+          onClose: /* @__PURE__ */ __name(() => {
+            if (this._sheet !== sheet) return;
+            this._forgetOrderSheet();
+          }, "onClose")
+        });
+        this._sheet = sheet;
+        this._sheetSlot = slot;
+        this._sheetLang = getLang();
       }
-      if (this._ordersPoll) {
-        clearInterval(this._ordersPoll);
-        this._ordersPoll = null;
+      return this._sheet;
+    }
+    // Arrow/Home/End move focus between the options of an open picker, wrapping
+    // at both ends. Enter and Space select the focused option: preventing the
+    // key default stops the browser from firing its own click on top of the one
+    // dispatched here, so a key press is exactly one selection.
+    _sheetOptionKeyNav(e6) {
+      const key = e6.key;
+      if (key === "Enter" || key === " ") {
+        const option = e6.target?.closest('[role="option"]');
+        if (!option) return;
+        e6.preventDefault();
+        option.click();
+        return;
       }
-      if (this._readyByTimer) {
-        clearInterval(this._readyByTimer);
-        this._readyByTimer = null;
+      if (key !== "ArrowDown" && key !== "ArrowUp" && key !== "Home" && key !== "End") return;
+      const opts = Array.from(e6.currentTarget.querySelectorAll('[role="option"]'));
+      if (!opts.length) return;
+      e6.preventDefault();
+      const at = opts.indexOf(e6.target);
+      let next;
+      if (key === "Home") next = 0;
+      else if (key === "End") next = opts.length - 1;
+      else if (key === "ArrowDown") next = at < 0 ? 0 : (at + 1) % opts.length;
+      else next = at < 0 ? opts.length - 1 : (at - 1 + opts.length) % opts.length;
+      opts[next]?.focus();
+    }
+    // ── Home Assistant events (documented custom-card events) ─────────────────
+    // callService returns a Promise in HA, but a stub may return nothing, so the
+    // result is always promisified. A rejected call is a failed action: the
+    // caller rolls its optimistic state back, then the user gets a toast and a
+    // failure vibration.
+    _callService(domain, service, data, onDone, onFail) {
+      const hass = this._hass;
+      if (!hass?.callService) return;
+      let call;
+      try {
+        call = Promise.resolve(hass.callService(domain, service, data));
+      } catch {
+        this._actionFailed(onFail);
+        return;
       }
+      call.then(() => {
+        onDone?.();
+      }, () => {
+        this._actionFailed(onFail);
+      });
+    }
+    _actionFailed(onFail) {
+      onFail?.();
+      toast(this, T2("toast_action_failed"));
+      haptic(this, "failure");
+    }
+    // Rolls the optimistic ready-by state back after a rejected call.
+    _clearPendingReadyBy() {
+      this._pendingReadyByTargetAt = null;
+      clearTimeout(this._pendingReadyByTimer);
+      this._pendingReadyByTimer = null;
+      this._render();
+    }
+    // A long press on the header opens the machine itself: its switch entity
+    // when one is configured, the status sensor otherwise.
+    _longPressHeader() {
+      moreInfo(this, this._switchEntity || this._resolvePrefix() + "machine_status");
+      haptic(this, "selection");
+    }
+    // Tapping a live value opens that entity's history.
+    _showHistory(entityId) {
+      moreInfo(this, entityId);
     }
     // ── ready-by preheat scheduler (#61) ───────────────────────────────────────
     // Reads sensor.<prefix>preheat_ready_by_target_at / _planned_switch_on_at
@@ -2578,9 +3807,14 @@ ${TOKENS}
       if (diffMs <= 0) return T2("ready_by_switching_now");
       return T2("ready_by_switching_in", Math.ceil(diffMs / 6e4));
     }
+    // Dates and times follow Home Assistant's locale, then its language, then
+    // the card's active language — never a fixed locale.
+    _locale() {
+      return String(this._hass?.locale?.language || this._hass?.language || getLang());
+    }
     _buildReadyByHtml(targetAt, plannedAt) {
       if (targetAt) {
-        const hhmm = targetAt.toLocaleTimeString(getLang(), { hour: "2-digit", minute: "2-digit" });
+        const hhmm = targetAt.toLocaleTimeString(this._locale(), { hour: "2-digit", minute: "2-digit" });
         return b2`<div class="ready-by ready-by-set">
         <div class="ready-by-info">
           <span class="ready-by-label">${T2("ready_by_target", hhmm)}</span>
@@ -2599,18 +3833,44 @@ ${TOKENS}
     }
     // ── Barista orders (via the integration REST proxy) ───────────────────────
     _startOrdersPoll() {
-      if (this._ordersPoll || !this._hass?.fetchWithAuth) {
-        if (!this._ordersPoll) setTimeout(() => this._startOrdersPoll(), 1500);
+      const hass = this._hass;
+      if (this._ordersPoll || !this.isConnected || this._ordersOff || !hass) return;
+      if (!hass.fetchWithAuth) {
+        if (!this._ordersRetry)
+          this._ordersRetry = setTimeout(() => {
+            this._ordersRetry = null;
+            this._startOrdersPoll();
+          }, 1500);
         return;
       }
       this._fetchOrders(true);
       this._ordersPoll = setInterval(() => this._fetchOrders(false), 6e3);
+    }
+    _stopOrdersPoll() {
+      if (this._ordersPoll) {
+        clearInterval(this._ordersPoll);
+        this._ordersPoll = null;
+      }
+      if (this._ordersRetry) {
+        clearTimeout(this._ordersRetry);
+        this._ordersRetry = null;
+      }
     }
     async _fetchOrders(force) {
       if (!this._hass?.fetchWithAuth) return;
       let list;
       try {
         const r4 = await this._hass.fetchWithAuth("/api/glp/orders");
+        if (r4.status === 404 || r4.status === 403) {
+          this._ordersOff = true;
+          this._stopOrdersPoll();
+          if (this._orders.length) {
+            this._orders = [];
+            this._ordersSig = null;
+            this._render();
+          }
+          return;
+        }
         if (!r4.ok) return;
         list = await r4.json();
       } catch {
@@ -2623,62 +3883,189 @@ ${TOKENS}
       this._orders = active;
       this._render();
     }
+    // Keeps an open order sheet in step with the list: another device may have
+    // handled the order, in which case the sheet has nothing left to act on and
+    // closes silently; otherwise it is re-rendered so its waiting time and
+    // ready-in line follow the list. Runs at the end of every render because
+    // neither view may leave a sheet behind on a slot node it just replaced.
+    _syncOrderSheet() {
+      const id = this._orderSheetId;
+      if (id == null) return;
+      const order = this._orderById(id);
+      if (!order) {
+        this._closeOrderSheet();
+        return;
+      }
+      const previous = this._sheet;
+      const sheet = this._sheetFor();
+      if (!sheet) return;
+      const rebuilt = sheet !== previous;
+      if (!rebuilt && !sheet.isOpen) return;
+      const sig = this._orderSheetSigFor(order);
+      if (!rebuilt && sig === this._orderSheetSig) return;
+      this._orderSheetSig = sig;
+      sheet.open(this._orderSheetContent(id, order));
+    }
+    // What the sheet's body is derived from. The minute is in there because the
+    // waiting line is relative to now, so an open sheet follows it the same way
+    // the card's own minute-based render does.
+    _orderSheetSigFor(order) {
+      return JSON.stringify([
+        order.status,
+        order.eta,
+        order.acceptedAt,
+        order.item,
+        order.variant,
+        order.customer,
+        order.note,
+        Math.floor(Date.now() / 6e4)
+      ]);
+    }
+    // The sheet is shared, so its content stops being about an order whenever a
+    // picker or a maintenance task takes it over, and whenever the card closes it.
+    _forgetOrderSheet() {
+      this._orderSheetId = null;
+      this._orderSheetEta = false;
+      this._orderSheetDecline = false;
+      this._orderSheetSig = "";
+    }
+    // Forgets the order and closes the sheet. The sheet's own onClose does the
+    // same, but only once a phone's slide-out has finished.
+    _closeOrderSheet() {
+      this._forgetOrderSheet();
+      this._sheet?.close();
+    }
+    _orderById(id) {
+      return this._orders.find((o8) => o8.id === id) ?? null;
+    }
+    // Whole minutes left until the promised time, or null when the accepted
+    // order carries no eta.
+    _orderMinsLeft(order) {
+      if (!order.acceptedAt || !order.eta) return null;
+      return Math.max(0, Math.ceil((order.acceptedAt + order.eta * 6e4 - Date.now()) / 6e4));
+    }
+    // How long the order has been waiting: "just now" under a minute, then whole
+    // minutes.
+    _orderWaitingText(createdAt) {
+      const at = parseTs(createdAt);
+      if (!at) return T2("ord_waiting_now");
+      const mins = Math.floor((Date.now() - at.getTime()) / 6e4);
+      if (!(mins >= 1)) return T2("ord_waiting_now");
+      return T2("ord_waiting", String(mins));
+    }
+    // Runs one barista action. fetchWithAuth resolves on 4xx/5xx, so the response
+    // status decides success: an ok answer closes the sheet with a confirmation,
+    // a failed one keeps it open and reports itself. Either way the list is
+    // refetched so the card and an open sheet show what the app really has.
     async _orderAction(id, action, body) {
       if (!this._hass?.fetchWithAuth || !id) return;
-      this._orderEtaFor = null;
-      this._orderDeclineFor = null;
+      let ok = false;
       try {
-        await this._hass.fetchWithAuth(`/api/glp/orders/${encodeURIComponent(id)}/${action}`, {
+        ok = (await this._hass.fetchWithAuth(`/api/glp/orders/${encodeURIComponent(id)}/${action}`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(body || {})
-        });
+        })).ok;
       } catch {
+      }
+      if (ok) {
+        this._closeOrderSheet();
+        toast(this, action === "accept" ? T2("toast_ord_accepted", String(body.eta ?? "")) : action === "complete" ? T2("toast_ord_done") : T2("toast_ord_declined"));
+        haptic(this, "success");
+      } else {
+        toast(this, T2("toast_action_failed"));
+        haptic(this, "failure");
       }
       await this._fetchOrders(true);
     }
+    // Every row is a read-only summary (#264): the barista actions live in the
+    // shared sheet, so a long queue no longer grows the card with a button row
+    // per order. The row itself is the tap target, keyboard included.
     _buildOrdersHtml() {
       if (!this._orders.length) return b2`<div class="unavailable">${T2("orders_none")}</div>`;
-      const tap = /* @__PURE__ */ __name((fn) => (e6) => {
-        e6.stopPropagation();
-        fn();
-      }, "tap");
-      const cancel = tap(() => {
-        this._orderEtaFor = null;
-        this._orderDeclineFor = null;
-        this._render();
-      });
-      const declineRow = /* @__PURE__ */ __name((id) => b2`<div class="ord-actions"><span class="ord-q">${T2("ord_decline_q")}</span>
-      <button class="ord-btn danger" data-ord-decline-yes=${id} @click=${tap(() => this._orderAction(id, "decline", {}))}>${/* ICONS.of() emits fixed SVG markup */
-      o5(ICONS.of("check"))} ${T2("ord_yes")}</button>
-      <button class="ord-btn ghost" data-ord-cancel="1" @click=${cancel}>${/* ICONS.of() emits fixed SVG markup */
-      o5(ICONS.of("close"))}</button></div>`, "declineRow");
-      return b2`<div class="ord-list">${this._orders.map((o8) => {
-        const label = o8.variant ? `${o8.item} · ${o8.variant}` : o8.item;
-        const head = b2`<div class="ord-top"><span class="ord-item">${/* ICONS.of() emits fixed SVG markup */
-        o5(ICONS.of("coffee"))} ${label}</span>${o8.customer ? b2`<span class="ord-who">${o8.customer}</span>` : A}</div>
-        ${o8.note ? b2`<div class="ord-note">„${o8.note}"</div>` : A}`;
-        if (o8.status === "pending") {
-          const actions2 = this._orderDeclineFor === o8.id ? declineRow(o8.id) : this._orderEtaFor === o8.id ? b2`<div class="ord-actions"><span class="ord-q">${T2("ord_done_in")}</span>${[3, 5, 8, 10].map((m2) => b2`<button class="ord-btn eta" data-ord-accept=${o8.id} data-eta=${m2} @click=${tap(() => this._orderAction(o8.id, "accept", { eta: m2 }))}>${m2} min</button>`)}<button class="ord-btn ghost" data-ord-cancel="1" @click=${cancel}>${/* ICONS.of() emits fixed SVG markup */
-          o5(ICONS.of("close"))}</button></div>` : b2`<div class="ord-actions"><button class="ord-btn primary" data-ord-eta=${o8.id} @click=${tap(() => {
-            this._orderEtaFor = o8.id;
-            this._render();
-          })}>${/* ICONS.of() emits fixed SVG markup */
-          o5(ICONS.of("check"))} ${T2("ord_accept")}</button><button class="ord-btn ghost" data-ord-decline=${o8.id} @click=${tap(() => {
-            this._orderDeclineFor = o8.id;
-            this._render();
-          })}>${T2("ord_decline")}</button></div>`;
-          return b2`<div class="ord-row pending">${head}${actions2}</div>`;
-        }
-        const minsLeft = o8.acceptedAt && o8.eta ? Math.max(0, Math.ceil((o8.acceptedAt + o8.eta * 6e4 - Date.now()) / 6e4)) : null;
-        const actions = this._orderDeclineFor === o8.id ? declineRow(o8.id) : b2`<div class="ord-actions"><button class="ord-btn primary" data-ord-done=${o8.id} @click=${tap(() => this._orderAction(o8.id, "complete", {}))}>${/* ICONS.of() emits fixed SVG markup */
-        o5(ICONS.of("check"))} ${T2("ord_done")}</button><button class="ord-btn ghost" data-ord-decline=${o8.id} @click=${tap(() => {
-          this._orderDeclineFor = o8.id;
-          this._render();
-        })}>${T2("ord_decline")}</button></div>`;
-        return b2`<div class="ord-row accepted">${head}
-        <div class="ord-sub">${minsLeft != null ? T2("ord_ready_in", minsLeft) : T2("ord_preparing")}</div>${actions}</div>`;
-      })}</div>`;
+      return b2`<div class="ord-list">${this._orders.map((o8) => this._orderRowHtml(o8))}</div>`;
+    }
+    _orderRowHtml(order) {
+      const label = order.variant ? `${order.item} · ${order.variant}` : order.item;
+      const minsLeft = this._orderMinsLeft(order);
+      const open = /* @__PURE__ */ __name(() => {
+        this._openOrderSheet(order.id);
+      }, "open");
+      return b2`<div class="ord-row ${order.status === "pending" ? "pending" : "accepted"}" data-order-id=${order.id} role="button" tabindex="0" @click=${open} @keydown=${(e6) => {
+        const key = e6.key;
+        if (key !== "Enter" && key !== " ") return;
+        e6.preventDefault();
+        open();
+      }}><div class="ord-top"><span class="ord-item">${/* ICONS.of() emits fixed SVG markup */
+      o5(ICONS.of("coffee"))} ${label}</span>${order.customer ? b2`<span class="ord-who">${order.customer}</span>` : A}</div>${order.note ? b2`<div class="ord-note">„${order.note}"</div>` : A}${order.status === "accepted" ? b2`<div class="ord-sub">${minsLeft != null ? T2("ord_ready_in", String(minsLeft)) : T2("ord_preparing")}</div>` : A}</div>`;
+    }
+    // One order in the shared sheet (#264): the same summary plus its waiting
+    // time, and the actions that used to sit in the row. Pending orders offer
+    // Accept (which swaps the actions to the ETA choice in place) and Decline; an
+    // accepted one offers Done and Decline. Decline first asks for a second tap,
+    // and Cancel there returns to the normal actions without closing the sheet.
+    _openOrderSheet(id) {
+      const order = this._orderById(id);
+      if (!order) return;
+      const sheet = this._sheetFor();
+      if (!sheet) return;
+      this._orderSheetId = id;
+      this._orderSheetEta = false;
+      this._orderSheetDecline = false;
+      this._orderSheetSig = this._orderSheetSigFor(order);
+      sheet.open(this._orderSheetContent(id, order));
+    }
+    // Both callbacks read the order back from the live list, so a refresh after a
+    // poll shows the new status and waiting time even though the content object
+    // was built earlier.
+    _orderSheetContent(id, order) {
+      return {
+        title: order.variant ? `${order.item} · ${order.variant}` : order.item,
+        body: /* @__PURE__ */ __name(() => this._orderSheetBody(this._orderById(id) ?? order), "body"),
+        actions: /* @__PURE__ */ __name(() => this._orderSheetActions(this._orderById(id) ?? order), "actions")
+      };
+    }
+    _orderSheetBody(order) {
+      const minsLeft = this._orderMinsLeft(order);
+      return b2`<div class="ord-detail">
+      ${order.variant ? b2`<div class="ord-detail-val">${order.variant}</div>` : A}
+      ${order.customer ? b2`<div class="ord-detail-who">${order.customer}</div>` : A}
+      ${order.note ? b2`<div class="ord-note">„${order.note}"</div>` : A}
+      <div class="ord-sub">${this._orderWaitingText(order.createdAt)}</div>
+      ${order.status === "accepted" ? b2`<div class="ord-sub">${minsLeft != null ? T2("ord_ready_in", String(minsLeft)) : T2("ord_preparing")}</div>` : A}
+    </div>`;
+    }
+    _orderSheetActions(order) {
+      if (this._orderSheetDecline) {
+        return b2`<span class="ord-q">${T2("ord_decline_q")}</span>
+        <button type="button" class="ord-btn danger" data-ord-decline-yes=${order.id} @click=${() => {
+          this._orderAction(order.id, "decline", {});
+        }}>${T2("ord_yes")}</button>
+        <button type="button" class="ord-btn ghost" data-ord-cancel="1" @click=${() => {
+          this._orderSheetDecline = false;
+          this._sheet?.refresh();
+        }}>${T2("sheet_cancel")}</button>`;
+      }
+      if (order.status === "pending" && this._orderSheetEta) {
+        return b2`<span class="ord-q">${T2("ord_done_in")}</span>${[3, 5, 8, 10].map((m2) => b2`<button type="button" class="ord-btn eta" data-ord-accept=${order.id} data-eta=${m2} @click=${() => {
+          this._orderAction(order.id, "accept", { eta: m2 });
+        }}>${m2} min</button>`)}<button type="button" class="ord-btn ghost" data-ord-cancel="1" @click=${() => {
+          this._orderSheetEta = false;
+          this._sheet?.refresh();
+        }}>${T2("sheet_cancel")}</button>`;
+      }
+      const primary = order.status === "pending" ? b2`<button type="button" class="ord-btn primary" data-ord-eta=${order.id} @click=${() => {
+        this._orderSheetEta = true;
+        this._sheet?.refresh();
+      }}>${/* ICONS.of() emits fixed SVG markup */
+      o5(ICONS.of("check"))} ${T2("ord_accept")}</button>` : b2`<button type="button" class="ord-btn primary" data-ord-done=${order.id} @click=${() => {
+        this._orderAction(order.id, "complete", {});
+      }}>${/* ICONS.of() emits fixed SVG markup */
+      o5(ICONS.of("check"))} ${T2("ord_done")}</button>`;
+      return b2`${primary}<button type="button" class="ord-btn ghost" data-ord-decline=${order.id} @click=${() => {
+        this._orderSheetDecline = true;
+        this._sheet?.refresh();
+      }}>${T2("ord_decline")}</button>`;
     }
     _navShot(dir) {
       if (this._activeTab !== "shot") return;
@@ -2714,6 +4101,31 @@ ${TOKENS}
         }, 250);
       }));
     }
+    // Home Assistant's visual card editor renders this schema with its own
+    // ha-form; there is no custom editor element. Every documented option in
+    // DOCS.md ("Shot Card options") appears here once, in the same order.
+    static getConfigForm(hass) {
+      const themeOptions = [
+        { value: "none", label: TIn(editorLang(hass), "cfg_theme_none") },
+        ...Object.keys(THEME_PRESETS).map((key) => ({ value: key, label: key }))
+      ];
+      return {
+        schema: [
+          { name: "title", selector: { text: {} } },
+          { name: "entity_prefix", selector: { text: {} } },
+          { name: "machine", selector: { text: {} } },
+          { name: "switch_entity", selector: { entity: { domain: "switch" } } },
+          { name: "theme", selector: { select: { mode: "dropdown", options: themeOptions } } },
+          { name: "accent_color", selector: { text: {} } },
+          { name: "accent_gradient", selector: { text: { multiple: true } } },
+          { name: "glp_url", selector: { text: { type: "url" } } }
+        ],
+        // Resolved per call, so a language change reaches the labels without
+        // building the form again.
+        computeLabel: /* @__PURE__ */ __name((entry) => TIn(editorLang(hass), `cfg_${entry.name}`), "computeLabel"),
+        computeHelper: /* @__PURE__ */ __name((entry) => TIn(editorLang(hass), `cfg_${entry.name}_help`), "computeHelper")
+      };
+    }
     // setConfig() also accepts the optional per-machine colour theme keys
     // (#87): `theme` (one of the THEME_PRESETS keys), `accent_color` (a flat
     // custom #rrggbb), and `accent_gradient` (a [start, end] #rrggbb pair) —
@@ -2722,13 +4134,27 @@ ${TOKENS}
     // standalone/no-app YAML fallback; the app's own stored theme (#701, see
     // _appMachineTheme() below) takes precedence over these once available.
     setConfig(config) {
-      this._config = { title: "Gaggiuino", ...config };
-      this._switchEntity = localStorage.getItem(this._switchStorageKey()) || localStorage.getItem("glp_switch_entity") || null;
+      const normalized = normalizeFormConfig(config || {}, SHOT_CONFIG_TEXT_KEYS);
+      const prefix = normalized.entity_prefix;
+      if (prefix != null && (typeof prefix !== "string" || !ENTITY_PREFIX_RE.test(prefix))) {
+        throw new Error("entity_prefix must be a sensor entity id, for example sensor.gaggiuino_local_profiler_");
+      }
+      this._config = { title: "Gaggiuino", ...normalized };
+      this._prefixStates = null;
+      this._prefixConfig = null;
+      this._prefixValue = null;
+      this._machineEntryCached = false;
+      this._machineEntryStates = null;
+      this._machineEntryMachine = void 0;
+      this._machineEntryValue = null;
+      this._renderInputs = null;
+      this._contrastKey = null;
+      this._switchEntity = this._readSwitchEntity();
     }
     // The app's own stored per-machine theme (#701), read from hass state by
     // the shared machine lookup; null when nothing valid is synced.
     _appMachineTheme() {
-      return appMachineTheme(appMachineEntry(this._hass, this._config?.machine));
+      return appMachineTheme(this._machineEntry());
     }
     // Resolves this card's effective theme to a {a,b} hex pair, or null when
     // nothing valid is configured/synced (falls back to the default
@@ -2774,13 +4200,70 @@ ${TOKENS}
     }
     set hass(hass) {
       this._hass = hass;
-      {
-        const l3 = String(hass?.language || hass?.locale?.language || "de").slice(0, 2).toLowerCase();
-        setLang(SUPPORTED_LANGS.includes(l3) ? l3 : "en");
-      }
-      if (!this._ordersPoll) this._startOrdersPoll();
+      setLang(resolveLang(hass));
+      if (this.isConnected && !this._ordersPoll) this._startOrdersPoll();
       this._loadBeansInfo();
-      this._render();
+      if (this._needsRender()) this._render();
+    }
+    // Every id the card can read: everything under the resolved prefix, the
+    // machine-status entities the app-level machine lookups scan, and the
+    // configured switch. Kept sorted-free because hass.states key order is stable
+    // until an entity is added or removed, which the length/key check catches.
+    _watchedIds(prefix) {
+      const dot = prefix.indexOf(".");
+      const base = dot === -1 ? prefix : prefix.slice(dot + 1);
+      const ids = this._stateKeys().filter((id) => {
+        const d3 = id.indexOf(".");
+        return (d3 === -1 ? id : id.slice(d3 + 1)).startsWith(base) || id.endsWith("_machine_status");
+      });
+      if (this._switchEntity && !ids.includes(this._switchEntity)) ids.push(this._switchEntity);
+      return ids;
+    }
+    // What a render depends on, as cheaply comparable plain values plus the
+    // identity of every state object it read.
+    _renderInputsFor() {
+      const states = this._hass.states;
+      const prefix = this._resolvePrefix();
+      const ids = this._watchedIds(prefix);
+      return {
+        prefix,
+        language: resolveLang(this._hass),
+        theme: this._themeKey(),
+        ids,
+        states: ids.map((id) => states[id]),
+        minute: Math.floor(Date.now() / 6e4)
+      };
+    }
+    // True when this hass push changed something the card shows: an entity of its
+    // own changed object, an entity appeared or disappeared under the prefix, the
+    // prefix/language/theme changed, or the minute rolled over (the ETA countdown
+    // and the relative timestamps are derived from Date.now()). The minute costs
+    // at most one extra render per minute and only when a push arrives at all; no
+    // timer is involved. The first push after setConfig always renders
+    // (`_renderInputs` is cleared there).
+    _needsRender() {
+      if (!this._config) return false;
+      const prev = this._renderInputs;
+      if (!prev) return true;
+      const next = this._renderInputsFor();
+      if (prev.prefix !== next.prefix || prev.language !== next.language || prev.theme !== next.theme) return true;
+      if (prev.minute !== next.minute) return true;
+      if (prev.ids.length !== next.ids.length) return true;
+      for (let i6 = 0; i6 < next.ids.length; i6++) {
+        if (prev.ids[i6] !== next.ids[i6] || prev.states[i6] !== next.states[i6]) return true;
+      }
+      return false;
+    }
+    // The theme inputs the colour-contrast pass reads: HA's selected theme and
+    // dark mode, plus the accent pair _applyMachineTheme() wrote to the host.
+    _themeKey() {
+      const themes = this._hass?.themes;
+      const t5 = this._resolveMachineTheme();
+      return [
+        themes?.selectedTheme ?? themes?.theme ?? "",
+        themes?.darkMode === true ? "dark" : "light",
+        t5 ? `${t5.a}:${t5.b}` : ""
+      ].join("|");
     }
     // ── Bean metadata (via the integration REST proxy, app >= 1.96) ───────────
     async _loadBeansInfo() {
@@ -2790,10 +4273,11 @@ ${TOKENS}
       this._beansInfoAt = Date.now();
       try {
         const r4 = await this._hass.fetchWithAuth("/api/glp/library/beans-info");
-        if (!r4.ok) {
+        if (r4.status === 404) {
           this._beansInfoUnavailable = true;
           return;
         }
+        if (!r4.ok) return;
         const list = await r4.json();
         const beans = Array.isArray(list) ? list : [];
         this._beansInfoById = new Map(beans.filter((b3) => b3.id != null).map((b3) => [b3.id, b3]));
@@ -2818,6 +4302,16 @@ ${TOKENS}
       const title = age != null ? T2("bean_roasted_ago", age) : "";
       return b2`<span class="shot-bean-extra" title=${o7(title || void 0)}>${parts.join(" · ")}</span>`;
     }
+    // hass.states' key list, cached per states object: HA builds a new states map
+    // on every push, so identity is enough to invalidate it.
+    _stateKeys() {
+      const states = this._hass.states;
+      if (this._stateKeysStates !== states || !this._stateKeysCache) {
+        this._stateKeysStates = states;
+        this._stateKeysCache = Object.keys(states);
+      }
+      return this._stateKeysCache;
+    }
     // machine (#50): optional config option naming/slugging a specific
     // machine, for setups with more than one GLP machine device (see the app's
     // multi-machine mode, GLP #317, and glp-integration #47's forthcoming
@@ -2826,17 +4320,46 @@ ${TOKENS}
     // existing "first Gaggiuino-named entity, else any" heuristic — so cards
     // without this option (the vast majority today, single-machine setups)
     // behave exactly as before.
+    //
+    // Scanned on every _s() call (~25 per render), so the result is remembered
+    // alongside the states object and config it was computed from; setConfig()
+    // clears it. The states map only needs re-scanning when an entity is added or
+    // removed, which HA signals by building a new map.
     _resolvePrefix() {
       if (this._config.entity_prefix) return this._config.entity_prefix;
-      const candidates = Object.keys(this._hass.states).filter((id) => id.endsWith("_machine_status"));
+      const states = this._hass.states;
+      if (this._prefixStates === states && this._prefixConfig === this._config && this._prefixValue !== null) {
+        return this._prefixValue;
+      }
+      const candidates = this._stateKeys().filter((id) => id.endsWith("_machine_status"));
+      let prefix = null;
       if (this._config?.machine) {
         const matched = matchMachineStatusEntity(this._hass, candidates, this._config.machine);
-        if (matched) return matched.replace(/machine_status$/, "");
+        if (matched) prefix = matched.replace(/machine_status$/, "");
       }
-      const found = candidates.find((id) => this._hass.states[id]?.attributes?.friendly_name?.toLowerCase().includes("gaggiuino"));
-      if (found) return found.replace(/machine_status$/, "");
-      const fallback = candidates[0];
-      return fallback ? fallback.replace(/machine_status$/, "") : "sensor.gaggiuino_local_profiler_";
+      if (prefix === null) {
+        const found = candidates.find((id) => this._hass.states[id]?.attributes?.friendly_name?.toLowerCase().includes("gaggiuino"));
+        const chosen = found || candidates[0];
+        prefix = chosen ? chosen.replace(/machine_status$/, "") : "sensor.gaggiuino_local_profiler_";
+      }
+      this._prefixStates = states;
+      this._prefixConfig = this._config;
+      this._prefixValue = prefix;
+      return prefix;
+    }
+    // The app's machines[] entry, cached like _resolvePrefix(): appMachineEntry()
+    // rescans every *_machine_status key on each call, and the render asks for it
+    // three times (theme, machine type, header icon).
+    _machineEntry() {
+      const states = this._hass?.states ?? null;
+      if (this._machineEntryCached && this._machineEntryStates === states && this._machineEntryMachine === this._config?.machine) {
+        return this._machineEntryValue;
+      }
+      this._machineEntryCached = true;
+      this._machineEntryStates = states;
+      this._machineEntryMachine = this._config?.machine;
+      this._machineEntryValue = appMachineEntry(this._hass, this._config?.machine);
+      return this._machineEntryValue;
     }
     // Machine-scoped localStorage key (#50) so the switch entity choice for
     // one machine's card doesn't collide with another's on the same
@@ -2846,6 +4369,16 @@ ${TOKENS}
       const machine = this._config?.machine;
       if (!machine) return "glp_switch_entity";
       return `glp_switch_entity_${String(machine).toLowerCase().replace(/\s+/g, "_")}`;
+    }
+    // A card configured for one machine never adopts the unscoped global key:
+    // every card on the dashboard shares it, so it may hold another machine's
+    // switch and toggling it would power the wrong machine. Cards without
+    // `machine` keep reading the global key as before.
+    _readSwitchEntity() {
+      const scoped = localStorage.getItem(this._switchStorageKey());
+      if (scoped) return scoped;
+      if (this._config?.machine) return null;
+      return localStorage.getItem("glp_switch_entity") || null;
     }
     _s(suffix) {
       return this._hass.states[this._resolvePrefix() + suffix];
@@ -2884,22 +4417,105 @@ ${TOKENS}
     _maintAnyDue() {
       return _GlpCard.MAINT_TASKS.some(([s4]) => this._s(s4)?.state === "due") || this._s("maintenance_grinders")?.state === "due";
     }
+    // One date format for the maintenance sheet: the sensor's `last_date`
+    // attribute is ISO in current app versions, but older data used a local
+    // DD.MM.YYYY string, and anything unparsable is shown as it arrived rather
+    // than silently dropped.
+    _maintLastDate(raw) {
+      if (raw === null || raw === void 0 || raw === "") return "—";
+      let d3 = null;
+      if (typeof raw === "number") {
+        d3 = parseTs(raw);
+      } else if (typeof raw === "string") {
+        const text = raw.trim();
+        const m2 = /^(\d{1,2})[.\-/](\d{1,2})[.\-/](\d{2,4})$/.exec(text);
+        if (m2) {
+          const y3 = m2[3].length === 2 ? 2e3 + parseInt(m2[3], 10) : parseInt(m2[3], 10);
+          d3 = new Date(y3, parseInt(m2[2], 10) - 1, parseInt(m2[1], 10));
+        } else {
+          d3 = parseTs(text);
+        }
+      }
+      if (!d3 || isNaN(d3.getTime())) return typeof raw === "string" ? raw : "—";
+      return d3.toLocaleDateString(this._locale(), { day: "2-digit", month: "2-digit", year: "numeric" });
+    }
+    // Opens the shared sheet for one maintenance task: the same last-done date,
+    // counters and status pill the row shows, plus the two actions. The sensors
+    // carry no interval, so the sheet does not claim one.
+    _openMaintSheet(detail) {
+      this._forgetOrderSheet();
+      const sheet = this._sheetFor();
+      if (!sheet) return;
+      const cls = detail.status === "ok" || detail.status === "soon" || detail.status === "due" ? detail.status : "never";
+      const pills = {
+        ok: T2("pill_ok"),
+        soon: T2("pill_soon"),
+        due: T2("pill_due"),
+        never: T2("pill_never")
+      };
+      const pillText = pills[cls];
+      const pillIcon = cls === "ok" ? "check" : cls === "due" ? "warning" : null;
+      const sub = [
+        detail.daysSince != null ? detail.daysSince === 0 ? T2("maint_today") : T2("days_ago", String(detail.daysSince)) : null,
+        detail.shotsSince != null && detail.shotsSince > 0 ? T2("maint_shots", String(detail.shotsSince)) : null
+      ].filter(Boolean).join(" · ");
+      sheet.open({
+        title: detail.name,
+        body: /* @__PURE__ */ __name(() => b2`
+        <div class="maint-detail">
+          <div class="maint-detail-row">
+            <span class="maint-detail-lbl">${T2("maint_last_done")}</span>
+            <span class="maint-detail-val">${this._maintLastDate(detail.lastDate)}</span>
+          </div>
+          ${sub ? b2`<div class="maint-sub">${sub}</div>` : A}
+          <span class="maint-pill ${cls}">${pillIcon ? o5(ICONS.of(pillIcon)) : A}${pillText}</span>
+        </div>`, "body"),
+        actions: /* @__PURE__ */ __name(() => b2`
+        <button type="button" class="maint-sheet-done" data-maint-done=${detail.task} @click=${() => {
+          this._maintDone(detail);
+        }}>${/* ICONS.of() emits fixed SVG markup */
+        o5(ICONS.of("check"))} ${T2("maint_done_today")}</button>
+        <button type="button" class="maint-sheet-cancel" data-maint-cancel="1" @click=${() => {
+          this._sheet?.close();
+        }}>${T2("sheet_cancel")}</button>`, "actions")
+      });
+    }
+    // Exactly one maintenance_done call per confirmation; the shared helper adds
+    // the failure toast and vibration, the success path toasts the task name.
+    _maintDone(detail) {
+      this._callService("gaggiuino_profiler", "maintenance_done", { task: detail.task }, () => {
+        toast(this, T2("toast_maint_done", detail.name));
+        haptic(this, "success");
+      });
+      this._sheet?.close();
+    }
     _buildMaintHtml() {
       const pills = { ok: T2("pill_ok"), soon: T2("pill_soon"), due: T2("pill_due"), never: T2("pill_never") };
       const pillIcon = { ok: "check", due: "warning" };
-      const row = /* @__PURE__ */ __name((icon, name, status, pct, daysSince, shotsSince, task) => {
+      const row = /* @__PURE__ */ __name((icon, name, status, pct, daysSince, shotsSince, task, lastDate) => {
         const cls = pills[status] ? status : "never";
         const pctW = Math.max(0, Math.min(100, Math.round((parseFloat(pct) || 0) * 100)));
         const sub = [
           daysSince != null ? daysSince === 0 ? T2("maint_today") : T2("days_ago", daysSince) : null,
-          shotsSince != null && shotsSince > 0 ? `${shotsSince} Shots` : null
+          shotsSince != null && shotsSince > 0 ? T2("maint_shots", shotsSince) : null
         ].filter(Boolean).join(" · ");
-        const confirming = task && this._maintConfirm === task;
-        return b2`<div class="maint-row${confirming ? " confirming" : ""}" data-maint-task=${o7(task || void 0)} role=${o7(task ? "button" : void 0)} @click=${(e6) => {
+        const open = /* @__PURE__ */ __name(() => {
           if (!task) return;
-          if (e6.target.closest("[data-maint-done],[data-maint-cancel]")) return;
-          this._maintConfirm = this._maintConfirm === task ? null : task;
-          this._render();
+          this._openMaintSheet({
+            task,
+            name,
+            status: cls,
+            daysSince: daysSince ?? null,
+            shotsSince: shotsSince ?? null,
+            lastDate: lastDate ?? null
+          });
+        }, "open");
+        return b2`<div class="maint-row" data-maint-task=${o7(task || void 0)} role=${o7(task ? "button" : void 0)} tabindex=${o7(task ? "0" : void 0)} @click=${open} @keydown=${(e6) => {
+          if (!task) return;
+          const key = e6.key;
+          if (key !== "Enter" && key !== " ") return;
+          e6.preventDefault();
+          open();
         }}>
         <div class="maint-row-top">
           ${/* ICONS.of() emits fixed SVG markup */
@@ -2909,32 +4525,16 @@ ${TOKENS}
         </div>
         ${sub ? b2`<div class="maint-sub">${sub}</div>` : A}
         <div class="maint-bar-bg"><div class="maint-bar ${cls}" style="width:${pctW}%"></div></div>
-        ${confirming ? b2`<div class="maint-confirm">
-          <span class="maint-confirm-q">${T2("maint_confirm_q")}</span>
-          <button class="maint-confirm-yes" data-maint-done=${task} @click=${(e6) => {
-          e6.stopPropagation();
-          if (this._hass && task) this._hass.callService("gaggiuino_profiler", "maintenance_done", { task });
-          this._maintConfirm = null;
-          this._render();
-        }}>${/* ICONS.of() emits fixed SVG markup */
-        o5(ICONS.of("check"))} ${T2("ord_yes")}</button>
-          <button class="maint-confirm-no" data-maint-cancel="1" @click=${(e6) => {
-          e6.stopPropagation();
-          this._maintConfirm = null;
-          this._render();
-        }}>${/* ICONS.of() emits fixed SVG markup */
-        o5(ICONS.of("close"))}</button>
-        </div>` : A}
       </div>`;
       }, "row");
       const rows = _GlpCard.MAINT_TASKS.map(([suffix, nameKey, icon, task]) => {
         const s4 = this._s(suffix);
         if (!s4 || s4.state === "unavailable" || s4.state === "unknown") return null;
         const a3 = s4.attributes || {};
-        return row(icon, T2(nameKey), s4.state, a3.pct, a3.days_since, a3.shots_since, task);
+        return row(icon, T2(nameKey), s4.state, a3.pct, a3.days_since, a3.shots_since, task, a3.last_date);
       }).filter(Boolean);
       const gAttrs = this._s("maintenance_grinders")?.attributes || {};
-      const gRows = Object.entries(gAttrs).filter(([, v2]) => v2 && typeof v2 === "object" && "status" in v2).map(([name, v2]) => row("gear", name, v2.status, v2.pct, v2.days_since, v2.shots_since, v2.task));
+      const gRows = Object.entries(gAttrs).filter(([, v2]) => v2 && typeof v2 === "object" && "status" in v2).map(([name, v2]) => row("gear", name, v2.status, v2.pct, v2.days_since, v2.shots_since, v2.task, v2.last_date));
       if (!rows.length && !gRows.length)
         return b2`<div class="unavailable">${T2("maint_none")}</div>`;
       return b2`<div class="maint-list">
@@ -2944,8 +4544,14 @@ ${TOKENS}
     }
     // Picks the contrast-safe semantic colour variants and --glp-aline at
     // runtime from the host's resolved colours; see cards/shared/contrast.ts.
+    // It appends probe spans and reads getComputedStyle ~10 times, forcing a
+    // style recalculation, but the result only depends on the theme — so it only
+    // re-runs when those inputs changed. cleared in setConfig/connectedCallback.
     _applySemanticColorContrast() {
+      const key = this._themeKey();
+      if (this._contrastKey === key) return;
       applySemanticColorContrast(this);
+      this._contrastKey = key;
     }
     // #195: the switch-only "off" rule — a configured switch reported `off` or
     // `unavailable`. Drives the power button, whose click toggles the switch, so
@@ -2986,7 +4592,8 @@ ${TOKENS}
       this._readyByTargetAt = readyByTargetAt;
       const _powerBtn = this._switchEntity ? b2`
       <button class="power-btn ${switchOff ? "is-off" : "is-on"}" data-action="toggle-switch"
-              title=${switchOff ? T2("power_on") : T2("power_off")}>
+              title=${switchOff ? T2("power_on") : T2("power_off")}
+              aria-label=${switchOff ? T2("power_on") : T2("power_off")}>
         <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor">
           <path d="M13 3h-2v10h2V3zm4.83 2.17-1.42 1.42A6.92 6.92 0 0 1 19 12c0 3.87-3.13 7-7 7s-7-3.13-7-7c0-2.28 1.09-4.3 2.58-5.42L6.17 5.17A8.932 8.932 0 0 0 3 12c0 4.97 4.03 9 9 9s9-4.03 9-9A8.932 8.932 0 0 0 17.83 5.17z"/>
         </svg>
@@ -3075,7 +4682,7 @@ ${TOKENS}
       const syncTime = this._reltime("last_sync");
       const glpUrl = safeUrl(this._config.glp_url);
       const maintAvailable = this._maintAvailable();
-      const ordersTabAvail = this._orders.length > 0;
+      const ordersTabAvail = !this._ordersOff && this._orders.length > 0;
       if (brewing && this._activeTab === "maint") this._activeTab = "shot";
       if (this._activeTab === "orders" && !ordersTabAvail) this._activeTab = "shot";
       const showMaint = maintAvailable && !brewing && this._activeTab === "maint";
@@ -3089,16 +4696,18 @@ ${TOKENS}
       const shotChartKey = shotObj ? shotObj.id ?? `idx:${this._shotIndex}` : null;
       const animateChart = this._shotChartKeyChanged(this._lastChartShotKey, shotChartKey);
       this._lastChartShotKey = shotChartKey;
-      const lmTiles = [
+      const lmTileCandidates = [
         temp !== null ? {
           val: temp,
           unit: "°",
-          lbl: boilerOff ? "Temp · Boiler aus" : targetTemp !== null ? `Temp · Ziel ${targetTemp}°` : "Temp",
+          lbl: boilerOff ? T2("lm_temp_off") : targetTemp !== null ? T2("lm_temp_target", targetTemp) : T2("lm_temp"),
+          entity: `${prefix}machine_temperature`,
           warm: !boilerOff && targetTemp !== null && parseFloat(temp) < parseFloat(targetTemp) - 1
         } : null,
-        livePressure !== null ? { val: livePressure, unit: " bar", lbl: "Druck" } : null,
-        liveWeight !== null ? { val: liveWeight, unit: " g", lbl: "Waage" } : null
-      ].filter(Boolean);
+        livePressure !== null ? { val: livePressure, unit: " bar", lbl: T2("lm_pressure"), entity: `${prefix}machine_live_pressure` } : null,
+        liveWeight !== null ? { val: liveWeight, unit: " g", lbl: T2("lm_weight"), entity: `${prefix}machine_live_weight` } : null
+      ];
+      const lmTiles = lmTileCandidates.filter((t5) => t5 !== null);
       const score = shotObj?.score ?? null;
       const scoreCls = score == null ? "" : score >= 80 ? "high" : score >= 55 ? "mid" : "low";
       const verdictWord = { high: T2("verdict_high"), mid: T2("verdict_mid"), low: T2("verdict_low") }[scoreCls];
@@ -3165,7 +4774,7 @@ ${TOKENS}
     // _viewModel() object) ─────────────────────────────────────────────────────
     _machineOffHtml(vm) {
       const { standbyState, _powerBtn } = vm;
-      const machineType = appMachineType(appMachineEntry(this._hass, this._config?.machine));
+      const machineType = appMachineType(this._machineEntry());
       const readyByHtml = this._buildReadyByHtml(vm.readyByTargetAt, vm.readyByPlannedAt);
       const offOrders = this._orders.length > 0 ? b2`
         <div style="padding:0 var(--glp-sp-3) var(--glp-sp-3)">
@@ -3187,7 +4796,7 @@ ${TOKENS}
           </div>
           ${readyByHtml}
           ${offOrders}
-        </div></ha-card>`;
+        </div></ha-card>${this._sheetSlotHtml()}`;
     }
     _tabBarHtml(vm) {
       const { maintAvailable, ordersTabAvail, showMaint, showOrders, pendingOrders } = vm;
@@ -3196,7 +4805,7 @@ ${TOKENS}
         <button class="tab-btn${!showMaint && !showOrders ? " active" : ""}" data-tab="shot" @click=${() => {
         this._selectTab("shot");
       }}>${/* ICONS.of() emits fixed SVG markup */
-      o5(ICONS.of("coffee"))} Shot</button>
+      o5(ICONS.of("coffee"))} ${T2("tab_shot")}</button>
         ${ordersTabAvail ? b2`<button class="tab-btn${showOrders ? " active" : ""}" data-tab="orders" @click=${() => {
         this._selectTab("orders");
       }}>${/* ICONS.of() emits fixed SVG markup */
@@ -3222,46 +4831,75 @@ ${TOKENS}
         if (this._shotIndex > 0 && shotObj?.ts) {
           const d3 = parseTs(shotObj.ts);
           if (d3 && !isNaN(d3))
-            tsLine = b2`<div class="nav-ts">${d3.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "2-digit" })} ${d3.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })}</div>`;
+            tsLine = b2`<div class="nav-ts">${d3.toLocaleDateString(this._locale(), { day: "2-digit", month: "2-digit", year: "2-digit" })} ${d3.toLocaleTimeString(this._locale(), { hour: "2-digit", minute: "2-digit" })}</div>`;
         }
         navHtml = b2`
         <div class="nav-row">
-          <button class="nav-arrow" data-nav="next" ?disabled=${nextDis} @click=${(e6) => {
+          <button class="nav-arrow" data-nav="next" ?disabled=${nextDis} aria-label=${T2("nav_next")} @click=${(e6) => {
           if (e6.currentTarget.hasAttribute("disabled")) return;
           this._navShot("next");
-        }}>‹</button>
+        }}>${/* ICONS.of() emits fixed SVG markup */
+        o5(ICONS.of("chevron-left"))}</button>
           <div class="nav-dots">${dots}</div>
-          <button class="nav-arrow" data-nav="prev" ?disabled=${prevDis} @click=${(e6) => {
+          <button class="nav-arrow" data-nav="prev" ?disabled=${prevDis} aria-label=${T2("nav_prev")} @click=${(e6) => {
           if (e6.currentTarget.hasAttribute("disabled")) return;
           this._navShot("prev");
-        }}>›</button>
+        }}>${/* ICONS.of() emits fixed SVG markup */
+        o5(ICONS.of("chevron-right"))}</button>
         </div>${tsLine}`;
       }
       return navHtml;
     }
     _profilePickerHtml(vm) {
-      const { brewing, showMaint, profileAvailable, currentProfile, profileSwitching, profileOptions } = vm;
+      const { brewing, showMaint, profileAvailable, currentProfile, profileSwitching } = vm;
       return !brewing && !showMaint && profileAvailable ? b2`
       <div class="profile-picker">
-        <button class="profile-current-btn${this._profileOpen ? " open" : ""}" data-action="toggle-profile" @click=${(e6) => {
+        <button class="profile-current-btn" data-action="toggle-profile" @click=${(e6) => {
         e6.stopPropagation();
-        this._toggleProfilePicker();
+        this._openProfileSheet();
       }}>
           <div style="display:flex;flex-direction:column;align-items:flex-start;gap:1px">
             <span class="profile-label-small">${T2("profile_label")}</span>
             <span class="profile-current-name">${currentProfile || "—"}${profileSwitching ? b2`<span style="color:var(--amber);font-weight:500;font-size:var(--glp-fs-1)"> · ${T2("profile_switching")}</span>` : A}</span>
           </div>
-          <span class="profile-chevron${this._profileOpen ? " open" : ""}">▾</span>
+          <span class="profile-chevron">${/* ICONS.of() emits fixed SVG markup */
+      o5(ICONS.of("chevron-down"))}</span>
         </button>
-        ${this._profileOpen ? b2`<div class="profile-opts">
-          ${profileOptions.map(
-        (p3) => b2`<button class="profile-opt${p3 === currentProfile ? " active" : ""}" data-profile-opt=${p3} @click=${(e6) => {
-          e6.stopPropagation();
-          this._selectProfile(p3);
-        }}>${p3}</button>`
-      )}
-        </div>` : A}
       </div>` : A;
+    }
+    // The profile list lives in the shared sheet now (#265): one option per
+    // profile with the active one marked, opened at the active option so a long
+    // list starts where the user last touched it.
+    _openProfileSheet() {
+      const entityId = this._resolvePrefix().replace(/^sensor\./, "select.") + "profile";
+      const entity = this._hass?.states[entityId];
+      const options = entity?.attributes?.options || null;
+      if (!Array.isArray(options) || !options.length) return;
+      const current = this._pendingProfile || entity?.state || null;
+      this._forgetOrderSheet();
+      const sheet = this._sheetFor();
+      if (!sheet) return;
+      sheet.open({
+        title: T2("profile_label"),
+        body: /* @__PURE__ */ __name(() => b2`<div class="profile-sheet-list" role="listbox" aria-label=${T2("profile_label")} @keydown=${(e6) => this._sheetOptionKeyNav(e6)}>
+        ${options.map((p3) => b2`<button
+          type="button"
+          class="profile-sheet-opt${p3 === current ? " active" : ""}"
+          role="option"
+          data-profile-opt=${p3}
+          aria-selected=${p3 === current ? "true" : "false"}
+          @click=${() => {
+          this._selectProfile(p3);
+          sheet.close();
+        }}>
+          <span class="profile-sheet-name">${p3}</span>
+          ${p3 === current ? o5(ICONS.of("check")) : A}
+        </button>`)}
+      </div>`, "body")
+      });
+      const slot = this._sheetSlot;
+      const focused = slot?.querySelector(".profile-sheet-opt.active") ?? slot?.querySelector(".profile-sheet-opt");
+      focused?.focus();
     }
     // Star rating: drawn ICONS.of('star') replaces the ★ text character —
     // filled vs. empty is the .on class on the same shape, not a second glyph.
@@ -3277,31 +4915,22 @@ ${TOKENS}
     // Historical shot: ratio is the recipe target a profile is set to hit,
     // duration is what actually happened during the pull, yield is what
     // came out — recipe/process/result, see metricLineHtml() above.
-    _metricTrioHtml(vm) {
-      const { ratio, duration, weight } = vm;
-      return b2`${/* metricLineHtml() escapes its own input and emits fixed markup */
-      o5(metricLineHtml([
-        ratio ? { role: "recipe", num: `1:${ratio}`, unit: "", label: "Ratio" } : null,
-        duration ? { role: "process", num: duration, unit: "s", label: T2("m_duration") } : null,
-        weight ? { role: "result", num: weight, unit: "g", label: T2("m_yield") } : null
-      ]))}`;
-    }
-    _secondaryHtml(vm) {
-      const { pressure, shotTemp } = vm;
-      return (() => {
-        const pills = [
-          pressure !== null ? { label: T2("m_pressure"), val: `${pressure} bar` } : null,
-          shotTemp !== null ? { label: T2("m_temp"), val: `${shotTemp}°` } : null
-        ].filter(Boolean);
-        if (!pills.length) return A;
-        return b2`<div class="stats-secondary">
-        ${pills.map((p3) => b2`
-          <div class="stat-pill">
-            <span class="stat-pill-label">${p3.label}</span>
-            <span class="stat-pill-value">${p3.val}</span>
-          </div>`)}
-      </div>`;
-      })();
+    // The five figures that describe one finished shot: recipe, process, result
+    // (ratio, duration, yield) plus the two averages (pressure, temperature).
+    // One grid with one value style — they used to be split into a three-item
+    // metric line and a two-pill row with a lighter, differently coloured value,
+    // which read as three numbers and two leftovers.
+    _keyFiguresHtml(vm) {
+      const { ratio, duration, weight, pressure, shotTemp } = vm;
+      const figures = [
+        ratio !== null ? { label: T2("m_ratio"), num: `1:${ratio}`, unit: "" } : null,
+        duration !== null ? { label: T2("m_duration"), num: duration, unit: "s" } : null,
+        weight !== null ? { label: T2("m_yield"), num: weight, unit: "g" } : null,
+        pressure !== null ? { label: T2("m_pressure"), num: pressure, unit: "bar" } : null,
+        shotTemp !== null ? { label: T2("m_temp"), num: shotTemp, unit: "°" } : null
+      ].filter((f3) => f3 !== null);
+      if (!figures.length) return A;
+      return b2`<div class="key-figures figures-${figures.length}">${figures.map((f3) => b2`<div class="key-figure"><div class="kf-value">${f3.num}${f3.unit ? b2`<span class="kf-unit">${f3.unit}</span>` : A}</div><div class="kf-label">${f3.label}</div></div>`)}</div>`;
     }
     _liveSvgHtml(vm) {
       const { brewing, liveDatapoints, liveDur } = vm;
@@ -3316,13 +4945,11 @@ ${TOKENS}
       o5(chartLegendHtml(histDp, shotObj?.duration))}` : A;
     }
     // ── live brewing stats ──────────────────────────────────────────────────
-    // Same metricLineHtml() component as the historical shot (metricTrioHtml
-    // above) — see the redesign note on .metric-line in STYLES. Roles while
-    // brewing: temp is the recipe's set point being held, pressure is the
-    // process happening right now, weight is the result accumulating in the
-    // cup. (labels were hardcoded German before this pass — T() is correct
-    // behavior here, not a scope change: these three tiles are the same
-    // per-shot stats as leg_temp/leg_pressure/leg_weight used elsewhere.)
+    // The metricLineHtml() row, which a finished shot no longer uses (it shows
+    // _keyFiguresHtml() instead) — see the note on .metric-line in STYLES.
+    // Roles while brewing: temp is the recipe's set point being held, pressure
+    // is the process happening right now, weight is the result accumulating in
+    // the cup.
     _liveStatsHtml(vm) {
       const { brewing, temp, livePressure, liveWeight } = vm;
       return brewing ? b2`${/* metricLineHtml() escapes its own input and emits fixed markup */
@@ -3338,11 +4965,16 @@ ${TOKENS}
       <div class="live-machine">
         <div class="lm-head"><span class="lm-live-dot"></span>${T2("lm_live")}</div>
         <div class="lm-tiles">
-          ${lmTiles.map((t5) => b2`
-            <div class="lm-tile${t5.warm ? " warming" : ""}">
+          ${lmTiles.map((t5) => {
+        const label = `${t5.lbl} ${t5.val}${t5.unit}`.replace(/\s+/g, " ").trim();
+        return b2`
+            <button type="button" class="lm-tile${t5.warm ? " warming" : ""}"
+                    aria-label="${label} · ${T2("lm_history")}"
+                    @click=${() => this._showHistory(t5.entity)}>
               <div class="lm-val">${String(t5.val)}<span class="lm-unit">${t5.unit}</span></div>
               <div class="lm-lbl">${t5.lbl}</div>
-            </div>`)}
+            </button>`;
+      })}
         </div>
       </div>` : A;
     }
@@ -3382,8 +5014,7 @@ ${TOKENS}
             <div class="no-shot-hint">${T2("no_shot_hint")}</div>
           </div>`}
       ${this._ratingHtml(vm)}
-      ${this._metricTrioHtml(vm)}
-      ${this._secondaryHtml(vm)}
+      ${this._keyFiguresHtml(vm)}
       ${this._histSvgHtml(vm)}
     ` : A;
     }
@@ -3393,24 +5024,30 @@ ${TOKENS}
       <div class="footer">
         <span class="footer-item">${/* ICONS.of() emits fixed SVG markup */
       o5(ICONS.of("coffee"))} ${T2("footer_today", today)}</span>
-        ${waterLevel !== null ? b2`<span class="footer-item">${/* ICONS.of() emits fixed SVG markup */
-      o5(ICONS.of("droplet"))} ${waterLevel}%</span>` : b2`<span></span>`}
+        ${waterLevel !== null ? b2`<button type="button" class="footer-item footer-history"
+                        aria-label="${waterLevel}% · ${T2("lm_history")}"
+                        @click=${() => this._showHistory(`${vm.prefix}machine_water_level`)}>${/* ICONS.of() emits fixed SVG markup */
+      o5(ICONS.of("droplet"))} ${waterLevel}%</button>` : b2`<span></span>`}
         <span class="footer-item">
           ${syncTime ? syncTime : A}
-          ${glpUrl ? b2`${syncTime ? " · " : ""}<a href=${glpUrl} target="_blank" rel="noopener noreferrer">GLP ↗</a>` : A}
+          ${glpUrl ? b2`${syncTime ? " · " : ""}<a href=${glpUrl} target="_blank" rel="noopener noreferrer">GLP ${/* ICONS.of() emits fixed SVG markup */
+      o5(ICONS.of("open-in-new", "ext"))}</a>` : A}
         </span>
       </div>`;
     }
     _render() {
       if (!this._hass || !this._config) return;
+      setLang(resolveLang(this._hass));
       const vm = this._viewModel();
-      const machineType = appMachineType(appMachineEntry(this._hass, this._config?.machine));
+      const machineType = appMachineType(this._machineEntry());
       if (vm.machineOff) {
-        this._profileOpen = false;
+        if (this._orderSheetId == null) this._sheet?.close();
         D(this._machineOffHtml(vm), this.shadowRoot);
+        this._syncOrderSheet();
         this._applyMachineTheme();
         this._applySemanticColorContrast();
         this._startReadyByTicker();
+        this._renderInputs = this._renderInputsFor();
         return;
       }
       D(b2`
@@ -3449,7 +5086,7 @@ ${TOKENS}
         this._swipeSy = e6.touches[0].clientY;
       }, "handleEvent"), passive: true }}
           @touchend=${{ handleEvent: /* @__PURE__ */ __name((e6) => {
-        if (this._profileOpen) return;
+        if (this._sheet?.isOpen) return;
         const dx = e6.changedTouches[0].clientX - this._swipeSx;
         const dy = e6.changedTouches[0].clientY - this._swipeSy;
         if (Math.abs(dx) < 50 || Math.abs(dx) < Math.abs(dy) * 1.2) return;
@@ -3468,16 +5105,21 @@ ${TOKENS}
 
         ${this._footerHtml(vm)}
 
-      </div></ha-card>`, this.shadowRoot);
+      </div></ha-card>${this._sheetSlotHtml()}`, this.shadowRoot);
+      this._syncOrderSheet();
       this._applyMachineTheme();
       this._applySemanticColorContrast();
       this._startUptimeTicker();
+      this._renderInputs = this._renderInputsFor();
     }
     getCardSize() {
       return 3;
     }
+    // An empty config lets _resolvePrefix() find the machine from the entities
+    // Home Assistant already has, so a card added from the picker works without
+    // hand-editing YAML.
     static getStubConfig() {
-      return { entity_prefix: "sensor.gaggiuino_local_profiler_" };
+      return {};
     }
   };
   var define = /* @__PURE__ */ __name(() => customElements.get("glp-card") || customElements.define("glp-card", GlpCard), "define");
@@ -3489,7 +5131,7 @@ ${TOKENS}
     name: "GLP Shot Card",
     description: "Shows the last espresso shot from Gaggiuino Local Profiler",
     preview: false,
-    documentationURL: "https://github.com/mxkissnr/glp-lovelace-card"
+    documentationURL: "https://github.com/mxkissnr/glp-integration/blob/main/DOCS.md#shot-card"
   });
   console.info(
     `%c GLP-CARD %c v${GLP_CARD_VERSION} `,

@@ -1,13 +1,37 @@
 # Changelog
 
 ## [Unreleased]
+
+## [1.34.0] – 2026-10-27
 ### Added
+- **The Order Card can now be set up in Home Assistant's visual card editor instead of YAML.** Refs #272
+- **The Shot Card can now be set up in Home Assistant's visual card editor instead of YAML.** Refs #262
+- **On the Shot Card a tap on a live value opens its Home Assistant history, a long press on the header opens the machine, and every action confirms with a short message and a vibration.** Refs #266
+- **The Order Card confirms a sent or failed order with a short Home Assistant message and a vibration on phones.** Refs #275
 - **Development builds of the integration and both cards are published as beta versions in HACS, for anyone who wants to test upcoming changes.** Refs #256
 
 ### Changed
+- **The Shot Card uses drawn icons for navigation and links, shows the bean name in the card's own font and lines up all five key figures in one grid.** Refs #263
+- **On the Shot Card a tap on an order opens its details with accept, done and decline in a sheet, and every action confirms with a short message.** Refs #264
+- **The Order Card fills the popular row with a single drink, keeps the order button on one line and needs one heading less above the bean choice.** Refs #273
+- **On the Shot Card the profile list and the maintenance confirmation now open in a sheet from the bottom of the screen instead of stretching the card.** Refs #265
+- **The Order Card shows bean details behind a small info button in a sheet, so the menu stays short.** Refs #274
+- **The Shot Card only redraws when its own machine data or the theme changes, which keeps wall tablets and Raspberry Pi kiosks responsive on busy Home Assistant instances.** Refs #270
 - **The Shot Card and the Order Card are now developed in this repository and ship with every integration release.** Refs #256
+- **The bundled Shot Card is now v2.23.0 and the bundled Order Card v1.23.0.** Refs #256
+- **Both cards got a shared bottom sheet that later changes use for pickers and details.** Refs #266
+- **The integration test suite now fails when a test hits an endpoint it did not mock, and several tests check what their names promise.** Refs #238
 
 ### Fixed
+- **For users who are not Home Assistant admins the Shot Card no longer keeps asking for the order list.** Refs #239
+- **Only Home Assistant admins can list all coffee orders, the shot proxy accepts numeric shot ids only, and diagnostics downloads hide addresses, tokens and names.** Refs #239
+- **The Shot Card now writes every label and both of its dates in the Home Assistant language, and a card added from the card picker finds its machine by itself.** Refs #269
+- **With reduced motion switched on the Shot Card no longer animates, the order buttons and badges are easier to read, and screen readers announce the shot arrows and the power button.** Refs #269
+- **A card set to one machine no longer switches another machine on or off, and a machine called "Kitchen" is no longer mixed up with "Kitchen 2".** Refs #269
+- **The Shot Card stops its background requests when it is removed, no longer polls orders when they are switched off, and keeps bean details after a short app restart.** Refs #270
+- **The maintenance row on the Shot Card can now be reached and confirmed with the keyboard.** Refs #267
+- **The Order Card no longer asks the app for an API token when it is pointed at a URL directly; that request only ever failed, so the card now relies on the token from the dashboard configuration.** Refs #276
+- **The documentation link in Home Assistant's card picker now opens the card documentation in this repository instead of the archived card repositories.** Refs #256
 - **Deleting the newest shot no longer fires a shot-completed event, one malformed shot value no longer makes all sensors unavailable, and deleting shots no longer distorts the shot-count statistics.** Refs #237
 - **The options-flow error messages now live under `options.error`, where Home Assistant's translation schema expects them, so the translation files validate again.** Refs #237
 - **Adding the integration a second time now stops with a clear message, and changing the app URL in the options checks that the new address answers.** Closes #237
@@ -16,11 +40,16 @@
 - **After the app gets a new API token, for example after a restore, the integration picks it up by itself instead of failing until Home Assistant restarts, and failed controls show a readable error.** Refs #235
 
 ### Documentation
+- **The beta install steps now match the HACS dialog.** Refs #256
 - **The contributor and security docs now cover the bundled cards and how to test them.** Refs #256
 - **The documentation now describes the Machine Status error state, the real shot-completed event fields, the settings poll and the current licence wording.** Refs #240
 - **The integration documentation now covers both bundled cards, their options and languages.** Refs #256
 
+### Security
+- **Card test tooling updated to a patched happy-dom release.** Refs #283
+
 ### CI
+- **Integration releases are now announced in the GLP Discord, titled "GLP Integration" to tell them apart from app releases.** Refs #285
 - **The "Cards" job's accent-token and icon checks now read the shared blocks in `cards/shared/`, so they still guard the shipped CSS cascade and the drawn icon set after the blocks moved out of each card's `src/`.** Refs #256
 - **Both cards now share one copy of their colour-contrast and machine-lookup code instead of two copies kept in sync by a test.** Refs #256
 

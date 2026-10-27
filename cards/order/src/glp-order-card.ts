@@ -16,19 +16,43 @@ import { _esc, _originHtml, _safeUrl, THEME_PRESETS, _validHex } from './helpers
 import { MACHINE_ICON_MINI, ICONS, _menuIconHtml } from './icons.ts';
 import { applySemanticColorContrast } from '../../shared/contrast.ts';
 import { appMachineEntry, appMachineTheme, appMachineType, matchMachineStatusEntity } from '../../shared/machine.ts';
+import { haptic, toast } from '../../shared/ha-events.ts';
+import { GlpSheet } from '../../shared/sheet.ts';
+import { normalizeFormConfig } from '../../shared/config-form.ts';
 import { STRINGS, _s } from './i18n.ts';
 import type { TemplateResult } from 'lit';
 import type {
-  Hass, CardConfig, MenuItem, Bean, Order, Shot, QueueEta,
+  Hass, CardConfig, MenuItem, Bean, Origin, Order, Shot, QueueEta,
   ThemeStops, GroupedVariants, ShotSeries,
 } from './types.ts';
 
 // Bumped only in a release — a feature or fix PR leaves this alone (see
 // cards/CLAUDE.md and the PR template). Logged on startup below.
-const GLP_ORDER_CARD_VERSION = '1.22.0';
+const GLP_ORDER_CARD_VERSION = '1.23.0';
 
 // Menu items younger than this show the NEW badge (config: new_badge_days)
 const NEW_BADGE_DAYS_DEFAULT = 7;
+
+// The card's language detection, shared by the constructor and the visual
+// editor's labels: first two letters, lower case, English for anything the
+// card has no strings for.
+function _configLang(code: string | null | undefined): string {
+  const lang = String(code || '').slice(0, 2).toLowerCase();
+  return STRINGS[lang] ? lang : 'en';
+}
+
+type ConfigFormEntry = { name?: string };
+
+// The visual editor's values differ in shape from YAML: the number selector
+// yields a number, the theme dropdown says 'none', a text field the user
+// cleared is ''. The shared normaliser turns those back into the YAML shapes,
+// keeping every reader of `_config` (theme precedence, the NEW-badge window,
+// the URL/token resolution) unchanged.
+const ORDER_CONFIG_TEXT_KEYS = ['title', 'machine', 'switch_entity', 'theme', 'accent_color', 'glp_url', 'glp_token'] as const;
+
+function _normalizeConfig(config: CardConfig): CardConfig {
+  return normalizeFormConfig(config, ORDER_CONFIG_TEXT_KEYS);
+}
 
 // Per-instance-unique suffix for this card's machine-icon gradient ids — a
 // dashboard can render more than one glp-order-card, and SVG gradient ids
@@ -58,6 +82,10 @@ class GlpOrderCard extends HTMLElement {
   declare _lang: string;
   declare _instanceId: number;
   declare _hass: Hass | null;
+  declare _sheet: GlpSheet | null;
+  // The language the sheet's close label was built with; a language change
+  // (hass.language) rebuilds the sheet rather than keeping a stale label.
+  declare _sheetLang: string | null;
 
   constructor() {
     super();
@@ -79,22 +107,66 @@ class GlpOrderCard extends HTMLElement {
     this._hassRenderTimer = null;
     this._lang = this._normalizeLang(navigator.language);
     this._instanceId = ++_glpOrderCardInstanceSeq;
+    this._sheet = null;
+    this._sheetLang = null;
   }
 
   // First two letters, lower case, falling back to English for a language this
   // card has no strings for.
   _normalizeLang(code: string | null | undefined): string {
-    const lang = String(code || '').slice(0, 2).toLowerCase();
-    return STRINGS[lang] ? lang : 'en';
+    return _configLang(code);
   }
 
+  // Home Assistant's visual card editor renders this schema with its own
+  // ha-form; there is no custom editor element. Every documented option in
+  // DOCS.md ("Order Card options") appears here once, in the same order.
+  static getConfigForm() {
+    const lang = _configLang(navigator.language);
+    const themeOptions = [
+      { value: 'none', label: _s('cfg_theme_none', lang) },
+      ...Object.keys(THEME_PRESETS).map(key => ({ value: key, label: key })),
+    ];
+    return {
+      schema: [
+        { name: 'title', selector: { text: {} } },
+        { name: 'machine', selector: { text: {} } },
+        { name: 'switch_entity', selector: { entity: { domain: 'switch' } } },
+        { name: 'new_badge_days', selector: { number: { min: 0, max: 365, mode: 'box' } } },
+        { name: 'theme', selector: { select: { mode: 'dropdown', options: themeOptions } } },
+        { name: 'accent_color', selector: { text: {} } },
+        { name: 'accent_gradient', selector: { text: { multiple: true } } },
+        {
+          type: 'expandable',
+          name: 'advanced',
+          title: _s('cfg_advanced', lang),
+          // Without flatten ha-form writes `advanced: {glp_url, glp_token}`
+          // and the card, which reads both keys at the top level, ignores them.
+          flatten: true,
+          schema: [
+            { name: 'glp_url', selector: { text: { type: 'url' } } },
+            { name: 'glp_token', selector: { text: { type: 'password' } } },
+          ],
+        },
+      ],
+      computeLabel: (entry: ConfigFormEntry) =>
+        _s(`cfg_${entry.name}`, _configLang(navigator.language)),
+      computeHelper: (entry: ConfigFormEntry) =>
+        _s(`cfg_${entry.name}_help`, _configLang(navigator.language)),
+    };
+  }
+
+  // Accepts both the YAML shape and what getConfigForm()'s form produces
+  // (numbers from the number selector, 'none' from the theme dropdown, ''
+  // from emptied text fields, a string for the multi-line gradient) without
+  // changing what an existing YAML config means.
   setConfig(config: CardConfig): void {
+    const normalized = _normalizeConfig(config);
     this._config = {
       title: null, switch_entity: null, glp_token: null, machine: null,
-      theme: null, accent_color: null, accent_gradient: null, ...config,
+      theme: null, accent_color: null, accent_gradient: null, ...normalized,
     };
     // Allow explicit token override in YAML for direct-URL mode
-    if (config.glp_token) this._token = String(config.glp_token);
+    if (normalized.glp_token) this._token = String(normalized.glp_token);
   }
 
   // The app's own stored per-machine theme (#701), read from hass state by
@@ -207,7 +279,12 @@ class GlpOrderCard extends HTMLElement {
   }
 
   connectedCallback() { this._startPoll(); }
-  disconnectedCallback() { this._stopPoll(); }
+  disconnectedCallback() {
+    this._stopPoll();
+    // A sheet left open by a removed card would keep its history entry
+    // behind; close() trims that entry too.
+    if (this._sheet) this._sheet.close();
+  }
 
   _startPoll() {
     this._stopPoll();
@@ -231,16 +308,12 @@ class GlpOrderCard extends HTMLElement {
 
   _useIngress() { return !this._config?.glp_url; }
 
+  // Direct-URL mode uses the YAML `glp_token` only: the app serves /api/token
+  // to Supervisor-originating requests, never to a browser on the LAN, so
+  // asking for it there only earned a 401. Without a token the app answers
+  // 401 and the existing _load()/_loadStatus() handling shows that.
   async _ensureToken(): Promise<string | null> {
     if (this._useIngress()) return null; // ingress bypasses token check
-    if (this._token) return this._token;
-    // /api/token is only served to Supervisor-originating requests or already-
-    // authenticated callers. In direct-URL mode the card is browser-originated
-    // (LAN IP) so this call will return 401. Users must set glp_token in YAML.
-    try {
-      const d = await fetch(`${this._getBase()}/api/token`).then(r => r.ok ? r.json() : {}) as { apiToken?: string };
-      this._token = d.apiToken || null;
-    } catch { /* 401 in direct-URL mode is expected; falls back to configured glp_token */ }
     return this._token;
   }
 
@@ -395,7 +468,8 @@ class GlpOrderCard extends HTMLElement {
           </div>
           ${body}
         </div>
-      </ha-card>`, this.shadowRoot!);
+      </ha-card>
+      <div class="glp-sheet-slot"></div>`, this.shadowRoot!);
 
     this._applySemanticColorContrast();
   }
@@ -413,16 +487,19 @@ class GlpOrderCard extends HTMLElement {
       return html`<div class="loading">${_s('no_menu', lang)}</div>`;
     }
 
-    const newThreshold = (parseFloat(this._config?.new_badge_days as string) || NEW_BADGE_DAYS_DEFAULT) * 24 * 60 * 60 * 1000;
+    // A configured 0 is a real choice (no NEW badges at all), so only an
+    // unparseable or absent value falls back to the default window.
+    const badgeDays = parseFloat(String(this._config?.new_badge_days ?? ''));
+    const newThreshold = (Number.isFinite(badgeDays) ? badgeDays : NEW_BADGE_DAYS_DEFAULT) * 24 * 60 * 60 * 1000;
     const now = Date.now();
 
-    const renderItem = (m: MenuItem) => {
+    const renderItem = (m: MenuItem, fullRow = false) => {
       const isNew      = m.createdAt && (now - m.createdAt) < newThreshold;
       const newBadge   = isNew ? html`<span class="menu-badge menu-badge-new">NEW</span>` : nothing;
       const trendBadge = m.trending
         ? html`<span class="menu-badge menu-badge-trend">${/* ICONS.of() emits fixed SVG markup */ unsafeHTML(ICONS.of('heat'))}</span>`
         : nothing;
-      return html`<button type="button" class="menu-item${this._selected === m.name ? ' selected' : ''}" data-item=${m.name} @click=${() => this._selectItem(m.name)}>
+      return html`<button type="button" class="menu-item${fullRow ? ' menu-item-full' : ''}${this._selected === m.name ? ' selected' : ''}" data-item=${m.name} @click=${() => this._selectItem(m.name)}>
         <div class="menu-item-icon">${/* _menuIconHtml() returns a fixed icon or an escaped emoji */ unsafeHTML(_menuIconHtml(m))}</div>
         <div class="menu-item-name">${m.name}${trendBadge}${newBadge}</div>
       </button>`;
@@ -431,36 +508,45 @@ class GlpOrderCard extends HTMLElement {
     const trending = visibleMenu.filter(m => m.trending);
     const regular  = visibleMenu.filter(m => !m.trending);
 
+    // A lone popular drink would leave half of the two-column row empty, so it
+    // spans the whole row instead; two or more stay in the normal grid.
     const trendSection = trending.length ? html`
       <p class="menu-section-title">${/* ICONS.of() emits fixed SVG markup */ unsafeHTML(ICONS.of('heat'))} ${_s('trending_title', lang)}</p>
-      <div class="menu-grid">${trending.map(renderItem)}</div>` : nothing;
+      <div class="menu-grid">${trending.map(m => renderItem(m, trending.length === 1))}</div>` : nothing;
     const regularSection = regular.length ? html`
       ${trending.length ? html`<p class="menu-section-title" style="margin-top:var(--glp-sp-3)">${_s('menu_all', lang)}</p>` : nothing}
-      <div class="menu-grid">${regular.map(renderItem)}</div>` : nothing;
+      <div class="menu-grid">${regular.map(m => renderItem(m))}</div>` : nothing;
 
     const selectedItem = visibleMenu.find(m => m.name === this._selected);
     const variants = this._getVariants(selectedItem);
     const needsVariant = variants.length > 0 && !this._selectedVariant;
     const groupedVariants = this._getVariantsGrouped(selectedItem);
+    // When both bean groups are shown, their own headings already carry the
+    // word "Variant" ("Variant · Speciality"), so the standalone heading above
+    // them would only repeat it.
+    const mergedHeadings = this._hasBothBeanGroups(groupedVariants);
     const variantSection = (this._selected && variants.length > 0) ? html`
-      <p class="variant-label">${_s('variant_label', lang)}</p>
+      ${mergedHeadings ? nothing : html`<p class="variant-label">${_s('variant_label', lang)}</p>`}
       <div id="oc-variants" class=${groupedVariants.flat ? 'variant-grid' : ''}>
-        ${this._variantInnerHtml(groupedVariants, lang)}
+        ${this._variantInnerHtml(groupedVariants, lang, mergedHeadings)}
       </div>` : nothing;
-    const beanInfoSection = this._beanInfoHtml(this._getSelectedBean()!, lang);
-    const itemLabel = (this._selected && this._selectedVariant)
+    const fullLabel = (this._selected && this._selectedVariant)
       ? `${this._selected} · ${this._selectedVariant}`
-      : this._selected || null;
-    const btnLabel = itemLabel ? _s('order_btn', lang, itemLabel)
-      : needsVariant ? _s('variant_select', lang)
-      : _s('order_btn_select', lang);
+      : null;
+    // The button label names the drink only and stays on one line; the chosen
+    // variant is already visible in the chip above, so the complete
+    // "drink · variant" moves into the title and the accessible name.
+    const btnLabel = this._selected ? _s('order_btn', lang, this._selected) : needsVariant ? _s('variant_select', lang) : _s('order_btn_select', lang);
+    const fullBtnLabel = fullLabel ? _s('order_btn', lang, fullLabel) : undefined;
     return html`
       <div class="order-form">
         ${trendSection}${regularSection}
-        ${variantSection}${beanInfoSection}
+        ${variantSection}
         <input class="note-input" id="oc-note" placeholder=${_s('note_ph', lang)} maxlength="200">
-        <button class="order-btn" id="oc-submit" ?disabled=${!this._selected || this._submitting || needsVariant} @click=${() => this._placeOrder()}>
-          ${itemLabel ? html`${/* ICONS.of() emits fixed SVG markup */ unsafeHTML(ICONS.of('coffee'))} ` : nothing}${btnLabel}
+        <button class="order-btn" id="oc-submit" ?disabled=${!this._selected || this._submitting || needsVariant}
+          title=${ifDefined(fullLabel || undefined)} aria-label=${ifDefined(fullBtnLabel)}
+          @click=${() => this._placeOrder()}>
+          ${this._selected ? html`${/* ICONS.of() emits fixed SVG markup */ unsafeHTML(ICONS.of('coffee'))}` : nothing}<span class="order-btn-label">${btnLabel}</span>
         </button>
         ${this._orderError ? html`<div class="order-error" role="alert">${this._orderError}</div>` : nothing}
       </div>`;
@@ -587,6 +673,7 @@ class GlpOrderCard extends HTMLElement {
     this._selected = this._selected === name ? null : name;
     if (this._selected !== prev) { this._selectedVariant = null; this._selectedBeanId = null; }
     this._orderError = null;
+    if (this._selected) haptic(this, 'selection');
     this._render();
   }
 
@@ -595,6 +682,7 @@ class GlpOrderCard extends HTMLElement {
     this._selectedVariant = wasSelected ? null : variant;
     this._selectedBeanId  = wasSelected ? null : (beanId != null ? Number(beanId) : null);
     this._orderError = null;
+    if (!wasSelected) haptic(this, 'selection');
     this._render();
   }
 
@@ -610,7 +698,7 @@ class GlpOrderCard extends HTMLElement {
 
   _getVariants(item: MenuItem | undefined): string[] {
     if (!item) return [];
-    if (item.useBeans) return (this._activeBeans || []).map(b => b.decaf ? `${b.name} · Decaf` : b.name);
+    if (item.useBeans) return (this._activeBeans || []).map(b => this._beanLabel(b));
     return Array.isArray(item.variants)
       ? item.variants.filter((v): v is string => typeof v === 'string')
       : [];
@@ -623,12 +711,33 @@ class GlpOrderCard extends HTMLElement {
   // gaggiuino-local-profiler#505) — untagged/missing beans default to 'normal'.
   _getVariantsGrouped(item: MenuItem | undefined): GroupedVariants {
     if (!item?.useBeans) return { flat: this._getVariants(item) };
-    const label = (b: Bean): string => b.decaf ? `${b.name} · Decaf` : b.name;
     const beans = this._activeBeans || [];
     return {
-      speciality: beans.filter(b => b.category === 'speciality').map(label),
-      normal:     beans.filter(b => b.category !== 'speciality').map(label),
+      speciality: beans.filter(b => b.category === 'speciality').map(b => this._beanLabel(b)),
+      normal:     beans.filter(b => b.category !== 'speciality').map(b => this._beanLabel(b)),
     };
+  }
+
+  // True only when both bean groups are rendered, i.e. exactly the case that
+  // shows group headings at all (#273).
+  _hasBothBeanGroups(grouped: GroupedVariants): boolean {
+    if (grouped.flat) return false;
+    const { speciality, normal } = grouped as { speciality: string[]; normal: string[] };
+    return speciality.length > 0 && normal.length > 0;
+  }
+
+  // The chip label plus the decaf suffix — the one place the two spellings
+  // are derived, so selection, grouping and the details sheet cannot drift.
+  _beanLabel(bean: Bean): string {
+    return bean.decaf ? `${bean.name} · Decaf` : bean.name;
+  }
+
+  _usesBeans(): boolean {
+    return this._menu?.find(m => m.name === this._selected)?.useBeans === true;
+  }
+
+  _beanForLabel(v: string): Bean | null {
+    return (this._activeBeans || []).find(b => this._beanLabel(b) === v) ?? null;
   }
 
   // Bean-backed variant chips carry the bean's stable id (#35) alongside the
@@ -636,28 +745,79 @@ class GlpOrderCard extends HTMLElement {
   // label alone is ambiguous whenever a bean gets deleted and reimported
   // under the same name (same bug class as gaggiuino-local-profiler#456).
   _beanIdForLabel(v: string): number | null {
-    const bean = (this._activeBeans || []).find(b => (b.decaf ? `${b.name} · Decaf` : b.name) === v);
-    return bean?.id ?? null;
+    return this._beanForLabel(v)?.id ?? null;
   }
 
-  _variantChipHtml(v: string): TemplateResult {
-    const beanId = this._beanIdForLabel(v);
-    return html`<button type="button" class="variant-chip${this._selectedVariant === v ? ' selected' : ''}" data-variant=${v} data-bean-id=${ifDefined(beanId ?? undefined)} @click=${() => this._selectVariant(v, beanId)}>${v}</button>`;
+  // The chip stays a plain select button; a bean with details gets a second,
+  // separate button that opens the details sheet (#274). They sit in one
+  // wrapper so the chip grid keeps its original cell size and wrapping.
+  _variantChipHtml(v: string, lang: string = this._lang): TemplateResult {
+    const bean = this._beanForLabel(v);
+    const beanId = bean?.id ?? null;
+    const chip = html`<button type="button" class="variant-chip${this._selectedVariant === v ? ' selected' : ''}" data-variant=${v} data-bean-id=${ifDefined(beanId ?? undefined)} @click=${() => this._selectVariant(v, beanId)}>${v}</button>`;
+    // Only a bean-backed chip has details to show: a plain drink's variant
+    // could share a name with a bean, but it is not that bean.
+    if (!this._usesBeans() || !bean || !this._beanHasDetails(bean)) return chip;
+    const withDetails: Bean = bean;
+    const label = _s('bean_details', lang) + this._beanLabel(withDetails);
+    return html`<span class="variant-chip-wrap">${chip}<button
+        type="button" class="bean-info-btn"
+        aria-label=${label}
+        @click=${(e: Event) => { e.stopPropagation(); this._openBeanSheet(withDetails, lang); }}>
+        ${/* ICONS.of() emits fixed SVG markup */ unsafeHTML(ICONS.of('info'))}
+      </button></span>`;
+  }
+
+  // The sheet's host element, rendered after the card. It has its own node so
+  // the card's template re-renders (Lit clears everything it committed) never
+  // eject an open sheet from the shadow root.
+  _sheetSlot(): HTMLElement | null {
+    return this.shadowRoot?.querySelector<HTMLElement>('.glp-sheet-slot') ?? null;
+  }
+
+  // One sheet per card, created on first use and mounted into the card's own
+  // shadow root so it inherits this card's --glp-* tokens. A language change
+  // replaces it: the close label is fixed at construction, and the old host is
+  // cleared so the shadow root never holds two close buttons.
+  _sheetFor(lang: string): GlpSheet {
+    const slot = this._sheetSlot();
+    if (this._sheet && this._sheetLang !== lang) {
+      this._sheet.close();
+      this._sheet = null;
+      slot?.replaceChildren();
+    }
+    if (!this._sheet) {
+      this._sheet = new GlpSheet(slot ?? this.shadowRoot!, { closeLabel: _s('sheet_close', lang) });
+      this._sheetLang = lang;
+    }
+    return this._sheet;
+  }
+
+  _openBeanSheet(bean: Bean, lang: string): void {
+    const body = this._beanInfoHtml(bean, lang);
+    if (body === nothing) return;
+    this._sheetFor(lang).open({ title: this._beanLabel(bean), body: () => body });
   }
 
   // Mirrors the trending/regular section pattern (~line 650): headings shown
   // only when both groups are non-empty — a single-group list (e.g. all beans
   // untagged) renders as one plain grid, no noisy "Normal" label.
-  _variantInnerHtml(grouped: GroupedVariants, lang: string): TemplateResult {
-    if (grouped.flat) return html`${grouped.flat.map(v => this._variantChipHtml(v))}`;
+  // `mergedHeadings` folds the standalone "Variant" heading into each group
+  // heading ("Variant · Speciality" / "Variant · Normal"), built from the
+  // existing keys so no new translation strings are needed.
+  _variantInnerHtml(grouped: GroupedVariants, lang: string, mergedHeadings = false): TemplateResult {
+    if (grouped.flat) return html`${grouped.flat.map(v => this._variantChipHtml(v, lang))}`;
     const { speciality, normal } = grouped as { speciality: string[]; normal: string[] };
     const showHeadings = speciality.length > 0 && normal.length > 0;
+    const heading = (key: string) => mergedHeadings
+      ? `${_s('variant_label', lang)} · ${_s(key, lang)}`
+      : _s(key, lang);
     const specialitySection = speciality.length ? html`
-      ${showHeadings ? html`<p class="menu-section-title">${_s('variant_speciality', lang)}</p>` : nothing}
-      <div class="variant-grid">${speciality.map(v => this._variantChipHtml(v))}</div>` : nothing;
+      ${showHeadings ? html`<p class="menu-section-title">${heading('variant_speciality')}</p>` : nothing}
+      <div class="variant-grid">${speciality.map(v => this._variantChipHtml(v, lang))}</div>` : nothing;
     const normalSection = normal.length ? html`
-      ${showHeadings ? html`<p class="menu-section-title" style="margin-top:var(--glp-sp-3)">${_s('variant_normal', lang)}</p>` : nothing}
-      <div class="variant-grid">${normal.map(v => this._variantChipHtml(v))}</div>` : nothing;
+      ${showHeadings ? html`<p class="menu-section-title" style="margin-top:var(--glp-sp-3)">${heading('variant_normal')}</p>` : nothing}
+      <div class="variant-grid">${normal.map(v => this._variantChipHtml(v, lang))}</div>` : nothing;
     return html`${specialitySection}${normalSection}`;
   }
 
@@ -673,14 +833,24 @@ class GlpOrderCard extends HTMLElement {
       const byId = beans.find(b => b.id === this._selectedBeanId);
       if (byId) return byId;
     }
-    return beans.find(b => (b.decaf ? `${b.name} · Decaf` : b.name) === this._selectedVariant) || null;
+    return beans.find(b => this._beanLabel(b) === this._selectedVariant) || null;
+  }
+
+  // The bean data the card receives has no roast date, so the sheet shows
+  // notes, origin, variety and process only.
+  _beanOrigins(bean: Bean): Origin[] {
+    if (Array.isArray(bean.origins) && bean.origins.length) return bean.origins;
+    return bean.origin ? [{ code: bean.origin }] : [];
+  }
+
+  _beanHasDetails(bean: Bean | null): boolean {
+    if (!bean) return false;
+    return !!(bean.notes || this._beanOrigins(bean).length || bean.variety || bean.process);
   }
 
   _beanInfoHtml(bean: Bean, lang: string): TemplateResult | typeof nothing {
-    const origins = Array.isArray(bean?.origins) && bean.origins.length
-      ? bean.origins
-      : (bean?.origin ? [{ code: bean.origin }] : []);
-    if (!bean || (!bean.notes && !origins.length && !bean.variety && !bean.process)) return nothing;
+    if (!this._beanHasDetails(bean)) return nothing;
+    const origins = this._beanOrigins(bean);
     const rows: TemplateResult[] = [];
     if (bean.notes)      rows.push(html`<div class="bean-info-notes">${bean.notes}</div>`);
     if (origins.length)  rows.push(html`<div class="bean-info-row"><span class="bean-info-label">${_s('bean_origin', lang)}</span><span>${/* _originHtml() escapes its own input */ unsafeHTML(_originHtml(origins, lang))}</span></div>`);
@@ -689,8 +859,21 @@ class GlpOrderCard extends HTMLElement {
     return html`<div class="bean-info" id="oc-bean-info">${rows}</div>`;
   }
 
+  // The inline message stays the primary feedback; the toast and the
+  // vibration repeat it for people who are looking at the machine.
+  _failOrder(): void {
+    const message = _s('order_failed', this._lang);
+    this._orderError = message;
+    toast(this, message);
+    haptic(this, 'failure');
+  }
+
   async _placeOrder(): Promise<void> {
     if (!this._selected || this._submitting) return;
+    // Captured up front: a successful order clears the selection before the
+    // confirmation toast is built.
+    const requestedItem = this._selected;
+    const variant       = this._selectedVariant;
     const noteEl = this.shadowRoot!.getElementById('oc-note') as HTMLInputElement | null;
     const note   = noteEl?.value?.trim() || '';
     const haUser = this._hass?.user;
@@ -719,17 +902,20 @@ class GlpOrderCard extends HTMLElement {
       const order = res.ok ? await res.json() as Order : null;
 
       if (order?.id) {
+        const sentLabel = variant ? `${requestedItem} · ${variant}` : requestedItem;
         this._activeOrder = order;
         this._orderError  = null;
         this._selected    = null;
         this._selectedVariant = null;
         this._selectedBeanId  = null;
+        toast(this, _s('toast_order_sent', this._lang, sentLabel));
+        haptic(this, 'success');
       } else {
         // Keep the selection so the customer can retry without re-picking.
-        this._orderError = _s('order_failed', this._lang);
+        this._failOrder();
       }
     } catch {
-      this._orderError = _s('order_failed', this._lang);
+      this._failOrder();
     }
     this._submitting = false;
     this._render();
@@ -751,7 +937,7 @@ window.customCards!.push({
   name:        'GLP Order Card',
   description: 'Customer-facing order card for Gaggiuino Local Profiler',
   preview:     false,
-  documentationURL: 'https://github.com/mxkissnr/glp-order-card',
+  documentationURL: 'https://github.com/mxkissnr/glp-integration/blob/main/DOCS.md#order-card',
 });
 
 console.info(`%c GLP-ORDER-CARD %c v${GLP_ORDER_CARD_VERSION} `, 'background:#ff9f0a;color:#000;padding:2px 4px;border-radius:3px 0 0 3px', 'background:#111113;color:#ff9f0a;padding:2px 4px;border-radius:0 3px 3px 0');

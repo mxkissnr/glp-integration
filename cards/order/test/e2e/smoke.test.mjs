@@ -55,16 +55,27 @@ const MENU = [{ name: 'Flat White', variants: ['Single', 'Doppio'] }];
 
 async function setUpCard() {
   const server = await startServer(HARNESS_HTML);
-  const { port } = server.address();
-  const browser = await chromium.launch();
-  const page = await browser.newPage();
-  await mockApi(page, { menu: MENU });
-  await page.goto(`http://127.0.0.1:${port}/__harness.html`);
-  await page.waitForFunction(() => {
-    const el = document.querySelector('glp-order-card');
-    return !!el?.shadowRoot?.querySelector('.menu-grid');
-  }, { timeout: 10000 });
-  return { server, browser, page };
+  // A browser that cannot launch (or a page that never becomes ready) must not
+  // leak the listening server: node --test would then wait forever, because a
+  // live handle keeps the process alive. Close both and rethrow the original
+  // error so the failing test reports why it could not set up.
+  let browser;
+  try {
+    const { port } = server.address();
+    browser = await chromium.launch();
+    const page = await browser.newPage();
+    await mockApi(page, { menu: MENU });
+    await page.goto(`http://127.0.0.1:${port}/__harness.html`);
+    await page.waitForFunction(() => {
+      const el = document.querySelector('glp-order-card');
+      return !!el?.shadowRoot?.querySelector('.menu-grid');
+    }, { timeout: 10000 });
+    return { server, browser, page };
+  } catch (err) {
+    await browser?.close();
+    server.close();
+    throw err;
+  }
 }
 
 async function tearDown({ server, browser }) {
@@ -95,10 +106,16 @@ test('order button becomes enabled after selecting an item + variant', async () 
 
     const submit = await page.evaluate(() => {
       const btn = document.querySelector('glp-order-card').shadowRoot.getElementById('oc-submit');
-      return { disabled: btn.disabled, text: btn.textContent };
+      return { disabled: btn.disabled, text: btn.textContent, title: btn.title, ariaLabel: btn.getAttribute('aria-label') };
     });
     assert.equal(submit.disabled, false);
-    assert.match(submit.text, /Single/);
+    // #273: the label names the drink only; the variant stays in the title
+    // and the accessible name.
+    assert.match(submit.text, /Flat White/);
+    assert.doesNotMatch(submit.text, /Single/);
+    assert.match(submit.title, /Flat White/);
+    assert.match(submit.title, /Single/);
+    assert.match(submit.ariaLabel, /Single/);
   } finally {
     await tearDown(ctx);
   }
@@ -156,12 +173,13 @@ test('a concurrent hass update does not reset an in-progress variant selection',
 
 test('switch entity going unavailable shows the machine-off state without throwing', async () => {
   const server = await startServer(harnessHtml('unavailable'));
-  const { port } = server.address();
-  const browser = await chromium.launch();
-  const page = await browser.newPage();
   const pageErrors = [];
-  page.on('pageerror', err => pageErrors.push(err));
+  let browser;
   try {
+    const { port } = server.address();
+    browser = await chromium.launch();
+    const page = await browser.newPage();
+    page.on('pageerror', err => pageErrors.push(err));
     await mockApi(page, { menu: MENU });
     await page.goto(`http://127.0.0.1:${port}/__harness.html`);
     await page.waitForFunction(() => {
@@ -174,7 +192,7 @@ test('switch entity going unavailable shows the machine-off state without throwi
     assert.match(bodyText, /\S/, 'machine-off state renders a non-empty message, not a blank card');
     assert.deepEqual(pageErrors, [], 'an unavailable switch entity must not throw during render');
   } finally {
-    await browser.close();
+    await browser?.close();
     server.close();
   }
 });

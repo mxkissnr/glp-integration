@@ -3,7 +3,23 @@
 // and are re-exported here.
 
 import { _esc } from './helpers.ts';
-import { GLP_ICON_PATHS, ICONS, MACHINE_BODY, MACHINE_ICON_MINI } from '../../shared/icons.ts';
+import { GLP_ICON_PATHS, ICONS as SHARED_ICONS, MACHINE_BODY, MACHINE_ICON_MINI } from '../../shared/icons.ts';
+
+// The shared set has no info glyph, and only this card needs one (the bean
+// details button on a variant chip), so it lives here instead of widening
+// GLP_ICON_PATHS for both cards. Same 24x24 stroke-drawn style, so the base
+// .glp-i rule draws it exactly like every shared icon.
+// The dot is a zero-length round-capped stroke, like the shared set's dots —
+// a tiny filled <circle> would need a fill attribute the base .glp-i rule
+// (fill:none) then erases.
+const INFO_ICON = '<circle cx="12" cy="12" r="8.2"/><path d="M12 11.2v5"/><path d="M12 8.2v.01" stroke-linecap="round"/>';
+
+const ICONS = {
+  has: (name: string): boolean => name === 'info' || SHARED_ICONS.has(name),
+  of: (name: string, cls: string = ''): string => (name === 'info'
+    ? `<svg class="glp-i${cls ? ' ' + cls : ''}" viewBox="0 0 24 24" aria-hidden="true" focusable="false">${INFO_ICON}</svg>`
+    : SHARED_ICONS.of(name, cls)),
+};
 
 // `emoji` on a menu entry is a PERSISTED DATA FIELD, not styling — it's
 // defined app-side in DEFAULT_MENU (gaggiuino-local-profiler lib/constants.js)

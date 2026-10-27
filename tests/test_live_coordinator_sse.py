@@ -29,6 +29,7 @@ async def test_sse_connect_once_pushes_live_snapshot_payload(hass, aioclient_moc
         b"event: sync-progress\ndata: {\"machineId\": 1}\n\n"
         b"event: live-snapshot\ndata: {\"isLive\": true, \"profileName\": \"Adaptive\"}\n\n"
     )
+    aioclient_mock.get(f"{URL}/api/token", json={"apiToken": "test-token"})
     aioclient_mock.get(f"{URL}/api/events", content=frame)
     coordinator = _make_coordinator(hass)
 
@@ -40,6 +41,7 @@ async def test_sse_connect_once_pushes_live_snapshot_payload(hass, aioclient_moc
 
 async def test_sse_connect_once_ignores_non_live_snapshot_events(hass, aioclient_mock) -> None:
     frame = b"event: sync-progress\ndata: {\"machineId\": 1}\n\n"
+    aioclient_mock.get(f"{URL}/api/token", json={"apiToken": "test-token"})
     aioclient_mock.get(f"{URL}/api/events", content=frame)
     coordinator = _make_coordinator(hass)
 
@@ -51,6 +53,7 @@ async def test_sse_connect_once_ignores_non_live_snapshot_events(hass, aioclient
 
 async def test_sse_connect_once_skips_malformed_json(hass, aioclient_mock) -> None:
     frame = b"event: live-snapshot\ndata: {not-json\n\n"
+    aioclient_mock.get(f"{URL}/api/token", json={"apiToken": "test-token"})
     aioclient_mock.get(f"{URL}/api/events", content=frame)
     coordinator = _make_coordinator(hass)
 

@@ -21,7 +21,7 @@ Bindet den [Gaggiuino Local Profiler](https://github.com/mxkissnr/gaggiuino-loca
 
 ### Beta-Versionen
 
-Um kommende Änderungen zu testen, diese Integration in HACS öffnen, das Drei-Punkte-Menü wählen, dann *Erneut herunterladen* und *Beta-Versionen anzeigen* aktivieren. Danach erhältst du den Entwicklungsstand der Integration und beider Karten. Er ist nur zum Testen gedacht und kann Fehler enthalten. Zum Zurückwechseln *Beta-Versionen anzeigen* deaktivieren und die neueste stabile Version erneut herunterladen.
+Um kommende Änderungen zu testen, diese Integration in HACS öffnen, das Drei-Punkte-Menü wählen und *Erneut herunterladen* anwählen, dann *Benötigst du eine andere Version?* aufklappen und die Beta-Version aus der Liste *Release* wählen (Tags wie `v1.33.2b1`). *Herunterladen* anwählen und Home Assistant neu starten. Danach erhältst du den Entwicklungsstand der Integration und beider Karten. Er ist nur zum Testen gedacht und kann Fehler enthalten. Zum Zurückwechseln denselben Dialog öffnen und die neueste stabile Version wählen.
 
 ## Einrichtung
 
@@ -70,6 +70,8 @@ theme: ember-espresso
 | `accent_color` | Eigene, einfarbige Akzentfarbe als `#rrggbb` statt eines Presets. Überschreibt `theme`. Werte, die keine sechsstellige Hex-Farbe sind, werden ignoriert. | *(keine)* |
 | `accent_gradient` | Eigener Verlauf mit zwei Stopps als `["#rrggbb", "#rrggbb"]`. Überschreibt `theme` und `accent_color`. Werte, die keine sechsstelligen Hex-Farben sind, werden ignoriert. | *(keine)* |
 
+Jede der obigen Optionen lässt sich auch im visuellen Karten-Editor von Home Assistant statt in YAML einstellen.
+
 ### Farbthema pro Maschine
 
 Die Akzentfarbe der Karte lässt sich pro Maschine thematisieren, damit sich mehrere Maschinen auf einem Dashboard gut unterscheiden lassen:
@@ -96,13 +98,15 @@ Ein im App gesetztes Thema (Einstellungen → Maschinen) wird live aus dem Attri
 - Shot-Navigation — Pfeile und bis zu zehn Punkt-Indikatoren für die letzten Shots aus dem Attribut `recent_shots` des `machine_status`-Sensors, dazu Wischen nach links/rechts auf Touch-Geräten; springt bei einem neuen Shot zurück auf den neuesten
 - Shot-Chart — Druck und Flow auf der linken Achse, Kesseltemperatur und Gewicht auf der rechten Achse, mit Legende der Spitzen- und Endwerte, sowohl für den angezeigten Shot als auch für den laufenden
 - Live-Kacheln, solange die Maschine an ist — Kesseltemperatur mit Zielwert (hervorgehoben beim Aufheizen), Live-Druck und Live-Gewicht der Waage; während eines Shots dieselben Werte als Mini-Stats
-- Profil-Auswahl für `select.*_profile` — bleibt über State-Updates hinweg offen und wird ausgeblendet, wenn das Entity fehlt
-- Tab "Bestellungen", wenn im App offene Barista-Bestellungen liegen, mit Zähler-Badge und Annehmen/Ablehnen/Abschließen
-- Tab "Wartung", wenn die Wartungssensoren existieren — die fünf Wartungsaufgaben plus eine Zeile pro Mühle, jeweils mit Status-Pill, Tagen/Shots seit der letzten Wartung und Fortschrittsbalken; ein Tipp auf eine Aufgabe markiert sie über `gaggiuino_profiler.maintenance_done` als erledigt
+- Profil-Auswahl für `select.*_profile` — öffnet sich in einem Sheet vom unteren Bildschirmrand, bleibt über State-Updates hinweg offen und wird ausgeblendet, wenn das Entity fehlt
+- Tab "Bestellungen", wenn in der App offene Barista-Bestellungen liegen, mit Zähler-Badge; ein Tipp auf eine Bestellung öffnet ihre Details in einem Sheet mit Annehmen, Erledigt und Ablehnen
+- Tab "Wartung", wenn die Wartungssensoren existieren — die fünf Wartungsaufgaben plus eine Zeile pro Mühle, jeweils mit Status-Pill, Tagen/Shots seit der letzten Wartung und Fortschrittsbalken; ein Tipp auf eine Aufgabe und die Bestätigung in einem Sheet markiert sie über `gaggiuino_profiler.maintenance_done` als erledigt; die Zeile lässt sich auch per Tastatur erreichen und bestätigen
 - Dampf-Banner, solange der Dampfschalter an ist, Entkalkungs-Banner, solange die Maschine ihr Entkalkungsprogramm fährt
 - Wasserstand in der Fußzeile mit Warnbanner unter 20 %
 - Letzter Shot: Profil, Getränkeart, Kaffee mit Sorte und Röstdatum-Alter aus der Kaffeebibliothek, Mühle und Mahlgrad, Sterne-Bewertung, Score-Verdict, Brühverhältnis, Dauer, Ausbeute, durchschnittlicher Druck und Brühtemperatur
 - Anzahl der heute gezogenen Shots
+- Kurzbefehle — ein Tipp auf einen Live-Wert (Temperatur, Druck, Gewicht) öffnet dessen Home-Assistant-Verlauf, ein langer Druck auf die Kopfzeile öffnet die Maschine
+- Rückmeldung — jede Aktion bestätigt sich mit einer kurzen Home-Assistant-Meldung, Handys vibrieren dazu. Beides nutzt die dokumentierten Karten-Events von Home Assistant und erscheint daher dort, wo Home Assistant seine eigenen Meldungen zeigt
 
 ### Sprachen der Shot Card
 
@@ -119,6 +123,8 @@ Minimale Konfiguration — in einem Standard-Home-Assistant-Setup sind keine Opt
 ```yaml
 type: custom:glp-order-card
 ```
+
+Ohne `glp_url` nutzt die Karte den Proxy der Integration, den Home Assistant mit der eigenen Sitzung authentifiziert — dabei wird nirgends ein Token gespeichert. Das ist die empfohlene Einrichtung. `glp_url` (und damit `glp_token`) nur setzen, wenn die Karte das GLP-App direkt erreichen muss, etwa auf einem Dashboard außerhalb von Home Assistant.
 
 Vollständige Konfiguration (nur für den direkten Zugriff außerhalb von Home Assistant nötig):
 
@@ -137,13 +143,15 @@ theme: ember-espresso
 |---|---|---|
 | `title` | Titel im Kartenkopf | *(lokalisiert — `Bestellen`, `Order`, …)* |
 | `glp_url` | URL des GLP-Apps auf Port 8099. Nur nötig, wenn die Karte außerhalb von Home Assistant verwendet wird oder die Ingress-Erkennung nicht greift. | *(automatisch — HA-Ingress)* |
-| `glp_token` | API-Token des GLP-Apps für den Direkt-URL-Modus, in dem die Karte selbst keinen Token holen kann. | *(keiner)* |
+| `glp_token` | API-Token des GLP-Apps, nur für den Direkt-URL-Modus. Achtung: Jeder Home-Assistant-Benutzer, der das Dashboard öffnen kann, kann ihn im YAML lesen. | *(keiner)* |
 | `switch_entity` | Switch-Entity der Maschine. Solange sie `off` oder `unavailable` meldet, zeigt die Karte die Ansicht "Maschine aus". | *(automatisch — aus dem Attribut `switch_entity` des `machine_status`-Sensors)* |
 | `machine` | Name oder ID einer Maschine aus der Multi-Machine-Registry des Apps. Legt fest, welches `*_machine_status`-Entity die `switch_entity` liefert, versieht jede Bestellung mit dem Maschinennamen und begrenzt das Maschinen-Thema darauf. | *(automatisch — erste Maschine mit "Gaggiuino" im Namen, sonst die erste gefundene)* |
 | `new_badge_days` | Wie viele Tage ein neu hinzugefügtes Menü-Item sein NEW-Badge behält. | `7` |
 | `theme` | Eines der acht Farb-Presets weiter unten. Färbt den Bestell-Button, die Auswahl-Hervorhebungen und das Maschinen-Icon. | *(keine — `--primary-color` des Home-Assistant-Themes)* |
 | `accent_color` | Eigene, einfarbige Akzentfarbe als `#rrggbb` statt eines Presets. Überschreibt `theme`. Werte, die keine sechsstellige Hex-Farbe sind, werden ignoriert. | *(keine)* |
 | `accent_gradient` | Eigener Verlauf mit zwei Stopps als `["#rrggbb", "#rrggbb"]`. Überschreibt `theme` und `accent_color`. Werte, die keine sechsstelligen Hex-Farben sind, werden ignoriert. | *(keine)* |
+
+Jede der obigen Optionen lässt sich auch im visuellen Karten-Editor von Home Assistant einstellen; er zeigt dieselben Bezeichnungen und unter jedem Feld einen kurzen Hilfetext. Die beiden Optionen für die direkte URL stehen im Abschnitt "Erweitert / direkte URL".
 
 ### Farbthema pro Maschine
 
@@ -166,8 +174,9 @@ Ein im App gesetztes Thema (Einstellungen → Maschinen) wird live aus dem Attri
 ### Was die Order Card zeigt
 
 - Getränkemenü aus dem Tab **Bestellungen** des Apps — ein Abschnitt "Beliebt" für markierte Getränke, ein NEW-Badge auf Items, die innerhalb von `new_badge_days` hinzugekommen sind, und der Rest unter "Alle Getränke"
-- Bohnen-Varianten aus der Kaffeebibliothek für Getränke, die Bohnen nutzen — nur tatsächlich vorrätige Bohnen, gruppiert in Spezialität und Normal; die Auswahl zeigt Geschmacksnoten, Herkunft (bei Blends die einzelnen Länder), Sorte und Aufbereitung
+- Bohnen-Varianten aus der Kaffeebibliothek für Getränke, die Bohnen nutzen — nur tatsächlich vorrätige Bohnen, gruppiert in Spezialität und Normal; eine Bohne mit Geschmacksnoten, Herkunft (bei Blends die einzelnen Länder), Sorte oder Aufbereitung bekommt einen kleinen Info-Knopf, der ihre Details in einem Bottom Sheet öffnet
 - Ein optionales Notizfeld und ein Bestell-Button, der mit dem gewählten Getränk und der Variante beschriftet ist
+- Eine kurze Home-Assistant-Benachrichtigung und ein Vibrieren auf dem Handy, wenn die Bestellung gesendet wurde oder fehlgeschlagen ist — beides nutzt die dokumentierten Karten-Events von Home Assistant und erscheint daher dort, wo Home Assistant seine eigenen Meldungen zeigt
 - Bestellstatus: wartet auf Bestätigung mit Position in der Warteschlange und geschätzter Zeit, angenommen mit Live-Countdown bis zur Fertigstellung, fertig mit Bestätigung plus dem fertigen Shot samt Kurve, wenn die Bestellung eine Shot-ID trägt, abgelehnt mit Begründung
 - Statt des Menüs die Ansicht "Maschine aus" oder "Bestellungen pausiert", wenn der Barista oder die Maschine das so meldet
 

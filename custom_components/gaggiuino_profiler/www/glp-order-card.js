@@ -751,303 +751,6 @@
     --glp-series-weight: #009e73;
   }`;
 
-  // order/src/styles.ts
-  var STYLES = `
-${TOKENS}
-
-  /* legacy internal aliases — rest of this file still reads these names;
-     hybrid theming happens one level up, in the GLP-TOKENS block above.
-     --oc-accent maps to --glp-err (this card's "amber" is its own CTA/brand
-     color below, mapped separately to --glp-accent — see .order-btn etc). */
-  :host {
-    --oc-bg:       var(--glp-bg);
-    --oc-surface:  var(--glp-surface);
-    --oc-surface2: color-mix(in srgb, var(--glp-text) 4%, transparent);
-    --oc-border:   var(--glp-border);
-    --oc-text:     var(--glp-text);
-    --oc-sub:      var(--glp-sub);
-    --oc-accent:   var(--glp-err);
-    --oc-amber:    var(--glp-warn);
-    --oc-green:    var(--glp-ok);
-  }
-  ha-card {
-    background: transparent;
-    border: none;
-    box-shadow: none;
-  }
-  /* Base sizing for every drawn icon inserted via ICONS.of()
-     (cards/shared/icons.ts) — 1em locks it to whatever font-size token its
-     container already resolves through, so a coffee cup dropped into a button
-     label vs.
-     a status line vs. a menu tile never needs a second, size-specific copy of
-     this rule. currentColor is what lets the same icon sit inside a muted
-     label, an accepted-green status line or the accent-filled order button
-     with no per-context markup. */
-  .glp-i { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-width: 1.8; vertical-align: -0.15em; flex-shrink: 0; }
-  .card {
-    background: var(--oc-bg);
-    border: 1px solid var(--oc-border);
-    border-radius: var(--glp-radius);
-    box-shadow: var(--ha-card-box-shadow, none);
-    padding: var(--glp-sp-5);
-    font-family: var(--paper-font-body1_-_font-family, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif);
-    color: var(--oc-text);
-  }
-  /* Labels were uppercase + letter-spaced everywhere (#90) — sentence case,
-     small (--glp-fs-1) and muted reads calmer and needs no tracking to stay
-     legible at this size. */
-  .header {
-    display: flex; align-items: center; gap: var(--glp-sp-2);
-    font-size: var(--glp-fs-1); font-weight: 700; color: var(--oc-sub);
-    margin-bottom: var(--glp-sp-4);
-  }
-  /* Machine icon badge (#62): small colour swatch in the card's resolved
-     theme (see MACHINE_ICON_MINI/_machineGlyphHtml()). .header sizes it next
-     to the title; .status is inline within the multi-machine status line. */
-  .machine-glyph { flex-shrink: 0; line-height: 0; }
-  .machine-glyph svg { width: 100%; height: 100%; display: block; }
-  .machine-glyph.header { width: 12px; height: 19.4px; }
-  .machine-glyph.status {
-    width: 9px; height: 14.6px; display: inline-block;
-    vertical-align: -2px; margin-right: 4px;
-  }
-  /* Not clickable — border diet (#90) drops the full frame in favour of a
-     single accent-coloured edge, same treatment as .status-card below. */
-  .machine-off {
-    background: color-mix(in srgb, var(--oc-accent) 8%, transparent);
-    border-left: 2px solid var(--oc-accent);
-    border-radius: var(--glp-radius-sm); color: var(--oc-accent); font-size: var(--glp-fs-2); font-weight: 600;
-    text-align: center; padding: var(--glp-sp-4);
-  }
-
-  /* Menu grid */
-  .menu-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
-    gap: var(--glp-sp-3);
-    margin-bottom: var(--glp-sp-4);
-  }
-  /* Menu tiles and variant chips are <button>s now (#183) so they are
-     keyboard/screen-reader reachable; these resets keep the tile look the
-     plain <div> had before. */
-  .menu-item, .variant-chip {
-    font: inherit;
-    color: inherit;
-    text-align: inherit;
-    appearance: none;
-  }
-  .menu-item {
-    background: var(--oc-surface);
-    border: 1px solid var(--oc-border);
-    border-radius: var(--glp-radius-sm);
-    padding: var(--glp-sp-3) var(--glp-sp-2);
-    text-align: center;
-    cursor: pointer;
-    transition: border-color .18s, background .18s;
-    user-select: none;
-  }
-  .menu-item:hover { border-color: color-mix(in srgb, var(--oc-text) 18%, transparent); background: color-mix(in srgb, var(--oc-text) 8%, transparent); }
-  .menu-item.selected {
-    /* --glp-aline, not raw --glp-accent: this border is an active-item edge
-       marker (the token's own use case), not a fill — .selected's background
-       tint below keeps the raw accent for that. */
-    border-color: var(--glp-aline);
-    background: color-mix(in srgb, var(--glp-accent) 12%, transparent);
-  }
-  /* The drink icon is the tile's primary recognition cue — it is what the eye
-     lands on before the name. It carries that weight at the top of the scale
-     and in text colour, NOT muted: a 1.8-weight stroke drawing at label colour
-     reads far lighter than the saturated emoji it replaced, and a tile whose
-     icon recedes into the background is a step backwards from what was there
-     before, however much cleaner it is in isolation. */
-  .menu-item-icon { font-size: var(--glp-fs-6); margin-bottom: var(--glp-sp-1); line-height: 1; color: var(--oc-text); }
-  .menu-item.selected .menu-item-icon { color: var(--glp-accent); }
-  .menu-item-name  { font-size: var(--glp-fs-1); font-weight: 500; color: var(--oc-sub); }
-  .menu-item.selected .menu-item-name { color: var(--oc-text); }
-
-  /* Order form */
-  .order-form { display: flex; flex-direction: column; gap: var(--glp-sp-3); margin-bottom: var(--glp-sp-1); }
-  .note-input {
-    background: var(--oc-surface2); border: 1px solid var(--oc-border);
-    border-radius: var(--glp-radius-sm); color: var(--oc-text); font-family: inherit;
-    font-size: var(--glp-fs-2); padding: var(--glp-sp-3); outline: none; width: 100%; box-sizing: border-box;
-    transition: border-color .18s, background .18s;
-  }
-  .note-input::placeholder { color: var(--oc-sub); }
-  /* --glp-aline for the focus ring — same active-marker case as
-     .menu-item.selected above. */
-  .note-input:focus { border-color: var(--glp-aline); background: color-mix(in srgb, var(--oc-text) 5%, transparent); }
-  /* Gradient stays a surface fill (#90 — "gradients belong on surfaces, not
-     hairlines"), only the ink resolves through the redesign: --glp-accent-text
-     is picked at runtime off the darker of the two gradient stops so button
-     text stays readable against any configured theme, see GLP-TOKENS above. */
-  .order-btn {
-    width: 100%; padding: var(--glp-sp-4); border: none; border-radius: var(--glp-radius-sm);
-    font-size: var(--glp-fs-2); font-weight: 800; letter-spacing: .01em; cursor: pointer;
-    font-family: inherit; color: var(--glp-accent-text);
-    background: linear-gradient(135deg, var(--glp-accent-start), var(--glp-accent-end));
-    transition: background .15s, opacity .15s;
-  }
-  .order-btn:disabled { opacity: .4; cursor: default; background: var(--oc-surface); color: var(--oc-sub); }
-  .order-btn:not(:disabled):hover {
-    background: linear-gradient(135deg,
-      color-mix(in srgb, var(--glp-accent-start) 90%, var(--oc-text) 10%),
-      color-mix(in srgb, var(--glp-accent-end) 90%, var(--oc-text) 10%));
-  }
-
-  /* Status card — not clickable, so the border diet (#90) replaces the full
-     frame with a single semantic-coloured edge; .pending keeps the machine's
-     own theme accent (it's an "in progress" state, not a semantic colour),
-     everything else already had a semantic --oc-* token to line up with. */
-  .status-card {
-    border-radius: var(--glp-radius-sm); padding: var(--glp-sp-4);
-    display: flex; flex-direction: column; gap: var(--glp-sp-2);
-    animation: oc-fade .3s ease-out both;
-  }
-  @keyframes oc-fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
-  .status-card.pending  { background: color-mix(in srgb, var(--glp-accent) 10%, transparent); border-left: 2px solid var(--glp-aline); }
-  .status-card.accepted { background: color-mix(in srgb, var(--oc-green) 10%, transparent); border-left: 2px solid var(--oc-green); }
-  .status-card.done     { background: color-mix(in srgb, var(--oc-green) 8%, transparent); border-left: 2px solid var(--oc-green); }
-  .status-card.declined { background: color-mix(in srgb, var(--oc-accent) 8%, transparent); border-left: 2px solid var(--oc-accent); }
-  .status-item  { font-size: var(--glp-fs-3); font-weight: 700; letter-spacing: -.01em; }
-  .status-line  { font-size: var(--glp-fs-1); color: var(--oc-sub); }
-  .status-eta   { font-size: var(--glp-fs-2); font-weight: 700; color: var(--oc-green); }
-  .status-card.accepted .status-eta { animation: oc-pulse 2s ease-in-out infinite; }
-  @keyframes oc-pulse { 0%,100% { opacity: 1; } 50% { opacity: .5; } }
-  .status-decline { font-size: var(--glp-fs-1); color: var(--oc-accent); }
-  .status-done-msg { font-size: var(--glp-fs-3); font-weight: 800; color: var(--oc-green); letter-spacing: -.01em; }
-  .shot-summary {
-    margin-top: var(--glp-sp-3);
-    background: var(--oc-surface2);
-    border-radius: var(--glp-radius-sm);
-    padding: var(--glp-sp-3) var(--glp-sp-4);
-    display: flex;
-    flex-direction: column;
-    gap: var(--glp-sp-2);
-  }
-  .shot-summary-meta {
-    display: flex;
-    gap: var(--glp-sp-3);
-    font-size: var(--glp-fs-1);
-    color: var(--oc-sub);
-  }
-  .shot-summary-profile {
-    font-size: var(--glp-fs-2);
-    font-weight: 700;
-    color: var(--oc-text);
-  }
-  .shot-chart { width: 100%; height: 80px; display: block; }
-  .shot-chart-legend { display: flex; gap: var(--glp-sp-3); flex-wrap: wrap; margin-top: var(--glp-sp-1); }
-  .shot-chart-legend-item { display: flex; align-items: center; gap: var(--glp-sp-1); font-size: var(--glp-fs-1); color: var(--oc-sub); }
-  .shot-chart-legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-  /* Badge padding stays a literal, not a ladder step: 1px/5px is below the
-     ladder's 4px floor, and rounding up would roughly quadruple this pill's
-     height — it needs to stay a tight inline mark, not a box. */
-  .menu-badge { display: inline-block; font-size: var(--glp-fs-1); font-weight: 600; padding: 1px 5px; border-radius: var(--glp-radius-sm); vertical-align: middle; margin-left: var(--glp-sp-1); line-height: 1.5; }
-  /* Not clickable — border diet drops the frame, the tint alone still reads
-     as a badge at this size. */
-  .menu-badge-new { background: color-mix(in srgb, var(--oc-green) 18%, transparent); color: var(--oc-green); }
-  .menu-badge-trend { background: color-mix(in srgb, var(--oc-accent) 15%, transparent); color: var(--oc-accent); }
-  .menu-section-title { font-size: var(--glp-fs-1); font-weight: 600; color: var(--oc-sub); margin: 0 0 var(--glp-sp-2); display: flex; align-items: center; gap: var(--glp-sp-1); }
-  .new-order-btn {
-    margin-top: var(--glp-sp-3); width: 100%; background: var(--oc-surface); border: 1px solid var(--oc-border);
-    border-radius: var(--glp-radius-sm); color: var(--oc-sub); font-family: inherit; font-weight: 600;
-    font-size: var(--glp-fs-1); padding: var(--glp-sp-2) var(--glp-sp-3); cursor: pointer; transition: all .15s;
-  }
-  .new-order-btn:hover { border-color: color-mix(in srgb, var(--oc-text) 22%, transparent); color: var(--oc-text); background: color-mix(in srgb, var(--oc-text) 7%, transparent); }
-  .loading { color: var(--oc-sub); font-size: var(--glp-fs-2); text-align: center; padding: var(--glp-sp-5) 0; }
-
-  /* Failed order attempt (#183): the selection stays so the customer can retry. */
-  .order-error {
-    color: var(--oc-error, #ff453a);
-    font-size: var(--glp-fs-1);
-    line-height: 1.4;
-    text-align: center;
-  }
-
-  /* Variant picker */
-  .variant-label { font-size: var(--glp-fs-1); font-weight: 600; color: var(--oc-sub); margin: var(--glp-sp-1) 0 var(--glp-sp-2); }
-  .variant-grid { display: flex; flex-wrap: wrap; gap: var(--glp-sp-2); margin-bottom: var(--glp-sp-1); }
-  .variant-chip {
-    background: var(--oc-surface); border: 1px solid var(--oc-border);
-    border-radius: var(--glp-radius-sm); padding: var(--glp-sp-2) var(--glp-sp-4); font-size: var(--glp-fs-1); cursor: pointer;
-    color: var(--oc-sub); transition: all .15s; user-select: none;
-  }
-  .variant-chip:hover { border-color: color-mix(in srgb, var(--oc-text) 20%, transparent); color: var(--oc-text); }
-  .variant-chip.selected { border-color: var(--glp-aline); background: color-mix(in srgb, var(--glp-accent) 14%, transparent); color: var(--oc-text); font-weight: 700; }
-
-  /* Bean description info box (shown when a bean variant is selected) — not
-     clickable, so it groups through the surface fill alone, no border. */
-  .bean-info {
-    background: var(--oc-surface);
-    border-radius: var(--glp-radius-sm); padding: var(--glp-sp-2) var(--glp-sp-3); margin: var(--glp-sp-1) 0 var(--glp-sp-2);
-    font-size: var(--glp-fs-1); line-height: 1.45; color: var(--oc-sub);
-  }
-  .bean-info-notes { color: var(--oc-text); font-style: italic; margin-bottom: 3px; }
-  .bean-info-row { display: flex; gap: var(--glp-sp-1); }
-  .bean-info-label {
-    font-weight: 600; font-size: var(--glp-fs-1);
-    color: var(--oc-sub); flex-shrink: 0;
-  }
-
-  /* Motion encodes state, it doesn't decorate (redesign plan §4) — every
-     transition/animation this file defines gets neutralised here rather than
-     picked off one at a time, so a future addition can't slip through
-     unguarded. */
-  @media (prefers-reduced-motion: reduce) {
-    .menu-item, .note-input, .order-btn, .new-order-btn, .variant-chip {
-      transition: none;
-    }
-    .status-card, .status-card.accepted .status-eta {
-      animation: none;
-    }
-  }
-`;
-
-  // shared/helpers.ts
-  function esc(s4) {
-    if (s4 == null) return "";
-    return String(s4).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
-  }
-  function safeUrl(url) {
-    if (!url) return null;
-    try {
-      const u3 = new URL(url);
-      return u3.protocol === "http:" || u3.protocol === "https:" ? u3.href : null;
-    } catch {
-      return null;
-    }
-  }
-  var THEME_PRESETS = {
-    "amber-americano": { a: "#f59e0b", b: "#f59e0b" },
-    "ruby-ristretto": { a: "#7f1d1d", b: "#7f1d1d" },
-    "copper-cortado": { a: "#c2703d", b: "#e8b4a0" },
-    "twilight-turkish": { a: "#0891b2", b: "#4338ca" },
-    "marbled-macchiato": { a: "#f59e0b", b: "#ec4899" },
-    "ember-espresso": { a: "#dc4a1f", b: "#f5a623" },
-    "mulberry-mocha": { a: "#5b21b6", b: "#db2777" },
-    "frosty-flat-white": { a: "#0f766e", b: "#38bdf8" }
-  };
-
-  // order/src/helpers.ts
-  function _originHtml(origins, lang) {
-    return origins.map((o7) => {
-      const raw = o7?.code;
-      if (typeof raw !== "string" || !/^[A-Z]{2}$/.test(raw.trim())) return esc(raw);
-      const code = raw.trim();
-      let name = code;
-      try {
-        name = new Intl.DisplayNames([lang || "en"], { type: "region" }).of(code) || code;
-      } catch {
-      }
-      const label = esc(name);
-      return o7.percent != null ? `${label} ${esc(o7.percent)}%` : label;
-    }).join(" + ");
-  }
-  function _validHex(s4) {
-    return typeof s4 === "string" && /^#[0-9a-fA-F]{6}$/.test(s4);
-  }
-
   // shared/icons.ts
   var MACHINE_BODY = (id, mini, type = "gaggiuino") => `
     <!-- Seitenwand rechts inkl. Kantenlicht, volle Hoehe -->
@@ -1178,7 +881,16 @@ ${TOKENS}
     celebrate: '<path d="M12 3v3.5M12 17.5V21M21 12h-3.5M6.5 12H3M18.4 5.6l-2.5 2.5M8.1 15.9l-2.5 2.5M18.4 18.4l-2.5-2.5M8.1 8.1 5.6 5.6"/>',
     // Replaces the ★/☆ text characters in the rating row. The filled state is a
     // class on the element, not a second path — it is the same shape either way.
-    star: '<path d="M12 3.8l2.6 5.3 5.9.9-4.2 4.1 1 5.8-5.3-2.8-5.3 2.8 1-5.8L3.5 10l5.9-.9L12 3.8z"/>'
+    star: '<path d="M12 3.8l2.6 5.3 5.9.9-4.2 4.1 1 5.8-5.3-2.8-5.3 2.8 1-5.8L3.5 10l5.9-.9L12 3.8z"/>',
+    // --- direction and links ----------------------------------------------
+    // Replace the ‹ › ▾ ↗ text characters: those render in whichever font the
+    // platform picks, ignore the button's colour and sit off the text baseline,
+    // exactly the emoji problem these icons were introduced for.
+    "chevron-left": '<path d="M14.5 5.5 8 12l6.5 6.5"/>',
+    "chevron-right": '<path d="M9.5 5.5 16 12l-6.5 6.5"/>',
+    "chevron-down": '<path d="M5.5 9.5 12 16l6.5-6.5"/>',
+    // An arrow leaving a box: "this leaves the card" rather than a bare arrow.
+    "open-in-new": '<path d="M13.5 4.5h6v6"/><path d="M19.5 4.5 11 13"/><path d="M17 14v4.5a1.5 1.5 0 0 1-1.5 1.5h-10A1.5 1.5 0 0 1 4 18.5v-10A1.5 1.5 0 0 1 5.5 7H10"/>'
   };
   var ICONS = {
     has: (name) => Object.prototype.hasOwnProperty.call(GLP_ICON_PATHS, name),
@@ -1188,9 +900,1023 @@ ${TOKENS}
     of: (name, cls = "") => ICONS.has(name) ? `<svg class="glp-i${cls ? " " + cls : ""}" viewBox="0 0 24 24" aria-hidden="true" focusable="false">${GLP_ICON_PATHS[name]}</svg>` : ""
   };
 
+  // shared/sheet.ts
+  var DISMISS_FRACTION = 0.25;
+  var DISMISS_MIN_PX = 80;
+  var DISMISS_VELOCITY_PX_PER_MS = 0.5;
+  var FLICK_WINDOW_MS = 100;
+  var DRAG_START_SLOP_PX = 6;
+  var SPRING_BACK_MS = 200;
+  var RUBBER_BAND_MAX_PX = 24;
+  var RUBBER_BAND_FACTOR = 0.5;
+  var SHEET_OUT_MS = 220;
+  var SHEET_OUT_MIN_MS = 120;
+  var SHEET_OUT_BEZIER = "cubic-bezier(.2,0,0,1)";
+  var HALF_VIEWPORT = 0.5;
+  var FULL_VIEWPORT = 0.92;
+  var SNAP_FRACTION = 0.12;
+  var SNAP_MIN_PX = 40;
+  var SNAP_MAX_PX = 72;
+  function dismissDistance(sheetHeight) {
+    if (!(sheetHeight > 0)) return DISMISS_MIN_PX;
+    return Math.min(sheetHeight * DISMISS_FRACTION, DISMISS_MIN_PX);
+  }
+  function recentVelocity(samples, windowMs = FLICK_WINDOW_MS) {
+    if (samples.length < 2) return 0;
+    const last = samples[samples.length - 1];
+    if (!last) return 0;
+    let first = last;
+    for (let i6 = samples.length - 2; i6 >= 0; i6--) {
+      const sample = samples[i6];
+      if (sample && last.t - sample.t <= windowMs) first = sample;
+      else break;
+    }
+    const dt = last.t - first.t;
+    return dt > 0 ? (last.y - first.y) / dt : 0;
+  }
+  function shouldDismissSheet(dy, sheetHeight, velocityPxPerMs) {
+    if (dy <= 0) return false;
+    if (dy >= dismissDistance(sheetHeight)) return true;
+    return velocityPxPerMs >= DISMISS_VELOCITY_PX_PER_MS;
+  }
+  function rubberBand(up) {
+    if (up <= 0) return 0;
+    return -Math.min(RUBBER_BAND_MAX_PX, up * RUBBER_BAND_FACTOR);
+  }
+  function allowsBodyDrag(scrollTop, dy, interactiveTarget) {
+    return scrollTop <= 0 && dy > 0 && !interactiveTarget;
+  }
+  function snapDistance(sheetHeight) {
+    if (!(sheetHeight > 0)) return SNAP_MIN_PX;
+    return Math.min(Math.max(sheetHeight * SNAP_FRACTION, SNAP_MIN_PX), SNAP_MAX_PX);
+  }
+  function sheetSnap(dy, height, velocity, expanded) {
+    if (dy > 0) {
+      if (shouldDismissSheet(dy, height, velocity)) return "close";
+      return "half";
+    }
+    if (dy < 0) {
+      const promotes = -dy >= snapDistance(height) || -velocity >= DISMISS_VELOCITY_PX_PER_MS;
+      if (!expanded && promotes) return "full";
+      return expanded ? "full" : "half";
+    }
+    return expanded ? "full" : "half";
+  }
+  var _sheetSeq = 0;
+  function _now() {
+    return typeof performance !== "undefined" && typeof performance.now === "function" ? performance.now() : Date.now();
+  }
+  function _isInteractiveTarget(target) {
+    const el = target;
+    return !!el?.closest?.(
+      'button, a, input, select, textarea, summary, canvas, [role="slider"], [contenteditable="true"]'
+    );
+  }
+  function _translateY(el) {
+    const transform = el.style?.transform;
+    if (!transform || transform === "none") return 0;
+    const match = /translateY\((-?[\d.]+)px\)/.exec(transform);
+    return match && match[1] ? parseFloat(match[1]) : 0;
+  }
+  function _findTouch(list, id) {
+    for (let i6 = 0; i6 < list.length; i6++) {
+      const touch = list[i6];
+      if (touch && touch.identifier === id) return touch;
+    }
+    return null;
+  }
+  function _isPhoneWidth(win) {
+    if (!win || typeof win.matchMedia !== "function") return false;
+    try {
+      return win.matchMedia("(max-width: 899px)").matches;
+    } catch {
+      return false;
+    }
+  }
+  function _motionOk(win) {
+    if (!win || typeof win.matchMedia !== "function") return true;
+    try {
+      return !win.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    } catch {
+      return true;
+    }
+  }
+  var GlpSheet = class {
+    _root;
+    _doc;
+    _win;
+    _options;
+    _titleId;
+    _host = null;
+    _dialog = null;
+    _panel = null;
+    _bodyEl = null;
+    _content = null;
+    _open = false;
+    _expanded = false;
+    // True while this sheet still owns a history entry, so a close path can
+    // tell whether back() has to remove one.
+    _historyPushed = false;
+    _cleanup = [];
+    _dragCleanup = [];
+    // A close that is still sliding out, if any, taking whether it should trim
+    // the history entry. open() settles it first, so a re-open can never be
+    // wiped by the previous close's transition timer.
+    _pendingClose = null;
+    // Bumped on every open, so a slide-out timer from an earlier close cannot
+    // touch the DOM of a sheet that was reopened since.
+    _generation = 0;
+    constructor(root, options = {}) {
+      this._root = root;
+      this._doc = root.ownerDocument ?? document;
+      this._win = this._doc.defaultView ?? (typeof window !== "undefined" ? window : null);
+      this._options = options;
+      this._titleId = `glp-sheet-title-${++_sheetSeq}`;
+    }
+    get isOpen() {
+      return this._open;
+    }
+    open(content) {
+      this._content = content;
+      if (this._open) {
+        this.refresh();
+        return;
+      }
+      const reuseEntry = this._pendingClose !== null && this._historyPushed;
+      this._settleClose(reuseEntry);
+      if (!this._root || typeof this._root.appendChild !== "function") return;
+      if (!this._host) {
+        this._host = this._doc.createElement("div");
+        this._host.className = "glp-sheet-host";
+        this._root.appendChild(this._host);
+      }
+      this._open = true;
+      this._expanded = false;
+      this._historyPushed = reuseEntry;
+      this._generation += 1;
+      this._render();
+      const dialog = this._dialog;
+      if (dialog) {
+        if (typeof dialog.showModal === "function") {
+          if (!dialog.open) {
+            try {
+              dialog.showModal();
+            } catch {
+              dialog.setAttribute("open", "");
+            }
+          }
+        } else {
+          dialog.setAttribute("open", "");
+        }
+      }
+      this._playEnter();
+      this._listen();
+      if (!reuseEntry) this._pushHistory();
+    }
+    close() {
+      this._close(true);
+    }
+    // Re-renders body and actions while open, so live data (a shot list, a
+    // picker's selection) updates without closing the sheet.
+    refresh() {
+      if (!this._open) return;
+      this._render();
+    }
+    _render() {
+      const host = this._host;
+      const content = this._content;
+      if (!host || !content) return;
+      const label = this._options.closeLabel ?? "Close";
+      D(b2`
+      <dialog
+        class="glp-sheet"
+        data-snap=${this._expanded ? "full" : "half"}
+        aria-labelledby=${this._titleId}
+        @cancel=${(e6) => {
+        e6.preventDefault();
+        this._close(true);
+      }}
+        @click=${(e6) => {
+        if (e6.target === this._dialog) this._close(true);
+      }}
+      >
+        <div class="glp-sheet-backdrop" @click=${() => this._close(true)}></div>
+        <div class="glp-sheet-panel">
+          <div class="glp-sheet-grab" aria-hidden="true"></div>
+          <div class="glp-sheet-bar">
+            <button class="glp-sheet-close" type="button" aria-label=${label} @click=${() => this._close(true)}>
+              ${/* ICONS.of() emits fixed SVG markup */
+      o5(ICONS.of("close"))}
+            </button>
+            <h2 class="glp-sheet-title" id=${this._titleId}>${content.title}</h2>
+            <div class="glp-sheet-actions">${content.actions ? content.actions() : A}</div>
+          </div>
+          <div class="glp-sheet-body">${content.body()}</div>
+        </div>
+      </dialog>
+    `, host);
+      this._dialog = host.querySelector("dialog");
+      this._panel = host.querySelector(".glp-sheet-panel");
+      this._bodyEl = host.querySelector(".glp-sheet-body");
+      this._attachDrag();
+    }
+    // Restarts the phone slide-in. The dialog node survives across opens, so the
+    // attribute has to be cleared first for the animation to run again.
+    _playEnter() {
+      const dialog = this._dialog;
+      if (!dialog || !_isPhoneWidth(this._win) || !_motionOk(this._win)) return;
+      dialog.removeAttribute("data-entering");
+      dialog.setAttribute("data-entering", "1");
+      const clear = () => {
+        dialog.removeAttribute("data-entering");
+      };
+      if (this._win && typeof this._win.setTimeout === "function") this._win.setTimeout(clear, 280);
+      else setTimeout(clear, 280);
+    }
+    _listen() {
+      this._detachListeners();
+      const win = this._win;
+      if (!win || typeof win.addEventListener !== "function") return;
+      const onPop = () => {
+        this._historyPushed = false;
+        if (this._open) this._close(false);
+      };
+      win.addEventListener("popstate", onPop);
+      this._cleanup.push(() => win.removeEventListener("popstate", onPop));
+    }
+    _detachListeners() {
+      for (const off of this._cleanup) off();
+      this._cleanup = [];
+    }
+    _history() {
+      const fromWin = this._win?.history;
+      if (fromWin) return fromWin;
+      if (typeof history !== "undefined") return history;
+      return null;
+    }
+    _pushHistory() {
+      const hist = this._history();
+      const push = hist?.pushState;
+      if (!hist || typeof push !== "function") return;
+      try {
+        const href = this._win?.location?.href;
+        if (href) push.call(hist, { glpSheet: true }, "", href);
+        else push.call(hist, { glpSheet: true }, "");
+        this._historyPushed = true;
+      } catch {
+        this._historyPushed = false;
+      }
+    }
+    _close(trimHistory) {
+      if (!this._open) return;
+      this._open = false;
+      this._expanded = false;
+      this._detachDrag();
+      this._settleClose();
+      let pending = true;
+      const finish = (trim) => {
+        if (!pending) return;
+        pending = false;
+        this._pendingClose = null;
+        this._finishClose(trim);
+      };
+      this._pendingClose = finish;
+      this._animateOut(() => finish(trimHistory));
+    }
+    // Immediately completes a close that is still sliding out, so its timer
+    // cannot tear down a sheet that was reopened in the meantime. With
+    // `reuseHistory` the entry the closing sheet still owns is kept for the
+    // re-open instead of being trimmed.
+    _settleClose(reuseHistory = false) {
+      const pending = this._pendingClose;
+      if (!pending) return;
+      this._pendingClose = null;
+      pending(!reuseHistory);
+    }
+    _finishClose(trimHistory) {
+      this._detachListeners();
+      const dialog = this._dialog;
+      if (dialog) {
+        try {
+          dialog.close();
+        } catch {
+          dialog.removeAttribute("open");
+        }
+        if (dialog.open) dialog.removeAttribute("open");
+      }
+      const hadEntry = this._historyPushed;
+      this._historyPushed = false;
+      if (trimHistory && hadEntry) {
+        const hist = this._history();
+        const back = hist?.back;
+        if (hist && typeof back === "function") back.call(hist);
+      }
+      const onClose = this._options.onClose;
+      if (typeof onClose === "function") onClose();
+    }
+    // Slides the panel out from wherever the drag left it. Phones with motion
+    // allowed only; everywhere else the close is instant.
+    _animateOut(done) {
+      const panel = this._panel;
+      const backdrop = this._host?.querySelector(".glp-sheet-backdrop") ?? null;
+      if (!panel || !_isPhoneWidth(this._win) || !_motionOk(this._win)) {
+        done();
+        return;
+      }
+      const height = (typeof panel.getBoundingClientRect === "function" ? panel.getBoundingClientRect().height : 0) || panel.offsetHeight || 0;
+      const startY = Math.max(0, _translateY(panel));
+      const distance = Math.max(1, height - startY);
+      const duration = Math.max(SHEET_OUT_MIN_MS, Math.round(SHEET_OUT_MS * (distance / Math.max(1, height))));
+      const generation = this._generation;
+      panel.style.transition = "none";
+      if (height > 0) panel.style.height = `${Math.round(height)}px`;
+      panel.style.transform = startY > 0 ? `translateY(${Math.round(startY)}px)` : "";
+      void panel.offsetHeight;
+      let finished = false;
+      let timer = null;
+      const finish = () => {
+        if (finished) return;
+        finished = true;
+        if (timer) clearTimeout(timer);
+        panel.removeEventListener("transitionend", onEnd);
+        if (generation === this._generation) this._resetPanelStyles();
+        done();
+      };
+      const onEnd = (e6) => {
+        if (e6.target === panel) finish();
+      };
+      panel.addEventListener("transitionend", onEnd);
+      panel.style.transition = `transform ${duration}ms ${SHEET_OUT_BEZIER}`;
+      panel.style.transform = `translateY(${Math.max(1, height)}px)`;
+      if (backdrop) {
+        backdrop.style.transition = `opacity ${duration}ms ${SHEET_OUT_BEZIER}`;
+        backdrop.style.opacity = "0";
+      }
+      timer = setTimeout(finish, duration + 60);
+    }
+    _resetPanelStyles() {
+      const panel = this._panel;
+      if (panel) {
+        panel.style.transition = "";
+        panel.style.transform = "";
+        panel.style.height = "";
+      }
+      const backdrop = this._host?.querySelector(".glp-sheet-backdrop") ?? null;
+      if (backdrop) {
+        backdrop.style.transition = "";
+        backdrop.style.opacity = "";
+      }
+    }
+    // Settles on a detent after a drag: the destination's max-height (50vh or
+    // 92vh) is applied by data-snap first, then the height animates from where
+    // the finger left it to the measured destination, and the inline styles are
+    // cleared so the detent's own rule owns the size again.
+    _settle(expanded, target) {
+      const before = this._panel;
+      const start = before && typeof before.getBoundingClientRect === "function" ? before.getBoundingClientRect().height : 0;
+      this._expanded = expanded;
+      this._render();
+      const panel = this._panel;
+      if (!panel) return;
+      const backdrop = this._host?.querySelector(".glp-sheet-backdrop") ?? null;
+      if (target > 0 && start > 0 && Math.abs(start - target) >= 1) {
+        panel.style.transition = "none";
+        panel.style.transform = "";
+        panel.style.height = `${Math.round(start)}px`;
+        void panel.offsetHeight;
+        panel.style.transition = `height ${SPRING_BACK_MS}ms ${SHEET_OUT_BEZIER}`;
+        panel.style.height = `${Math.round(target)}px`;
+      }
+      if (backdrop) {
+        backdrop.style.transition = `opacity ${SPRING_BACK_MS}ms ${SHEET_OUT_BEZIER}`;
+        backdrop.style.opacity = "";
+      }
+      const reset = () => {
+        this._resetPanelStyles();
+      };
+      if (this._win && typeof this._win.setTimeout === "function") this._win.setTimeout(reset, SPRING_BACK_MS + 40);
+      else setTimeout(reset, SPRING_BACK_MS + 40);
+    }
+    _detachDrag() {
+      for (const off of this._dragCleanup) off();
+      this._dragCleanup = [];
+    }
+    // Touch drag on the sheet: the grab pill, the header and the content all
+    // drag, as long as the content is scrolled to the top, or the sheet is
+    // already expanded (where the next downward gesture must be able to shrink
+    // it). Touch events (not pointer) keep native `pan-y` scrolling working; the
+    // browser scroll is only suppressed with preventDefault once the drag
+    // starts. Wider viewports get no drag at all, matching the centred dialog.
+    _attachDrag() {
+      const host = this._host;
+      if (this._dragCleanup.length || !host || !_isPhoneWidth(this._win)) return;
+      if (typeof host.addEventListener !== "function") return;
+      let active = false;
+      let touchId = null;
+      let startY = 0;
+      let interactive = false;
+      let dragging = false;
+      let lastDy = 0;
+      let samples = [];
+      let halfH = 0;
+      let fullH = 0;
+      const panel = () => this._panel;
+      const backdrop = () => this._host?.querySelector(".glp-sheet-backdrop") ?? null;
+      const heightOf = (el) => {
+        if (!el) return 0;
+        const rect = typeof el.getBoundingClientRect === "function" ? el.getBoundingClientRect() : null;
+        return rect?.height || el.offsetHeight || 0;
+      };
+      const measure = () => {
+        const el = panel();
+        const bodyEl = this._bodyEl;
+        const cur = heightOf(el);
+        const vh = this._win?.innerHeight || 0;
+        const extra = bodyEl ? Math.max(0, bodyEl.scrollHeight - bodyEl.clientHeight) : 0;
+        if (this._expanded) {
+          halfH = Math.min(cur, vh * HALF_VIEWPORT);
+          fullH = cur;
+        } else {
+          halfH = cur;
+          fullH = Math.max(cur, Math.min(cur + extra, vh * FULL_VIEWPORT));
+        }
+      };
+      const applyTransform = () => {
+        const el = panel();
+        if (!el) return;
+        const dy = lastDy;
+        const delta = Math.max(0, fullH - halfH);
+        el.style.transition = "none";
+        if (dy >= 0) {
+          if (this._expanded && delta > 0 && dy < delta) {
+            el.style.height = `${Math.round(fullH - dy)}px`;
+            el.style.transform = "";
+          } else {
+            const out = this._expanded ? dy - delta : dy;
+            el.style.height = delta > 0 ? `${Math.round(halfH)}px` : "";
+            el.style.transform = out > 0 ? `translateY(${Math.round(out)}px)` : "";
+          }
+        } else {
+          const up = -dy;
+          if (!this._expanded && delta > 0 && up < delta) {
+            el.style.height = `${Math.round(halfH + up)}px`;
+            el.style.transform = "";
+          } else {
+            const beyond = !this._expanded && delta > 0 ? up - delta : up;
+            el.style.height = delta > 0 ? `${Math.round(fullH)}px` : "";
+            const band = rubberBand(beyond);
+            el.style.transform = band < 0 ? `translateY(${Math.round(band)}px)` : "";
+          }
+        }
+        const shade = backdrop();
+        if (shade) {
+          const height = heightOf(el) || 1;
+          shade.style.opacity = String(Math.max(0, 1 - Math.max(0, dy) / height));
+        }
+      };
+      const onTouchStart = (e6) => {
+        if (!this._open || e6.touches.length !== 1) return;
+        const t4 = e6.touches[0];
+        if (!t4) return;
+        touchId = t4.identifier;
+        startY = t4.clientY;
+        interactive = _isInteractiveTarget(e6.target);
+        active = true;
+        dragging = false;
+        lastDy = 0;
+        samples = [{ t: _now(), y: 0 }];
+        measure();
+      };
+      const onTouchMove = (e6) => {
+        if (!active || touchId === null) return;
+        const el = panel();
+        if (!el) return;
+        const t4 = _findTouch(e6.touches, touchId);
+        if (!t4) return;
+        const dy = t4.clientY - startY;
+        const bodyEl = this._bodyEl;
+        const scrollTop = bodyEl ? bodyEl.scrollTop : 0;
+        if (!dragging) {
+          if (interactive) return;
+          const fromBody = !!bodyEl && typeof bodyEl.contains === "function" && bodyEl.contains(e6.target);
+          if (dy > 0 && (scrollTop > 0 || fromBody && !allowsBodyDrag(scrollTop, dy, interactive))) return;
+          if (Math.abs(dy) < DRAG_START_SLOP_PX) return;
+          dragging = true;
+          el.style.transition = "none";
+        }
+        e6.preventDefault();
+        lastDy = dy;
+        samples.push({ t: _now(), y: dy });
+        if (samples.length > 40) samples.shift();
+        applyTransform();
+      };
+      const onTouchEnd = (cancelled) => {
+        if (!active) return;
+        active = false;
+        touchId = null;
+        if (!dragging) {
+          this._resetPanelStyles();
+          return;
+        }
+        dragging = false;
+        const dy = lastDy;
+        const velocity = recentVelocity(samples);
+        const at = this._expanded ? fullH : halfH;
+        const snap = cancelled ? this._expanded ? "full" : "half" : sheetSnap(dy, at, velocity, this._expanded);
+        if (snap === "close") {
+          this._close(true);
+          return;
+        }
+        this._settle(snap === "full", snap === "full" ? fullH : halfH);
+      };
+      const onStart = (e6) => onTouchStart(e6);
+      const onMove = (e6) => onTouchMove(e6);
+      const onEnd = () => onTouchEnd(false);
+      const onCancel = () => onTouchEnd(true);
+      host.addEventListener("touchstart", onStart, { passive: true });
+      host.addEventListener("touchmove", onMove, { passive: false });
+      host.addEventListener("touchend", onEnd);
+      host.addEventListener("touchcancel", onCancel);
+      this._dragCleanup.push(() => {
+        host.removeEventListener("touchstart", onStart);
+        host.removeEventListener("touchmove", onMove);
+        host.removeEventListener("touchend", onEnd);
+        host.removeEventListener("touchcancel", onCancel);
+      });
+    }
+  };
+  var SHEET_STYLES = `
+  .glp-sheet {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    max-height: none;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    overflow: hidden;
+    color: var(--glp-text);
+    font-family: var(--paper-font-body1_-_font-family, -apple-system, sans-serif);
+  }
+  .glp-sheet::backdrop { background: transparent; }
+  .glp-sheet-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+  }
+  .glp-sheet-panel {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    background: var(--glp-surface);
+    color: var(--glp-text);
+    border: 1px solid var(--glp-border);
+    border-bottom: none;
+    border-radius: var(--glp-radius) var(--glp-radius) 0 0;
+    box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.35);
+    max-height: 92vh;
+    will-change: transform;
+  }
+  /* Half is the opening detent; full is the panel's own 92vh max-height. */
+  .glp-sheet[data-snap="half"] .glp-sheet-panel { max-height: 50vh; }
+  .glp-sheet-grab {
+    display: block;
+    flex: 0 0 auto;
+    width: 36px;
+    height: 4px;
+    margin: var(--glp-sp-2) auto var(--glp-sp-1);
+    border-radius: 2px;
+    background: var(--glp-border);
+  }
+  .glp-sheet-bar {
+    display: flex;
+    align-items: center;
+    gap: var(--glp-sp-2);
+    flex: 0 0 auto;
+    padding: var(--glp-sp-2) var(--glp-sp-4) var(--glp-sp-3);
+    border-bottom: 1px solid var(--glp-border);
+  }
+  .glp-sheet-title {
+    flex: 1 1 auto;
+    min-width: 0;
+    margin: 0;
+    font-size: var(--glp-fs-4);
+    font-weight: 600;
+    line-height: 1.3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .glp-sheet-close {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: 0;
+    border-radius: var(--glp-radius-sm);
+    background: transparent;
+    color: var(--glp-sub);
+    font-size: var(--glp-fs-4);
+    cursor: pointer;
+  }
+  .glp-sheet-close:hover { color: var(--glp-text); background: var(--glp-border); }
+  .glp-sheet-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--glp-sp-2);
+    flex: 0 0 auto;
+  }
+  .glp-sheet-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: var(--glp-sp-4);
+    font-size: var(--glp-fs-2);
+    line-height: 1.45;
+    touch-action: pan-y;
+  }
+  /* The cards' base .glp-i rule lives in their own stylesheet; the sheet does
+     not assume it, so the close icon still draws as a stroke path here. */
+  .glp-sheet .glp-i {
+    width: 1em;
+    height: 1em;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 1.8;
+    flex-shrink: 0;
+  }
+  /* Phone slide-in, restarted per open by _playEnter(); reduced motion gets
+     no animation at all. */
+  @media (prefers-reduced-motion: no-preference) and (max-width: 899px) {
+    .glp-sheet[data-entering="1"] .glp-sheet-panel { animation: glp-sheet-in 240ms cubic-bezier(.2,0,0,1); }
+    .glp-sheet[data-entering="1"] .glp-sheet-backdrop { animation: glp-sheet-fade 240ms cubic-bezier(.2,0,0,1); }
+  }
+  @keyframes glp-sheet-in { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  @keyframes glp-sheet-fade { from { opacity: 0; } to { opacity: 1; } }
+  /* Wider viewports: a centred dialog, no grab pill and no drag. */
+  @media (min-width: 900px) {
+    .glp-sheet-panel {
+      left: 50%;
+      top: 50%;
+      right: auto;
+      bottom: auto;
+      transform: translate(-50%, -50%);
+      width: min(560px, calc(100vw - 32px));
+      max-height: min(80vh, 720px);
+      border-bottom: 1px solid var(--glp-border);
+      border-radius: var(--glp-radius);
+    }
+    .glp-sheet[data-snap="half"] .glp-sheet-panel { max-height: min(80vh, 720px); }
+    .glp-sheet-grab { display: none; }
+  }
+`;
+
+  // order/src/styles.ts
+  var STYLES = `
+${TOKENS}
+
+  /* legacy internal aliases — rest of this file still reads these names;
+     hybrid theming happens one level up, in the GLP-TOKENS block above.
+     --oc-accent maps to --glp-err (this card's "amber" is its own CTA/brand
+     color below, mapped separately to --glp-accent — see .order-btn etc). */
+  :host {
+    --oc-bg:       var(--glp-bg);
+    --oc-surface:  var(--glp-surface);
+    --oc-surface2: color-mix(in srgb, var(--glp-text) 4%, transparent);
+    --oc-border:   var(--glp-border);
+    --oc-text:     var(--glp-text);
+    --oc-sub:      var(--glp-sub);
+    --oc-accent:   var(--glp-err);
+    --oc-amber:    var(--glp-warn);
+    --oc-green:    var(--glp-ok);
+  }
+  ha-card {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+  }
+  /* Base sizing for every drawn icon inserted via ICONS.of()
+     (cards/shared/icons.ts) — 1em locks it to whatever font-size token its
+     container already resolves through, so a coffee cup dropped into a button
+     label vs.
+     a status line vs. a menu tile never needs a second, size-specific copy of
+     this rule. currentColor is what lets the same icon sit inside a muted
+     label, an accepted-green status line or the accent-filled order button
+     with no per-context markup. */
+  .glp-i { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-width: 1.8; vertical-align: -0.15em; flex-shrink: 0; }
+  .card {
+    background: var(--oc-bg);
+    border: 1px solid var(--oc-border);
+    border-radius: var(--glp-radius);
+    box-shadow: var(--ha-card-box-shadow, none);
+    padding: var(--glp-sp-5);
+    font-family: var(--paper-font-body1_-_font-family, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif);
+    color: var(--oc-text);
+  }
+  /* Labels were uppercase + letter-spaced everywhere (#90) — sentence case,
+     small (--glp-fs-1) and muted reads calmer and needs no tracking to stay
+     legible at this size. */
+  .header {
+    display: flex; align-items: center; gap: var(--glp-sp-2);
+    font-size: var(--glp-fs-1); font-weight: 700; color: var(--oc-sub);
+    margin-bottom: var(--glp-sp-4);
+  }
+  /* Machine icon badge (#62): small colour swatch in the card's resolved
+     theme (see MACHINE_ICON_MINI/_machineGlyphHtml()). .header sizes it next
+     to the title; .status is inline within the multi-machine status line. */
+  .machine-glyph { flex-shrink: 0; line-height: 0; }
+  .machine-glyph svg { width: 100%; height: 100%; display: block; }
+  .machine-glyph.header { width: 12px; height: 19.4px; }
+  .machine-glyph.status {
+    width: 9px; height: 14.6px; display: inline-block;
+    vertical-align: -2px; margin-right: 4px;
+  }
+  /* Not clickable — border diet (#90) drops the full frame in favour of a
+     single accent-coloured edge, same treatment as .status-card below. */
+  .machine-off {
+    background: color-mix(in srgb, var(--oc-accent) 8%, transparent);
+    border-left: 2px solid var(--oc-accent);
+    border-radius: var(--glp-radius-sm); color: var(--oc-accent); font-size: var(--glp-fs-2); font-weight: 600;
+    text-align: center; padding: var(--glp-sp-4);
+  }
+
+  /* Menu grid */
+  .menu-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+    gap: var(--glp-sp-3);
+    margin-bottom: var(--glp-sp-4);
+  }
+  /* Menu tiles and variant chips are <button>s now (#183) so they are
+     keyboard/screen-reader reachable; these resets keep the tile look the
+     plain <div> had before. */
+  .menu-item, .variant-chip {
+    font: inherit;
+    color: inherit;
+    text-align: inherit;
+    appearance: none;
+  }
+  .menu-item {
+    background: var(--oc-surface);
+    border: 1px solid var(--oc-border);
+    border-radius: var(--glp-radius-sm);
+    padding: var(--glp-sp-3) var(--glp-sp-2);
+    text-align: center;
+    cursor: pointer;
+    transition: border-color .18s, background .18s;
+    user-select: none;
+  }
+  .menu-item:hover { border-color: color-mix(in srgb, var(--oc-text) 18%, transparent); background: color-mix(in srgb, var(--oc-text) 8%, transparent); }
+  .menu-item.selected {
+    /* --glp-aline, not raw --glp-accent: this border is an active-item edge
+       marker (the token's own use case), not a fill — .selected's background
+       tint below keeps the raw accent for that. */
+    border-color: var(--glp-aline);
+    background: color-mix(in srgb, var(--glp-accent) 12%, transparent);
+  }
+  /* The drink icon is the tile's primary recognition cue — it is what the eye
+     lands on before the name. It carries that weight at the top of the scale
+     and in text colour, NOT muted: a 1.8-weight stroke drawing at label colour
+     reads far lighter than the saturated emoji it replaced, and a tile whose
+     icon recedes into the background is a step backwards from what was there
+     before, however much cleaner it is in isolation. */
+  .menu-item-icon { font-size: var(--glp-fs-6); margin-bottom: var(--glp-sp-1); line-height: 1; color: var(--oc-text); }
+  .menu-item.selected .menu-item-icon { color: var(--glp-accent); }
+  .menu-item-name  { font-size: var(--glp-fs-1); font-weight: 500; color: var(--oc-sub); }
+  .menu-item.selected .menu-item-name { color: var(--oc-text); }
+  /* A lone popular drink fills its row instead of leaving half of the
+     two-column grid empty. */
+  .menu-item-full { grid-column: 1 / -1; }
+
+  /* Order form */
+  .order-form { display: flex; flex-direction: column; gap: var(--glp-sp-3); margin-bottom: var(--glp-sp-1); }
+  .note-input {
+    background: var(--oc-surface2); border: 1px solid var(--oc-border);
+    border-radius: var(--glp-radius-sm); color: var(--oc-text); font-family: inherit;
+    font-size: var(--glp-fs-2); padding: var(--glp-sp-3); outline: none; width: 100%; box-sizing: border-box;
+    transition: border-color .18s, background .18s;
+  }
+  .note-input::placeholder { color: var(--oc-sub); }
+  /* --glp-aline for the focus ring — same active-marker case as
+     .menu-item.selected above. */
+  .note-input:focus { border-color: var(--glp-aline); background: color-mix(in srgb, var(--oc-text) 5%, transparent); }
+  /* Gradient stays a surface fill (#90 — "gradients belong on surfaces, not
+     hairlines"), only the ink resolves through the redesign: --glp-accent-text
+     is picked at runtime off the darker of the two gradient stops so button
+     text stays readable against any configured theme, see GLP-TOKENS above. */
+  .order-btn {
+    width: 100%; padding: var(--glp-sp-4); border: none; border-radius: var(--glp-radius-sm);
+    font-size: var(--glp-fs-2); font-weight: 800; letter-spacing: .01em; cursor: pointer;
+    font-family: inherit; color: var(--glp-accent-text);
+    background: linear-gradient(135deg, var(--glp-accent-start), var(--glp-accent-end));
+    transition: background .15s, opacity .15s;
+    /* The label names the drink only and must never wrap: the icon keeps its
+       size, the text truncates with an ellipsis, and the full order stays in
+       the button's title and aria-label. */
+    display: flex; align-items: center; justify-content: center; gap: var(--glp-sp-2);
+  }
+  .order-btn > svg { flex: 0 0 auto; }
+  .order-btn-label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+  .order-btn:disabled { opacity: .4; cursor: default; background: var(--oc-surface); color: var(--oc-sub); }
+  .order-btn:not(:disabled):hover {
+    background: linear-gradient(135deg,
+      color-mix(in srgb, var(--glp-accent-start) 90%, var(--oc-text) 10%),
+      color-mix(in srgb, var(--glp-accent-end) 90%, var(--oc-text) 10%));
+  }
+
+  /* Status card — not clickable, so the border diet (#90) replaces the full
+     frame with a single semantic-coloured edge; .pending keeps the machine's
+     own theme accent (it's an "in progress" state, not a semantic colour),
+     everything else already had a semantic --oc-* token to line up with. */
+  .status-card {
+    border-radius: var(--glp-radius-sm); padding: var(--glp-sp-4);
+    display: flex; flex-direction: column; gap: var(--glp-sp-2);
+    animation: oc-fade .3s ease-out both;
+  }
+  @keyframes oc-fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  .status-card.pending  { background: color-mix(in srgb, var(--glp-accent) 10%, transparent); border-left: 2px solid var(--glp-aline); }
+  .status-card.accepted { background: color-mix(in srgb, var(--oc-green) 10%, transparent); border-left: 2px solid var(--oc-green); }
+  .status-card.done     { background: color-mix(in srgb, var(--oc-green) 8%, transparent); border-left: 2px solid var(--oc-green); }
+  .status-card.declined { background: color-mix(in srgb, var(--oc-accent) 8%, transparent); border-left: 2px solid var(--oc-accent); }
+  .status-item  { font-size: var(--glp-fs-3); font-weight: 700; letter-spacing: -.01em; }
+  .status-line  { font-size: var(--glp-fs-1); color: var(--oc-sub); }
+  .status-eta   { font-size: var(--glp-fs-2); font-weight: 700; color: var(--oc-green); }
+  .status-card.accepted .status-eta { animation: oc-pulse 2s ease-in-out infinite; }
+  @keyframes oc-pulse { 0%,100% { opacity: 1; } 50% { opacity: .5; } }
+  .status-decline { font-size: var(--glp-fs-1); color: var(--oc-accent); }
+  .status-done-msg { font-size: var(--glp-fs-3); font-weight: 800; color: var(--oc-green); letter-spacing: -.01em; }
+  .shot-summary {
+    margin-top: var(--glp-sp-3);
+    background: var(--oc-surface2);
+    border-radius: var(--glp-radius-sm);
+    padding: var(--glp-sp-3) var(--glp-sp-4);
+    display: flex;
+    flex-direction: column;
+    gap: var(--glp-sp-2);
+  }
+  .shot-summary-meta {
+    display: flex;
+    gap: var(--glp-sp-3);
+    font-size: var(--glp-fs-1);
+    color: var(--oc-sub);
+  }
+  .shot-summary-profile {
+    font-size: var(--glp-fs-2);
+    font-weight: 700;
+    color: var(--oc-text);
+  }
+  .shot-chart { width: 100%; height: 80px; display: block; }
+  .shot-chart-legend { display: flex; gap: var(--glp-sp-3); flex-wrap: wrap; margin-top: var(--glp-sp-1); }
+  .shot-chart-legend-item { display: flex; align-items: center; gap: var(--glp-sp-1); font-size: var(--glp-fs-1); color: var(--oc-sub); }
+  .shot-chart-legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  /* Badge padding stays a literal, not a ladder step: 1px/5px is below the
+     ladder's 4px floor, and rounding up would roughly quadruple this pill's
+     height — it needs to stay a tight inline mark, not a box. */
+  .menu-badge { display: inline-block; font-size: var(--glp-fs-1); font-weight: 600; padding: 1px 5px; border-radius: var(--glp-radius-sm); vertical-align: middle; margin-left: var(--glp-sp-1); line-height: 1.5; }
+  /* Not clickable — border diet drops the frame, the tint alone still reads
+     as a badge at this size. */
+  .menu-badge-new { background: color-mix(in srgb, var(--oc-green) 18%, transparent); color: var(--oc-green); }
+  .menu-badge-trend { background: color-mix(in srgb, var(--oc-accent) 15%, transparent); color: var(--oc-accent); }
+  .menu-section-title { font-size: var(--glp-fs-1); font-weight: 600; color: var(--oc-sub); margin: 0 0 var(--glp-sp-2); display: flex; align-items: center; gap: var(--glp-sp-1); }
+  .new-order-btn {
+    margin-top: var(--glp-sp-3); width: 100%; background: var(--oc-surface); border: 1px solid var(--oc-border);
+    border-radius: var(--glp-radius-sm); color: var(--oc-sub); font-family: inherit; font-weight: 600;
+    font-size: var(--glp-fs-1); padding: var(--glp-sp-2) var(--glp-sp-3); cursor: pointer; transition: all .15s;
+  }
+  .new-order-btn:hover { border-color: color-mix(in srgb, var(--oc-text) 22%, transparent); color: var(--oc-text); background: color-mix(in srgb, var(--oc-text) 7%, transparent); }
+  .loading { color: var(--oc-sub); font-size: var(--glp-fs-2); text-align: center; padding: var(--glp-sp-5) 0; }
+
+  /* Failed order attempt (#183): the selection stays so the customer can retry. */
+  .order-error {
+    color: var(--oc-error, #ff453a);
+    font-size: var(--glp-fs-1);
+    line-height: 1.4;
+    text-align: center;
+  }
+
+  /* Variant picker */
+  .variant-label { font-size: var(--glp-fs-1); font-weight: 600; color: var(--oc-sub); margin: var(--glp-sp-1) 0 var(--glp-sp-2); }
+  .variant-grid { display: flex; flex-wrap: wrap; gap: var(--glp-sp-2); margin-bottom: var(--glp-sp-1); }
+  .variant-chip {
+    background: var(--oc-surface); border: 1px solid var(--oc-border);
+    border-radius: var(--glp-radius-sm); padding: var(--glp-sp-2) var(--glp-sp-4); font-size: var(--glp-fs-1); cursor: pointer;
+    color: var(--oc-sub); transition: all .15s; user-select: none;
+  }
+  .variant-chip:hover { border-color: color-mix(in srgb, var(--oc-text) 20%, transparent); color: var(--oc-text); }
+  .variant-chip.selected { border-color: var(--glp-aline); background: color-mix(in srgb, var(--glp-accent) 14%, transparent); color: var(--oc-text); font-weight: 700; }
+  /* A bean chip with details is a chip plus a small info button (#274). The
+     wrapper takes the grid cell the bare chip used to fill, so chips without
+     details keep the exact same size and wrapping; the button hangs off the
+     chip's right edge instead of adding a row. */
+  .variant-chip-wrap { display: inline-flex; align-items: stretch; min-width: 0; }
+  .variant-chip-wrap > .variant-chip { border-top-right-radius: 0; border-bottom-right-radius: 0; }
+  .bean-info-btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 28px; padding: 0; border: 1px solid var(--oc-border); border-left: none;
+    border-radius: 0 var(--glp-radius-sm) var(--glp-radius-sm) 0;
+    background: var(--oc-surface); color: var(--oc-sub);
+    font-size: var(--glp-fs-1); cursor: pointer; transition: all .15s;
+  }
+  .bean-info-btn:hover { color: var(--oc-text); background: color-mix(in srgb, var(--oc-text) 7%, transparent); }
+  .bean-info-btn:focus-visible { outline: 2px solid var(--glp-aline); outline-offset: 1px; }
+
+  /* Bean description, rendered as the details sheet's body (#274). The sheet
+     panel is already a surface with its own padding, so this block adds none
+     of its own — a second card inside a card would read as a nesting level
+     that does not exist. */
+  .bean-info { margin: 0; }
+  .bean-info-notes { color: var(--oc-text); font-style: italic; margin-bottom: 3px; }
+  .bean-info-row { display: flex; gap: var(--glp-sp-1); }
+  .bean-info-label {
+    font-weight: 600; font-size: var(--glp-fs-1);
+    color: var(--oc-sub); flex-shrink: 0;
+  }
+
+  /* Motion encodes state, it doesn't decorate (redesign plan §4) — every
+     transition/animation this file defines gets neutralised here rather than
+     picked off one at a time, so a future addition can't slip through
+     unguarded. */
+  @media (prefers-reduced-motion: reduce) {
+    .menu-item, .note-input, .order-btn, .new-order-btn, .variant-chip, .bean-info-btn {
+      transition: none;
+    }
+    .status-card, .status-card.accepted .status-eta {
+      animation: none;
+    }
+  }
+
+  /* The sheet's mount point: an empty div after the card, so a re-render
+     cannot take an open sheet down with it. The dialog inside is fixed. */
+  .glp-sheet-slot { display: block; }
+
+  /* The shared bottom sheet (#274): appended last so its rules win over the
+     card's own, and so it resolves this card's --glp-* tokens. */
+${SHEET_STYLES}
+`;
+
+  // shared/helpers.ts
+  function esc(s4) {
+    if (s4 == null) return "";
+    return String(s4).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+  }
+  function safeUrl(url) {
+    if (!url) return null;
+    try {
+      const u3 = new URL(url);
+      return u3.protocol === "http:" || u3.protocol === "https:" ? u3.href : null;
+    } catch {
+      return null;
+    }
+  }
+  var THEME_PRESETS = {
+    "amber-americano": { a: "#f59e0b", b: "#f59e0b" },
+    "ruby-ristretto": { a: "#7f1d1d", b: "#7f1d1d" },
+    "copper-cortado": { a: "#c2703d", b: "#e8b4a0" },
+    "twilight-turkish": { a: "#0891b2", b: "#4338ca" },
+    "marbled-macchiato": { a: "#f59e0b", b: "#ec4899" },
+    "ember-espresso": { a: "#dc4a1f", b: "#f5a623" },
+    "mulberry-mocha": { a: "#5b21b6", b: "#db2777" },
+    "frosty-flat-white": { a: "#0f766e", b: "#38bdf8" }
+  };
+
+  // order/src/helpers.ts
+  function _originHtml(origins, lang) {
+    return origins.map((o7) => {
+      const raw = o7?.code;
+      if (typeof raw !== "string" || !/^[A-Z]{2}$/.test(raw.trim())) return esc(raw);
+      const code = raw.trim();
+      let name = code;
+      try {
+        name = new Intl.DisplayNames([lang || "en"], { type: "region" }).of(code) || code;
+      } catch {
+      }
+      const label = esc(name);
+      return o7.percent != null ? `${label} ${esc(o7.percent)}%` : label;
+    }).join(" + ");
+  }
+  function _validHex(s4) {
+    return typeof s4 === "string" && /^#[0-9a-fA-F]{6}$/.test(s4);
+  }
+
   // order/src/icons.ts
+  var INFO_ICON = '<circle cx="12" cy="12" r="8.2"/><path d="M12 11.2v5"/><path d="M12 8.2v.01" stroke-linecap="round"/>';
+  var ICONS2 = {
+    has: (name) => name === "info" || ICONS.has(name),
+    of: (name, cls = "") => name === "info" ? `<svg class="glp-i${cls ? " " + cls : ""}" viewBox="0 0 24 24" aria-hidden="true" focusable="false">${INFO_ICON}</svg>` : ICONS.of(name, cls)
+  };
   function _menuIconHtml(item) {
-    return ICONS.of(item?.id) || esc(item?.emoji);
+    return ICONS2.of(item?.id) || esc(item?.emoji);
   }
 
   // shared/contrast.ts
@@ -1269,9 +1995,23 @@ ${TOKENS}
   }
 
   // shared/machine.ts
+  function hasExactStatusId(id, needleSlug) {
+    const lower = id.toLowerCase();
+    const suffix = `${needleSlug}_machine_status`;
+    if (!lower.endsWith(suffix)) return false;
+    if (lower.length === suffix.length) return true;
+    const boundary = lower[lower.length - suffix.length - 1];
+    return boundary === "." || boundary === "_";
+  }
+  function hasExactFriendlyName(id, hass, needle) {
+    const friendly = String(hass.states[id]?.attributes?.friendly_name ?? "").toLowerCase();
+    return friendly === needle || friendly === `${needle} machine status`;
+  }
   function matchMachineStatusEntity(hass, candidates, machine) {
     const needle = String(machine).toLowerCase();
     const needleSlug = needle.replace(/\s+/g, "_");
+    const exact = candidates.find((id) => hasExactStatusId(id, needleSlug) || hasExactFriendlyName(id, hass, needle));
+    if (exact) return exact;
     return candidates.find((id) => hass.states[id]?.attributes?.friendly_name?.toLowerCase().includes(needle) || id.toLowerCase().includes(needleSlug));
   }
   function appMachineEntry(hass, machine) {
@@ -1310,6 +2050,30 @@ ${TOKENS}
     return type === "gaggimate" ? "gaggimate" : "gaggiuino";
   }
 
+  // shared/ha-events.ts
+  function fireHaEvent(node, type, detail) {
+    node.dispatchEvent(new CustomEvent(type, { detail, bubbles: true, composed: true }));
+  }
+  var toast = (node, message) => fireHaEvent(node, "hass-notification", { message });
+  var haptic = (node, type) => fireHaEvent(node, "haptic", type);
+
+  // shared/config-form.ts
+  function normalizeFormConfig(config, textKeys) {
+    const out = { ...config };
+    for (const key of textKeys) {
+      const value = out[key];
+      if (typeof value === "string" && value.trim() === "") delete out[key];
+    }
+    if (out.theme === "none") delete out.theme;
+    const gradient = out.accent_gradient;
+    if (typeof gradient === "string") {
+      const stops = gradient.split(/[\s,]+/).filter(Boolean);
+      if (stops.length > 0) out.accent_gradient = stops;
+      else delete out.accent_gradient;
+    }
+    return out;
+  }
+
   // order/src/i18n.ts
   var STRINGS = {
     de: {
@@ -1325,6 +2089,8 @@ ${TOKENS}
       bean_origin: "Herkunft",
       bean_variety: "Varietät",
       bean_process: "Aufbereitung",
+      sheet_close: "Schließen",
+      bean_details: "Bohnendetails: ",
       almost_ready: "Gleich fertig!",
       note_ph: "Notiz (optional) …",
       trending_title: "Beliebt",
@@ -1339,8 +2105,30 @@ ${TOKENS}
       no_menu: "Noch kein Menü konfiguriert",
       menu_all: "Alle Getränke",
       order_failed: "Bestellung konnte nicht gesendet werden. Bitte erneut versuchen.",
+      toast_order_sent: (item) => `Bestellung gesendet: ${item}`,
       chart_pressure: "Druck",
-      chart_weight: "Gewicht"
+      chart_weight: "Gewicht",
+      cfg_title: "Titel",
+      cfg_title_help: "Titel im Kartenkopf. Leer lassen für den übersetzten Standard.",
+      cfg_machine: "Maschine",
+      cfg_machine_help: "Name oder ID einer Maschine aus dem Maschinen-Register des Apps.",
+      cfg_switch_entity: "Switch-Entity",
+      cfg_switch_entity_help: "Schalter der Maschine. Solange er aus ist, zeigt die Karte keine Bestellung an.",
+      cfg_new_badge_days: "Tage für das NEW-Badge",
+      cfg_new_badge_days_help: "So viele Tage behält ein neu hinzugefügtes Getränk sein NEW-Badge.",
+      cfg_theme: "Farb-Preset",
+      cfg_theme_help: "Preset für Bestell-Button, Auswahl-Hervorhebungen und Maschinen-Icon.",
+      cfg_accent_color: "Akzentfarbe",
+      cfg_accent_color_help: "Eigene Farbe als #rrggbb statt eines Presets. Ungültige Werte werden ignoriert.",
+      cfg_accent_gradient: "Akzent-Verlauf",
+      cfg_accent_gradient_help: "Zwei Farben als #rrggbb, eine pro Zeile. Überschreibt Preset und Akzentfarbe.",
+      cfg_glp_url: "GLP-URL",
+      cfg_glp_url_help: "Adresse des GLP-Apps auf Port 8099. Nur für eine direkte Verbindung nötig.",
+      cfg_glp_token: "API-Token",
+      cfg_glp_token_help: "Nur für eine direkte Verbindung. Achtung: Jeder Dashboard-Benutzer kann den Token lesen.",
+      cfg_advanced: "Erweitert / direkte URL",
+      cfg_advanced_help: "Nur nötig, wenn die Karte das App nicht über den Home-Assistant-Ingress erreicht.",
+      cfg_theme_none: "Kein Preset"
     },
     en: {
       title: "Order",
@@ -1355,6 +2143,8 @@ ${TOKENS}
       bean_origin: "Origin",
       bean_variety: "Variety",
       bean_process: "Process",
+      sheet_close: "Close",
+      bean_details: "Bean details: ",
       almost_ready: "Almost ready!",
       note_ph: "Note (optional) …",
       trending_title: "Trending",
@@ -1369,8 +2159,30 @@ ${TOKENS}
       no_menu: "No menu configured yet",
       menu_all: "All drinks",
       order_failed: "Order could not be sent. Please try again.",
+      toast_order_sent: (item) => `Order sent: ${item}`,
       chart_pressure: "Pressure",
-      chart_weight: "Weight"
+      chart_weight: "Weight",
+      cfg_title: "Title",
+      cfg_title_help: "Title in the card header. Leave empty for the translated default.",
+      cfg_machine: "Machine",
+      cfg_machine_help: "Name or id of one machine from the app's machine registry.",
+      cfg_switch_entity: "Switch entity",
+      cfg_switch_entity_help: "The machine's switch. While it is off, the card shows no ordering.",
+      cfg_new_badge_days: "NEW badge days",
+      cfg_new_badge_days_help: "How many days a newly added drink keeps its NEW badge.",
+      cfg_theme: "Colour preset",
+      cfg_theme_help: "Preset for the order button, the selection highlights and the machine icon.",
+      cfg_accent_color: "Accent colour",
+      cfg_accent_color_help: "Custom #rrggbb colour instead of a preset. Invalid values are ignored.",
+      cfg_accent_gradient: "Accent gradient",
+      cfg_accent_gradient_help: "Two #rrggbb colours, one per line. Overrides the preset and the accent colour.",
+      cfg_glp_url: "GLP URL",
+      cfg_glp_url_help: "Address of the GLP app on port 8099. Only needed for a direct connection.",
+      cfg_glp_token: "API token",
+      cfg_glp_token_help: "Only for a direct connection. Warning: every dashboard user can read this token.",
+      cfg_advanced: "Advanced / direct URL",
+      cfg_advanced_help: "Only needed when the card cannot reach the app through Home Assistant ingress.",
+      cfg_theme_none: "No preset"
     },
     it: {
       title: "Ordina",
@@ -1385,6 +2197,8 @@ ${TOKENS}
       bean_origin: "Origine",
       bean_variety: "Varietà",
       bean_process: "Lavorazione",
+      sheet_close: "Chiudi",
+      bean_details: "Dettagli del caffè: ",
       almost_ready: "Quasi pronto!",
       note_ph: "Nota (opzionale) …",
       trending_title: "Di tendenza",
@@ -1399,8 +2213,30 @@ ${TOKENS}
       no_menu: "Nessun menu configurato ancora",
       menu_all: "Tutte le bevande",
       order_failed: "Impossibile inviare l'ordine. Riprova.",
+      toast_order_sent: (item) => `Ordine inviato: ${item}`,
       chart_pressure: "Pressione",
-      chart_weight: "Peso"
+      chart_weight: "Peso",
+      cfg_title: "Titolo",
+      cfg_title_help: "Titolo nell'intestazione della scheda. Vuoto per il valore predefinito tradotto.",
+      cfg_machine: "Macchina",
+      cfg_machine_help: "Nome o ID di una macchina dal registro macchine dell'app.",
+      cfg_switch_entity: "Entità switch",
+      cfg_switch_entity_help: "Lo switch della macchina. Finché è spento, la scheda non permette ordini.",
+      cfg_new_badge_days: "Giorni del badge NEW",
+      cfg_new_badge_days_help: "Per quanti giorni una bevanda nuova mantiene il badge NEW.",
+      cfg_theme: "Preset di colore",
+      cfg_theme_help: "Preset per il pulsante d'ordine, le selezioni e l'icona della macchina.",
+      cfg_accent_color: "Colore d'accento",
+      cfg_accent_color_help: "Colore #rrggbb personalizzato invece di un preset. I valori non validi vengono ignorati.",
+      cfg_accent_gradient: "Sfumatura d'accento",
+      cfg_accent_gradient_help: "Due colori #rrggbb, uno per riga. Prevale sul preset e sul colore d'accento.",
+      cfg_glp_url: "URL GLP",
+      cfg_glp_url_help: "Indirizzo dell'app GLP sulla porta 8099. Serve solo per una connessione diretta.",
+      cfg_glp_token: "Token API",
+      cfg_glp_token_help: "Solo per una connessione diretta. Attenzione: ogni utente della dashboard può leggerlo.",
+      cfg_advanced: "Avanzate / URL diretto",
+      cfg_advanced_help: "Serve solo se la scheda non raggiunge l'app tramite l'ingress di Home Assistant.",
+      cfg_theme_none: "Nessun preset"
     },
     fr: {
       title: "Commander",
@@ -1415,6 +2251,8 @@ ${TOKENS}
       bean_origin: "Origine",
       bean_variety: "Variété",
       bean_process: "Traitement",
+      sheet_close: "Fermer",
+      bean_details: "Détails du café : ",
       almost_ready: "Presque prêt !",
       note_ph: "Note (facultatif) …",
       trending_title: "Tendances",
@@ -1429,8 +2267,30 @@ ${TOKENS}
       no_menu: "Aucun menu configuré pour le moment",
       menu_all: "Toutes les boissons",
       order_failed: "La commande n'a pas pu être envoyée. Veuillez réessayer.",
+      toast_order_sent: (item) => `Commande envoyée : ${item}`,
       chart_pressure: "Pression",
-      chart_weight: "Poids"
+      chart_weight: "Poids",
+      cfg_title: "Titre",
+      cfg_title_help: "Titre dans l'en-tête de la carte. Laisser vide pour le texte traduit par défaut.",
+      cfg_machine: "Machine",
+      cfg_machine_help: "Nom ou identifiant d'une machine du registre des machines de l'application.",
+      cfg_switch_entity: "Entité switch",
+      cfg_switch_entity_help: "L'interrupteur de la machine. Tant qu'il est éteint, la carte ne permet pas de commander.",
+      cfg_new_badge_days: "Jours du badge NEW",
+      cfg_new_badge_days_help: "Pendant combien de jours une boisson ajoutée garde son badge NEW.",
+      cfg_theme: "Préréglage de couleur",
+      cfg_theme_help: "Préréglage pour le bouton de commande, les sélections et l'icône de la machine.",
+      cfg_accent_color: "Couleur d'accent",
+      cfg_accent_color_help: "Couleur #rrggbb personnalisée au lieu d'un préréglage. Les valeurs invalides sont ignorées.",
+      cfg_accent_gradient: "Dégradé d'accent",
+      cfg_accent_gradient_help: "Deux couleurs #rrggbb, une par ligne. Prioritaire sur le préréglage et la couleur d'accent.",
+      cfg_glp_url: "URL GLP",
+      cfg_glp_url_help: "Adresse de l'application GLP sur le port 8099. Nécessaire seulement pour une connexion directe.",
+      cfg_glp_token: "Jeton API",
+      cfg_glp_token_help: "Seulement pour une connexion directe. Attention : chaque utilisateur du tableau de bord peut le lire.",
+      cfg_advanced: "Avancé / URL directe",
+      cfg_advanced_help: "Nécessaire seulement si la carte n'atteint pas l'application via l'ingress de Home Assistant.",
+      cfg_theme_none: "Aucun préréglage"
     },
     es: {
       title: "Pedir",
@@ -1445,6 +2305,8 @@ ${TOKENS}
       bean_origin: "Origen",
       bean_variety: "Variedad",
       bean_process: "Proceso",
+      sheet_close: "Cerrar",
+      bean_details: "Detalles del café: ",
       almost_ready: "¡Casi listo!",
       note_ph: "Nota (opcional) …",
       trending_title: "Tendencia",
@@ -1459,8 +2321,30 @@ ${TOKENS}
       no_menu: "Aún no hay menú configurado",
       menu_all: "Todas las bebidas",
       order_failed: "No se pudo enviar el pedido. Inténtalo de nuevo.",
+      toast_order_sent: (item) => `Pedido enviado: ${item}`,
       chart_pressure: "Presión",
-      chart_weight: "Peso"
+      chart_weight: "Peso",
+      cfg_title: "Título",
+      cfg_title_help: "Título en la cabecera de la tarjeta. Déjalo vacío para el valor traducido.",
+      cfg_machine: "Máquina",
+      cfg_machine_help: "Nombre o ID de una máquina del registro de máquinas de la app.",
+      cfg_switch_entity: "Entidad switch",
+      cfg_switch_entity_help: "El interruptor de la máquina. Mientras está apagado, la tarjeta no permite pedir.",
+      cfg_new_badge_days: "Días del badge NEW",
+      cfg_new_badge_days_help: "Cuántos días mantiene una bebida nueva su badge NEW.",
+      cfg_theme: "Preset de color",
+      cfg_theme_help: "Preset para el botón de pedido, las selecciones y el icono de la máquina.",
+      cfg_accent_color: "Color de acento",
+      cfg_accent_color_help: "Color #rrggbb propio en lugar de un preset. Los valores no válidos se ignoran.",
+      cfg_accent_gradient: "Degradado de acento",
+      cfg_accent_gradient_help: "Dos colores #rrggbb, uno por línea. Tiene prioridad sobre el preset y el color de acento.",
+      cfg_glp_url: "URL de GLP",
+      cfg_glp_url_help: "Dirección de la app GLP en el puerto 8099. Solo hace falta para una conexión directa.",
+      cfg_glp_token: "Token de API",
+      cfg_glp_token_help: "Solo para una conexión directa. Aviso: cualquier usuario del panel puede leerlo.",
+      cfg_advanced: "Avanzado / URL directa",
+      cfg_advanced_help: "Solo hace falta si la tarjeta no llega a la app mediante el ingress de Home Assistant.",
+      cfg_theme_none: "Sin preset"
     },
     nl: {
       title: "Bestellen",
@@ -1475,6 +2359,8 @@ ${TOKENS}
       bean_origin: "Herkomst",
       bean_variety: "Variëteit",
       bean_process: "Verwerking",
+      sheet_close: "Sluiten",
+      bean_details: "Bonedetails: ",
       almost_ready: "Bijna klaar!",
       note_ph: "Notitie (optioneel) …",
       trending_title: "Populair",
@@ -1489,8 +2375,30 @@ ${TOKENS}
       no_menu: "Nog geen menu ingesteld",
       menu_all: "Alle drankjes",
       order_failed: "Bestelling kon niet worden verzonden. Probeer het opnieuw.",
+      toast_order_sent: (item) => `Bestelling verzonden: ${item}`,
       chart_pressure: "Druk",
-      chart_weight: "Gewicht"
+      chart_weight: "Gewicht",
+      cfg_title: "Titel",
+      cfg_title_help: "Titel in de kop van de kaart. Leeg laten voor de vertaalde standaardtekst.",
+      cfg_machine: "Machine",
+      cfg_machine_help: "Naam of id van een machine uit het machineregister van de app.",
+      cfg_switch_entity: "Switch-entiteit",
+      cfg_switch_entity_help: "De schakelaar van de machine. Zolang die uit staat, laat de kaart geen bestelling toe.",
+      cfg_new_badge_days: "Dagen voor het NEW-label",
+      cfg_new_badge_days_help: "Hoeveel dagen een nieuw drankje zijn NEW-label houdt.",
+      cfg_theme: "Kleurpreset",
+      cfg_theme_help: "Preset voor de bestelknop, de selecties en het machine-icoon.",
+      cfg_accent_color: "Accentkleur",
+      cfg_accent_color_help: "Eigen #rrggbb-kleur in plaats van een preset. Ongeldige waarden worden genegeerd.",
+      cfg_accent_gradient: "Accentverloop",
+      cfg_accent_gradient_help: "Twee #rrggbb-kleuren, één per regel. Gaat voor op de preset en de accentkleur.",
+      cfg_glp_url: "GLP-URL",
+      cfg_glp_url_help: "Adres van de GLP-app op poort 8099. Alleen nodig voor een directe verbinding.",
+      cfg_glp_token: "API-token",
+      cfg_glp_token_help: "Alleen voor een directe verbinding. Let op: elke dashboardgebruiker kan dit token lezen.",
+      cfg_advanced: "Geavanceerd / directe URL",
+      cfg_advanced_help: "Alleen nodig als de kaart de app niet via de Home Assistant-ingress bereikt.",
+      cfg_theme_none: "Geen preset"
     }
   };
   function _s(key, lang, ...args) {
@@ -1500,8 +2408,16 @@ ${TOKENS}
   }
 
   // order/src/glp-order-card.ts
-  var GLP_ORDER_CARD_VERSION = "1.22.0";
+  var GLP_ORDER_CARD_VERSION = "1.23.0";
   var NEW_BADGE_DAYS_DEFAULT = 7;
+  function _configLang(code) {
+    const lang = String(code || "").slice(0, 2).toLowerCase();
+    return STRINGS[lang] ? lang : "en";
+  }
+  var ORDER_CONFIG_TEXT_KEYS = ["title", "machine", "switch_entity", "theme", "accent_color", "glp_url", "glp_token"];
+  function _normalizeConfig(config) {
+    return normalizeFormConfig(config, ORDER_CONFIG_TEXT_KEYS);
+  }
   var _glpOrderCardInstanceSeq = 0;
   var GlpOrderCard = class extends HTMLElement {
     constructor() {
@@ -1524,14 +2440,55 @@ ${TOKENS}
       this._hassRenderTimer = null;
       this._lang = this._normalizeLang(navigator.language);
       this._instanceId = ++_glpOrderCardInstanceSeq;
+      this._sheet = null;
+      this._sheetLang = null;
     }
     // First two letters, lower case, falling back to English for a language this
     // card has no strings for.
     _normalizeLang(code) {
-      const lang = String(code || "").slice(0, 2).toLowerCase();
-      return STRINGS[lang] ? lang : "en";
+      return _configLang(code);
     }
+    // Home Assistant's visual card editor renders this schema with its own
+    // ha-form; there is no custom editor element. Every documented option in
+    // DOCS.md ("Order Card options") appears here once, in the same order.
+    static getConfigForm() {
+      const lang = _configLang(navigator.language);
+      const themeOptions = [
+        { value: "none", label: _s("cfg_theme_none", lang) },
+        ...Object.keys(THEME_PRESETS).map((key) => ({ value: key, label: key }))
+      ];
+      return {
+        schema: [
+          { name: "title", selector: { text: {} } },
+          { name: "machine", selector: { text: {} } },
+          { name: "switch_entity", selector: { entity: { domain: "switch" } } },
+          { name: "new_badge_days", selector: { number: { min: 0, max: 365, mode: "box" } } },
+          { name: "theme", selector: { select: { mode: "dropdown", options: themeOptions } } },
+          { name: "accent_color", selector: { text: {} } },
+          { name: "accent_gradient", selector: { text: { multiple: true } } },
+          {
+            type: "expandable",
+            name: "advanced",
+            title: _s("cfg_advanced", lang),
+            // Without flatten ha-form writes `advanced: {glp_url, glp_token}`
+            // and the card, which reads both keys at the top level, ignores them.
+            flatten: true,
+            schema: [
+              { name: "glp_url", selector: { text: { type: "url" } } },
+              { name: "glp_token", selector: { text: { type: "password" } } }
+            ]
+          }
+        ],
+        computeLabel: (entry) => _s(`cfg_${entry.name}`, _configLang(navigator.language)),
+        computeHelper: (entry) => _s(`cfg_${entry.name}_help`, _configLang(navigator.language))
+      };
+    }
+    // Accepts both the YAML shape and what getConfigForm()'s form produces
+    // (numbers from the number selector, 'none' from the theme dropdown, ''
+    // from emptied text fields, a string for the multi-line gradient) without
+    // changing what an existing YAML config means.
     setConfig(config) {
+      const normalized = _normalizeConfig(config);
       this._config = {
         title: null,
         switch_entity: null,
@@ -1540,9 +2497,9 @@ ${TOKENS}
         theme: null,
         accent_color: null,
         accent_gradient: null,
-        ...config
+        ...normalized
       };
-      if (config.glp_token) this._token = String(config.glp_token);
+      if (normalized.glp_token) this._token = String(normalized.glp_token);
     }
     // The app's own stored per-machine theme (#701), read from hass state by
     // the shared machine lookup; null when nothing valid is synced.
@@ -1641,6 +2598,7 @@ ${TOKENS}
     }
     disconnectedCallback() {
       this._stopPoll();
+      if (this._sheet) this._sheet.close();
     }
     _startPoll() {
       this._stopPoll();
@@ -1665,14 +2623,12 @@ ${TOKENS}
     _useIngress() {
       return !this._config?.glp_url;
     }
+    // Direct-URL mode uses the YAML `glp_token` only: the app serves /api/token
+    // to Supervisor-originating requests, never to a browser on the LAN, so
+    // asking for it there only earned a 401. Without a token the app answers
+    // 401 and the existing _load()/_loadStatus() handling shows that.
     async _ensureToken() {
       if (this._useIngress()) return null;
-      if (this._token) return this._token;
-      try {
-        const d3 = await fetch(`${this._getBase()}/api/token`).then((r4) => r4.ok ? r4.json() : {});
-        this._token = d3.apiToken || null;
-      } catch {
-      }
       return this._token;
     }
     async _fetch(path, opts = {}) {
@@ -1810,7 +2766,8 @@ ${TOKENS}
           </div>
           ${body}
         </div>
-      </ha-card>`, this.shadowRoot);
+      </ha-card>
+      <div class="glp-sheet-slot"></div>`, this.shadowRoot);
       this._applySemanticColorContrast();
     }
     _renderOrderForm(lang) {
@@ -1823,14 +2780,15 @@ ${TOKENS}
       if (visibleMenu.length === 0) {
         return b2`<div class="loading">${_s("no_menu", lang)}</div>`;
       }
-      const newThreshold = (parseFloat(this._config?.new_badge_days) || NEW_BADGE_DAYS_DEFAULT) * 24 * 60 * 60 * 1e3;
+      const badgeDays = parseFloat(String(this._config?.new_badge_days ?? ""));
+      const newThreshold = (Number.isFinite(badgeDays) ? badgeDays : NEW_BADGE_DAYS_DEFAULT) * 24 * 60 * 60 * 1e3;
       const now = Date.now();
-      const renderItem = (m2) => {
+      const renderItem = (m2, fullRow = false) => {
         const isNew = m2.createdAt && now - m2.createdAt < newThreshold;
         const newBadge = isNew ? b2`<span class="menu-badge menu-badge-new">NEW</span>` : A;
         const trendBadge = m2.trending ? b2`<span class="menu-badge menu-badge-trend">${/* ICONS.of() emits fixed SVG markup */
-        o5(ICONS.of("heat"))}</span>` : A;
-        return b2`<button type="button" class="menu-item${this._selected === m2.name ? " selected" : ""}" data-item=${m2.name} @click=${() => this._selectItem(m2.name)}>
+        o5(ICONS2.of("heat"))}</span>` : A;
+        return b2`<button type="button" class="menu-item${fullRow ? " menu-item-full" : ""}${this._selected === m2.name ? " selected" : ""}" data-item=${m2.name} @click=${() => this._selectItem(m2.name)}>
         <div class="menu-item-icon">${/* _menuIconHtml() returns a fixed icon or an escaped emoji */
         o5(_menuIconHtml(m2))}</div>
         <div class="menu-item-name">${m2.name}${trendBadge}${newBadge}</div>
@@ -1840,31 +2798,34 @@ ${TOKENS}
       const regular = visibleMenu.filter((m2) => !m2.trending);
       const trendSection = trending.length ? b2`
       <p class="menu-section-title">${/* ICONS.of() emits fixed SVG markup */
-      o5(ICONS.of("heat"))} ${_s("trending_title", lang)}</p>
-      <div class="menu-grid">${trending.map(renderItem)}</div>` : A;
+      o5(ICONS2.of("heat"))} ${_s("trending_title", lang)}</p>
+      <div class="menu-grid">${trending.map((m2) => renderItem(m2, trending.length === 1))}</div>` : A;
       const regularSection = regular.length ? b2`
       ${trending.length ? b2`<p class="menu-section-title" style="margin-top:var(--glp-sp-3)">${_s("menu_all", lang)}</p>` : A}
-      <div class="menu-grid">${regular.map(renderItem)}</div>` : A;
+      <div class="menu-grid">${regular.map((m2) => renderItem(m2))}</div>` : A;
       const selectedItem = visibleMenu.find((m2) => m2.name === this._selected);
       const variants = this._getVariants(selectedItem);
       const needsVariant = variants.length > 0 && !this._selectedVariant;
       const groupedVariants = this._getVariantsGrouped(selectedItem);
+      const mergedHeadings = this._hasBothBeanGroups(groupedVariants);
       const variantSection = this._selected && variants.length > 0 ? b2`
-      <p class="variant-label">${_s("variant_label", lang)}</p>
+      ${mergedHeadings ? A : b2`<p class="variant-label">${_s("variant_label", lang)}</p>`}
       <div id="oc-variants" class=${groupedVariants.flat ? "variant-grid" : ""}>
-        ${this._variantInnerHtml(groupedVariants, lang)}
+        ${this._variantInnerHtml(groupedVariants, lang, mergedHeadings)}
       </div>` : A;
-      const beanInfoSection = this._beanInfoHtml(this._getSelectedBean(), lang);
-      const itemLabel = this._selected && this._selectedVariant ? `${this._selected} · ${this._selectedVariant}` : this._selected || null;
-      const btnLabel = itemLabel ? _s("order_btn", lang, itemLabel) : needsVariant ? _s("variant_select", lang) : _s("order_btn_select", lang);
+      const fullLabel = this._selected && this._selectedVariant ? `${this._selected} · ${this._selectedVariant}` : null;
+      const btnLabel = this._selected ? _s("order_btn", lang, this._selected) : needsVariant ? _s("variant_select", lang) : _s("order_btn_select", lang);
+      const fullBtnLabel = fullLabel ? _s("order_btn", lang, fullLabel) : void 0;
       return b2`
       <div class="order-form">
         ${trendSection}${regularSection}
-        ${variantSection}${beanInfoSection}
+        ${variantSection}
         <input class="note-input" id="oc-note" placeholder=${_s("note_ph", lang)} maxlength="200">
-        <button class="order-btn" id="oc-submit" ?disabled=${!this._selected || this._submitting || needsVariant} @click=${() => this._placeOrder()}>
-          ${itemLabel ? b2`${/* ICONS.of() emits fixed SVG markup */
-      o5(ICONS.of("coffee"))} ` : A}${btnLabel}
+        <button class="order-btn" id="oc-submit" ?disabled=${!this._selected || this._submitting || needsVariant}
+          title=${o6(fullLabel || void 0)} aria-label=${o6(fullBtnLabel)}
+          @click=${() => this._placeOrder()}>
+          ${this._selected ? b2`${/* ICONS.of() emits fixed SVG markup */
+      o5(ICONS2.of("coffee"))}` : A}<span class="order-btn-label">${btnLabel}</span>
         </button>
         ${this._orderError ? b2`<div class="order-error" role="alert">${this._orderError}</div>` : A}
       </div>`;
@@ -1929,7 +2890,7 @@ ${TOKENS}
         const queueLine = qp ? b2`<div class="status-line">${_s("queue_pos", lang, qp.position, qp.suggestedEta)}</div>` : A;
         content = b2`<div class="status-card pending">
         <div class="status-item">${/* ICONS.of() emits fixed SVG markup */
-        o5(ICONS.of("hourglass"))} ${_s("pending", lang, itemLabel)}</div>
+        o5(ICONS2.of("hourglass"))} ${_s("pending", lang, itemLabel)}</div>
         ${machineLine}
         ${queueLine}
       </div>`;
@@ -1938,21 +2899,21 @@ ${TOKENS}
         const minsLeft = Math.max(0, Math.ceil((etaDone - Date.now()) / 6e4));
         content = b2`<div class="status-card accepted">
         <div class="status-item">${/* ICONS.of() emits fixed SVG markup */
-        o5(ICONS.of("coffee"))} ${_s("accepted", lang, itemLabel, minsLeft)}</div>
+        o5(ICONS2.of("coffee"))} ${_s("accepted", lang, itemLabel, minsLeft)}</div>
         ${machineLine}
         <div class="status-eta">${minsLeft === 0 ? b2`${/* ICONS.of() emits fixed SVG markup */
-        o5(ICONS.of("celebrate"))} ${_s("almost_ready", this._lang)}` : `~${minsLeft} min`}</div>
+        o5(ICONS2.of("celebrate"))} ${_s("almost_ready", this._lang)}` : `~${minsLeft} min`}</div>
       </div>`;
       } else if (order.status === "done") {
         const shotHtml = this._renderShotSummary(this._lastShot, lang);
         content = b2`<div class="status-card done">
         <div class="status-done-msg">${/* ICONS.of() emits fixed SVG markup */
-        o5(ICONS.of("check"))} ${_s("done", lang, itemLabel)}</div>
+        o5(ICONS2.of("check"))} ${_s("done", lang, itemLabel)}</div>
       </div>${shotHtml}`;
       } else if (order.status === "declined") {
         content = b2`<div class="status-card declined">
         <div class="status-item">${/* ICONS.of() emits fixed SVG markup */
-        o5(ICONS.of("close"))} ${_s("declined", lang, itemLabel)}</div>
+        o5(ICONS2.of("close"))} ${_s("declined", lang, itemLabel)}</div>
         ${order.declineReason ? b2`<div class="status-decline">${_s("decline_reason", lang, order.declineReason)}</div>` : A}
       </div>`;
       }
@@ -1969,6 +2930,7 @@ ${TOKENS}
         this._selectedBeanId = null;
       }
       this._orderError = null;
+      if (this._selected) haptic(this, "selection");
       this._render();
     }
     _selectVariant(variant, beanId) {
@@ -1976,6 +2938,7 @@ ${TOKENS}
       this._selectedVariant = wasSelected ? null : variant;
       this._selectedBeanId = wasSelected ? null : beanId != null ? Number(beanId) : null;
       this._orderError = null;
+      if (!wasSelected) haptic(this, "selection");
       this._render();
     }
     _newOrder() {
@@ -1989,7 +2952,7 @@ ${TOKENS}
     }
     _getVariants(item) {
       if (!item) return [];
-      if (item.useBeans) return (this._activeBeans || []).map((b3) => b3.decaf ? `${b3.name} · Decaf` : b3.name);
+      if (item.useBeans) return (this._activeBeans || []).map((b3) => this._beanLabel(b3));
       return Array.isArray(item.variants) ? item.variants.filter((v2) => typeof v2 === "string") : [];
     }
     // Second, orthogonal grouping axis on top of _getVariants() (#36): non-bean
@@ -1999,38 +2962,103 @@ ${TOKENS}
     // gaggiuino-local-profiler#505) — untagged/missing beans default to 'normal'.
     _getVariantsGrouped(item) {
       if (!item?.useBeans) return { flat: this._getVariants(item) };
-      const label = (b3) => b3.decaf ? `${b3.name} · Decaf` : b3.name;
       const beans = this._activeBeans || [];
       return {
-        speciality: beans.filter((b3) => b3.category === "speciality").map(label),
-        normal: beans.filter((b3) => b3.category !== "speciality").map(label)
+        speciality: beans.filter((b3) => b3.category === "speciality").map((b3) => this._beanLabel(b3)),
+        normal: beans.filter((b3) => b3.category !== "speciality").map((b3) => this._beanLabel(b3))
       };
+    }
+    // True only when both bean groups are rendered, i.e. exactly the case that
+    // shows group headings at all (#273).
+    _hasBothBeanGroups(grouped) {
+      if (grouped.flat) return false;
+      const { speciality, normal } = grouped;
+      return speciality.length > 0 && normal.length > 0;
+    }
+    // The chip label plus the decaf suffix — the one place the two spellings
+    // are derived, so selection, grouping and the details sheet cannot drift.
+    _beanLabel(bean) {
+      return bean.decaf ? `${bean.name} · Decaf` : bean.name;
+    }
+    _usesBeans() {
+      return this._menu?.find((m2) => m2.name === this._selected)?.useBeans === true;
+    }
+    _beanForLabel(v2) {
+      return (this._activeBeans || []).find((b3) => this._beanLabel(b3) === v2) ?? null;
     }
     // Bean-backed variant chips carry the bean's stable id (#35) alongside the
     // display label, so selection can be tracked and submitted by id — the
     // label alone is ambiguous whenever a bean gets deleted and reimported
     // under the same name (same bug class as gaggiuino-local-profiler#456).
     _beanIdForLabel(v2) {
-      const bean = (this._activeBeans || []).find((b3) => (b3.decaf ? `${b3.name} · Decaf` : b3.name) === v2);
-      return bean?.id ?? null;
+      return this._beanForLabel(v2)?.id ?? null;
     }
-    _variantChipHtml(v2) {
-      const beanId = this._beanIdForLabel(v2);
-      return b2`<button type="button" class="variant-chip${this._selectedVariant === v2 ? " selected" : ""}" data-variant=${v2} data-bean-id=${o6(beanId ?? void 0)} @click=${() => this._selectVariant(v2, beanId)}>${v2}</button>`;
+    // The chip stays a plain select button; a bean with details gets a second,
+    // separate button that opens the details sheet (#274). They sit in one
+    // wrapper so the chip grid keeps its original cell size and wrapping.
+    _variantChipHtml(v2, lang = this._lang) {
+      const bean = this._beanForLabel(v2);
+      const beanId = bean?.id ?? null;
+      const chip = b2`<button type="button" class="variant-chip${this._selectedVariant === v2 ? " selected" : ""}" data-variant=${v2} data-bean-id=${o6(beanId ?? void 0)} @click=${() => this._selectVariant(v2, beanId)}>${v2}</button>`;
+      if (!this._usesBeans() || !bean || !this._beanHasDetails(bean)) return chip;
+      const withDetails = bean;
+      const label = _s("bean_details", lang) + this._beanLabel(withDetails);
+      return b2`<span class="variant-chip-wrap">${chip}<button
+        type="button" class="bean-info-btn"
+        aria-label=${label}
+        @click=${(e6) => {
+        e6.stopPropagation();
+        this._openBeanSheet(withDetails, lang);
+      }}>
+        ${/* ICONS.of() emits fixed SVG markup */
+      o5(ICONS2.of("info"))}
+      </button></span>`;
+    }
+    // The sheet's host element, rendered after the card. It has its own node so
+    // the card's template re-renders (Lit clears everything it committed) never
+    // eject an open sheet from the shadow root.
+    _sheetSlot() {
+      return this.shadowRoot?.querySelector(".glp-sheet-slot") ?? null;
+    }
+    // One sheet per card, created on first use and mounted into the card's own
+    // shadow root so it inherits this card's --glp-* tokens. A language change
+    // replaces it: the close label is fixed at construction, and the old host is
+    // cleared so the shadow root never holds two close buttons.
+    _sheetFor(lang) {
+      const slot = this._sheetSlot();
+      if (this._sheet && this._sheetLang !== lang) {
+        this._sheet.close();
+        this._sheet = null;
+        slot?.replaceChildren();
+      }
+      if (!this._sheet) {
+        this._sheet = new GlpSheet(slot ?? this.shadowRoot, { closeLabel: _s("sheet_close", lang) });
+        this._sheetLang = lang;
+      }
+      return this._sheet;
+    }
+    _openBeanSheet(bean, lang) {
+      const body = this._beanInfoHtml(bean, lang);
+      if (body === A) return;
+      this._sheetFor(lang).open({ title: this._beanLabel(bean), body: () => body });
     }
     // Mirrors the trending/regular section pattern (~line 650): headings shown
     // only when both groups are non-empty — a single-group list (e.g. all beans
     // untagged) renders as one plain grid, no noisy "Normal" label.
-    _variantInnerHtml(grouped, lang) {
-      if (grouped.flat) return b2`${grouped.flat.map((v2) => this._variantChipHtml(v2))}`;
+    // `mergedHeadings` folds the standalone "Variant" heading into each group
+    // heading ("Variant · Speciality" / "Variant · Normal"), built from the
+    // existing keys so no new translation strings are needed.
+    _variantInnerHtml(grouped, lang, mergedHeadings = false) {
+      if (grouped.flat) return b2`${grouped.flat.map((v2) => this._variantChipHtml(v2, lang))}`;
       const { speciality, normal } = grouped;
       const showHeadings = speciality.length > 0 && normal.length > 0;
+      const heading = (key) => mergedHeadings ? `${_s("variant_label", lang)} · ${_s(key, lang)}` : _s(key, lang);
       const specialitySection = speciality.length ? b2`
-      ${showHeadings ? b2`<p class="menu-section-title">${_s("variant_speciality", lang)}</p>` : A}
-      <div class="variant-grid">${speciality.map((v2) => this._variantChipHtml(v2))}</div>` : A;
+      ${showHeadings ? b2`<p class="menu-section-title">${heading("variant_speciality")}</p>` : A}
+      <div class="variant-grid">${speciality.map((v2) => this._variantChipHtml(v2, lang))}</div>` : A;
       const normalSection = normal.length ? b2`
-      ${showHeadings ? b2`<p class="menu-section-title" style="margin-top:var(--glp-sp-3)">${_s("variant_normal", lang)}</p>` : A}
-      <div class="variant-grid">${normal.map((v2) => this._variantChipHtml(v2))}</div>` : A;
+      ${showHeadings ? b2`<p class="menu-section-title" style="margin-top:var(--glp-sp-3)">${heading("variant_normal")}</p>` : A}
+      <div class="variant-grid">${normal.map((v2) => this._variantChipHtml(v2, lang))}</div>` : A;
       return b2`${specialitySection}${normalSection}`;
     }
     // Id-first with a name fallback (#35), mirroring resolveBeanForAnnotation()
@@ -2045,11 +3073,21 @@ ${TOKENS}
         const byId = beans.find((b3) => b3.id === this._selectedBeanId);
         if (byId) return byId;
       }
-      return beans.find((b3) => (b3.decaf ? `${b3.name} · Decaf` : b3.name) === this._selectedVariant) || null;
+      return beans.find((b3) => this._beanLabel(b3) === this._selectedVariant) || null;
+    }
+    // The bean data the card receives has no roast date, so the sheet shows
+    // notes, origin, variety and process only.
+    _beanOrigins(bean) {
+      if (Array.isArray(bean.origins) && bean.origins.length) return bean.origins;
+      return bean.origin ? [{ code: bean.origin }] : [];
+    }
+    _beanHasDetails(bean) {
+      if (!bean) return false;
+      return !!(bean.notes || this._beanOrigins(bean).length || bean.variety || bean.process);
     }
     _beanInfoHtml(bean, lang) {
-      const origins = Array.isArray(bean?.origins) && bean.origins.length ? bean.origins : bean?.origin ? [{ code: bean.origin }] : [];
-      if (!bean || !bean.notes && !origins.length && !bean.variety && !bean.process) return A;
+      if (!this._beanHasDetails(bean)) return A;
+      const origins = this._beanOrigins(bean);
       const rows = [];
       if (bean.notes) rows.push(b2`<div class="bean-info-notes">${bean.notes}</div>`);
       if (origins.length) rows.push(b2`<div class="bean-info-row"><span class="bean-info-label">${_s("bean_origin", lang)}</span><span>${/* _originHtml() escapes its own input */
@@ -2058,8 +3096,18 @@ ${TOKENS}
       if (bean.process) rows.push(b2`<div class="bean-info-row"><span class="bean-info-label">${_s("bean_process", lang)}</span><span>${bean.process}</span></div>`);
       return b2`<div class="bean-info" id="oc-bean-info">${rows}</div>`;
     }
+    // The inline message stays the primary feedback; the toast and the
+    // vibration repeat it for people who are looking at the machine.
+    _failOrder() {
+      const message = _s("order_failed", this._lang);
+      this._orderError = message;
+      toast(this, message);
+      haptic(this, "failure");
+    }
     async _placeOrder() {
       if (!this._selected || this._submitting) return;
+      const requestedItem = this._selected;
+      const variant = this._selectedVariant;
       const noteEl = this.shadowRoot.getElementById("oc-note");
       const note = noteEl?.value?.trim() || "";
       const haUser = this._hass?.user;
@@ -2085,16 +3133,19 @@ ${TOKENS}
         });
         const order = res.ok ? await res.json() : null;
         if (order?.id) {
+          const sentLabel = variant ? `${requestedItem} · ${variant}` : requestedItem;
           this._activeOrder = order;
           this._orderError = null;
           this._selected = null;
           this._selectedVariant = null;
           this._selectedBeanId = null;
+          toast(this, _s("toast_order_sent", this._lang, sentLabel));
+          haptic(this, "success");
         } else {
-          this._orderError = _s("order_failed", this._lang);
+          this._failOrder();
         }
       } catch {
-        this._orderError = _s("order_failed", this._lang);
+        this._failOrder();
       }
       this._submitting = false;
       this._render();
@@ -2115,7 +3166,7 @@ ${TOKENS}
     name: "GLP Order Card",
     description: "Customer-facing order card for Gaggiuino Local Profiler",
     preview: false,
-    documentationURL: "https://github.com/mxkissnr/glp-order-card"
+    documentationURL: "https://github.com/mxkissnr/glp-integration/blob/main/DOCS.md#order-card"
   });
   console.info(`%c GLP-ORDER-CARD %c v${GLP_ORDER_CARD_VERSION} `, "background:#ff9f0a;color:#000;padding:2px 4px;border-radius:3px 0 0 3px", "background:#111113;color:#ff9f0a;padding:2px 4px;border-radius:0 3px 3px 0");
 })();

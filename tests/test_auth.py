@@ -10,6 +10,7 @@ from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from custom_components.gaggiuino_profiler.auth import GlpAuth
 from custom_components.gaggiuino_profiler.coordinator import GlpDataCoordinator
+from tests.common import mock_all_coordinator_endpoints
 
 URL = "http://glp.local:8099"
 
@@ -149,14 +150,7 @@ async def test_post_wraps_aiohttp_errors(hass, aioclient_mock) -> None:
 async def test_data_coordinator_401_on_status_invalidates_cached_token(
     hass, aioclient_mock
 ) -> None:
-    aioclient_mock.get(f"{URL}/api/status", status=401)
-    aioclient_mock.get(f"{URL}/shots.json?limit=10", json=[])
-    aioclient_mock.get(f"{URL}/shots.json", json=[])
-    aioclient_mock.get(f"{URL}/api/maintenance", json={})
-    aioclient_mock.get(f"{URL}/api/preheat", json={})
-    aioclient_mock.get(f"{URL}/api/machine/profiles", json={})
-    aioclient_mock.get(f"{URL}/api/menu", json=[])
-    aioclient_mock.get(f"{URL}/api/version", json={})
+    mock_all_coordinator_endpoints(aioclient_mock, URL, statuses={"status": 401})
     token_session = _FakeSession(tokens=["old-token", "new-token"])
     auth = GlpAuth(token_session, URL)
     coordinator = GlpDataCoordinator(
