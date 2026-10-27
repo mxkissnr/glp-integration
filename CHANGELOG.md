@@ -1,6 +1,8 @@
 # Changelog
 
 ## [Unreleased]
+
+## [1.34.0] – 2026-10-27
 ### Added
 - **The Order Card can now be set up in Home Assistant's visual card editor instead of YAML.** Refs #272
 - **The Shot Card can now be set up in Home Assistant's visual card editor instead of YAML.** Refs #262
@@ -16,6 +18,7 @@
 - **The Order Card shows bean details behind a small info button in a sheet, so the menu stays short.** Refs #274
 - **The Shot Card only redraws when its own machine data or the theme changes, which keeps wall tablets and Raspberry Pi kiosks responsive on busy Home Assistant instances.** Refs #270
 - **The Shot Card and the Order Card are now developed in this repository and ship with every integration release.** Refs #256
+- **The bundled Shot Card is now v2.23.0 and the bundled Order Card v1.23.0.** Refs #256
 - **Both cards got a shared bottom sheet that later changes use for pickers and details.** Refs #266
 - **The integration test suite now fails when a test hits an endpoint it did not mock, and several tests check what their names promise.** Refs #238
 

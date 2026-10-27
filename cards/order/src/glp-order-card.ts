@@ -28,7 +28,7 @@ import type {
 
 // Bumped only in a release — a feature or fix PR leaves this alone (see
 // cards/CLAUDE.md and the PR template). Logged on startup below.
-const GLP_ORDER_CARD_VERSION = '1.22.0';
+const GLP_ORDER_CARD_VERSION = '1.23.0';
 
 // Menu items younger than this show the NEW badge (config: new_badge_days)
 const NEW_BADGE_DAYS_DEFAULT = 7;
