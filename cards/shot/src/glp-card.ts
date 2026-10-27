@@ -24,7 +24,7 @@ import type {
 } from './types.ts';
 // Bumped only in a release — a feature or fix PR leaves this alone (see
 // cards/CLAUDE.md and the PR template). Logged on startup below.
-const GLP_CARD_VERSION = '2.22.0';
+const GLP_CARD_VERSION = '2.23.0';
 
 // Fallback for a ready-by Set/Cancel whose sensor confirmation never lands
 // (#214). The optimistic value is cleared the moment _readReadyBy() sees the

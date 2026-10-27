@@ -98,13 +98,15 @@ Ein im App gesetztes Thema (Einstellungen → Maschinen) wird live aus dem Attri
 - Shot-Navigation — Pfeile und bis zu zehn Punkt-Indikatoren für die letzten Shots aus dem Attribut `recent_shots` des `machine_status`-Sensors, dazu Wischen nach links/rechts auf Touch-Geräten; springt bei einem neuen Shot zurück auf den neuesten
 - Shot-Chart — Druck und Flow auf der linken Achse, Kesseltemperatur und Gewicht auf der rechten Achse, mit Legende der Spitzen- und Endwerte, sowohl für den angezeigten Shot als auch für den laufenden
 - Live-Kacheln, solange die Maschine an ist — Kesseltemperatur mit Zielwert (hervorgehoben beim Aufheizen), Live-Druck und Live-Gewicht der Waage; während eines Shots dieselben Werte als Mini-Stats
-- Profil-Auswahl für `select.*_profile` — bleibt über State-Updates hinweg offen und wird ausgeblendet, wenn das Entity fehlt
-- Tab "Bestellungen", wenn im App offene Barista-Bestellungen liegen, mit Zähler-Badge und Annehmen/Ablehnen/Abschließen
-- Tab "Wartung", wenn die Wartungssensoren existieren — die fünf Wartungsaufgaben plus eine Zeile pro Mühle, jeweils mit Status-Pill, Tagen/Shots seit der letzten Wartung und Fortschrittsbalken; ein Tipp auf eine Aufgabe markiert sie über `gaggiuino_profiler.maintenance_done` als erledigt
+- Profil-Auswahl für `select.*_profile` — öffnet sich in einem Sheet vom unteren Bildschirmrand, bleibt über State-Updates hinweg offen und wird ausgeblendet, wenn das Entity fehlt
+- Tab "Bestellungen", wenn in der App offene Barista-Bestellungen liegen, mit Zähler-Badge; ein Tipp auf eine Bestellung öffnet ihre Details in einem Sheet mit Annehmen, Erledigt und Ablehnen
+- Tab "Wartung", wenn die Wartungssensoren existieren — die fünf Wartungsaufgaben plus eine Zeile pro Mühle, jeweils mit Status-Pill, Tagen/Shots seit der letzten Wartung und Fortschrittsbalken; ein Tipp auf eine Aufgabe und die Bestätigung in einem Sheet markiert sie über `gaggiuino_profiler.maintenance_done` als erledigt; die Zeile lässt sich auch per Tastatur erreichen und bestätigen
 - Dampf-Banner, solange der Dampfschalter an ist, Entkalkungs-Banner, solange die Maschine ihr Entkalkungsprogramm fährt
 - Wasserstand in der Fußzeile mit Warnbanner unter 20 %
 - Letzter Shot: Profil, Getränkeart, Kaffee mit Sorte und Röstdatum-Alter aus der Kaffeebibliothek, Mühle und Mahlgrad, Sterne-Bewertung, Score-Verdict, Brühverhältnis, Dauer, Ausbeute, durchschnittlicher Druck und Brühtemperatur
 - Anzahl der heute gezogenen Shots
+- Kurzbefehle — ein Tipp auf einen Live-Wert (Temperatur, Druck, Gewicht) öffnet dessen Home-Assistant-Verlauf, ein langer Druck auf die Kopfzeile öffnet die Maschine
+- Rückmeldung — jede Aktion bestätigt sich mit einer kurzen Home-Assistant-Meldung, Handys vibrieren dazu. Beides nutzt die dokumentierten Karten-Events von Home Assistant und erscheint daher dort, wo Home Assistant seine eigenen Meldungen zeigt
 
 ### Sprachen der Shot Card
 
