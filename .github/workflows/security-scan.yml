@@ -2,10 +2,12 @@ name: Security scan
 
 # Dependency vulnerability checks elsewhere only run when a PR touches the repo;
 # new CVEs are published without any commit (#327). This daily scan covers dev
-# and main with osv-scanner on the card lockfile (cards/package-lock.json) and
-# the Python test requirements, including dependencies that were already
-# present. Findings are reported as one `security` issue per branch; reruns
-# comment on the open issue.
+# and main with osv-scanner on cards/package-lock.json, including dependencies
+# that were already present. Findings are reported as one `security` issue per
+# branch; reruns comment on the open issue.
+# requirements_test.txt is excluded on purpose: its findings are transitive
+# packages pinned by the pytest-homeassistant-custom-component harness, CI-only
+# and not bumpable independently, so the issue would never close.
 
 on:
   schedule:
@@ -52,7 +54,7 @@ jobs:
         run: |
           mkdir -p findings
           rc=0
-          go run github.com/google/osv-scanner/v2/cmd/osv-scanner@v2.7.0 scan source -L cards/package-lock.json -L requirements.txt:requirements_test.txt > findings/osv-scanner.txt 2>&1 || rc=$?
+          go run github.com/google/osv-scanner/v2/cmd/osv-scanner@v2.7.0 scan source -L cards/package-lock.json > findings/osv-scanner.txt 2>&1 || rc=$?
           cat findings/osv-scanner.txt
           [ "$rc" -eq 0 ] && rm findings/osv-scanner.txt
           [ "$rc" -eq 0 ] || [ "$rc" -eq 1 ] || exit "$rc"
