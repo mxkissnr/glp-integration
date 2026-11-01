@@ -31,5 +31,166 @@
       "invalid_url": "The URL must start with http:// or https://",
       "cannot_connect": "Cannot connect to GLP. Check the URL and make sure the app is running."
     }
+  },
+  "entity": {
+    "sensor": {
+      "machine_status": {
+        "name": "Machine Status"
+      },
+      "shot_count": {
+        "name": "Shot Count"
+      },
+      "shots_today": {
+        "name": "Shots Today"
+      },
+      "last_shot_profile": {
+        "name": "Last Shot Profile"
+      },
+      "last_shot_rating": {
+        "name": "Last Shot Rating"
+      },
+      "last_shot_date": {
+        "name": "Last Shot Date"
+      },
+      "last_shot_duration": {
+        "name": "Last Shot Duration"
+      },
+      "last_shot_pressure": {
+        "name": "Last Shot Avg Pressure"
+      },
+      "last_shot_weight": {
+        "name": "Last Shot Yield"
+      },
+      "last_shot_ratio": {
+        "name": "Last Shot Brew Ratio"
+      },
+      "last_shot_dose": {
+        "name": "Last Shot Dose"
+      },
+      "last_shot_coffee": {
+        "name": "Last Shot Coffee"
+      },
+      "last_shot_grinder": {
+        "name": "Last Shot Grinder"
+      },
+      "last_sync": {
+        "name": "Last Sync"
+      },
+      "machine_url": {
+        "name": "Machine Hostname"
+      },
+      "machine_temperature": {
+        "name": "Machine Temperature"
+      },
+      "machine_target_temperature": {
+        "name": "Machine Target Temperature"
+      },
+      "preheat_elapsed": {
+        "name": "Elapsed"
+      },
+      "preheat_remaining": {
+        "name": "Remaining"
+      },
+      "preheat_ready_by_target_at": {
+        "name": "Ready By"
+      },
+      "preheat_planned_switch_on_at": {
+        "name": "Planned Switch On"
+      },
+      "maint_descaling": {
+        "name": "Descaling"
+      },
+      "maint_backflush": {
+        "name": "Backflush"
+      },
+      "maint_grouphead": {
+        "name": "Group Head"
+      },
+      "maint_gaskets": {
+        "name": "Gaskets"
+      },
+      "maint_waterfilter": {
+        "name": "Water Filter"
+      },
+      "machine_live_pressure": {
+        "name": "Machine Live Pressure"
+      },
+      "machine_water_level": {
+        "name": "Machine Water Level"
+      },
+      "machine_live_weight": {
+        "name": "Machine Live Weight"
+      },
+      "machine_uptime": {
+        "name": "Machine Uptime"
+      },
+      "machine_live_profile": {
+        "name": "Machine Active Profile"
+      },
+      "pump_flow": {
+        "name": "Pump Flow"
+      },
+      "weight_flow": {
+        "name": "Weight Flow"
+      },
+      "water_temperature": {
+        "name": "Water Temperature"
+      },
+      "maint_grinders": {
+        "name": "Maintenance Grinders"
+      },
+      "status": {
+        "name": "Status"
+      }
+    },
+    "binary_sensor": {
+      "thermocouple_faulted": {
+        "name": "Thermocouple Faulted"
+      },
+      "pressure_sensor_faulted": {
+        "name": "Pressure Sensor Faulted"
+      },
+      "boiler_state": {
+        "name": "Boiler Relay"
+      },
+      "valve_state": {
+        "name": "Valve"
+      },
+      "steam_valve_state": {
+        "name": "Steam Valve"
+      },
+      "valve_b_state": {
+        "name": "Valve B"
+      },
+      "steam_boiler_relay_state": {
+        "name": "Steam Boiler Relay"
+      },
+      "is_brewing": {
+        "name": "Brewing"
+      },
+      "preheat_ready": {
+        "name": "Ready"
+      },
+      "machine_standby": {
+        "name": "Machine Standby"
+      },
+      "steam_switch": {
+        "name": "Steam Switch"
+      },
+      "reachable": {
+        "name": "Reachable"
+      }
+    }
+  },
+  "device": {
+    "shots": {
+      "name": "Shots"
+    },
+    "maintenance": {
+      "name": "Maintenance"
+    },
+    "preheat": {
+      "name": "Preheat"
+    }
   }
 }

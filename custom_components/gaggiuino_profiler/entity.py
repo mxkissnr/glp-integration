@@ -35,7 +35,8 @@ except ImportError:  # HA Core < 2026.9
 _CoordinatorT = TypeVar("_CoordinatorT", bound=DataUpdateCoordinator)
 
 # #336: display names of the child devices the default machine's entities are
-# grouped into. English literals like every other name in this integration.
+# grouped into, used as the fallback name for HA Core versions that do not
+# translate device names; #339 adds the `device.<group>.name` translations.
 GROUP_NAMES = {"shots": "Shots", "maintenance": "Maintenance", "preheat": "Preheat"}
 
 

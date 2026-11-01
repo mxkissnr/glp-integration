@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 ### Changed
+- **Entity and device names now follow the Home Assistant language, starting with the sensors in English and German.** Refs #339
 - **The entities of the Gaggiuino Local Profiler device are grouped into the child devices Shots, Maintenance and Preheat, the machine hostname, uptime and last sync moved to the Diagnostic section, and every entity ID stayed the same.** Refs #336
 - **The docs now describe installing and updating the integration and both cards through the Home Assistant Marketplace, and how to switch on pre-releases there.** Refs #326
 - **The Shot Card and the Order Card find their machine through Home Assistant's entity registry, so a renamed device, a translated interface or the 2026.11 "main entity" setting no longer stops them from finding the machine.** Refs #323
