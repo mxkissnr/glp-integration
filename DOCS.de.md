@@ -9,7 +9,17 @@ Bindet den [Gaggiuino Local Profiler](https://github.com/mxkissnr/gaggiuino-loca
 
 ## Installation
 
-### HACS (empfohlen)
+### Home Assistant 2026.11 oder neuer (empfohlen)
+
+Home Assistant 2026.11 hat HACS durch den eingebauten Marketplace ersetzt, und diese Integration steht in dessen Standardkatalog — ein eigenes Repository ist nicht nötig.
+
+1. **Einstellungen → Marketplace** öffnen
+2. Nach *Gaggiuino Local Profiler* suchen und installieren
+3. Home Assistant neu starten
+
+Eine bestehende HACS-Installation wird beim ersten Start von Home Assistant 2026.11 automatisch übernommen; HACS selbst lässt sich auf 2026.11 oder neuer nicht mehr installieren. Die `hacs.json` bleibt im Repository und bleibt erforderlich, an Installationen mit HACS ändert sich also nichts.
+
+### Älteres Home Assistant (vor 2026.11): HACS
 
 1. In HACS nach *Gaggiuino Local Profiler* suchen und installieren
 2. Home Assistant neu starten
@@ -19,9 +29,15 @@ Bindet den [Gaggiuino Local Profiler](https://github.com/mxkissnr/gaggiuino-loca
 1. Den Ordner `custom_components/gaggiuino_profiler/` in `config/custom_components/` kopieren
 2. Home Assistant neu starten
 
+### Aktualisierungen
+
+Auf Home Assistant 2026.11 oder neuer kommen Aktualisierungen für die Integration und beide mitgelieferten Karten über die Marketplace-Update-Entity dieser Integration — dort installieren und Home Assistant neu starten, wenn es dazu auffordert. Vor 2026.11 zeigt HACS dieselbe Aktualisierung in seiner eigenen Update-Entity.
+
 ### Beta-Versionen
 
-Um kommende Änderungen zu testen, diese Integration in HACS öffnen, das Drei-Punkte-Menü wählen und *Erneut herunterladen* anwählen, dann *Benötigst du eine andere Version?* aufklappen und die Beta-Version aus der Liste *Release* wählen (Tags wie `v1.33.2b1`). *Herunterladen* anwählen und Home Assistant neu starten. Danach erhältst du den Entwicklungsstand der Integration und beider Karten. Er ist nur zum Testen gedacht und kann Fehler enthalten. Zum Zurückwechseln denselben Dialog öffnen und die neueste stabile Version wählen.
+Vorabversionen sind pro Repository opt-in. Auf Home Assistant 2026.11 oder neuer die Marketplace-Geräteseite der Integration öffnen, dort die Entity *Pre-release* aktivieren (sie ist standardmäßig deaktiviert) und einschalten. Der Marketplace bietet dann die Beta-Versionen an (Tags wie `v1.33.2b1`), du erhältst also den Entwicklungsstand der Integration und beider Karten. Er ist nur zum Testen gedacht und kann Fehler enthalten; zum Zurückwechseln die Entity wieder ausschalten, dann werden wie voreingestellt nur stabile Versionen angeboten.
+
+Auf älteren Home Assistant-Versionen bietet HACS die Beta-Versionen weiterhin über *Beta-Versionen anzeigen* an.
 
 ## Einrichtung
 
@@ -35,7 +51,7 @@ Die Integration testet die Verbindung direkt beim Einrichten.
 
 ## Shot Card
 
-Die GLP Shot Card ist Teil dieser Integration und wird beim Einrichten automatisch als Dashboard-Ressource registriert — keine separate HACS-Installation oder manuelle Ressourcenkonfiguration nötig. Einfach eine Karte mit `type: custom:glp-card` zum Dashboard hinzufügen, nachdem diese Integration installiert ist. Der Quellcode liegt in [`cards/shot/`](cards/shot/).
+Die GLP Shot Card ist Teil dieser Integration und wird beim Einrichten automatisch als Dashboard-Ressource registriert — keine separate Karten-Installation oder manuelle Ressourcenkonfiguration nötig. Einfach eine Karte mit `type: custom:glp-card` zum Dashboard hinzufügen, nachdem diese Integration installiert ist. Der Quellcode liegt in [`cards/shot/`](cards/shot/).
 
 <img src="cards/shot/docs/screenshots/card.png" width="420" alt="GLP Shot Card mit vorgeheizter Maschine, aktuellem Profil, Live-Kacheln und dem letzten Shot samt Druck-, Flow-, Temperatur- und Gewichtskurve"/>
 
@@ -208,6 +224,10 @@ Erkannt aus der Sprache des angemeldeten Home-Assistant-Benutzers, mit der Brows
 ## Entities
 
 Alle Sensoren/Entities aktualisieren sich mit dem Poll-Intervall des jeweiligen Coordinators: der Haupt-Coordinator (`coordinator.py`) alle 60 Sekunden (konfigurierbar, s.o.), und der Machine-Coordinator (`machine_coordinator.py`) alle 5 Sekunden für Live-Maschinenwerte. Der Live-Coordinator (`live_coordinator.py`, treibt den `Brewing`-Sensor) wird seit v1.30.0 per SSE-Stream des Add-ons in Echtzeit gepusht (nahezu verzögerungsfrei) und fällt nur auf einen 2-Sekunden-Poll zurück, solange dieser Stream nicht verfügbar ist.
+
+### Haupt-Entity (Home Assistant 2026.11+)
+
+Der Sensor *Machine Status* lässt sich in seinen Entity-Einstellungen als Haupt-Entity des GLP-Geräts markieren (**Einstellungen → Geräte & Dienste → Gaggiuino Local Profiler → Entities → Machine Status → Haupt-Entity**). Das Gerät zeigt dann den Maschinennamen, und beide mitgelieferten Karten finden die Maschine weiterhin.
 
 ### Verhältnis zu Gaggiuinos eigenen MQTT-Entities
 

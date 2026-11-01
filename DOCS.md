@@ -9,7 +9,17 @@ Integrates the [Gaggiuino Local Profiler](https://github.com/mxkissnr/gaggiuino-
 
 ## Installation
 
-### HACS (recommended)
+### Home Assistant 2026.11 or newer (recommended)
+
+Home Assistant 2026.11 replaced HACS with the built-in Marketplace, and this integration is in its default catalog — no custom repository needed.
+
+1. Open **Settings → Marketplace**
+2. Search for *Gaggiuino Local Profiler* and install it
+3. Restart Home Assistant
+
+An existing HACS installation is migrated automatically the first time Home Assistant 2026.11 starts; HACS itself cannot be installed on 2026.11 or newer. `hacs.json` stays in the repository and stays required, so nothing changes for installs that still use HACS.
+
+### Older Home Assistant (before 2026.11): HACS
 
 1. Search HACS for *Gaggiuino Local Profiler* and install
 2. Restart Home Assistant
@@ -19,9 +29,15 @@ Integrates the [Gaggiuino Local Profiler](https://github.com/mxkissnr/gaggiuino-
 1. Copy the `custom_components/gaggiuino_profiler/` folder into `config/custom_components/`
 2. Restart Home Assistant
 
+### Updates
+
+On Home Assistant 2026.11 or newer, updates for the integration and both bundled cards arrive through the Marketplace update entity for this integration — install the update there and restart Home Assistant when it asks. Before 2026.11, HACS shows the same update in its own update entity.
+
 ### Beta versions
 
-To test upcoming changes, open this integration in HACS, open the three-dot menu and choose *Redownload*, then expand *Need a different version?* and pick the beta release from the *Release* list (tags like `v1.33.2b1`). Choose *Download* and restart Home Assistant. You then get the development build of the integration and both cards. It is for testing only and may be broken. To go back, open the same dialog and pick the newest stable release.
+Pre-releases are opt-in per repository. On Home Assistant 2026.11 or newer, open the integration's Marketplace device page, enable the *Pre-release* entity there (it is disabled by default) and turn it on. The Marketplace then offers the beta releases (tags like `v1.33.2b1`), so you get the development build of the integration and both cards. It is for testing only and may be broken; turn the entity off again to go back to stable releases only, which is the default.
+
+On older Home Assistant versions the beta builds are still offered by HACS under *Show beta versions*.
 
 ## Setup
 
@@ -35,7 +51,7 @@ The integration tests the connection right away during setup.
 
 ## Shot Card
 
-The GLP Shot Card ships inside this integration and is registered automatically as a dashboard resource on setup — no separate HACS install or manual resource config needed. Add a card with `type: custom:glp-card` to your dashboard after installing this integration. The source lives in [`cards/shot/`](cards/shot/).
+The GLP Shot Card ships inside this integration and is registered automatically as a dashboard resource on setup — no separate card install or manual resource config needed. Add a card with `type: custom:glp-card` to your dashboard after installing this integration. The source lives in [`cards/shot/`](cards/shot/).
 
 <img src="cards/shot/docs/screenshots/card.png" width="420" alt="GLP Shot Card showing a preheated machine, the current profile, live machine tiles and the last shot with its pressure, flow, temperature and weight curve"/>
 
@@ -208,6 +224,10 @@ Detected from the language of the logged-in Home Assistant user, with the browse
 ## Entities
 
 All sensors/entities update at the poll interval of their respective coordinator: the main coordinator (`coordinator.py`) every 60 seconds (configurable, see above), and the machine coordinator (`machine_coordinator.py`) every 5 seconds for live machine values. The live coordinator (`live_coordinator.py`, driving the `Brewing` sensor) is pushed live over the add-on's SSE stream (near-instant) since v1.30.0, falling back to a 2-second poll only while that stream is unavailable.
+
+### Main entity (Home Assistant 2026.11+)
+
+You can mark the *Machine Status* sensor as the main entity of the GLP device in its entity settings (**Settings → Devices & Services → Gaggiuino Local Profiler → Entities → Machine Status → Main entity**). The device then shows the machine name, and both bundled cards keep finding the machine as before.
 
 ### Relationship to Gaggiuino firmware's own MQTT entities
 
