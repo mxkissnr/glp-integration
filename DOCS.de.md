@@ -402,6 +402,31 @@ data:
 
 `rating` ist die manuelle Sterne-Bewertung aus der Shot-Annotation (`null`, falls (noch) nicht gesetzt) — kein automatisch berechneter Score.
 
+### Event-Entity: `event.gaggiuino_local_profiler_shot`
+
+Derselbe abgeschlossene Shot steht zusätzlich als Event-Entity auf dem Kindgerät **Shots** bereit. Sie feuert den Event-Typ `shot_finished` einmal pro neuem Shot, und ihre Attribute tragen dieselben Felder wie das Bus-Event oben: `shot_id`, `profile`, `duration_s`, `yield_g`, `dose_g`, `ratio`, `avg_pressure`, `rating`, `coffee` und `grinder`. Das Bus-Event oben funktioniert unverändert weiter, bestehende Automatisierungen müssen also nicht angepasst werden; die Entity ist die bequemere Variante, wenn du die Automatisierung in der UI zusammenklickst.
+
+Beim ersten Poll nach dem Einrichten und nach einem Neustart von Home Assistant feuert die Entity nichts für einen Shot, der bereits bekannt war.
+
+**Benachrichtigung nach jedem Shot, über die Event-Entity:**
+```yaml
+automation:
+  trigger:
+    platform: state
+    entity_id: event.gaggiuino_local_profiler_shot
+  condition:
+    - condition: template
+      value_template: "{{ trigger.to_state.attributes.event_type == 'shot_finished' }}"
+  action:
+    service: notify.mobile_app
+    data:
+      title: "☕ Shot abgeschlossen"
+      message: >
+        {{ trigger.to_state.attributes.profile }} –
+        {{ trigger.to_state.attributes.duration_s }}s,
+        Ratio 1:{{ trigger.to_state.attributes.ratio }}
+```
+
 ### Automationsbeispiele
 
 **Benachrichtigung nach jedem Shot:**

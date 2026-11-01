@@ -31,7 +31,7 @@ _LOGGER = logging.getLogger(__name__)
 # the new GlpSettingsCoordinator below (light/number/switch) or the existing
 # data/machine coordinators (button, select's new operation-mode/release-
 # channel entries).
-PLATFORMS = ["sensor", "binary_sensor", "select", "update", "light", "number", "switch", "button"]
+PLATFORMS = ["sensor", "binary_sensor", "select", "update", "light", "number", "switch", "button", "event"]
 
 MAINTENANCE_DONE_SCHEMA = vol.Schema({
     vol.Required("task"): vol.All(str, vol.Length(min=1)),
