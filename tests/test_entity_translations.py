@@ -13,6 +13,8 @@ the very same ids as the English one.
 import json
 from pathlib import Path
 
+import pytest
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity import UNDEFINED
 from pytest_homeassistant_custom_component.common import MockConfigEntry
@@ -27,7 +29,7 @@ from custom_components.gaggiuino_profiler.binary_sensor import (
     SteamSwitchSensor,
 )
 from custom_components.gaggiuino_profiler.const import DOMAIN
-from custom_components.gaggiuino_profiler.entity import GROUP_NAMES
+from custom_components.gaggiuino_profiler.entity import DEVICE_GROUP_KEYS, GlpEntity
 from custom_components.gaggiuino_profiler.sensor import (
     MACHINE_SENSORS,
     MAINTENANCE_SENSORS,
@@ -40,6 +42,11 @@ from custom_components.gaggiuino_profiler.sensor import (
 from tests.common import load_icons, mock_all_coordinator_endpoints
 
 COMPONENT_DIR = Path(__file__).resolve().parent.parent / "custom_components" / "gaggiuino_profiler"
+try:
+    HAS_CHILD_DEVICES = dr.ChildDeviceEntry is not None
+except AttributeError:  # HA Core < 2026.9
+    HAS_CHILD_DEVICES = False
+
 URL = "http://glp.example.com"
 
 MACHINES_ONE = [
@@ -118,12 +125,13 @@ def test_english_and_german_have_the_same_keys() -> None:
         assert english["entity"][platform].keys() == german["entity"][platform].keys(), platform
 
 
-def test_device_names_are_translated() -> None:
+def test_device_device_keys_are_translated() -> None:
     english, german = _translations("en"), _translations("de")
-    assert set(GROUP_NAMES) == set(english["device"])
-    assert set(GROUP_NAMES) == set(german["device"])
-    for group, name in GROUP_NAMES.items():
-        assert english["device"][group]["name"] == name
+    assert set(DEVICE_GROUP_KEYS) == set(english["device"])
+    assert set(DEVICE_GROUP_KEYS) == set(german["device"])
+    for key in DEVICE_GROUP_KEYS:
+        assert english["device"][key]["name"], key
+        assert german["device"][key]["name"], key
 
 
 def test_every_icon_belongs_to_an_entity_translation_key() -> None:
@@ -174,10 +182,49 @@ async def test_german_keeps_the_entity_ids(hass, strict_aioclient_mock) -> None:
     )
 
 
+def test_device_info_carries_the_group_translation_key() -> None:
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": URL}, entry_id="test_entry")
+    for group in DEVICE_GROUP_KEYS:
+        for parent_device_id in ("parent_device_id", None):
+            info = GlpEntity._device_info(entry, None, group, parent_device_id)
+            assert info["translation_key"] == group, (group, parent_device_id)
+            # A `name` would win over the translation key, so only the key is set.
+            assert "name" not in info, (group, parent_device_id)
+
+
+def _group_device(hass, entry, group):
+    registry = dr.async_get(hass)
+    identifier = (DOMAIN, f"{entry.entry_id}_group_{group}")
+    if HAS_CHILD_DEVICES:
+        return registry.async_get_child_device_by_identifier(identifier, entry.entry_id)
+    return registry.async_get_device_by_identifier(identifier, entry.entry_id)
+
+
+@pytest.mark.skipif(not HAS_CHILD_DEVICES, reason="HA Core < 2026.9 has no child devices")
+async def test_child_devices_are_named_from_their_translation_key(hass, strict_aioclient_mock) -> None:
+    entry = await _setup(hass, strict_aioclient_mock)
+
+    english = _translations("en")["device"]
+    for group in DEVICE_GROUP_KEYS:
+        device = _group_device(hass, entry, group)
+        assert device is not None, group
+        assert device.name == english[group]["name"], group
+
+
+@pytest.mark.skipif(not HAS_CHILD_DEVICES, reason="HA Core < 2026.9 has no child devices")
 async def test_german_shows_the_german_entity_and_device_names(hass, strict_aioclient_mock) -> None:
-    await _setup(hass, strict_aioclient_mock, language="de")
+    entry = await _setup(hass, strict_aioclient_mock, language="de")
 
     shot_count = hass.states.get("sensor.gaggiuino_local_profiler_shot_count")
     assert shot_count.attributes["friendly_name"].endswith("Shot-Anzahl")
     descaling = hass.states.get("sensor.gaggiuino_local_profiler_maint_descaling")
     assert descaling.attributes["friendly_name"].endswith("Entkalken")
+
+    german = _translations("de")["device"]
+    for group in DEVICE_GROUP_KEYS:
+        device = _group_device(hass, entry, group)
+        assert device.name == german[group]["name"], group
+    # "Maintenance"/"Preheat" genuinely differ from the English literals, so
+    # these two prove the device names are translated rather than hard-coded.
+    assert _group_device(hass, entry, "maintenance").name == "Wartung"
+    assert _group_device(hass, entry, "preheat").name == "Vorheizen"

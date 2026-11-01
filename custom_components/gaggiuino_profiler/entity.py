@@ -34,10 +34,10 @@ except ImportError:  # HA Core < 2026.9
 
 _CoordinatorT = TypeVar("_CoordinatorT", bound=DataUpdateCoordinator)
 
-# #336: display names of the child devices the default machine's entities are
-# grouped into, used as the fallback name for HA Core versions that do not
-# translate device names; #339 adds the `device.<group>.name` translations.
-GROUP_NAMES = {"shots": "Shots", "maintenance": "Maintenance", "preheat": "Preheat"}
+# #336/#339: the child devices the default machine's entities are grouped into.
+# Their display names come from `device.<group>.name` in translations/<lang>.json,
+# resolved by HA from the device's translation_key, so they follow the HA language.
+DEVICE_GROUP_KEYS = ("shots", "maintenance", "preheat")
 
 
 class GlpEntity(CoordinatorEntity[_CoordinatorT]):
@@ -84,16 +84,17 @@ class GlpEntity(CoordinatorEntity[_CoordinatorT]):
         identifiers = {(DOMAIN, f"{entry.entry_id}_group_{group}")}
         if ChildDeviceInfo is not None and parent_device_id:
             # #336: same shape as the additional-machine child devices (#322).
+            # #339: the name comes from `device.<group>.name`.
             return ChildDeviceInfo(
                 identifiers=identifiers,
-                name=GROUP_NAMES[group],
                 parent_device_id=parent_device_id,
+                translation_key=group,
             )
         return DeviceInfo(
             identifiers=identifiers,
-            name=GROUP_NAMES[group],
             manufacturer="Gaggiuino",
             model="Local Profiler",
+            translation_key=group,
             via_device=(DOMAIN, entry.entry_id),
         )
 
