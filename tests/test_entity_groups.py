@@ -17,13 +17,14 @@ import re
 from unittest import mock
 
 import pytest
-from homeassistant.const import EntityCategory
+from homeassistant.const import EntityCategory, Platform
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.gaggiuino_profiler import entity as entity_module
 from custom_components.gaggiuino_profiler.const import DOMAIN
+from custom_components.gaggiuino_profiler.sensor import SENSORS, GlpSensor
 from tests.common import mock_all_coordinator_endpoints
 from tests.test_additional_machine_child_device import _entity_ids_by_unique_id, _main_device
 
@@ -201,6 +202,26 @@ async def test_group_devices_fall_back_to_via_device(hass, strict_aioclient_mock
 
     # The entities are still grouped and keep their ids on that core.
     assert _registry_entry(hass, entry, "preheat_remaining") == "sensor.gaggiuino_local_profiler_preheat_remaining"
+
+
+def test_grouped_sensor_id_is_pinned_from_the_platform_domain() -> None:
+    """The pinned id must not depend on where HA Core defines SensorEntity.
+
+    HA 2026.11 moved the platform base classes into a submodule
+    (`homeassistant.components.sensor.entity`), which broke the former
+    module-path lookup and crashed the whole platform setup.
+    """
+    coordinator = mock.MagicMock()
+    coordinator.data = {}
+    entry = mock.MagicMock()
+    entry.entry_id = "test_entry"
+    entry.data = {"url": URL}
+
+    description = next(d for d in SENSORS if d.group == "shots")
+    sensor = GlpSensor(coordinator, entry, description)
+    sensor.pin_grouped_entity_id(Platform.SENSOR.value)
+
+    assert sensor.entity_id == f"sensor.gaggiuino_local_profiler_{description.key}"
 
 
 async def test_machine_hostname_uptime_and_last_sync_are_diagnostic(hass, strict_aioclient_mock) -> None:

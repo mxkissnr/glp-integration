@@ -13,6 +13,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
     EntityCategory,
+    Platform,
     UnitOfPressure,
     UnitOfTemperature,
     UnitOfTime,
@@ -450,7 +451,7 @@ class GlpSensor(GlpEntity[GlpDataCoordinator], SensorEntity):
             parent_device_id=parent_device_id,
         )
         self.entity_description = description
-        self.pin_grouped_entity_id()
+        self.pin_grouped_entity_id(Platform.SENSOR.value)
 
     @property
     def suggested_object_id(self) -> str | None:
@@ -506,7 +507,7 @@ class GlpGrinderMaintenanceSensor(GlpEntity[GlpDataCoordinator], SensorEntity):
         super().__init__(
             coordinator, entry, "maint_grinders", group="maintenance", parent_device_id=parent_device_id
         )
-        self.pin_grouped_entity_id()
+        self.pin_grouped_entity_id(Platform.SENSOR.value)
 
     @property
     def suggested_object_id(self) -> str | None:
@@ -537,7 +538,7 @@ class GlpMaintenanceSensor(GlpEntity[GlpDataCoordinator], SensorEntity):
             parent_device_id=parent_device_id,
         )
         self.entity_description = description
-        self.pin_grouped_entity_id()
+        self.pin_grouped_entity_id(Platform.SENSOR.value)
 
     @property
     def suggested_object_id(self) -> str | None:

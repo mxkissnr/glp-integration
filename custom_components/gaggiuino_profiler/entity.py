@@ -96,9 +96,9 @@ class GlpEntity(CoordinatorEntity[_CoordinatorT]):
             via_device=(DOMAIN, entry.entry_id),
         )
 
-    def pin_grouped_entity_id(self) -> None:
+    def pin_grouped_entity_id(self, domain: str) -> None:
         """Keep the entity_id of a grouped entity (#336), call after the
-        description/suggested id is set.
+        description/suggested id is set, with the platform's domain.
 
         With `has_entity_name=True` HA derives a fresh entity's object id from
         the DEVICE name, which for a grouped entity is its child device
@@ -116,15 +116,7 @@ class GlpEntity(CoordinatorEntity[_CoordinatorT]):
             return
         object_id = self.suggested_object_id
         if object_id:
-            self.entity_id = f"{self._entity_domain()}.gaggiuino_local_profiler_{object_id}"
-
-    def _entity_domain(self) -> str:
-        """The platform domain, e.g. "sensor" for a sensor entity."""
-        for component in type(self).mro():
-            parts = getattr(component, "__module__", "").split(".")
-            if len(parts) == 3 and parts[0] == "homeassistant" and parts[1] == "components":
-                return parts[2]
-        raise RuntimeError(f"cannot determine the platform domain of {type(self).__name__}")
+            self.entity_id = f"{domain}.gaggiuino_local_profiler_{object_id}"
 
 
 class GlpAdditionalMachineEntity(CoordinatorEntity[_CoordinatorT]):

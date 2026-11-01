@@ -9,7 +9,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EntityCategory
+from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -187,7 +187,7 @@ class PreheatReadySensor(GlpEntity[GlpDataCoordinator], BinarySensorEntity):
         parent_device_id: str | None = None,
     ) -> None:
         super().__init__(coordinator, entry, "preheat_ready", group="preheat", parent_device_id=parent_device_id)
-        self.pin_grouped_entity_id()
+        self.pin_grouped_entity_id(Platform.BINARY_SENSOR.value)
 
     @property
     def suggested_object_id(self) -> str | None:
