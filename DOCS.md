@@ -9,7 +9,17 @@ Integrates the [Gaggiuino Local Profiler](https://github.com/mxkissnr/gaggiuino-
 
 ## Installation
 
-### HACS (recommended)
+### Home Assistant 2026.11 or newer (recommended)
+
+Home Assistant 2026.11 replaced HACS with the built-in Marketplace, and this integration is in its default catalog — no custom repository needed.
+
+1. Open **Settings → Marketplace**
+2. Search for *Gaggiuino Local Profiler* and install it
+3. Restart Home Assistant
+
+An existing HACS installation is migrated automatically the first time Home Assistant 2026.11 starts; HACS itself cannot be installed on 2026.11 or newer. `hacs.json` stays in the repository and stays required, so nothing changes for installs that still use HACS.
+
+### Older Home Assistant (before 2026.11): HACS
 
 1. Search HACS for *Gaggiuino Local Profiler* and install
 2. Restart Home Assistant
@@ -19,9 +29,17 @@ Integrates the [Gaggiuino Local Profiler](https://github.com/mxkissnr/gaggiuino-
 1. Copy the `custom_components/gaggiuino_profiler/` folder into `config/custom_components/`
 2. Restart Home Assistant
 
+### Updates
+
+On Home Assistant 2026.11 or newer, updates for the integration and both bundled cards arrive through the Marketplace update entity for this integration — install the update there and restart Home Assistant when it asks. Before 2026.11, HACS shows the same update in its own update entity.
+
 ### Beta versions
 
-To test upcoming changes, open this integration in HACS, open the three-dot menu and choose *Redownload*, then expand *Need a different version?* and pick the beta release from the *Release* list (tags like `v1.33.2b1`). Choose *Download* and restart Home Assistant. You then get the development build of the integration and both cards. It is for testing only and may be broken. To go back, open the same dialog and pick the newest stable release.
+Pre-releases are opt-in per repository. On Home Assistant 2026.11 or newer, open the integration's Marketplace device page, enable the *Pre-release* entity there (it is disabled by default) and turn it on. The Marketplace then offers the beta releases (tags like `v1.33.2b1`), so you get the development build of the integration and both cards. It is for testing only and may be broken; turn the entity off again to go back to stable releases only, which is the default.
+
+A second way is the Marketplace's *Reinstall* dialog, which lists the beta releases marked *pre-release*; picking one installs it.
+
+On older Home Assistant versions the beta builds are still offered by HACS under *Show beta versions*.
 
 ## Setup
 
@@ -33,9 +51,11 @@ To test upcoming changes, open this integration in HACS, open the three-dot menu
 
 The integration tests the connection right away during setup.
 
+On Home Assistant OS with the GLP app installed, Home Assistant also offers the integration by itself: once the app supports it, its announcement shows up under *Discovered* and one confirmation adds the integration with the address the app reported. Manual setup is unchanged and still works the same way.
+
 ## Shot Card
 
-The GLP Shot Card ships inside this integration and is registered automatically as a dashboard resource on setup — no separate HACS install or manual resource config needed. Add a card with `type: custom:glp-card` to your dashboard after installing this integration. The source lives in [`cards/shot/`](cards/shot/).
+The GLP Shot Card ships inside this integration and is registered automatically as a dashboard resource on setup — no separate card install or manual resource config needed. Add a card with `type: custom:glp-card` to your dashboard after installing this integration. The source lives in [`cards/shot/`](cards/shot/).
 
 <img src="cards/shot/docs/screenshots/card.png" width="420" alt="GLP Shot Card showing a preheated machine, the current profile, live machine tiles and the last shot with its pressure, flow, temperature and weight curve"/>
 
@@ -209,6 +229,14 @@ Detected from the language of the logged-in Home Assistant user, with the browse
 
 All sensors/entities update at the poll interval of their respective coordinator: the main coordinator (`coordinator.py`) every 60 seconds (configurable, see above), and the machine coordinator (`machine_coordinator.py`) every 5 seconds for live machine values. The live coordinator (`live_coordinator.py`, driving the `Brewing` sensor) is pushed live over the add-on's SSE stream (near-instant) since v1.30.0, falling back to a 2-second poll only while that stream is unavailable.
 
+### Names and languages
+
+Entity and device names follow the Home Assistant language: English, German, Spanish, French, Italian and Dutch. Other languages show the English names. Entity IDs do not depend on the language and never change when the language does.
+
+### Main entity (Home Assistant 2026.11+)
+
+You can mark the *Machine Status* sensor as the main entity of the GLP device: **Settings → Devices & Services → Gaggiuino Local Profiler → open the device → Machine Status → gear icon → top toggle "Main entity of the device (<device name>)"**. The sensor then shows the device name and always uses the device's area, and both bundled cards keep finding the machine. The device itself is unchanged.
+
 ### Relationship to Gaggiuino firmware's own MQTT entities
 
 Newer Gaggiuino firmware (build 7889b7d+) can publish its own MQTT/Home Assistant auto-discovery entities directly — boiler temperature/pressure/flow/weight, brew/steam/hot-water status, an operation-mode select, active profile, a tare button, and live shot-in-progress sensors. This integration never talks to the machine directly — it only polls the add-on's own REST API — so nothing here is affected by enabling firmware MQTT.
@@ -252,6 +280,8 @@ If you enable both, some entities will look duplicated (this integration's `Mach
 | Water Temperature | Live water (boiler inlet) temperature | °C |
 
 With multi-machine mode enabled (app v2.0.0+), a `Reachable` binary sensor is added automatically on its own device for every additional (non-default) machine — reachable/on are currently the only fields the app API (`machines[]` registry) provides per additional machine.
+
+On Home Assistant 2026.9 and newer that device is a child device of the Gaggiuino Local Profiler device, so the extra machine shows up nested under the main device instead of beside it. Device and entity ids are unchanged, and existing extra-machine devices are converted in place. Going back to v1.34.0 or older afterwards cannot add the additional machines' entities again (Home Assistant logs identifiers that overlap with those of the child device) until those devices are removed; upgrading again restores them. Going back to v1.34.x also leaves the empty Shots, Maintenance and Preheat child devices of the GLP device behind; they can be deleted. On older Home Assistant versions the extra machine stays a separate device linked to the main one.
 
 The default machine's `Machine Status` sensor's `machines` attribute, and each additional machine's `Status` sensor (since v1.29.0), also expose a `theme` attribute — the accent color configured for that machine in the app's Settings → Machines, which the bundled Lovelace/Order cards read to color their header per machine.
 
@@ -377,6 +407,31 @@ data:
 ```
 
 `rating` is the manual star rating from the shot annotation (`null` if not set (yet)) — not an automatically calculated score.
+
+### Event entity: `event.gaggiuino_local_profiler_shot`
+
+The same finished shot is also available as an event entity on the **Shots** child device. It fires the event type `shot_finished` once per new shot, and its attributes carry the same fields as the bus event above: `shot_id`, `profile`, `duration_s`, `yield_g`, `dose_g`, `ratio`, `avg_pressure`, `rating`, `coffee` and `grinder`. The bus event above keeps working unchanged, so existing automations do not need to change; the entity is the convenient option when you build the automation in the UI.
+
+The entity fires nothing on the first poll after setup or after a Home Assistant restart for a shot that was already known.
+
+**Notification after every shot, using the event entity:**
+```yaml
+automation:
+  trigger:
+    platform: state
+    entity_id: event.gaggiuino_local_profiler_shot
+  condition:
+    - condition: template
+      value_template: "{{ trigger.to_state.attributes.event_type == 'shot_finished' }}"
+  action:
+    service: notify.mobile_app
+    data:
+      title: "☕ Shot complete"
+      message: >
+        {{ trigger.to_state.attributes.profile }} –
+        {{ trigger.to_state.attributes.duration_s }}s,
+        Ratio 1:{{ trigger.to_state.attributes.ratio }}
+```
 
 ### Automation examples
 

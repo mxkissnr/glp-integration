@@ -7,6 +7,10 @@
         "data": {
           "url": "GLP-URL"
         }
+      },
+      "hassio_confirm": {
+        "title": "Gaggiuino Local Profiler gefunden",
+        "description": "Die Gaggiuino Local Profiler-App wurde unter {name} gefunden. Integration für diese Adresse hinzufügen?"
       }
     },
     "error": {
@@ -14,7 +18,9 @@
       "invalid_url": "Die URL muss mit http:// oder https:// beginnen."
     },
     "abort": {
-      "already_configured": "Diese GLP-Instanz ist bereits konfiguriert."
+      "already_configured": "Diese GLP-Instanz ist bereits konfiguriert.",
+      "invalid_discovery_info": "Die GLP-App hat eine Adresse gemeldet, die Home Assistant nicht verwenden kann (Host fehlt oder Port ungültig). App aktualisieren und erneut versuchen.",
+      "cannot_connect": "Verbindung zu GLP unter der gefundenen Adresse nicht möglich. Prüfe, ob die App läuft, und versuche es erneut."
     }
   },
   "options": {
@@ -30,6 +36,268 @@
     "error": {
       "invalid_url": "Die URL muss mit http:// oder https:// beginnen.",
       "cannot_connect": "Verbindung zu GLP nicht möglich. Prüfe die URL und stelle sicher, dass die App läuft."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "machine_status": {
+        "name": "Maschinenstatus"
+      },
+      "shot_count": {
+        "name": "Anzahl"
+      },
+      "shots_today": {
+        "name": "Heute"
+      },
+      "last_shot_profile": {
+        "name": "Letztes Profil"
+      },
+      "last_shot_rating": {
+        "name": "Letzte Bewertung"
+      },
+      "last_shot_date": {
+        "name": "Letztes Shot-Datum"
+      },
+      "last_shot_duration": {
+        "name": "Letzte Shot-Dauer"
+      },
+      "last_shot_pressure": {
+        "name": "Letzter Shot-Druck"
+      },
+      "last_shot_weight": {
+        "name": "Letzter Shot-Ertrag"
+      },
+      "last_shot_ratio": {
+        "name": "Letztes Brühverhältnis"
+      },
+      "last_shot_dose": {
+        "name": "Letzte Dosis"
+      },
+      "last_shot_coffee": {
+        "name": "Letzte Bohne"
+      },
+      "last_shot_grinder": {
+        "name": "Letzte Mühle"
+      },
+      "last_sync": {
+        "name": "Letzte Synchronisierung"
+      },
+      "machine_url": {
+        "name": "Maschinen-Hostname"
+      },
+      "machine_temperature": {
+        "name": "Maschinentemperatur"
+      },
+      "machine_target_temperature": {
+        "name": "Zieltemperatur"
+      },
+      "preheat_elapsed": {
+        "name": "Vergangen"
+      },
+      "preheat_remaining": {
+        "name": "Verbleibend"
+      },
+      "preheat_ready_by_target_at": {
+        "name": "Bereit um"
+      },
+      "preheat_planned_switch_on_at": {
+        "name": "Geplantes Einschalten"
+      },
+      "maint_descaling": {
+        "name": "Entkalken"
+      },
+      "maint_backflush": {
+        "name": "Backflush"
+      },
+      "maint_grouphead": {
+        "name": "Gruppenkopf"
+      },
+      "maint_gaskets": {
+        "name": "Dichtungen"
+      },
+      "maint_waterfilter": {
+        "name": "Wasserfilter"
+      },
+      "maint_grinders": {
+        "name": "Mühlen"
+      },
+      "machine_live_pressure": {
+        "name": "Live-Druck"
+      },
+      "machine_water_level": {
+        "name": "Wasserstand"
+      },
+      "machine_live_weight": {
+        "name": "Live-Gewicht"
+      },
+      "machine_uptime": {
+        "name": "Betriebszeit"
+      },
+      "machine_live_profile": {
+        "name": "Aktives Profil"
+      },
+      "pump_flow": {
+        "name": "Pumpendurchfluss"
+      },
+      "weight_flow": {
+        "name": "Gewichtsdurchfluss"
+      },
+      "water_temperature": {
+        "name": "Wassertemperatur"
+      },
+      "status": {
+        "name": "Status"
+      }
+    },
+    "binary_sensor": {
+      "thermocouple_faulted": {
+        "name": "Thermoelement gestört"
+      },
+      "pressure_sensor_faulted": {
+        "name": "Drucksensor gestört"
+      },
+      "boiler_state": {
+        "name": "Kesselrelais"
+      },
+      "valve_state": {
+        "name": "Ventil"
+      },
+      "steam_valve_state": {
+        "name": "Dampfventil"
+      },
+      "valve_b_state": {
+        "name": "Ventil B"
+      },
+      "steam_boiler_relay_state": {
+        "name": "Dampfkesselrelais"
+      },
+      "is_brewing": {
+        "name": "Brüht"
+      },
+      "preheat_ready": {
+        "name": "Bereit"
+      },
+      "machine_standby": {
+        "name": "Maschinen-Standby"
+      },
+      "steam_switch": {
+        "name": "Dampfschalter"
+      },
+      "reachable": {
+        "name": "Erreichbar"
+      }
+    },
+    "button": {
+      "tare_scale": {
+        "name": "Waage tarieren"
+      },
+      "save_settings": {
+        "name": "Einstellungen speichern"
+      },
+      "save_active_profile": {
+        "name": "Aktives Profil speichern"
+      }
+    },
+    "event": {
+      "shot": {
+        "name": "Letzter Shot"
+      }
+    },
+    "light": {
+      "led": {
+        "name": "LED"
+      }
+    },
+    "number": {
+      "steam_set_point": {
+        "name": "Dampf-Sollwert"
+      },
+      "offset_temp": {
+        "name": "Temperatur-Offset"
+      },
+      "hpwr": {
+        "name": "Heizleistung"
+      },
+      "main_divider": {
+        "name": "Hauptteiler"
+      },
+      "brew_divider": {
+        "name": "Brühteiler"
+      },
+      "startup_heat_delta": {
+        "name": "Start-Delta"
+      },
+      "lcd_brightness": {
+        "name": "LCD-Helligkeit"
+      },
+      "lcd_sleep": {
+        "name": "LCD-Schlafzeit"
+      },
+      "lcd_go_home": {
+        "name": "LCD-Home-Zeit"
+      },
+      "led_tof_min": {
+        "name": "LED-ToF Min"
+      },
+      "led_tof_max": {
+        "name": "LED-ToF Max"
+      }
+    },
+    "select": {
+      "profile": {
+        "name": "Profil"
+      },
+      "operation_mode": {
+        "name": "Betriebsmodus"
+      },
+      "release_channel": {
+        "name": "Release-Kanal"
+      }
+    },
+    "switch": {
+      "brew_delta_state": {
+        "name": "Brüh-Delta"
+      },
+      "dream_steam_state": {
+        "name": "Dream Steam"
+      },
+      "lcd_dark_mode": {
+        "name": "LCD-Dunkelmodus"
+      },
+      "lcd_close_on_brew_off": {
+        "name": "LCD aus bei Brühende"
+      },
+      "simple_ui": {
+        "name": "Einfache Oberfläche"
+      },
+      "force_predictive": {
+        "name": "Predictive-Waage erzwingen"
+      },
+      "hw_scales_enabled": {
+        "name": "Hardware-Waage aktiv"
+      },
+      "bt_scales_enabled": {
+        "name": "Bluetooth-Waage aktiv"
+      }
+    },
+    "update": {
+      "update": {
+        "name": "Update"
+      },
+      "firmware_update": {
+        "name": "Firmware"
+      }
+    }
+  },
+  "device": {
+    "shots": {
+      "name": "Shots"
+    },
+    "maintenance": {
+      "name": "Wartung"
+    },
+    "preheat": {
+      "name": "Vorheizen"
     }
   }
 }

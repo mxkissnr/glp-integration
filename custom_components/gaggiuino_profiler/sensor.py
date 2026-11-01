@@ -12,6 +12,8 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
+    EntityCategory,
+    Platform,
     UnitOfPressure,
     UnitOfTemperature,
     UnitOfTime,
@@ -29,6 +31,8 @@ from .machine_coordinator import GlpMachineCoordinator
 @dataclass(frozen=True)
 class GlpSensorDescription(SensorEntityDescription):
     data_key: str = ""
+    # #336: child device the entity is grouped into (None -> main device).
+    group: str | None = None
     # Opt-in (#106): when True, the sensor also goes unavailable whenever the
     # add-on reports the physical Gaggiuino machine itself as unreachable
     # (coordinator.data["machine_reachable"] is False), not just when the
@@ -41,20 +45,22 @@ class GlpSensorDescription(SensorEntityDescription):
 @dataclass(frozen=True)
 class GlpMaintenanceSensorDescription(SensorEntityDescription):
     task_key: str = ""
+    group: str | None = None
 
 
 SENSORS: tuple[GlpSensorDescription, ...] = (
     GlpSensorDescription(
         key="machine_status",
+        # Lets the cards find this entity through the entity registry instead
+        # of its (translated, device-composed) friendly name (#323).
+        translation_key="machine_status",
         data_key="machine_status",
-        name="Machine Status",
-        icon="mdi:coffee-maker",
     ),
     GlpSensorDescription(
         key="shot_count",
+        translation_key="shot_count",
         data_key="shot_count",
-        name="Shot Count",
-        icon="mdi:counter",
+        group="shots",
         # Deleting shots lowers the count; with TOTAL_INCREASING HA treats that
         # as a meter reset and inflates long-term statistics (#237).
         state_class=SensorStateClass.TOTAL,
@@ -62,48 +68,48 @@ SENSORS: tuple[GlpSensorDescription, ...] = (
     ),
     GlpSensorDescription(
         key="shots_today",
+        translation_key="shots_today",
         data_key="shots_today",
-        name="Shots Today",
-        icon="mdi:coffee-maker-check-outline",
+        group="shots",
         state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement="shots",
     ),
     GlpSensorDescription(
         key="last_shot_profile",
+        translation_key="last_shot_profile",
         data_key="last_shot_profile",
-        name="Last Shot Profile",
-        icon="mdi:chart-bell-curve",
+        group="shots",
     ),
     GlpSensorDescription(
         key="last_shot_rating",
+        translation_key="last_shot_rating",
         data_key="last_shot_rating",
-        name="Last Shot Rating",
-        icon="mdi:star-outline",
+        group="shots",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement="★",
         suggested_display_precision=0,
     ),
     GlpSensorDescription(
         key="last_shot_date",
+        translation_key="last_shot_date",
         data_key="last_shot_date",
-        name="Last Shot Date",
-        icon="mdi:calendar-clock",
+        group="shots",
         device_class=SensorDeviceClass.TIMESTAMP,
     ),
     GlpSensorDescription(
         key="last_shot_duration",
+        translation_key="last_shot_duration",
         data_key="last_shot_duration",
-        name="Last Shot Duration",
-        icon="mdi:timer-outline",
+        group="shots",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTime.SECONDS,
         suggested_display_precision=1,
     ),
     GlpSensorDescription(
         key="last_shot_pressure",
+        translation_key="last_shot_pressure",
         data_key="last_shot_pressure",
-        name="Last Shot Avg Pressure",
-        icon="mdi:gauge",
+        group="shots",
         device_class=SensorDeviceClass.PRESSURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPressure.BAR,
@@ -111,60 +117,59 @@ SENSORS: tuple[GlpSensorDescription, ...] = (
     ),
     GlpSensorDescription(
         key="last_shot_weight",
+        translation_key="last_shot_weight",
         data_key="last_shot_weight",
-        name="Last Shot Yield",
-        icon="mdi:scale",
+        group="shots",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement="g",
         suggested_display_precision=1,
     ),
     GlpSensorDescription(
         key="last_shot_ratio",
+        translation_key="last_shot_ratio",
         data_key="last_shot_ratio",
-        name="Last Shot Brew Ratio",
-        icon="mdi:approximately-equal",
+        group="shots",
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=2,
     ),
     GlpSensorDescription(
         key="last_shot_dose",
+        translation_key="last_shot_dose",
         data_key="last_shot_dose",
-        name="Last Shot Dose",
-        icon="mdi:coffee",
+        group="shots",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement="g",
         suggested_display_precision=1,
     ),
     GlpSensorDescription(
         key="last_shot_coffee",
+        translation_key="last_shot_coffee",
         data_key="last_shot_coffee",
-        name="Last Shot Coffee",
-        icon="mdi:coffee-outline",
+        group="shots",
     ),
     GlpSensorDescription(
         key="last_shot_grinder",
+        translation_key="last_shot_grinder",
         data_key="last_shot_grinder",
-        name="Last Shot Grinder",
-        icon="mdi:blender-outline",
+        group="shots",
     ),
     GlpSensorDescription(
         key="last_sync",
+        translation_key="last_sync",
         data_key="last_sync",
-        name="Last Sync",
-        icon="mdi:sync",
         device_class=SensorDeviceClass.TIMESTAMP,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     GlpSensorDescription(
         key="machine_url",
+        translation_key="machine_url",
         data_key="machine_url",
-        name="Machine Hostname",
-        icon="mdi:lan",
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     GlpSensorDescription(
         key="machine_temperature",
+        translation_key="machine_temperature",
         data_key="machine_temperature",
-        name="Machine Temperature",
-        icon="mdi:thermometer",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -173,9 +178,8 @@ SENSORS: tuple[GlpSensorDescription, ...] = (
     ),
     GlpSensorDescription(
         key="machine_target_temperature",
+        translation_key="machine_target_temperature",
         data_key="machine_target_temperature",
-        name="Machine Target Temperature",
-        icon="mdi:thermometer-chevron-up",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -184,34 +188,34 @@ SENSORS: tuple[GlpSensorDescription, ...] = (
     ),
     GlpSensorDescription(
         key="preheat_elapsed",
+        translation_key="preheat_elapsed",
         data_key="preheat_elapsed",
-        name="Preheat Elapsed",
-        icon="mdi:timer-outline",
+        group="preheat",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTime.SECONDS,
         suggested_display_precision=0,
     ),
     GlpSensorDescription(
         key="preheat_remaining",
+        translation_key="preheat_remaining",
         data_key="preheat_remaining",
-        name="Preheat Remaining",
-        icon="mdi:timer-sand",
+        group="preheat",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTime.SECONDS,
         suggested_display_precision=0,
     ),
     GlpSensorDescription(
         key="preheat_ready_by_target_at",
+        translation_key="preheat_ready_by_target_at",
         data_key="preheat_ready_by_target_at",
-        name="Preheat Ready By",
-        icon="mdi:clock-alert-outline",
+        group="preheat",
         device_class=SensorDeviceClass.TIMESTAMP,
     ),
     GlpSensorDescription(
         key="preheat_planned_switch_on_at",
+        translation_key="preheat_planned_switch_on_at",
         data_key="preheat_planned_switch_on_at",
-        name="Preheat Planned Switch On",
-        icon="mdi:clock-start",
+        group="preheat",
         device_class=SensorDeviceClass.TIMESTAMP,
     ),
 )
@@ -220,33 +224,33 @@ SENSORS: tuple[GlpSensorDescription, ...] = (
 MAINTENANCE_SENSORS: tuple[GlpMaintenanceSensorDescription, ...] = (
     GlpMaintenanceSensorDescription(
         key="maint_descaling",
+        translation_key="maint_descaling",
         task_key="descaling",
-        name="Maintenance Descaling",
-        icon="mdi:water-alert-outline",
+        group="maintenance",
     ),
     GlpMaintenanceSensorDescription(
         key="maint_backflush",
+        translation_key="maint_backflush",
         task_key="backflush",
-        name="Maintenance Backflush",
-        icon="mdi:coffee-maker-outline",
+        group="maintenance",
     ),
     GlpMaintenanceSensorDescription(
         key="maint_grouphead",
+        translation_key="maint_grouphead",
         task_key="grouphead",
-        name="Maintenance Group Head",
-        icon="mdi:wrench-outline",
+        group="maintenance",
     ),
     GlpMaintenanceSensorDescription(
         key="maint_gaskets",
+        translation_key="maint_gaskets",
         task_key="gaskets",
-        name="Maintenance Gaskets",
-        icon="mdi:circle-outline",
+        group="maintenance",
     ),
     GlpMaintenanceSensorDescription(
         key="maint_waterfilter",
+        translation_key="maint_waterfilter",
         task_key="waterfilter",
-        name="Maintenance Water Filter",
-        icon="mdi:water-check-outline",
+        group="maintenance",
     ),
 )
 
@@ -262,9 +266,8 @@ MACHINE_SENSORS: tuple[GlpMachineSensorDescription, ...] = (
     # sensors are defined here to avoid duplicate entities.
     GlpMachineSensorDescription(
         key="machine_live_pressure",
+        translation_key="machine_live_pressure",
         data_key="pressure",
-        name="Machine Live Pressure",
-        icon="mdi:gauge",
         device_class=SensorDeviceClass.PRESSURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPressure.BAR,
@@ -272,27 +275,25 @@ MACHINE_SENSORS: tuple[GlpMachineSensorDescription, ...] = (
     ),
     GlpMachineSensorDescription(
         key="machine_water_level",
+        translation_key="machine_water_level",
         data_key="waterLevel",
-        name="Machine Water Level",
-        icon="mdi:water-outline",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         suggested_display_precision=0,
     ),
     GlpMachineSensorDescription(
         key="machine_live_weight",
+        translation_key="machine_live_weight",
         data_key="weight",
-        name="Machine Live Weight",
-        icon="mdi:scale",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement="g",
         suggested_display_precision=1,
     ),
     GlpMachineSensorDescription(
         key="machine_uptime",
+        translation_key="machine_uptime",
         data_key="upTime",
-        name="Machine Uptime",
-        icon="mdi:timer-outline",
+        entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfTime.SECONDS,
@@ -300,17 +301,15 @@ MACHINE_SENSORS: tuple[GlpMachineSensorDescription, ...] = (
     ),
     GlpMachineSensorDescription(
         key="machine_live_profile",
+        translation_key="machine_live_profile",
         data_key="profileName",
-        name="Machine Active Profile",
-        icon="mdi:chart-bell-curve",
     ),
     # #108: pumpFlow/weightFlow/waterTemperature merged into /api/machine/status
     # by gaggiuino-local-profiler#597/#599 from the machine's live sensor push.
     GlpMachineSensorDescription(
         key="pump_flow",
+        translation_key="pump_flow",
         data_key="pumpFlow",
-        name="Pump Flow",
-        icon="mdi:pump",
         device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
@@ -318,18 +317,16 @@ MACHINE_SENSORS: tuple[GlpMachineSensorDescription, ...] = (
     ),
     GlpMachineSensorDescription(
         key="weight_flow",
+        translation_key="weight_flow",
         data_key="weightFlow",
-        name="Weight Flow",
-        icon="mdi:speedometer",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement="g/s",
         suggested_display_precision=2,
     ),
     GlpMachineSensorDescription(
         key="water_temperature",
+        translation_key="water_temperature",
         data_key="waterTemperature",
-        name="Water Temperature",
-        icon="mdi:water-thermometer-outline",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -345,9 +342,13 @@ async def async_setup_entry(
 ) -> None:
     coordinator: GlpDataCoordinator         = hass.data[DOMAIN][entry.entry_id]["data"]
     machine_coordinator: GlpMachineCoordinator = hass.data[DOMAIN][entry.entry_id]["machine"]
-    entities: list = [GlpSensor(coordinator, entry, d) for d in SENSORS]
-    entities += [GlpMaintenanceSensor(coordinator, entry, d) for d in MAINTENANCE_SENSORS]
-    entities.append(GlpGrinderMaintenanceSensor(coordinator, entry))
+    parent_device_id: str | None            = hass.data[DOMAIN][entry.entry_id].get("parent_device_id")
+    entities: list = [GlpSensor(coordinator, entry, d, parent_device_id=parent_device_id) for d in SENSORS]
+    entities += [
+        GlpMaintenanceSensor(coordinator, entry, d, parent_device_id=parent_device_id)
+        for d in MAINTENANCE_SENSORS
+    ]
+    entities.append(GlpGrinderMaintenanceSensor(coordinator, entry, parent_device_id=parent_device_id))
     entities += [GlpMachineSensor(machine_coordinator, entry, d) for d in MACHINE_SENSORS]
     async_add_entities(entities)
 
@@ -381,7 +382,11 @@ async def async_setup_entry(
             if mid is None or m.get("isDefault") or mid in known_machine_ids:
                 continue
             known_machine_ids.add(mid)
-            new_entities.append(GlpAdditionalMachineSensor(coordinator, entry, mid, m.get("name") or f"Machine {mid}"))
+            new_entities.append(
+                GlpAdditionalMachineSensor(
+                    coordinator, entry, mid, m.get("name") or f"Machine {mid}", parent_device_id
+                )
+            )
         if new_entities:
             async_add_entities(new_entities)
 
@@ -399,9 +404,17 @@ class GlpSensor(GlpEntity[GlpDataCoordinator], SensorEntity):
         coordinator: GlpDataCoordinator,
         entry: ConfigEntry,
         description: GlpSensorDescription,
+        parent_device_id: str | None = None,
     ) -> None:
-        super().__init__(coordinator, entry, description.key)
+        super().__init__(
+            coordinator,
+            entry,
+            description.key,
+            group=description.group,
+            parent_device_id=parent_device_id,
+        )
         self.entity_description = description
+        self.pin_grouped_entity_id(Platform.SENSOR.value)
 
     @property
     def suggested_object_id(self) -> str | None:
@@ -445,11 +458,18 @@ class GlpSensor(GlpEntity[GlpDataCoordinator], SensorEntity):
 
 
 class GlpGrinderMaintenanceSensor(GlpEntity[GlpDataCoordinator], SensorEntity):
-    _attr_name = "Maintenance Grinders"
-    _attr_icon = "mdi:coffee-maker-outline"
+    _attr_translation_key = "maint_grinders"
 
-    def __init__(self, coordinator: GlpDataCoordinator, entry: ConfigEntry) -> None:
-        super().__init__(coordinator, entry, "maint_grinders")
+    def __init__(
+        self,
+        coordinator: GlpDataCoordinator,
+        entry: ConfigEntry,
+        parent_device_id: str | None = None,
+    ) -> None:
+        super().__init__(
+            coordinator, entry, "maint_grinders", group="maintenance", parent_device_id=parent_device_id
+        )
+        self.pin_grouped_entity_id(Platform.SENSOR.value)
 
     @property
     def suggested_object_id(self) -> str | None:
@@ -470,9 +490,17 @@ class GlpMaintenanceSensor(GlpEntity[GlpDataCoordinator], SensorEntity):
         coordinator: GlpDataCoordinator,
         entry: ConfigEntry,
         description: GlpMaintenanceSensorDescription,
+        parent_device_id: str | None = None,
     ) -> None:
-        super().__init__(coordinator, entry, description.key)
+        super().__init__(
+            coordinator,
+            entry,
+            description.key,
+            group=description.group,
+            parent_device_id=parent_device_id,
+        )
         self.entity_description = description
+        self.pin_grouped_entity_id(Platform.SENSOR.value)
 
     @property
     def suggested_object_id(self) -> str | None:
@@ -530,11 +558,17 @@ class GlpAdditionalMachineSensor(GlpAdditionalMachineEntity[GlpDataCoordinator],
     (#48) — see the scope-note comment in async_setup_entry() above for why
     this doesn't mirror the default machine's full sensor set."""
 
-    _attr_name = "Status"
-    _attr_icon = "mdi:coffee-maker"
+    _attr_translation_key = "status"
 
-    def __init__(self, coordinator: GlpDataCoordinator, entry: ConfigEntry, machine_id: int, machine_name: str) -> None:
-        super().__init__(coordinator, entry, machine_id, machine_name, "status")
+    def __init__(
+        self,
+        coordinator: GlpDataCoordinator,
+        entry: ConfigEntry,
+        machine_id: int,
+        machine_name: str,
+        parent_device_id: str | None = None,
+    ) -> None:
+        super().__init__(coordinator, entry, machine_id, machine_name, "status", parent_device_id)
 
     @property
     def suggested_object_id(self) -> str | None:

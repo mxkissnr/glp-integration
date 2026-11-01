@@ -69,6 +69,12 @@ class GlpDataCoordinator(DataUpdateCoordinator):
         self._url     = url.rstrip("/")
         self.auth     = auth or GlpAuth(session, url)
         self._last_shot_id: int | None = None
+        # #340: payload of the most recently detected new shot, plus a counter
+        # that increments with every one of them. The `shot` event entity
+        # mirrors the bus event below by watching the counter, so it fires
+        # exactly once per shot and never for one detected before it existed.
+        self.last_new_shot: dict | None = None
+        self.new_shot_count = 0
         # #191: last /api/machine/firmware/version payload that actually carried
         # an "installed" coreVersion. The machine is powered off most of the
         # time here, and the add-on 502s that endpoint (or drops "installed")
@@ -268,21 +274,21 @@ class GlpDataCoordinator(DataUpdateCoordinator):
             else current_shot_id != self._last_shot_id
         )
         if current_shot_id and shot_id_increased and self._last_shot_id is not None:
-            self.hass.bus.async_fire(
-                f"{DOMAIN}_shot_completed",
-                {
-                    "shot_id":      current_shot_id,
-                    "profile":      data["last_shot_profile"],
-                    "duration_s":   data["last_shot_duration"],
-                    "yield_g":      data["last_shot_weight"],
-                    "dose_g":       data["last_shot_dose"],
-                    "ratio":        data["last_shot_ratio"],
-                    "avg_pressure": data["last_shot_pressure"],
-                    "rating":       data["last_shot_rating"],
-                    "coffee":       data["last_shot_coffee"],
-                    "grinder":      data["last_shot_grinder"],
-                },
-            )
+            payload = {
+                "shot_id":      current_shot_id,
+                "profile":      data["last_shot_profile"],
+                "duration_s":   data["last_shot_duration"],
+                "yield_g":      data["last_shot_weight"],
+                "dose_g":       data["last_shot_dose"],
+                "ratio":        data["last_shot_ratio"],
+                "avg_pressure": data["last_shot_pressure"],
+                "rating":       data["last_shot_rating"],
+                "coffee":       data["last_shot_coffee"],
+                "grinder":      data["last_shot_grinder"],
+            }
+            self.last_new_shot = payload
+            self.new_shot_count += 1
+            self.hass.bus.async_fire(f"{DOMAIN}_shot_completed", dict(payload))
 
         self._last_shot_id = current_shot_id
 

@@ -1,0 +1,250 @@
+{
+  "entity": {
+    "sensor": {
+      "last_shot_coffee": {
+        "default": "mdi:coffee-outline"
+      },
+      "last_shot_date": {
+        "default": "mdi:calendar-clock"
+      },
+      "last_shot_dose": {
+        "default": "mdi:coffee"
+      },
+      "last_shot_duration": {
+        "default": "mdi:timer-outline"
+      },
+      "last_shot_grinder": {
+        "default": "mdi:blender-outline"
+      },
+      "last_shot_pressure": {
+        "default": "mdi:gauge"
+      },
+      "last_shot_profile": {
+        "default": "mdi:chart-bell-curve"
+      },
+      "last_shot_rating": {
+        "default": "mdi:star-outline"
+      },
+      "last_shot_ratio": {
+        "default": "mdi:approximately-equal"
+      },
+      "last_shot_weight": {
+        "default": "mdi:scale"
+      },
+      "last_sync": {
+        "default": "mdi:sync"
+      },
+      "machine_live_pressure": {
+        "default": "mdi:gauge"
+      },
+      "machine_live_profile": {
+        "default": "mdi:chart-bell-curve"
+      },
+      "machine_live_weight": {
+        "default": "mdi:scale"
+      },
+      "machine_status": {
+        "default": "mdi:coffee-maker"
+      },
+      "machine_target_temperature": {
+        "default": "mdi:thermometer-chevron-up"
+      },
+      "machine_temperature": {
+        "default": "mdi:thermometer"
+      },
+      "machine_uptime": {
+        "default": "mdi:timer-outline"
+      },
+      "machine_url": {
+        "default": "mdi:lan"
+      },
+      "machine_water_level": {
+        "default": "mdi:water-outline"
+      },
+      "maint_backflush": {
+        "default": "mdi:coffee-maker-outline"
+      },
+      "maint_descaling": {
+        "default": "mdi:water-alert-outline"
+      },
+      "maint_gaskets": {
+        "default": "mdi:circle-outline"
+      },
+      "maint_grinders": {
+        "default": "mdi:coffee-maker-outline"
+      },
+      "maint_grouphead": {
+        "default": "mdi:wrench-outline"
+      },
+      "maint_waterfilter": {
+        "default": "mdi:water-check-outline"
+      },
+      "preheat_elapsed": {
+        "default": "mdi:timer-outline"
+      },
+      "preheat_planned_switch_on_at": {
+        "default": "mdi:clock-start"
+      },
+      "preheat_ready_by_target_at": {
+        "default": "mdi:clock-alert-outline"
+      },
+      "preheat_remaining": {
+        "default": "mdi:timer-sand"
+      },
+      "pump_flow": {
+        "default": "mdi:pump"
+      },
+      "shot_count": {
+        "default": "mdi:counter"
+      },
+      "shots_today": {
+        "default": "mdi:coffee-maker-check-outline"
+      },
+      "status": {
+        "default": "mdi:coffee-maker"
+      },
+      "water_temperature": {
+        "default": "mdi:water-thermometer-outline"
+      },
+      "weight_flow": {
+        "default": "mdi:speedometer"
+      }
+    },
+    "binary_sensor": {
+      "boiler_state": {
+        "default": "mdi:radiator"
+      },
+      "is_brewing": {
+        "default": "mdi:coffee-maker-check-outline"
+      },
+      "machine_standby": {
+        "default": "mdi:power-sleep"
+      },
+      "preheat_ready": {
+        "default": "mdi:coffee-maker-check"
+      },
+      "pressure_sensor_faulted": {
+        "default": "mdi:gauge-full"
+      },
+      "steam_boiler_relay_state": {
+        "default": "mdi:radiator"
+      },
+      "steam_switch": {
+        "default": "mdi:weather-fog"
+      },
+      "steam_valve_state": {
+        "default": "mdi:valve"
+      },
+      "thermocouple_faulted": {
+        "default": "mdi:thermometer-alert"
+      },
+      "valve_b_state": {
+        "default": "mdi:valve"
+      },
+      "valve_state": {
+        "default": "mdi:valve"
+      }
+    },
+    "button": {
+      "save_active_profile": {
+        "default": "mdi:content-save-outline"
+      },
+      "save_settings": {
+        "default": "mdi:content-save-cog-outline"
+      },
+      "tare_scale": {
+        "default": "mdi:scale-balance"
+      }
+    },
+    "event": {
+      "shot": {
+        "default": "mdi:coffee"
+      }
+    },
+    "light": {
+      "led": {
+        "default": "mdi:led-strip-variant"
+      }
+    },
+    "number": {
+      "brew_divider": {
+        "default": "mdi:division"
+      },
+      "hpwr": {
+        "default": "mdi:flash"
+      },
+      "lcd_brightness": {
+        "default": "mdi:brightness-6"
+      },
+      "lcd_go_home": {
+        "default": "mdi:home-clock"
+      },
+      "lcd_sleep": {
+        "default": "mdi:sleep"
+      },
+      "led_tof_max": {
+        "default": "mdi:ruler"
+      },
+      "led_tof_min": {
+        "default": "mdi:ruler"
+      },
+      "main_divider": {
+        "default": "mdi:division"
+      },
+      "offset_temp": {
+        "default": "mdi:thermometer"
+      },
+      "startup_heat_delta": {
+        "default": "mdi:thermometer-plus"
+      },
+      "steam_set_point": {
+        "default": "mdi:kettle-steam"
+      }
+    },
+    "select": {
+      "operation_mode": {
+        "default": "mdi:tune-variant"
+      },
+      "profile": {
+        "default": "mdi:coffee"
+      },
+      "release_channel": {
+        "default": "mdi:source-branch"
+      }
+    },
+    "switch": {
+      "brew_delta_state": {
+        "default": "mdi:delta"
+      },
+      "bt_scales_enabled": {
+        "default": "mdi:bluetooth"
+      },
+      "dream_steam_state": {
+        "default": "mdi:kettle-steam"
+      },
+      "force_predictive": {
+        "default": "mdi:chart-line"
+      },
+      "hw_scales_enabled": {
+        "default": "mdi:scale"
+      },
+      "lcd_close_on_brew_off": {
+        "default": "mdi:coffee-off-outline"
+      },
+      "lcd_dark_mode": {
+        "default": "mdi:brightness-4"
+      },
+      "simple_ui": {
+        "default": "mdi:view-dashboard-outline"
+      }
+    },
+    "update": {
+      "firmware_update": {
+        "default": "mdi:chip"
+      },
+      "update": {
+        "default": "mdi:coffee-maker"
+      }
+    }
+  }
+}

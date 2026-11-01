@@ -33,9 +33,8 @@ class GlpUpdateEntity(GlpEntity[GlpDataCoordinator], UpdateEntity):
     /api/update always returned 503 there).
     """
 
-    _attr_name = "Update"
+    _attr_translation_key = "update"
     _attr_title = "Gaggiuino Local Profiler"
-    _attr_icon = "mdi:coffee-maker"
 
     def __init__(self, coordinator: GlpDataCoordinator, entry: ConfigEntry) -> None:
         super().__init__(coordinator, entry, "update")
@@ -91,9 +90,8 @@ class GlpMachineFirmwareUpdate(GlpEntity[GlpDataCoordinator], UpdateEntity):
     refresh still succeeds.
     """
 
-    _attr_name = "Firmware"
+    _attr_translation_key = "firmware_update"
     _attr_title = "Machine Firmware"
-    _attr_icon = "mdi:chip"
     _attr_supported_features = UpdateEntityFeature.INSTALL
 
     def __init__(self, coordinator: GlpDataCoordinator, entry: ConfigEntry) -> None:
@@ -132,6 +130,22 @@ class GlpMachineFirmwareUpdate(GlpEntity[GlpDataCoordinator], UpdateEntity):
         if self.coordinator.data is None:
             return None
         return self.coordinator.data.get("firmware_release_url")
+
+    @property
+    def has_update(self) -> bool:
+        # Gaggiuino/GaggiMate release tags are not reliably comparable as
+        # versions, so Home Assistant 2026.11+'s explicit availability hook
+        # (#325) reports the app's own `updateAvailable` flag instead.
+        data = self.coordinator.data
+        if data is not None and "firmware_update_available" in data:
+            return bool(data["firmware_update_available"])
+        base = getattr(super(), "has_update", None)
+        if base is not None:
+            return bool(base)
+        # Older cores have no UpdateEntity.has_update and never read this;
+        # fall back to the plain version comparison HA would have done.
+        installed, latest = self.installed_version, self.latest_version
+        return installed is not None and latest is not None and latest != installed
 
     async def async_install(self, version: str | None, backup: bool, **kwargs: object) -> None:
         await self.coordinator.auth.post("/api/machine/firmware/update", json={})

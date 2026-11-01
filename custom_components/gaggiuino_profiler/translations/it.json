@@ -7,6 +7,10 @@
         "data": {
           "url": "URL GLP"
         }
+      },
+      "hassio_confirm": {
+        "title": "Gaggiuino Local Profiler trovato",
+        "description": "L'app Gaggiuino Local Profiler è stata trovata su {name}. Aggiungere l'integrazione per questo indirizzo?"
       }
     },
     "error": {
@@ -14,7 +18,9 @@
       "invalid_url": "L'URL deve iniziare con http:// o https://."
     },
     "abort": {
-      "already_configured": "Questa istanza GLP è già configurata."
+      "already_configured": "Questa istanza GLP è già configurata.",
+      "invalid_discovery_info": "L'app GLP ha annunciato un indirizzo che Home Assistant non può usare (host mancante o porta non valida). Aggiorna l'app e riprova.",
+      "cannot_connect": "Impossibile connettersi a GLP all'indirizzo rilevato. Assicurati che l'app sia in esecuzione, poi riprova."
     }
   },
   "options": {
@@ -30,6 +36,268 @@
     "error": {
       "invalid_url": "L'URL deve iniziare con http:// o https://.",
       "cannot_connect": "Impossibile connettersi a GLP. Controlla l'URL e assicurati che l'app sia in esecuzione."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "machine_status": {
+        "name": "Stato macchina"
+      },
+      "shot_count": {
+        "name": "Conteggio"
+      },
+      "shots_today": {
+        "name": "Oggi"
+      },
+      "last_shot_profile": {
+        "name": "Profilo ultimo shot"
+      },
+      "last_shot_rating": {
+        "name": "Valutazione ultimo shot"
+      },
+      "last_shot_date": {
+        "name": "Data ultimo shot"
+      },
+      "last_shot_duration": {
+        "name": "Durata ultimo shot"
+      },
+      "last_shot_pressure": {
+        "name": "Pressione media ultimo shot"
+      },
+      "last_shot_weight": {
+        "name": "Resa ultimo shot"
+      },
+      "last_shot_ratio": {
+        "name": "Rapporto dell'ultima erogazione"
+      },
+      "last_shot_dose": {
+        "name": "Dose ultimo shot"
+      },
+      "last_shot_coffee": {
+        "name": "Caffè ultimo shot"
+      },
+      "last_shot_grinder": {
+        "name": "Macinacaffè ultimo shot"
+      },
+      "last_sync": {
+        "name": "Ultima sincronizzazione"
+      },
+      "machine_url": {
+        "name": "Nome host macchina"
+      },
+      "machine_temperature": {
+        "name": "Temperatura macchina"
+      },
+      "machine_target_temperature": {
+        "name": "Temperatura target macchina"
+      },
+      "preheat_elapsed": {
+        "name": "Trascorso"
+      },
+      "preheat_remaining": {
+        "name": "Rimanente"
+      },
+      "preheat_ready_by_target_at": {
+        "name": "Pronto alle"
+      },
+      "preheat_planned_switch_on_at": {
+        "name": "Accensione prevista"
+      },
+      "maint_descaling": {
+        "name": "Decalcificazione"
+      },
+      "maint_backflush": {
+        "name": "Backflush"
+      },
+      "maint_grouphead": {
+        "name": "Gruppo erogatore"
+      },
+      "maint_gaskets": {
+        "name": "Guarnizioni"
+      },
+      "maint_waterfilter": {
+        "name": "Filtro acqua"
+      },
+      "machine_live_pressure": {
+        "name": "Pressione in tempo reale"
+      },
+      "machine_water_level": {
+        "name": "Livello acqua"
+      },
+      "machine_live_weight": {
+        "name": "Peso in tempo reale"
+      },
+      "machine_uptime": {
+        "name": "Tempo di attività"
+      },
+      "machine_live_profile": {
+        "name": "Profilo attivo"
+      },
+      "pump_flow": {
+        "name": "Portata pompa"
+      },
+      "weight_flow": {
+        "name": "Portata peso"
+      },
+      "water_temperature": {
+        "name": "Temperatura acqua"
+      },
+      "maint_grinders": {
+        "name": "Macinini"
+      },
+      "status": {
+        "name": "Stato"
+      }
+    },
+    "binary_sensor": {
+      "thermocouple_faulted": {
+        "name": "Termocoppia in errore"
+      },
+      "pressure_sensor_faulted": {
+        "name": "Sensore di pressione in errore"
+      },
+      "boiler_state": {
+        "name": "Relè caldaia"
+      },
+      "valve_state": {
+        "name": "Valvola"
+      },
+      "steam_valve_state": {
+        "name": "Valvola vapore"
+      },
+      "valve_b_state": {
+        "name": "Valvola B"
+      },
+      "steam_boiler_relay_state": {
+        "name": "Relè caldaia vapore"
+      },
+      "is_brewing": {
+        "name": "Erogazione in corso"
+      },
+      "preheat_ready": {
+        "name": "Pronto"
+      },
+      "machine_standby": {
+        "name": "Macchina in standby"
+      },
+      "steam_switch": {
+        "name": "Interruttore vapore"
+      },
+      "reachable": {
+        "name": "Raggiungibile"
+      }
+    },
+    "button": {
+      "tare_scale": {
+        "name": "Azzera bilancia"
+      },
+      "save_settings": {
+        "name": "Salva impostazioni"
+      },
+      "save_active_profile": {
+        "name": "Salva profilo attivo"
+      }
+    },
+    "event": {
+      "shot": {
+        "name": "Ultimo shot"
+      }
+    },
+    "light": {
+      "led": {
+        "name": "LED"
+      }
+    },
+    "number": {
+      "steam_set_point": {
+        "name": "Set point vapore"
+      },
+      "offset_temp": {
+        "name": "Offset temperatura"
+      },
+      "hpwr": {
+        "name": "Potenza riscaldamento"
+      },
+      "main_divider": {
+        "name": "Divisore principale"
+      },
+      "brew_divider": {
+        "name": "Divisore erogazione"
+      },
+      "startup_heat_delta": {
+        "name": "Delta riscaldamento iniziale"
+      },
+      "lcd_brightness": {
+        "name": "Luminosità LCD"
+      },
+      "lcd_sleep": {
+        "name": "Timeout sospensione LCD"
+      },
+      "lcd_go_home": {
+        "name": "Timeout ritorno alla home LCD"
+      },
+      "led_tof_min": {
+        "name": "LED ToF minimo"
+      },
+      "led_tof_max": {
+        "name": "LED ToF massimo"
+      }
+    },
+    "select": {
+      "profile": {
+        "name": "Profilo"
+      },
+      "operation_mode": {
+        "name": "Modalità operativa"
+      },
+      "release_channel": {
+        "name": "Canale di rilascio"
+      }
+    },
+    "switch": {
+      "brew_delta_state": {
+        "name": "Delta erogazione"
+      },
+      "dream_steam_state": {
+        "name": "Dream Steam"
+      },
+      "lcd_dark_mode": {
+        "name": "Modalità scura LCD"
+      },
+      "lcd_close_on_brew_off": {
+        "name": "Chiudi LCD a fine erogazione"
+      },
+      "simple_ui": {
+        "name": "Interfaccia semplice"
+      },
+      "force_predictive": {
+        "name": "Forza bilance predittive"
+      },
+      "hw_scales_enabled": {
+        "name": "Bilance hardware attive"
+      },
+      "bt_scales_enabled": {
+        "name": "Bilance Bluetooth attive"
+      }
+    },
+    "update": {
+      "update": {
+        "name": "Aggiornamento"
+      },
+      "firmware_update": {
+        "name": "Firmware"
+      }
+    }
+  },
+  "device": {
+    "shots": {
+      "name": "Shots"
+    },
+    "maintenance": {
+      "name": "Manutenzione"
+    },
+    "preheat": {
+      "name": "Preriscaldamento"
     }
   }
 }

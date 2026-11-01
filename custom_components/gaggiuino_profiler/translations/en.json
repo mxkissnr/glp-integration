@@ -7,6 +7,10 @@
         "data": {
           "url": "GLP URL"
         }
+      },
+      "hassio_confirm": {
+        "title": "Gaggiuino Local Profiler found",
+        "description": "The Gaggiuino Local Profiler app was found at {name}. Add the integration for this address?"
       }
     },
     "error": {
@@ -14,7 +18,9 @@
       "invalid_url": "The URL must start with http:// or https://"
     },
     "abort": {
-      "already_configured": "This GLP instance is already configured."
+      "already_configured": "This GLP instance is already configured.",
+      "invalid_discovery_info": "The GLP app announced an address Home Assistant cannot use (missing host or invalid port). Update the app and try again.",
+      "cannot_connect": "Cannot connect to GLP at the discovered address. Make sure the app is running, then try again."
     }
   },
   "options": {
@@ -30,6 +36,268 @@
     "error": {
       "invalid_url": "The URL must start with http:// or https://",
       "cannot_connect": "Cannot connect to GLP. Check the URL and make sure the app is running."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "machine_status": {
+        "name": "Machine Status"
+      },
+      "shot_count": {
+        "name": "Count"
+      },
+      "shots_today": {
+        "name": "Today"
+      },
+      "last_shot_profile": {
+        "name": "Last Shot Profile"
+      },
+      "last_shot_rating": {
+        "name": "Last Shot Rating"
+      },
+      "last_shot_date": {
+        "name": "Last Shot Date"
+      },
+      "last_shot_duration": {
+        "name": "Last Shot Duration"
+      },
+      "last_shot_pressure": {
+        "name": "Last Shot Avg Pressure"
+      },
+      "last_shot_weight": {
+        "name": "Last Shot Yield"
+      },
+      "last_shot_ratio": {
+        "name": "Last Shot Brew Ratio"
+      },
+      "last_shot_dose": {
+        "name": "Last Shot Dose"
+      },
+      "last_shot_coffee": {
+        "name": "Last Shot Coffee"
+      },
+      "last_shot_grinder": {
+        "name": "Last Shot Grinder"
+      },
+      "last_sync": {
+        "name": "Last Sync"
+      },
+      "machine_url": {
+        "name": "Machine Hostname"
+      },
+      "machine_temperature": {
+        "name": "Machine Temperature"
+      },
+      "machine_target_temperature": {
+        "name": "Machine Target Temperature"
+      },
+      "preheat_elapsed": {
+        "name": "Elapsed"
+      },
+      "preheat_remaining": {
+        "name": "Remaining"
+      },
+      "preheat_ready_by_target_at": {
+        "name": "Ready By"
+      },
+      "preheat_planned_switch_on_at": {
+        "name": "Planned Switch On"
+      },
+      "maint_descaling": {
+        "name": "Descaling"
+      },
+      "maint_backflush": {
+        "name": "Backflush"
+      },
+      "maint_grouphead": {
+        "name": "Group Head"
+      },
+      "maint_gaskets": {
+        "name": "Gaskets"
+      },
+      "maint_waterfilter": {
+        "name": "Water Filter"
+      },
+      "machine_live_pressure": {
+        "name": "Machine Live Pressure"
+      },
+      "machine_water_level": {
+        "name": "Machine Water Level"
+      },
+      "machine_live_weight": {
+        "name": "Machine Live Weight"
+      },
+      "machine_uptime": {
+        "name": "Machine Uptime"
+      },
+      "machine_live_profile": {
+        "name": "Machine Active Profile"
+      },
+      "pump_flow": {
+        "name": "Pump Flow"
+      },
+      "weight_flow": {
+        "name": "Weight Flow"
+      },
+      "water_temperature": {
+        "name": "Water Temperature"
+      },
+      "maint_grinders": {
+        "name": "Grinders"
+      },
+      "status": {
+        "name": "Status"
+      }
+    },
+    "binary_sensor": {
+      "thermocouple_faulted": {
+        "name": "Thermocouple Faulted"
+      },
+      "pressure_sensor_faulted": {
+        "name": "Pressure Sensor Faulted"
+      },
+      "boiler_state": {
+        "name": "Boiler Relay"
+      },
+      "valve_state": {
+        "name": "Valve"
+      },
+      "steam_valve_state": {
+        "name": "Steam Valve"
+      },
+      "valve_b_state": {
+        "name": "Valve B"
+      },
+      "steam_boiler_relay_state": {
+        "name": "Steam Boiler Relay"
+      },
+      "is_brewing": {
+        "name": "Brewing"
+      },
+      "preheat_ready": {
+        "name": "Ready"
+      },
+      "machine_standby": {
+        "name": "Machine Standby"
+      },
+      "steam_switch": {
+        "name": "Steam Switch"
+      },
+      "reachable": {
+        "name": "Reachable"
+      }
+    },
+    "button": {
+      "tare_scale": {
+        "name": "Tare Scale"
+      },
+      "save_settings": {
+        "name": "Save Settings"
+      },
+      "save_active_profile": {
+        "name": "Save Active Profile"
+      }
+    },
+    "event": {
+      "shot": {
+        "name": "Last shot"
+      }
+    },
+    "light": {
+      "led": {
+        "name": "LED"
+      }
+    },
+    "number": {
+      "steam_set_point": {
+        "name": "Steam Set Point"
+      },
+      "offset_temp": {
+        "name": "Offset Temperature"
+      },
+      "hpwr": {
+        "name": "Heating Power"
+      },
+      "main_divider": {
+        "name": "Main Divider"
+      },
+      "brew_divider": {
+        "name": "Brew Divider"
+      },
+      "startup_heat_delta": {
+        "name": "Startup Heat Delta"
+      },
+      "lcd_brightness": {
+        "name": "LCD Brightness"
+      },
+      "lcd_sleep": {
+        "name": "LCD Sleep Timeout"
+      },
+      "lcd_go_home": {
+        "name": "LCD Go Home Timeout"
+      },
+      "led_tof_min": {
+        "name": "LED Time-of-Flight Min"
+      },
+      "led_tof_max": {
+        "name": "LED Time-of-Flight Max"
+      }
+    },
+    "select": {
+      "profile": {
+        "name": "Profile"
+      },
+      "operation_mode": {
+        "name": "Operation Mode"
+      },
+      "release_channel": {
+        "name": "Release Channel"
+      }
+    },
+    "switch": {
+      "brew_delta_state": {
+        "name": "Brew Delta"
+      },
+      "dream_steam_state": {
+        "name": "Dream Steam"
+      },
+      "lcd_dark_mode": {
+        "name": "LCD Dark Mode"
+      },
+      "lcd_close_on_brew_off": {
+        "name": "LCD Close On Brew Off"
+      },
+      "simple_ui": {
+        "name": "Simple UI"
+      },
+      "force_predictive": {
+        "name": "Force Predictive Scales"
+      },
+      "hw_scales_enabled": {
+        "name": "Hardware Scales Enabled"
+      },
+      "bt_scales_enabled": {
+        "name": "Bluetooth Scales Enabled"
+      }
+    },
+    "update": {
+      "update": {
+        "name": "Update"
+      },
+      "firmware_update": {
+        "name": "Firmware"
+      }
+    }
+  },
+  "device": {
+    "shots": {
+      "name": "Shots"
+    },
+    "maintenance": {
+      "name": "Maintenance"
+    },
+    "preheat": {
+      "name": "Preheat"
     }
   }
 }

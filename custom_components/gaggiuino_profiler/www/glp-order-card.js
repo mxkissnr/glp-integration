@@ -2049,6 +2049,37 @@ ${SHEET_STYLES}
     const type = entry?.type;
     return type === "gaggimate" ? "gaggimate" : "gaggiuino";
   }
+  function registryMachineStatusEntities(hass) {
+    const entities = hass.entities;
+    if (!entities) return [];
+    return Object.values(entities).filter((e6) => e6?.platform === "gaggiuino_profiler" && e6.translation_key === "machine_status" && Boolean(e6.entity_id) && Boolean(hass.states[String(e6.entity_id)])).sort((a3, b3) => String(a3.entity_id).localeCompare(String(b3.entity_id)));
+  }
+  function registryDeviceName(hass, entry) {
+    const device = entry.device_id ? hass.devices?.[entry.device_id] : void 0;
+    return String(device?.name_by_user ?? device?.name ?? "");
+  }
+  function findMachineStatusEntity(hass, machine, candidates) {
+    if (!hass) return void 0;
+    const registered = registryMachineStatusEntities(hass);
+    const [first] = registered;
+    if (first) {
+      if (!machine) return first.entity_id;
+      const needle = String(machine).toLowerCase();
+      const byDevice = registered.find((e6) => registryDeviceName(hass, e6).toLowerCase() === needle);
+      if (byDevice) return byDevice.entity_id;
+      return matchByFriendlyName(hass, machine, registered.map((e6) => String(e6.entity_id)));
+    }
+    return matchByFriendlyName(hass, machine, candidates);
+  }
+  function matchByFriendlyName(hass, machine, known) {
+    const candidates = known ?? Object.keys(hass.states).filter((id) => id.endsWith("_machine_status"));
+    if (machine) {
+      const matched = matchMachineStatusEntity(hass, candidates, machine);
+      if (matched) return matched;
+    }
+    const found = candidates.find((id) => hass.states[id]?.attributes?.friendly_name?.toLowerCase().includes("gaggiuino"));
+    return found || candidates[0];
+  }
 
   // shared/ha-events.ts
   function fireHaEvent(node, type, detail) {
@@ -2408,7 +2439,7 @@ ${SHEET_STYLES}
   }
 
   // order/src/glp-order-card.ts
-  var GLP_ORDER_CARD_VERSION = "1.23.0";
+  var GLP_ORDER_CARD_VERSION = "1.23.1";
   var NEW_BADGE_DAYS_DEFAULT = 7;
   function _configLang(code) {
     const lang = String(code || "").slice(0, 2).toLowerCase();
@@ -2564,18 +2595,13 @@ ${SHEET_STYLES}
     // the one app instance regardless (see README — a documented limitation,
     // not a bug: there's still only one add-on), but `_getSwitchEntity()`
     // resolution and the order payload's `machine` field use it to target the
-    // right machine's switch/queue display. Falls back to the previous "first
-    // *_machine_status entity" behavior when unset, so existing single-machine
-    // cards are unaffected.
+    // right machine's switch/queue display. The entity registry identifies the
+    // status sensor (#323), so renamed devices and translated names still
+    // resolve; without a registry the previous name match answers, and without
+    // `machine` the first *_machine_status entity does, so existing
+    // single-machine cards are unaffected.
     _findMachineStatusEntity() {
-      if (!this._hass) return null;
-      const candidates = Object.keys(this._hass.states).filter((id) => id.endsWith("_machine_status"));
-      if (this._config?.machine) {
-        const matched = matchMachineStatusEntity(this._hass, candidates, this._config.machine);
-        if (matched) return matched;
-      }
-      const found = candidates.find((id) => this._hass.states[id]?.attributes?.friendly_name?.toLowerCase().includes("gaggiuino"));
-      return found || candidates[0] || null;
+      return findMachineStatusEntity(this._hass, this._config?.machine) ?? null;
     }
     _getSwitchEntity() {
       if (this._config?.switch_entity) return this._config.switch_entity;

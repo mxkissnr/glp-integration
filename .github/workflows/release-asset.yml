@@ -21,6 +21,17 @@ jobs:
         with:
           ref: ${{ github.event.release.tag_name }}
 
+      # Beta pre-releases are tagged by dev-prerelease.yml itself.
+      - name: Verify release tag signature
+        if: ${{ !github.event.release.prerelease }}
+        env:
+          TAG: ${{ github.event.release.tag_name }}
+          ALLOWED_SIGNERS: ${{ vars.RELEASE_ALLOWED_SIGNERS }}
+        run: |
+          git fetch --no-tags --force origin "refs/tags/$TAG:refs/tags/$TAG"
+          printf '%s\n' "$ALLOWED_SIGNERS" > "$RUNNER_TEMP/allowed_signers"
+          git -c gpg.format=ssh -c gpg.ssh.allowedSignersFile="$RUNNER_TEMP/allowed_signers" verify-tag "$TAG"
+
       - name: Build zip
         run: |
           cd custom_components/gaggiuino_profiler

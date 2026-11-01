@@ -4,7 +4,7 @@
 
 <p align="center">
   <a href="https://github.com/mxkissnr/glp-integration/releases">
-    <img src="https://img.shields.io/github/v/tag/mxkissnr/glp-integration?color=%23f59e0b&label=Version&style=flat-square" alt="Version"/>
+    <img src="https://img.shields.io/github/v/release/mxkissnr/glp-integration?color=%23f59e0b&label=Version&style=flat-square" alt="Version"/>
   </a>
   <a href="https://github.com/mxkissnr/glp-integration/actions/workflows/validate.yml">
     <img src="https://img.shields.io/github/actions/workflow/status/mxkissnr/glp-integration/validate.yml?branch=main&label=Validate&style=flat-square" alt="Validate"/>
@@ -33,9 +33,9 @@
 
 ## ⚡ Quick Install
 
-<a href="https://my.home-assistant.io/redirect/hacs_repository/?owner=mxkissnr&repository=glp-integration&category=integration">
-  <img src="https://my.home-assistant.io/badges/hacs_repository.svg" alt="Add Integration via HACS" height="40"/>
-</a>
+**Home Assistant 2026.11 or newer:** open **Settings → Marketplace**, search for *Gaggiuino Local Profiler*, install it and restart Home Assistant. No custom repository needed — the integration is in the default catalog.
+
+On older Home Assistant versions, use the HACS button in [Installation](#-installation).
 
 ---
 
@@ -43,8 +43,8 @@
 
 | | Feature | Description |
 |---|---|---|
-| 🃏 | **Bundled Shot Card** | The [GLP Shot Card](DOCS.md#shot-card) ships inside this integration and registers itself as a Lovelace resource on setup — just add `type: custom:glp-card` to a dashboard, no separate HACS install or resource config |
-| 🃏 | **Bundled Order Card** | The [GLP Order Card](DOCS.md#order-card) ships inside this integration and registers itself as a Lovelace resource on setup — just add `type: custom:glp-order-card` to a dashboard, no separate HACS install or resource config |
+| 🃏 | **Bundled Shot Card** | The [GLP Shot Card](DOCS.md#shot-card) ships inside this integration and registers itself as a Lovelace resource on setup — just add `type: custom:glp-card` to a dashboard, no separate card install or resource config |
+| 🃏 | **Bundled Order Card** | The [GLP Order Card](DOCS.md#order-card) ships inside this integration and registers itself as a Lovelace resource on setup — just add `type: custom:glp-order-card` to a dashboard, no separate card install or resource config |
 | ☕ | **Brewing Sensor** | Binary sensor pushed live over SSE (2 s poll fallback) — perfect as automation trigger |
 | 📊 | **Shot Sensors** | Profile, rating, duration, pressure, yield, ratio, dose, coffee, grinder, shots today and more |
 | 🌡️ | **Machine Sensors** | Live pressure, temperature, water level, weight, uptime, active profile — updated every 5 s |
@@ -57,7 +57,10 @@
 | 🖥️ | **Multi-Machine Devices** | Each additional configured machine gets its own HA device with status and reachable sensors |
 | 🎨 | **Theme Sync** | Machine status sensor exposes a `theme` attribute the bundled cards read to match each machine's configured accent color |
 | 💾 | **Backup & Maintenance Services** | `backup` service exports shots/annotations/coffee library/blocklist to `<config>/glp_backups/`; `maintenance_done` marks a maintenance task complete |
-| 🔔 | **Shot Event** | Fires `gaggiuino_profiler_shot_completed` with full shot data after every pull |
+| 🔔 | **Shot Event** | Fires `gaggiuino_profiler_shot_completed` with full shot data after every pull, and the same shot on the `event.gaggiuino_local_profiler_shot` event entity |
+| 🗂️ | **Grouped Devices** | The GLP device's entities are grouped into the child devices Shots, Maintenance and Preheat; additional machines are child devices too |
+| 🌍 | **Translated Names** | Entity and device names follow the Home Assistant language: English, German, Spanish, French, Italian and Dutch |
+| 🔎 | **Automatic Discovery** | On Home Assistant OS the integration is offered by itself once the GLP app announces its address |
 | ⚙️ | **Configurable** | URL and poll interval adjustable any time via *Settings → Integration → Configure* |
 | 🔍 | **Diagnostics** | HA diagnostics export for easy bug reports |
 
@@ -67,7 +70,21 @@
 
 ## 🚀 Installation
 
-### HACS (recommended)
+### Home Assistant 2026.11 or newer (recommended)
+
+Home Assistant 2026.11 replaced HACS with the built-in Marketplace, and this integration is in its default catalog — no custom repository needed.
+
+1. Open **Settings → Marketplace**
+2. Search for *Gaggiuino Local Profiler* and install it
+3. Restart Home Assistant
+
+An existing HACS installation is migrated automatically when Home Assistant 2026.11 starts for the first time; HACS itself cannot be installed on 2026.11 or newer.
+
+### Older Home Assistant (before 2026.11): HACS
+
+<a href="https://my.home-assistant.io/redirect/hacs_repository/?owner=mxkissnr&repository=glp-integration&category=integration">
+  <img src="https://my.home-assistant.io/badges/hacs_repository.svg" alt="Add Integration via HACS" height="40"/>
+</a>
 
 1. Click the button above, or search HACS for *Gaggiuino Local Profiler* and install
 2. Restart Home Assistant
@@ -76,6 +93,12 @@
 
 1. Copy `custom_components/gaggiuino_profiler/` into your `config/custom_components/` directory
 2. Restart Home Assistant
+
+### Updates
+
+Updates for the integration and both bundled cards arrive through the Marketplace update entity: install the update there and restart Home Assistant when it asks. There is no separate update step for the cards.
+
+To run a beta release instead, either enable the *Pre-release* entity on the integration's Marketplace device page, or open the Marketplace's *Reinstall* dialog, which lists the beta releases marked *pre-release*, and pick one there.
 
 ---
 
@@ -251,7 +274,7 @@ All three services optionally accept a `machine` field (a machine id from the mu
 
 ## 🔔 Event: `gaggiuino_profiler_shot_completed`
 
-Fired automatically when a newer shot (higher `id`) appears. Deleting the newest shot does not fire it. Contains all relevant shot data:
+Fired automatically when a newer shot (higher `id`) appears. Deleting the newest shot does not fire it. The same shot is also fired on the event entity `event.gaggiuino_local_profiler_shot` (Shots device), see [DOCS.md](DOCS.md#event-entity-eventgaggiuino_local_profiler_shot). Contains all relevant shot data:
 
 ```yaml
 event_type: gaggiuino_profiler_shot_completed
