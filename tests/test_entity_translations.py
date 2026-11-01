@@ -10,6 +10,7 @@ The entity ids must not move: every class pins `suggested_object_id` (and
 grouped entities preset `entity_id`), so the German run below has to produce
 the very same ids as the English one.
 """
+import ast
 import json
 import re
 from pathlib import Path
@@ -204,6 +205,43 @@ def test_every_language_keeps_the_english_placeholders() -> None:
             assert sorted(PLACEHOLDER_RE.findall(value)) == sorted(
                 PLACEHOLDER_RE.findall(english[key])
             ), (language, key)
+
+
+def _flow_keys() -> tuple[set[str], set[str], set[str]]:
+    """Steps, abort reasons and error keys the config and options flows use."""
+    tree = ast.parse((COMPONENT_DIR / "config_flow.py").read_text())
+    steps, aborts, errors = set(), set(), set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.FunctionDef) and node.name.startswith("async_step_"):
+            steps.add(node.name.removeprefix("async_step_"))
+        if isinstance(node, ast.Call):
+            for keyword in node.keywords:
+                if keyword.arg in ("reason", "step_id") and isinstance(keyword.value, ast.Constant):
+                    (aborts if keyword.arg == "reason" else steps).add(keyword.value.value)
+        if isinstance(node, ast.Assign):
+            for target in node.targets:
+                if (
+                    isinstance(target, ast.Subscript)
+                    and isinstance(target.value, ast.Name)
+                    and target.value.id == "errors"
+                    and isinstance(node.value, ast.Constant)
+                ):
+                    errors.add(node.value.value)
+    return steps, aborts, errors
+
+
+def test_english_covers_every_key_the_flows_use() -> None:
+    """en.json is the reference set, so it must not lag behind the flow code."""
+    steps, aborts, errors = _flow_keys()
+    english = _translations("en")["config"]
+    options = _translations("en")["options"]
+    for step in steps:
+        assert step in english["step"] or step in options["step"], step
+    for reason in aborts:
+        assert reason in english["abort"], reason
+    for key in errors:
+        assert key in english["error"], key
+        assert key in options["error"], key
 
 
 def test_device_device_keys_are_translated() -> None:
