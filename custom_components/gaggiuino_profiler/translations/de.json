@@ -7,6 +7,10 @@
         "data": {
           "url": "GLP-URL"
         }
+      },
+      "hassio_confirm": {
+        "title": "Gaggiuino Local Profiler gefunden",
+        "description": "Die Gaggiuino Local Profiler-App wurde unter {name} gefunden. Integration für diese Adresse hinzufügen?"
       }
     },
     "error": {
@@ -14,7 +18,9 @@
       "invalid_url": "Die URL muss mit http:// oder https:// beginnen."
     },
     "abort": {
-      "already_configured": "Diese GLP-Instanz ist bereits konfiguriert."
+      "already_configured": "Diese GLP-Instanz ist bereits konfiguriert.",
+      "invalid_discovery_info": "Die GLP-App hat eine Adresse gemeldet, die Home Assistant nicht verwenden kann (Host fehlt oder Port ungültig). App aktualisieren und erneut versuchen.",
+      "cannot_connect": "Verbindung zu GLP unter der gefundenen Adresse nicht möglich. Prüfe, ob die App läuft, und versuche es erneut."
     }
   },
   "options": {

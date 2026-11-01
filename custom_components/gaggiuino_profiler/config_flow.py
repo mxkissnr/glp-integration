@@ -5,9 +5,16 @@ from urllib.parse import urlparse
 
 import aiohttp
 import voluptuous as vol
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult, OptionsFlow
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigEntryState,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 
 from .const import ADDON_SLUG, CONF_SCAN_INTERVAL, DEFAULT_URL, DOMAIN, SCAN_INTERVAL_SECONDS
 
@@ -172,6 +179,36 @@ async def _probe_status(
     return True
 
 
+def _parse_discovery_info(
+    config: dict | None,
+) -> tuple[str, int] | None:
+    """Read `{"host": str, "port": int}` out of the app's discovery payload.
+
+    Anything else -- a missing or empty host, a port that is not a plain int
+    (JSON strings, floats, booleans) or out of the 1-65535 range -- returns
+    None, so the flow aborts with `invalid_discovery_info` instead of
+    building a URL out of a malformed announcement.
+    """
+    host = (config or {}).get("host")
+    port = (config or {}).get("port")
+    if not isinstance(host, str) or not host.strip():
+        return None
+    if isinstance(port, bool) or not isinstance(port, int) or not 1 <= port <= 65535:
+        return None
+    return host.strip(), port
+
+
+def _entry_url(entry: ConfigEntry) -> str:
+    """The URL an entry actually connects to (options override data, see
+    async_setup_entry)."""
+    return entry.options.get("url") or entry.data.get("url", "")
+
+
+def _url_host(url: str) -> str | None:
+    hostname = urlparse(url).hostname
+    return hostname.lower() if hostname else None
+
+
 class GlpConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
@@ -221,6 +258,74 @@ class GlpConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema({vol.Required("url", default=DEFAULT_URL): str}),
             errors=errors,
         )
+
+    async def async_step_hassio(
+        self, discovery_info: HassioServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle discovery announced by the GLP app (Supervisor installs only).
+
+        The app publishes `{"host": "<app hostname>", "port": <int>}` for the
+        service `gaggiuino_profiler`; the URL is built from that payload and
+        probed before it is offered, never trusted blindly. A malformed
+        announcement aborts with `invalid_discovery_info`.
+
+        Standalone Docker installs never see this step -- they keep the manual
+        `async_step_user` flow unchanged.
+        """
+        parsed = _parse_discovery_info(discovery_info.config)
+        if parsed is None:
+            return self.async_abort(reason="invalid_discovery_info")
+        host, port = parsed
+        url = f"http://{host}:{port}"
+
+        if not await _probe_status(async_get_clientsession(self.hass), url, 5):
+            return self.async_abort(reason="cannot_connect")
+
+        # An entry for this app already exists: a new port (the app restarted
+        # with a different host-port mapping) updates it in place instead of
+        # adding a second integration for the same machine.
+        for entry in self._async_current_entries(include_ignore=False):
+            if _url_host(_entry_url(entry)) != host.lower():
+                continue
+            if _entry_url(entry) != url:
+                # The unique_id is the URL for both this flow and the manual
+                # one, so it moves with the port -- otherwise a later manual
+                # setup of the new URL would not see this entry and add a second.
+                updates: dict = {"data": {**entry.data, "url": url}}
+                if (
+                    self.hass.config_entries.async_entry_for_domain_unique_id(DOMAIN, url)
+                    is None
+                ):
+                    updates["unique_id"] = url
+                if "url" in entry.options:
+                    updates["options"] = {**entry.options, "url": url}
+                self.hass.config_entries.async_update_entry(entry, **updates)
+                # A loaded entry reloads through its own update listener; one
+                # stuck in setup retry has no listener yet, so reload it here.
+                if entry.state in (ConfigEntryState.SETUP_RETRY, ConfigEntryState.SETUP_ERROR):
+                    self.hass.config_entries.async_schedule_reload(entry.entry_id)
+            return self.async_abort(reason="already_configured")
+
+        await self.async_set_unique_id(url)
+        self._abort_if_unique_id_configured()
+
+        # Kept in the flow context (not an attribute) so a discovery flow that
+        # Home Assistant restores after a restart can still finish the confirm.
+        self.context["glp_discovered_url"] = url
+        self.context["title_placeholders"] = {"name": f"GLP ({host}:{port})"}
+        return await self.async_step_hassio_confirm()
+
+    async def async_step_hassio_confirm(
+        self, user_input: dict | None = None
+    ) -> ConfigFlowResult:
+        """Confirm the discovered address before creating the entry."""
+        url = self.context["glp_discovered_url"]
+        if user_input is not None:
+            return self.async_create_entry(
+                title=f"GLP ({url.removeprefix('http://')})",
+                data={"url": url},
+            )
+        return self.async_show_form(step_id="hassio_confirm")
 
     @staticmethod
     @callback
