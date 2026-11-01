@@ -33,55 +33,48 @@ class GlpMachineBinarySensorDescription(BinarySensorEntityDescription):
 MACHINE_BINARY_SENSORS: tuple[GlpMachineBinarySensorDescription, ...] = (
     GlpMachineBinarySensorDescription(
         key="thermocouple_faulted",
+        translation_key="thermocouple_faulted",
         data_key="thermocoupleFaulted",
         reason_key="thermocoupleFaultReason",
-        name="Thermocouple Faulted",
-        icon="mdi:thermometer-alert",
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     GlpMachineBinarySensorDescription(
         key="pressure_sensor_faulted",
+        translation_key="pressure_sensor_faulted",
         data_key="pressureSensorFaulted",
         reason_key="pressureSensorFaultReason",
-        name="Pressure Sensor Faulted",
-        icon="mdi:gauge-full",
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     GlpMachineBinarySensorDescription(
         key="boiler_state",
+        translation_key="boiler_state",
         data_key="boilerState",
-        name="Boiler Relay",
-        icon="mdi:radiator",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     GlpMachineBinarySensorDescription(
         key="valve_state",
+        translation_key="valve_state",
         data_key="valveState",
-        name="Valve",
-        icon="mdi:valve",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     GlpMachineBinarySensorDescription(
         key="steam_valve_state",
+        translation_key="steam_valve_state",
         data_key="steamValveState",
-        name="Steam Valve",
-        icon="mdi:valve",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     GlpMachineBinarySensorDescription(
         key="valve_b_state",
+        translation_key="valve_b_state",
         data_key="valveBState",
-        name="Valve B",
-        icon="mdi:valve",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     GlpMachineBinarySensorDescription(
         key="steam_boiler_relay_state",
+        translation_key="steam_boiler_relay_state",
         data_key="steamBoilerRelayState",
-        name="Steam Boiler Relay",
-        icon="mdi:radiator",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )
@@ -132,9 +125,8 @@ async def async_setup_entry(
 
 
 class IsBrewingSensor(GlpEntity[GlpLiveCoordinator], BinarySensorEntity):
-    _attr_name = "Brewing"
+    _attr_translation_key = "is_brewing"
     _attr_device_class = BinarySensorDeviceClass.RUNNING
-    _attr_icon = "mdi:coffee-maker-check-outline"
     # Live sample data changes every 2 s; keep it out of the recorder (the
     # bundled cards still read it live from the state machine).
     _unrecorded_attributes = frozenset({"datapoints", "seq"})
@@ -176,9 +168,7 @@ class IsBrewingSensor(GlpEntity[GlpLiveCoordinator], BinarySensorEntity):
 
 
 class PreheatReadySensor(GlpEntity[GlpDataCoordinator], BinarySensorEntity):
-    # #336: on the Preheat child device, where the leading word is redundant.
-    _attr_name = "Ready"
-    _attr_icon = "mdi:coffee-maker-check"
+    _attr_translation_key = "preheat_ready"
 
     def __init__(
         self,
@@ -203,8 +193,7 @@ class PreheatReadySensor(GlpEntity[GlpDataCoordinator], BinarySensorEntity):
 class MachineStandbySensor(GlpEntity[GlpDataCoordinator], BinarySensorEntity):
     """#219: true while a GaggiMate reports standby; Gaggiuino always reports false."""
 
-    _attr_name = "Machine Standby"
-    _attr_icon = "mdi:power-sleep"
+    _attr_translation_key = "machine_standby"
 
     def __init__(self, coordinator: GlpDataCoordinator, entry: ConfigEntry) -> None:
         super().__init__(coordinator, entry, "machine_standby")
@@ -223,9 +212,8 @@ class MachineStandbySensor(GlpEntity[GlpDataCoordinator], BinarySensorEntity):
 class SteamSwitchSensor(GlpEntity[GlpMachineCoordinator], BinarySensorEntity):
     """Physical steam switch state from the Gaggiuino machine."""
 
-    _attr_name = "Steam Switch"
+    _attr_translation_key = "steam_switch"
     _attr_device_class = BinarySensorDeviceClass.HEAT
-    _attr_icon = "mdi:weather-fog"
 
     def __init__(self, coordinator: GlpMachineCoordinator, entry: ConfigEntry) -> None:
         super().__init__(coordinator, entry, "steam_switch")
@@ -287,7 +275,7 @@ class GlpMachineBinarySensor(GlpEntity[GlpMachineCoordinator], BinarySensorEntit
 class GlpAdditionalMachineReachableSensor(GlpAdditionalMachineEntity[GlpDataCoordinator], BinarySensorEntity):
     """Reachability of one additional (non-default) machine (#48)."""
 
-    _attr_name = "Reachable"
+    _attr_translation_key = "reachable"
     _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
 
     def __init__(

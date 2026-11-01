@@ -11,14 +11,24 @@ so a full `async_setup_entry` needs a single call.
 """
 from __future__ import annotations
 
+import json
 from collections.abc import Iterator
 from contextlib import contextmanager
+from pathlib import Path
 from typing import Any
 from unittest import mock
 
 import pytest
 
 SETTINGS_CATEGORIES = ("boiler", "display", "led", "scales", "system")
+
+COMPONENT_DIR = Path(__file__).resolve().parent.parent / "custom_components" / "gaggiuino_profiler"
+
+
+def load_icons() -> dict[str, Any]:
+    """Return the parsed icons.json of the integration."""
+    return json.loads((COMPONENT_DIR / "icons.json").read_text())
+
 
 # Every endpoint the four coordinators request on first refresh. The last
 # three are the ones whose failures the production code deliberately ignores

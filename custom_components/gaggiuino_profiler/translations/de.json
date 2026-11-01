@@ -31,5 +31,166 @@
       "invalid_url": "Die URL muss mit http:// oder https:// beginnen.",
       "cannot_connect": "Verbindung zu GLP nicht möglich. Prüfe die URL und stelle sicher, dass die App läuft."
     }
+  },
+  "entity": {
+    "sensor": {
+      "machine_status": {
+        "name": "Maschinenstatus"
+      },
+      "shot_count": {
+        "name": "Shot-Anzahl"
+      },
+      "shots_today": {
+        "name": "Shots heute"
+      },
+      "last_shot_profile": {
+        "name": "Letztes Profil"
+      },
+      "last_shot_rating": {
+        "name": "Letzte Bewertung"
+      },
+      "last_shot_date": {
+        "name": "Letztes Shot-Datum"
+      },
+      "last_shot_duration": {
+        "name": "Letzte Shot-Dauer"
+      },
+      "last_shot_pressure": {
+        "name": "Letzter Shot-Druck"
+      },
+      "last_shot_weight": {
+        "name": "Letzter Shot-Ertrag"
+      },
+      "last_shot_ratio": {
+        "name": "Letztes Brühverhältnis"
+      },
+      "last_shot_dose": {
+        "name": "Letzte Dosis"
+      },
+      "last_shot_coffee": {
+        "name": "Letzte Bohne"
+      },
+      "last_shot_grinder": {
+        "name": "Letzte Mühle"
+      },
+      "last_sync": {
+        "name": "Letzte Synchronisierung"
+      },
+      "machine_url": {
+        "name": "Maschinen-Hostname"
+      },
+      "machine_temperature": {
+        "name": "Maschinentemperatur"
+      },
+      "machine_target_temperature": {
+        "name": "Zieltemperatur"
+      },
+      "preheat_elapsed": {
+        "name": "Vergangen"
+      },
+      "preheat_remaining": {
+        "name": "Verbleibend"
+      },
+      "preheat_ready_by_target_at": {
+        "name": "Bereit um"
+      },
+      "preheat_planned_switch_on_at": {
+        "name": "Geplantes Einschalten"
+      },
+      "maint_descaling": {
+        "name": "Entkalken"
+      },
+      "maint_backflush": {
+        "name": "Backflush"
+      },
+      "maint_grouphead": {
+        "name": "Gruppenkopf"
+      },
+      "maint_gaskets": {
+        "name": "Dichtungen"
+      },
+      "maint_waterfilter": {
+        "name": "Wasserfilter"
+      },
+      "maint_grinders": {
+        "name": "Mühlen"
+      },
+      "machine_live_pressure": {
+        "name": "Live-Druck"
+      },
+      "machine_water_level": {
+        "name": "Wasserstand"
+      },
+      "machine_live_weight": {
+        "name": "Live-Gewicht"
+      },
+      "machine_uptime": {
+        "name": "Betriebszeit"
+      },
+      "machine_live_profile": {
+        "name": "Aktives Profil"
+      },
+      "pump_flow": {
+        "name": "Pumpendurchfluss"
+      },
+      "weight_flow": {
+        "name": "Gewichtsdurchfluss"
+      },
+      "water_temperature": {
+        "name": "Wassertemperatur"
+      },
+      "status": {
+        "name": "Status"
+      }
+    },
+    "binary_sensor": {
+      "thermocouple_faulted": {
+        "name": "Thermoelement gestört"
+      },
+      "pressure_sensor_faulted": {
+        "name": "Drucksensor gestört"
+      },
+      "boiler_state": {
+        "name": "Kesselrelais"
+      },
+      "valve_state": {
+        "name": "Ventil"
+      },
+      "steam_valve_state": {
+        "name": "Dampfventil"
+      },
+      "valve_b_state": {
+        "name": "Ventil B"
+      },
+      "steam_boiler_relay_state": {
+        "name": "Dampfkesselrelais"
+      },
+      "is_brewing": {
+        "name": "Brüht"
+      },
+      "preheat_ready": {
+        "name": "Bereit"
+      },
+      "machine_standby": {
+        "name": "Maschinen-Standby"
+      },
+      "steam_switch": {
+        "name": "Dampfschalter"
+      },
+      "reachable": {
+        "name": "Erreichbar"
+      }
+    }
+  },
+  "device": {
+    "shots": {
+      "name": "Shots"
+    },
+    "maintenance": {
+      "name": "Wartung"
+    },
+    "preheat": {
+      "name": "Vorheizen"
+    }
   }
 }

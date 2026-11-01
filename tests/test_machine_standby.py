@@ -19,7 +19,7 @@ from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.gaggiuino_profiler.const import DOMAIN
 from custom_components.gaggiuino_profiler.coordinator import GlpDataCoordinator
-from tests.common import mock_all_coordinator_endpoints
+from tests.common import load_icons, mock_all_coordinator_endpoints
 
 URL = "http://glp.example.com"
 
@@ -104,7 +104,9 @@ async def test_standby_true_sensor_is_on_and_counters_unknown(hass, strict_aiocl
     )
     standby = _state(hass, entry, "machine_standby")
     assert standby.state == "on"
-    assert standby.attributes.get("icon") == "mdi:power-sleep"
+    # #339: the icon lives in icons.json now, so the frontend resolves it from
+    # the entity's translation key instead of the state attribute.
+    assert load_icons()["entity"]["binary_sensor"]["machine_standby"]["default"] == "mdi:power-sleep"
     assert "device_class" not in standby.attributes
     assert _state(hass, entry, "preheat_elapsed").state == "unknown"
     assert _state(hass, entry, "preheat_remaining").state == "unknown"
