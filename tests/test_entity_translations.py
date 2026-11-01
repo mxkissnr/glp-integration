@@ -10,7 +10,9 @@ The entity ids must not move: every class pins `suggested_object_id` (and
 grouped entities preset `entity_id`), so the German run below has to produce
 the very same ids as the English one.
 """
+import ast
 import json
+import re
 from pathlib import Path
 
 import pytest
@@ -107,8 +109,27 @@ CHILD_DEVICE_KEYS = {
 }
 
 
+LANGUAGES = ("en", "de", "es", "fr", "it", "nl")
+
+PLACEHOLDER_RE = re.compile(r"\{[^{}]*\}")
+
+
 def _translations(language: str) -> dict:
     return json.loads((COMPONENT_DIR / "translations" / f"{language}.json").read_text())
+
+
+def _flat_translations(language: str) -> dict[str, str]:
+    """Every string of a translation file keyed by its dotted path."""
+
+    def walk(node: dict, prefix: str = ""):
+        for key, value in node.items():
+            path = f"{prefix}.{key}" if prefix else key
+            if isinstance(value, dict):
+                yield from walk(value, path)
+            else:
+                yield path, value
+
+    return dict(walk(_translations(language)))
 
 
 def _description_keys() -> dict[str, set[str]]:
@@ -166,6 +187,61 @@ def test_english_and_german_have_the_same_keys() -> None:
         assert english[section].keys() == german[section].keys(), section
     for platform in english["entity"]:
         assert english["entity"][platform].keys() == german["entity"][platform].keys(), platform
+
+
+def test_every_language_has_the_english_keys_and_no_empty_value() -> None:
+    english = _flat_translations("en")
+    for language in LANGUAGES:
+        translated = _flat_translations(language)
+        assert translated.keys() == english.keys(), language
+        for key, value in translated.items():
+            assert isinstance(value, str) and value.strip(), (language, key)
+
+
+def test_every_language_keeps_the_english_placeholders() -> None:
+    english = _flat_translations("en")
+    for language in LANGUAGES:
+        for key, value in _flat_translations(language).items():
+            assert sorted(PLACEHOLDER_RE.findall(value)) == sorted(
+                PLACEHOLDER_RE.findall(english[key])
+            ), (language, key)
+
+
+def _flow_keys() -> tuple[set[str], set[str], set[str]]:
+    """Steps, abort reasons and error keys the config and options flows use."""
+    tree = ast.parse((COMPONENT_DIR / "config_flow.py").read_text())
+    steps, aborts, errors = set(), set(), set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.FunctionDef) and node.name.startswith("async_step_"):
+            steps.add(node.name.removeprefix("async_step_"))
+        if isinstance(node, ast.Call):
+            for keyword in node.keywords:
+                if keyword.arg in ("reason", "step_id") and isinstance(keyword.value, ast.Constant):
+                    (aborts if keyword.arg == "reason" else steps).add(keyword.value.value)
+        if isinstance(node, ast.Assign):
+            for target in node.targets:
+                if (
+                    isinstance(target, ast.Subscript)
+                    and isinstance(target.value, ast.Name)
+                    and target.value.id == "errors"
+                    and isinstance(node.value, ast.Constant)
+                ):
+                    errors.add(node.value.value)
+    return steps, aborts, errors
+
+
+def test_english_covers_every_key_the_flows_use() -> None:
+    """en.json is the reference set, so it must not lag behind the flow code."""
+    steps, aborts, errors = _flow_keys()
+    english = _translations("en")["config"]
+    options = _translations("en")["options"]
+    for step in steps:
+        assert step in english["step"] or step in options["step"], step
+    for reason in aborts:
+        assert reason in english["abort"], reason
+    for key in errors:
+        assert key in english["error"], key
+        assert key in options["error"], key
 
 
 def test_device_device_keys_are_translated() -> None:
@@ -290,7 +366,7 @@ def test_control_and_event_entities_have_a_translation_key_and_no_name_literal()
 
 def test_no_child_device_entity_name_repeats_its_device_name() -> None:
     """HA shows "<device name> <entity name>"; a repeat reads as "Shots Shots"."""
-    for language in ("en", "de"):
+    for language in LANGUAGES:
         translations = _translations(language)
         for platform, keys in CHILD_DEVICE_KEYS.items():
             for key, group in keys.items():

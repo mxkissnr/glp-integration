@@ -7,6 +7,10 @@
         "data": {
           "url": "GLP-URL"
         }
+      },
+      "hassio_confirm": {
+        "title": "Gaggiuino Local Profiler gevonden",
+        "description": "De Gaggiuino Local Profiler-app is gevonden op {name}. Integratie voor dit adres toevoegen?"
       }
     },
     "error": {
@@ -14,7 +18,9 @@
       "invalid_url": "De URL moet beginnen met http:// of https://."
     },
     "abort": {
-      "already_configured": "Deze GLP-instantie is al geconfigureerd."
+      "already_configured": "Deze GLP-instantie is al geconfigureerd.",
+      "invalid_discovery_info": "De GLP-app heeft een adres gemeld dat Home Assistant niet kan gebruiken (host ontbreekt of poort is ongeldig). Werk de app bij en probeer het opnieuw.",
+      "cannot_connect": "Kan geen verbinding maken met GLP op het gevonden adres. Controleer of de app actief is en probeer het opnieuw."
     }
   },
   "options": {
@@ -30,6 +36,268 @@
     "error": {
       "invalid_url": "De URL moet beginnen met http:// of https://.",
       "cannot_connect": "Kan geen verbinding maken met GLP. Controleer de URL en zorg dat de app actief is."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "machine_status": {
+        "name": "Machinestatus"
+      },
+      "shot_count": {
+        "name": "Aantal"
+      },
+      "shots_today": {
+        "name": "Vandaag"
+      },
+      "last_shot_profile": {
+        "name": "Profiel laatste shot"
+      },
+      "last_shot_rating": {
+        "name": "Beoordeling laatste shot"
+      },
+      "last_shot_date": {
+        "name": "Datum laatste shot"
+      },
+      "last_shot_duration": {
+        "name": "Duur laatste shot"
+      },
+      "last_shot_pressure": {
+        "name": "Gemiddelde druk laatste shot"
+      },
+      "last_shot_weight": {
+        "name": "Opbrengst laatste shot"
+      },
+      "last_shot_ratio": {
+        "name": "Brouwverhouding laatste shot"
+      },
+      "last_shot_dose": {
+        "name": "Dosering laatste shot"
+      },
+      "last_shot_coffee": {
+        "name": "Koffie laatste shot"
+      },
+      "last_shot_grinder": {
+        "name": "Molen laatste shot"
+      },
+      "last_sync": {
+        "name": "Laatste synchronisatie"
+      },
+      "machine_url": {
+        "name": "Hostnaam machine"
+      },
+      "machine_temperature": {
+        "name": "Machinetemperatuur"
+      },
+      "machine_target_temperature": {
+        "name": "Doeltemperatuur machine"
+      },
+      "preheat_elapsed": {
+        "name": "Verstreken"
+      },
+      "preheat_remaining": {
+        "name": "Resterend"
+      },
+      "preheat_ready_by_target_at": {
+        "name": "Klaar om"
+      },
+      "preheat_planned_switch_on_at": {
+        "name": "Gepland inschakelen"
+      },
+      "maint_descaling": {
+        "name": "Ontkalken"
+      },
+      "maint_backflush": {
+        "name": "Backflush"
+      },
+      "maint_grouphead": {
+        "name": "Zetgroep"
+      },
+      "maint_gaskets": {
+        "name": "Pakkingen"
+      },
+      "maint_waterfilter": {
+        "name": "Waterfilter"
+      },
+      "machine_live_pressure": {
+        "name": "Live druk"
+      },
+      "machine_water_level": {
+        "name": "Waterniveau"
+      },
+      "machine_live_weight": {
+        "name": "Live gewicht"
+      },
+      "machine_uptime": {
+        "name": "Bedrijfstijd"
+      },
+      "machine_live_profile": {
+        "name": "Actief profiel"
+      },
+      "pump_flow": {
+        "name": "Pompdebiet"
+      },
+      "weight_flow": {
+        "name": "Gewichtsdebiet"
+      },
+      "water_temperature": {
+        "name": "Watertemperatuur"
+      },
+      "maint_grinders": {
+        "name": "Molens"
+      },
+      "status": {
+        "name": "Status"
+      }
+    },
+    "binary_sensor": {
+      "thermocouple_faulted": {
+        "name": "Thermokoppel fout"
+      },
+      "pressure_sensor_faulted": {
+        "name": "Druksensor fout"
+      },
+      "boiler_state": {
+        "name": "Ketelrelais"
+      },
+      "valve_state": {
+        "name": "Klep"
+      },
+      "steam_valve_state": {
+        "name": "Stoomklep"
+      },
+      "valve_b_state": {
+        "name": "Klep B"
+      },
+      "steam_boiler_relay_state": {
+        "name": "Stoomketelrelais"
+      },
+      "is_brewing": {
+        "name": "Aan het brouwen"
+      },
+      "preheat_ready": {
+        "name": "Klaar"
+      },
+      "machine_standby": {
+        "name": "Machine stand-by"
+      },
+      "steam_switch": {
+        "name": "Stoomschakelaar"
+      },
+      "reachable": {
+        "name": "Bereikbaar"
+      }
+    },
+    "button": {
+      "tare_scale": {
+        "name": "Schaal tarieren"
+      },
+      "save_settings": {
+        "name": "Instellingen opslaan"
+      },
+      "save_active_profile": {
+        "name": "Actief profiel opslaan"
+      }
+    },
+    "event": {
+      "shot": {
+        "name": "Laatste shot"
+      }
+    },
+    "light": {
+      "led": {
+        "name": "LED"
+      }
+    },
+    "number": {
+      "steam_set_point": {
+        "name": "Stoominstelpunt"
+      },
+      "offset_temp": {
+        "name": "Temperatuurcorrectie"
+      },
+      "hpwr": {
+        "name": "Verwarmingsvermogen"
+      },
+      "main_divider": {
+        "name": "Hoofdverdeler"
+      },
+      "brew_divider": {
+        "name": "Brouwverdeler"
+      },
+      "startup_heat_delta": {
+        "name": "Opwarmdelta bij start"
+      },
+      "lcd_brightness": {
+        "name": "LCD-helderheid"
+      },
+      "lcd_sleep": {
+        "name": "LCD-slaaptijd"
+      },
+      "lcd_go_home": {
+        "name": "LCD-terug-naar-starttijd"
+      },
+      "led_tof_min": {
+        "name": "LED-ToF min"
+      },
+      "led_tof_max": {
+        "name": "LED-ToF max"
+      }
+    },
+    "select": {
+      "profile": {
+        "name": "Profiel"
+      },
+      "operation_mode": {
+        "name": "Bedrijfsmodus"
+      },
+      "release_channel": {
+        "name": "Releasekanaal"
+      }
+    },
+    "switch": {
+      "brew_delta_state": {
+        "name": "Brouwdelta"
+      },
+      "dream_steam_state": {
+        "name": "Dream Steam"
+      },
+      "lcd_dark_mode": {
+        "name": "LCD-donkere modus"
+      },
+      "lcd_close_on_brew_off": {
+        "name": "LCD sluiten na brouwen"
+      },
+      "simple_ui": {
+        "name": "Eenvoudige interface"
+      },
+      "force_predictive": {
+        "name": "Voorspellende schalen forceren"
+      },
+      "hw_scales_enabled": {
+        "name": "Hardwareschalen ingeschakeld"
+      },
+      "bt_scales_enabled": {
+        "name": "Bluetooth-schalen ingeschakeld"
+      }
+    },
+    "update": {
+      "update": {
+        "name": "Update"
+      },
+      "firmware_update": {
+        "name": "Firmware"
+      }
+    }
+  },
+  "device": {
+    "shots": {
+      "name": "Shots"
+    },
+    "maintenance": {
+      "name": "Onderhoud"
+    },
+    "preheat": {
+      "name": "Voorverwarmen"
     }
   }
 }
