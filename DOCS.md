@@ -51,6 +51,8 @@ On older Home Assistant versions the beta builds are still offered by HACS under
 
 The integration tests the connection right away during setup.
 
+On Home Assistant OS with the GLP app installed, Home Assistant also offers the integration by itself: once the app supports it, its announcement shows up under *Discovered* and one confirmation adds the integration with the address the app reported. Manual setup is unchanged and still works the same way.
+
 ## Shot Card
 
 The GLP Shot Card ships inside this integration and is registered automatically as a dashboard resource on setup — no separate card install or manual resource config needed. Add a card with `type: custom:glp-card` to your dashboard after installing this integration. The source lives in [`cards/shot/`](cards/shot/).

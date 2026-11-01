@@ -3,6 +3,7 @@
 ## [Unreleased]
 ### Added
 - **Every finished shot now also fires the event entity `event.gaggiuino_local_profiler_shot` on the Shots device, with the shot data as attributes, so an automation can trigger on it like on any other state; the existing `gaggiuino_profiler_shot_completed` bus event stays unchanged.** Refs #340
+- **On Home Assistant OS the integration now finds the GLP app by itself once the app announces its address, and one confirmation adds it; a changed app port updates the existing entry instead of adding a second one, and manual setup is unchanged.** Refs #338
 
 ### Changed
 - **Entity and device names now follow the Home Assistant language for the sensors, binary sensors, switches, numbers, selects, buttons, lights, update and event entities in English and German, and a name on the Shots, Maintenance and Preheat child devices no longer repeats the device name, so Home Assistant shows "Shots Count" instead of "Shots Shot Count".** Refs #339
