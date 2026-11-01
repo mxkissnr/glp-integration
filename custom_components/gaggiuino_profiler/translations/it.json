@@ -68,7 +68,7 @@
         "name": "Resa ultimo shot"
       },
       "last_shot_ratio": {
-        "name": "Rapporto ultimo shot"
+        "name": "Rapporto dell'ultima erogazione"
       },
       "last_shot_dose": {
         "name": "Dose ultimo shot"
@@ -110,7 +110,7 @@
         "name": "Backflush"
       },
       "maint_grouphead": {
-        "name": "Gruppo"
+        "name": "Gruppo erogatore"
       },
       "maint_gaskets": {
         "name": "Guarnizioni"
@@ -189,7 +189,7 @@
     },
     "button": {
       "tare_scale": {
-        "name": "Azzerare bilancia"
+        "name": "Azzera bilancia"
       },
       "save_settings": {
         "name": "Salva impostazioni"

@@ -68,7 +68,7 @@
         "name": "Rendement du dernier shot"
       },
       "last_shot_ratio": {
-        "name": "Ratio du dernier shot"
+        "name": "Ratio de la dernière extraction"
       },
       "last_shot_dose": {
         "name": "Dose du dernier shot"
@@ -189,7 +189,7 @@
     },
     "button": {
       "tare_scale": {
-        "name": "Tarage de la balance"
+        "name": "Tarer la balance"
       },
       "save_settings": {
         "name": "Enregistrer les réglages"

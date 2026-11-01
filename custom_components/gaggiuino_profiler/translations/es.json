@@ -68,7 +68,7 @@
         "name": "Rendimiento del último shot"
       },
       "last_shot_ratio": {
-        "name": "Ratio del último shot"
+        "name": "Proporción de la última extracción"
       },
       "last_shot_dose": {
         "name": "Dosis del último shot"
@@ -172,7 +172,7 @@
         "name": "Relé de la caldera de vapor"
       },
       "is_brewing": {
-        "name": "Preparando café"
+        "name": "Extrayendo café"
       },
       "preheat_ready": {
         "name": "Listo"
@@ -189,7 +189,7 @@
     },
     "button": {
       "tare_scale": {
-        "name": "Tara la balanza"
+        "name": "Tarar balanza"
       },
       "save_settings": {
         "name": "Guardar ajustes"
