@@ -85,10 +85,20 @@ async def test_additional_machine_device_is_a_child_of_the_default_device(
     registry = dr.async_get(hass)
 
     default_device = registry.async_get_device_by_identifier((DOMAIN, entry.entry_id), entry.entry_id)
+    assert default_device is not None
+
+    if not hasattr(dr, "ChildDeviceInfo"):
+        # HA Core < 2026.9: no child devices, the extra machine keeps the
+        # via_device link it has always had.
+        additional_device = registry.async_get_device_by_identifier((DOMAIN, f"{entry.entry_id}_2"), entry.entry_id)
+        assert additional_device is not None
+        assert additional_device.id != default_device.id
+        assert additional_device.via_device_id == default_device.id
+        return
+
     additional_device = registry.async_get_child_device_by_identifier(
         (DOMAIN, f"{entry.entry_id}_2"), entry.entry_id
     )
-    assert default_device is not None
     assert additional_device is not None
     assert additional_device.id != default_device.id
     # #322: a child of the GLP device, not a via_device-linked separate device.

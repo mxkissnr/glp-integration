@@ -4,21 +4,30 @@ linked back with the `via_device` relationship that HA deprecates in 2026.11.
 
 The child shape must be a drop-in replacement: the extra machine keeps its
 device id and its entity ids, so device- and entity-targeted automations keep
-working. On older cores (`ChildDeviceInfo` missing) the previous `via_device`
+working. On cores without `ChildDeviceInfo` (< 2026.9) the previous `via_device`
 device is still used, so `hacs.json`'s 2024.7.0 minimum keeps working.
+
+The device-info shape is checked on every core by standing in for
+`ChildDeviceInfo`; the registry-level assertions only run where the installed
+`DeviceRegistry` has the child-device API.
 """
 import logging
 from unittest import mock
 
+import pytest
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.gaggiuino_profiler import entity as entity_module
+from custom_components.gaggiuino_profiler.binary_sensor import GlpAdditionalMachineReachableSensor
 from custom_components.gaggiuino_profiler.const import DOMAIN
+from custom_components.gaggiuino_profiler.sensor import GlpAdditionalMachineSensor
 from tests.common import mock_all_coordinator_endpoints
 
 URL = "http://glp.example.com"
+
+HAS_CHILD_DEVICES = hasattr(dr, "ChildDeviceInfo")
 
 MACHINES_TWO = [
     {
@@ -42,6 +51,14 @@ MACHINES_TWO = [
 ]
 
 
+class _RecordingChildDeviceInfo(dict):
+    """Stands in for HA Core < 2026.9's missing ChildDeviceInfo, keeping the
+    keyword arguments so the test can assert the branch that built it."""
+
+    def __init__(self, **kwargs) -> None:
+        super().__init__(kwargs)
+
+
 async def _setup(hass, strict_aioclient_mock):
     mock_all_coordinator_endpoints(strict_aioclient_mock, URL, status={"machines": MACHINES_TWO})
     entry = MockConfigEntry(domain=DOMAIN, data={"url": URL})
@@ -55,22 +72,53 @@ def _main_device(hass, entry):
     return dr.async_get(hass).async_get_device_by_identifier((DOMAIN, entry.entry_id), entry.entry_id)
 
 
-def _child_device(hass, entry):
-    return dr.async_get(hass).async_get_child_device_by_identifier(
-        (DOMAIN, f"{entry.entry_id}_2"), entry.entry_id
-    )
+def _additional_device(hass, entry):
+    registry = dr.async_get(hass)
+    if HAS_CHILD_DEVICES:
+        return registry.async_get_child_device_by_identifier((DOMAIN, f"{entry.entry_id}_2"), entry.entry_id)
+    return registry.async_get_device_by_identifier((DOMAIN, f"{entry.entry_id}_2"), entry.entry_id)
 
 
 def _entity_ids_by_unique_id(hass) -> dict[str, str]:
-    return {registered.unique_id: registered.entity_id for registered in er.async_get(hass).entities.values()}
+    return {item.unique_id: item.entity_id for item in er.async_get(hass).entities.values()}
 
 
+@pytest.mark.parametrize("entity_class", [GlpAdditionalMachineSensor, GlpAdditionalMachineReachableSensor])
+def test_additional_machine_device_info_is_a_child_of_the_glp_device(entity_class) -> None:
+    """Both entity kinds must build the child shape themselves: the registry
+    raises DeviceInfoError when one of them registers a main device for the
+    same identifiers."""
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": URL}, entry_id="entry123")
+    with mock.patch.object(entity_module, "ChildDeviceInfo", _RecordingChildDeviceInfo):
+        device_info = entity_class(mock.MagicMock(), entry, 2, "Kitchen GaggiMate", "parent-device-id").device_info
+
+    assert device_info["parent_device_id"] == "parent-device-id"
+    assert device_info["identifiers"] == {(DOMAIN, "entry123_2")}
+    assert device_info["name"] == "Kitchen GaggiMate"
+    assert "via_device" not in device_info
+
+
+def test_additional_machine_device_info_falls_back_to_via_device() -> None:
+    """Core < 2026.9 has no ChildDeviceInfo: the previous device shape must be
+    produced, with byte-identical identifiers so the device is the same one."""
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": URL}, entry_id="entry123")
+    with mock.patch.object(entity_module, "ChildDeviceInfo", None):
+        device_info = GlpAdditionalMachineSensor(
+            mock.MagicMock(), entry, 2, "Kitchen GaggiMate", "parent-device-id"
+        ).device_info
+
+    assert device_info["identifiers"] == {(DOMAIN, "entry123_2")}
+    assert device_info["via_device"] == (DOMAIN, "entry123")
+    assert "parent_device_id" not in device_info
+
+
+@pytest.mark.skipif(not HAS_CHILD_DEVICES, reason="HA Core < 2026.9 has no child devices")
 async def test_additional_machine_is_a_child_device_of_the_glp_device(hass, strict_aioclient_mock, caplog) -> None:
     caplog.set_level(logging.WARNING)
     entry = await _setup(hass, strict_aioclient_mock)
 
     main_device = _main_device(hass, entry)
-    child = _child_device(hass, entry)
+    child = _additional_device(hass, entry)
     assert isinstance(child, dr.ChildDeviceEntry)
     assert child.id != main_device.id
     assert child.parent_device_id == main_device.id
@@ -87,18 +135,20 @@ async def test_additional_machine_is_a_child_device_of_the_glp_device(hass, stri
     assert not [record for record in caplog.records if "via_device" in record.getMessage()]
 
 
+@pytest.mark.skipif(not HAS_CHILD_DEVICES, reason="HA Core < 2026.9 has no child devices")
 async def test_every_entity_of_the_additional_machine_shares_its_child_device(hass, strict_aioclient_mock) -> None:
     """Mixing a ChildDeviceInfo with a main-device DeviceInfo for the same
     identifiers raises DeviceInfoError, so both entities landing on the same
     child device is what proves none of them builds its own DeviceInfo."""
     entry = await _setup(hass, strict_aioclient_mock)
 
-    child = _child_device(hass, entry)
+    child = _additional_device(hass, entry)
     registered = {item.unique_id: item for item in er.async_get(hass).entities.values()}
     for unique_id in (f"{entry.entry_id}_2_status", f"{entry.entry_id}_2_reachable"):
         assert registered[unique_id].device_id == child.id
 
 
+@pytest.mark.skipif(not HAS_CHILD_DEVICES, reason="HA Core < 2026.9 has no child devices")
 async def test_existing_via_device_is_converted_to_a_child_device_in_place(hass, strict_aioclient_mock) -> None:
     """Migration: an install that already has the extra machine as its own
     via_device-linked device keeps the device id and both entity ids."""
@@ -116,7 +166,7 @@ async def test_existing_via_device_is_converted_to_a_child_device_in_place(hass,
     await hass.config_entries.async_reload(entry.entry_id)
     await hass.async_block_till_done()
 
-    child = _child_device(hass, entry)
+    child = _additional_device(hass, entry)
     assert isinstance(child, dr.ChildDeviceEntry)
     assert child.id == old_device.id
     assert child.parent_device_id == _main_device(hass, entry).id
@@ -126,13 +176,11 @@ async def test_existing_via_device_is_converted_to_a_child_device_in_place(hass,
 
 
 async def test_falls_back_to_via_device_without_child_device_support(hass, strict_aioclient_mock) -> None:
-    """HA Core < 2026.9 has no ChildDeviceInfo: the previous device shape must
-    still be produced (hacs.json keeps a 2024.7.0 minimum)."""
+    """No ChildDeviceInfo (HA Core < 2026.9, `hacs.json` keeps a 2024.7.0
+    minimum): the extra machine is its own device linked to the main one."""
     with mock.patch.object(entity_module, "ChildDeviceInfo", None):
         entry = await _setup(hass, strict_aioclient_mock)
 
-    registry = dr.async_get(hass)
-    device = registry.async_get_device_by_identifier((DOMAIN, f"{entry.entry_id}_2"), entry.entry_id)
+    device = dr.async_get(hass).async_get_device_by_identifier((DOMAIN, f"{entry.entry_id}_2"), entry.entry_id)
     assert isinstance(device, dr.DeviceEntry)
     assert device.via_device_id == _main_device(hass, entry).id
-    assert _child_device(hass, entry) is None
