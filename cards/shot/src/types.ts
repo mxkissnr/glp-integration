@@ -2,6 +2,8 @@
 // where the data is the same; this module is imported with `import type` and
 // emits nothing at runtime.
 
+import type { MachineDeviceEntry, MachineRegistryEntry } from '../../shared/types.ts';
+
 // ─── Home Assistant ──────────────────────────────────────────────────────────
 
 export interface HassStateObject {
@@ -30,6 +32,11 @@ export interface HassThemes {
 export interface Hass {
   states: Record<string, HassStateObject>;
   language?: string;
+  // Home Assistant's entity and device registries (the frontend's
+  // `hass.entities` / `hass.devices`), read to find this card's machine
+  // sensor independently of entity names (#323).
+  entities?: Record<string, MachineRegistryEntry>;
+  devices?: Record<string, MachineDeviceEntry>;
   locale?: HassLocale;
   user?: HassUser;
   themes?: HassThemes;
