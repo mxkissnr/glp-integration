@@ -184,3 +184,33 @@ async def test_falls_back_to_via_device_without_child_device_support(hass, stric
     device = dr.async_get(hass).async_get_device_by_identifier((DOMAIN, f"{entry.entry_id}_2"), entry.entry_id)
     assert isinstance(device, dr.DeviceEntry)
     assert device.via_device_id == _main_device(hass, entry).id
+
+
+@pytest.mark.skipif(not HAS_CHILD_DEVICES, reason="HA Core < 2026.9 has no child devices")
+async def test_group_devices_and_the_additional_machine_share_one_parent(hass, strict_aioclient_mock) -> None:
+    """#336 adds three more child devices next to the extra machine's. They all
+    hang off the default-machine device and none of them overlaps another's
+    identifiers, which the registry rejects with DeviceInfoError."""
+    entry = await _setup(hass, strict_aioclient_mock)
+
+    main_device = _main_device(hass, entry)
+    registry = dr.async_get(hass)
+    group_device_ids = set()
+    for group in ("shots", "maintenance", "preheat"):
+        device = registry.async_get_child_device_by_identifier(
+            (DOMAIN, f"{entry.entry_id}_group_{group}"), entry.entry_id
+        )
+        assert isinstance(device, dr.ChildDeviceEntry), group
+        assert device.parent_device_id == main_device.id
+        group_device_ids.add(device.id)
+
+    machine = _additional_device(hass, entry)
+    assert machine.parent_device_id == main_device.id
+    assert machine.id not in group_device_ids
+    assert len(group_device_ids) == 3
+
+    # Every entity still lands on the device of its own kind.
+    registered = {item.unique_id: item for item in er.async_get(hass).entities.values()}
+    assert registered[f"{entry.entry_id}_last_shot_profile"].device_id in group_device_ids
+    assert registered[f"{entry.entry_id}_2_status"].device_id == machine.id
+    assert registered[f"{entry.entry_id}_machine_status"].device_id == main_device.id

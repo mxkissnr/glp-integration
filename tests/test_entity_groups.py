@@ -25,6 +25,7 @@ from pytest_homeassistant_custom_component.common import MockConfigEntry
 from custom_components.gaggiuino_profiler import entity as entity_module
 from custom_components.gaggiuino_profiler.const import DOMAIN
 from tests.common import mock_all_coordinator_endpoints
+from tests.test_additional_machine_child_device import _entity_ids_by_unique_id, _main_device
 
 URL = "http://glp.example.com"
 
@@ -83,10 +84,6 @@ async def _setup(hass, aioclient_mock):
     return entry
 
 
-def _main_device(hass, entry):
-    return dr.async_get(hass).async_get_device_by_identifier((DOMAIN, entry.entry_id), entry.entry_id)
-
-
 def _group_device(hass, entry, group):
     registry = dr.async_get(hass)
     identifier = (DOMAIN, f"{entry.entry_id}_group_{group}")
@@ -136,10 +133,9 @@ async def test_each_entity_lands_on_its_group_device(hass, strict_aioclient_mock
 async def test_fresh_install_keeps_the_entity_ids_of_an_existing_install(hass, strict_aioclient_mock) -> None:
     """A fresh install must not get `sensor.shots_*` ids: the pinned entity id
     has to win over the device-name-derived one."""
-    entry = await _setup(hass, strict_aioclient_mock)
+    await _setup(hass, strict_aioclient_mock)
 
-    registry = er.async_get(hass)
-    actual = {item.entity_id for item in registry.entities.values() if item.config_entry_id == entry.entry_id}
+    actual = set(_entity_ids_by_unique_id(hass).values())
     assert MOVED_ENTITY_IDS <= actual
     device_derived = re.compile(r"^(sensor|binary_sensor)\.(shots|maintenance|preheat)_")
     assert not [entity_id for entity_id in actual if device_derived.match(entity_id)], sorted(actual)
