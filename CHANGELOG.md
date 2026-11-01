@@ -2,12 +2,16 @@
 
 ## [Unreleased]
 ### Changed
+- **The entities of the Gaggiuino Local Profiler device are grouped into the child devices Shots, Maintenance and Preheat, the machine hostname, uptime and last sync moved to the Diagnostic section, and every entity ID stayed the same.** Refs #336
 - **The docs now describe installing and updating the integration and both cards through the Home Assistant Marketplace, and how to switch on pre-releases there.** Refs #326
 - **The Shot Card and the Order Card find their machine through Home Assistant's entity registry, so a renamed device, a translated interface or the 2026.11 "main entity" setting no longer stops them from finding the machine.** Refs #323
 - **The machine firmware update entity now follows the app's "update available" flag instead of comparing version strings, so it reports correctly on Home Assistant 2026.11 and newer.** Refs #325
 
 ### Changed
 - **Additional machines now appear as child devices of the GLP device on Home Assistant 2026.9+, with unchanged device and entity IDs and no via_device deprecation warning on Home Assistant 2026.11.** Going back to v1.34.0 or older drops the additional machines' entities until those devices are removed. Refs #322
+
+### Fixed
+- **The grouped entities no longer stop the sensor and binary sensor platforms from setting up on Home Assistant 2026.11, where the entity base classes moved into a submodule.** Refs #336
 
 ## [1.34.0] – 2026-10-27
 ### Added

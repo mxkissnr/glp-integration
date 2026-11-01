@@ -9,7 +9,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EntityCategory
+from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -98,7 +98,7 @@ async def async_setup_entry(
     parent_device_id: str | None               = hass.data[DOMAIN][entry.entry_id].get("parent_device_id")
     async_add_entities([
         IsBrewingSensor(live_coordinator, entry),
-        PreheatReadySensor(data_coordinator, entry),
+        PreheatReadySensor(data_coordinator, entry, parent_device_id),
         MachineStandbySensor(data_coordinator, entry),
         SteamSwitchSensor(machine_coordinator, entry),
         *[GlpMachineBinarySensor(machine_coordinator, entry, d) for d in MACHINE_BINARY_SENSORS],
@@ -176,11 +176,18 @@ class IsBrewingSensor(GlpEntity[GlpLiveCoordinator], BinarySensorEntity):
 
 
 class PreheatReadySensor(GlpEntity[GlpDataCoordinator], BinarySensorEntity):
-    _attr_name = "Preheat Ready"
+    # #336: on the Preheat child device, where the leading word is redundant.
+    _attr_name = "Ready"
     _attr_icon = "mdi:coffee-maker-check"
 
-    def __init__(self, coordinator: GlpDataCoordinator, entry: ConfigEntry) -> None:
-        super().__init__(coordinator, entry, "preheat_ready")
+    def __init__(
+        self,
+        coordinator: GlpDataCoordinator,
+        entry: ConfigEntry,
+        parent_device_id: str | None = None,
+    ) -> None:
+        super().__init__(coordinator, entry, "preheat_ready", group="preheat", parent_device_id=parent_device_id)
+        self.pin_grouped_entity_id(Platform.BINARY_SENSOR.value)
 
     @property
     def suggested_object_id(self) -> str | None:
