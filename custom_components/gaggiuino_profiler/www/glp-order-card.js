@@ -2439,7 +2439,7 @@ ${SHEET_STYLES}
   }
 
   // order/src/glp-order-card.ts
-  var GLP_ORDER_CARD_VERSION = "1.23.0";
+  var GLP_ORDER_CARD_VERSION = "1.23.1";
   var NEW_BADGE_DAYS_DEFAULT = 7;
   function _configLang(code) {
     const lang = String(code || "").slice(0, 2).toLowerCase();

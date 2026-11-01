@@ -57,7 +57,10 @@ On older Home Assistant versions, use the HACS button in [Installation](#-instal
 | 🖥️ | **Multi-Machine Devices** | Each additional configured machine gets its own HA device with status and reachable sensors |
 | 🎨 | **Theme Sync** | Machine status sensor exposes a `theme` attribute the bundled cards read to match each machine's configured accent color |
 | 💾 | **Backup & Maintenance Services** | `backup` service exports shots/annotations/coffee library/blocklist to `<config>/glp_backups/`; `maintenance_done` marks a maintenance task complete |
-| 🔔 | **Shot Event** | Fires `gaggiuino_profiler_shot_completed` with full shot data after every pull |
+| 🔔 | **Shot Event** | Fires `gaggiuino_profiler_shot_completed` with full shot data after every pull, and the same shot on the `event.gaggiuino_local_profiler_shot` event entity |
+| 🗂️ | **Grouped Devices** | The GLP device's entities are grouped into the child devices Shots, Maintenance and Preheat; additional machines are child devices too |
+| 🌍 | **Translated Names** | Entity and device names follow the Home Assistant language: English, German, Spanish, French, Italian and Dutch |
+| 🔎 | **Automatic Discovery** | On Home Assistant OS the integration is offered by itself once the GLP app announces its address |
 | ⚙️ | **Configurable** | URL and poll interval adjustable any time via *Settings → Integration → Configure* |
 | 🔍 | **Diagnostics** | HA diagnostics export for easy bug reports |
 
@@ -271,7 +274,7 @@ All three services optionally accept a `machine` field (a machine id from the mu
 
 ## 🔔 Event: `gaggiuino_profiler_shot_completed`
 
-Fired automatically when a newer shot (higher `id`) appears. Deleting the newest shot does not fire it. Contains all relevant shot data:
+Fired automatically when a newer shot (higher `id`) appears. Deleting the newest shot does not fire it. The same shot is also fired on the event entity `event.gaggiuino_local_profiler_shot` (Shots device), see [DOCS.md](DOCS.md#event-entity-eventgaggiuino_local_profiler_shot). Contains all relevant shot data:
 
 ```yaml
 event_type: gaggiuino_profiler_shot_completed

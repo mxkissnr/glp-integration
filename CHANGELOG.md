@@ -1,6 +1,8 @@
 # Changelog
 
 ## [Unreleased]
+
+## [1.35.0] – 2026-11-01
 ### Added
 - **Every finished shot now also fires the event entity `event.gaggiuino_local_profiler_shot` on the Shots device, with the shot data as attributes, so an automation can trigger on it like on any other state; the existing `gaggiuino_profiler_shot_completed` bus event stays unchanged.** Refs #340
 - **On Home Assistant OS the integration now finds the GLP app by itself once the app announces its address, and one confirmation adds it; a changed app port updates the existing entry instead of adding a second one, and manual setup is unchanged.** Refs #338
@@ -11,10 +13,15 @@
 - **The entities of the Gaggiuino Local Profiler device are grouped into the child devices Shots, Maintenance and Preheat, the machine hostname, uptime and last sync moved to the Diagnostic section, and every entity ID stayed the same.** Refs #336
 - **The docs now describe installing and updating the integration and both cards through the Home Assistant Marketplace, and how to switch on pre-releases there.** Refs #326
 - **The Shot Card and the Order Card find their machine through Home Assistant's entity registry, so a renamed device, a translated interface or the 2026.11 "main entity" setting no longer stops them from finding the machine.** Refs #323
+- **The bundled Shot Card is now v2.23.1 and the bundled Order Card v1.23.1.** Refs #323
 - **The machine firmware update entity now follows the app's "update available" flag instead of comparing version strings, so it reports correctly on Home Assistant 2026.11 and newer.** Refs #325
 
 ### Fixed
 - **The grouped entities no longer stop the sensor and binary sensor platforms from setting up on Home Assistant 2026.11, where the entity base classes moved into a submodule.** Refs #336
+
+### Documentation
+- **The README and the documentation now list the event entity, the child devices, the translated names and automatic discovery.**
+
 
 ## [1.34.0] – 2026-10-27
 ### Added
