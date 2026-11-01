@@ -7,7 +7,7 @@
 - **The machine firmware update entity now follows the app's "update available" flag instead of comparing version strings, so it reports correctly on Home Assistant 2026.11 and newer.** Refs #325
 
 ### Changed
-- **Additional machines now appear as child devices of the GLP device on Home Assistant 2026.9+, with unchanged device and entity IDs and no via_device deprecation warning on Home Assistant 2026.11.** Refs #322
+- **Additional machines now appear as child devices of the GLP device on Home Assistant 2026.9+, with unchanged device and entity IDs and no via_device deprecation warning on Home Assistant 2026.11.** Going back to v1.34.0 or older drops the additional machines' entities until those devices are removed. Refs #322
 
 ## [1.34.0] – 2026-10-27
 ### Added
