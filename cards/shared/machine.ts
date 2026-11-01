@@ -1,7 +1,7 @@
 // GLP-SHARED machine-lookup helpers imported by both cards (Shot Card and Order Card).
 
 import { THEME_PRESETS } from './helpers.ts';
-import type { MachineEntry, MachineHass, ThemeStops } from './types.ts';
+import type { MachineEntry, MachineHass, MachineRegistryEntry, ThemeStops } from './types.ts';
 
 // True when `id` carries `<needleSlug>_machine_status` as a whole token — the
 // slug starts the object id, or another underscore precedes it. "Kitchen" then
@@ -105,4 +105,84 @@ function appMachineType(entry: MachineEntry | null | undefined): 'gaggiuino' | '
   return type === 'gaggimate' ? 'gaggimate' : 'gaggiuino';
 }
 
-export { matchMachineStatusEntity, appMachineEntry, appMachineTheme, appMachineType };
+// The *_machine_status entity ids this integration registers, read from Home
+// Assistant's entity registry (frontend `hass.entities`). Sorted, so the
+// "no `machine` configured" pick does not depend on object insertion order.
+// Entities without a state are left out: a disabled or not-yet-added entity
+// cannot be this card's machine, and its attributes are unreadable.
+function registryMachineStatusEntities(hass: MachineHass): MachineRegistryEntry[] {
+  const entities = hass.entities;
+  if (!entities) return [];
+  return Object.values(entities)
+    .filter(e =>
+      e?.platform === 'gaggiuino_profiler' && e.translation_key === 'machine_status' &&
+      Boolean(e.entity_id) && Boolean(hass.states[String(e.entity_id)]))
+    .sort((a, b) => String(a.entity_id).localeCompare(String(b.entity_id)));
+}
+
+// The device's display name: the user's rename wins over the integration's
+// own name, exactly as Home Assistant composes an entity's friendly name.
+function registryDeviceName(hass: MachineHass, entry: MachineRegistryEntry): string {
+  const device = entry.device_id ? hass.devices?.[entry.device_id] : undefined;
+  return String(device?.name_by_user ?? device?.name ?? '');
+}
+
+// Picks this card's *_machine_status entity id.
+//
+// The entity registry is the primary source (#323): Home Assistant 2026.11
+// composes entity names from device + entity name, lets a user mark a "main
+// entity" (which then shows only the device name) and plans to deprecate
+// friendly_name, so a translated or renamed entity no longer carries a name
+// the cards can match on. `translation_key="machine_status"` identifies the
+// sensor independently of any name.
+//
+// Matching a configured `machine` runs in that order: the device's name
+// (renamed devices included) first, then the pre-existing name/id match over
+// the registered ids — exact id or friendly name, then the contains-match.
+// An unmatched `machine` still ends on a real machine (the first
+// Gaggiuino-named status entity, else the first registration), so a stale or
+// misspelt option never leaves the card without one. Without `machine` the
+// first registration in entity-id order answers, which is the same
+// single-machine setup the cards used to find by name.
+//
+// Without a registry (an older frontend, or a test that only seeds `states`)
+// both cards keep their previous friendly-name behaviour unchanged.
+function findMachineStatusEntity(
+  hass: MachineHass | null | undefined,
+  machine?: unknown,
+  candidates?: string[],
+): string | undefined {
+  if (!hass) return undefined;
+  const registered = registryMachineStatusEntities(hass);
+  const [first] = registered;
+  if (first) {
+    if (!machine) return first.entity_id;
+    const needle = String(machine).toLowerCase();
+    const byDevice = registered.find(e => registryDeviceName(hass, e).toLowerCase() === needle);
+    if (byDevice) return byDevice.entity_id;
+    return matchByFriendlyName(hass, machine, registered.map(e => String(e.entity_id)));
+  }
+  return matchByFriendlyName(hass, machine, candidates);
+}
+
+// The pre-#323 name match, unchanged: a configured `machine` goes through
+// matchMachineStatusEntity(), and the answer without a match (or without a
+// `machine` at all) is the first Gaggiuino-named status entity, else any.
+function matchByFriendlyName(hass: MachineHass, machine?: unknown, known?: string[]): string | undefined {
+  const candidates = known ?? Object.keys(hass.states).filter(id => id.endsWith('_machine_status'));
+  if (machine) {
+    const matched = matchMachineStatusEntity(hass, candidates, machine);
+    if (matched) return matched;
+  }
+  const found = candidates.find(id =>
+    (hass.states[id]?.attributes?.friendly_name as string)?.toLowerCase().includes('gaggiuino'));
+  return found || candidates[0];
+}
+
+export {
+  matchMachineStatusEntity,
+  findMachineStatusEntity,
+  appMachineEntry,
+  appMachineTheme,
+  appMachineType,
+};

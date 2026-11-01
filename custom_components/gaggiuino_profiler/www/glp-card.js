@@ -3227,6 +3227,41 @@ ${SHEET_STYLES}
     return type === "gaggimate" ? "gaggimate" : "gaggiuino";
   }
   __name(appMachineType, "appMachineType");
+  function registryMachineStatusEntities(hass) {
+    const entities = hass.entities;
+    if (!entities) return [];
+    return Object.values(entities).filter((e6) => e6?.platform === "gaggiuino_profiler" && e6.translation_key === "machine_status" && Boolean(e6.entity_id) && Boolean(hass.states[String(e6.entity_id)])).sort((a3, b3) => String(a3.entity_id).localeCompare(String(b3.entity_id)));
+  }
+  __name(registryMachineStatusEntities, "registryMachineStatusEntities");
+  function registryDeviceName(hass, entry) {
+    const device = entry.device_id ? hass.devices?.[entry.device_id] : void 0;
+    return String(device?.name_by_user ?? device?.name ?? "");
+  }
+  __name(registryDeviceName, "registryDeviceName");
+  function findMachineStatusEntity(hass, machine, candidates) {
+    if (!hass) return void 0;
+    const registered = registryMachineStatusEntities(hass);
+    const [first] = registered;
+    if (first) {
+      if (!machine) return first.entity_id;
+      const needle = String(machine).toLowerCase();
+      const byDevice = registered.find((e6) => registryDeviceName(hass, e6).toLowerCase() === needle);
+      if (byDevice) return byDevice.entity_id;
+      return matchByFriendlyName(hass, machine, registered.map((e6) => String(e6.entity_id)));
+    }
+    return matchByFriendlyName(hass, machine, candidates);
+  }
+  __name(findMachineStatusEntity, "findMachineStatusEntity");
+  function matchByFriendlyName(hass, machine, known) {
+    const candidates = known ?? Object.keys(hass.states).filter((id) => id.endsWith("_machine_status"));
+    if (machine) {
+      const matched = matchMachineStatusEntity(hass, candidates, machine);
+      if (matched) return matched;
+    }
+    const found = candidates.find((id) => hass.states[id]?.attributes?.friendly_name?.toLowerCase().includes("gaggiuino"));
+    return found || candidates[0];
+  }
+  __name(matchByFriendlyName, "matchByFriendlyName");
 
   // shared/ha-events.ts
   function fireHaEvent(node, type, detail) {
@@ -3472,6 +3507,8 @@ ${SHEET_STYLES}
       this._stateKeysStates = null;
       this._stateKeysCache = null;
       this._prefixStates = null;
+      this._prefixEntities = void 0;
+      this._prefixDevices = void 0;
       this._prefixConfig = null;
       this._prefixValue = null;
       this._machineEntryCached = false;
@@ -4141,6 +4178,8 @@ ${SHEET_STYLES}
       }
       this._config = { title: "Gaggiuino", ...normalized };
       this._prefixStates = null;
+      this._prefixEntities = void 0;
+      this._prefixDevices = void 0;
       this._prefixConfig = null;
       this._prefixValue = null;
       this._machineEntryCached = false;
@@ -4315,11 +4354,13 @@ ${SHEET_STYLES}
     // machine (#50): optional config option naming/slugging a specific
     // machine, for setups with more than one GLP machine device (see the app's
     // multi-machine mode, GLP #317, and glp-integration #47's forthcoming
-    // per-machine devices). When set, matches a *_machine_status entity whose
-    // friendly_name or entity_id references it, before falling back to the
-    // existing "first Gaggiuino-named entity, else any" heuristic — so cards
+    // per-machine devices). Resolution lives in shared/machine.ts
+    // (findMachineStatusEntity, #323): the entity registry identifies the
+    // status sensor and its device's name matches the option, with the older
+    // friendly-name match kept for frontends that expose no registry — so cards
     // without this option (the vast majority today, single-machine setups)
-    // behave exactly as before.
+    // behave exactly as before. `entity_prefix`, when set, still short-circuits
+    // the whole lookup.
     //
     // Scanned on every _s() call (~25 per render), so the result is remembered
     // alongside the states object and config it was computed from; setConfig()
@@ -4328,21 +4369,15 @@ ${SHEET_STYLES}
     _resolvePrefix() {
       if (this._config.entity_prefix) return this._config.entity_prefix;
       const states = this._hass.states;
-      if (this._prefixStates === states && this._prefixConfig === this._config && this._prefixValue !== null) {
+      if (this._prefixStates === states && this._prefixEntities === this._hass.entities && this._prefixDevices === this._hass.devices && this._prefixConfig === this._config && this._prefixValue !== null) {
         return this._prefixValue;
       }
       const candidates = this._stateKeys().filter((id) => id.endsWith("_machine_status"));
-      let prefix = null;
-      if (this._config?.machine) {
-        const matched = matchMachineStatusEntity(this._hass, candidates, this._config.machine);
-        if (matched) prefix = matched.replace(/machine_status$/, "");
-      }
-      if (prefix === null) {
-        const found = candidates.find((id) => this._hass.states[id]?.attributes?.friendly_name?.toLowerCase().includes("gaggiuino"));
-        const chosen = found || candidates[0];
-        prefix = chosen ? chosen.replace(/machine_status$/, "") : "sensor.gaggiuino_local_profiler_";
-      }
+      const matched = findMachineStatusEntity(this._hass, this._config?.machine, candidates);
+      const prefix = matched ? matched.replace(/machine_status$/, "") : "sensor.gaggiuino_local_profiler_";
       this._prefixStates = states;
+      this._prefixEntities = this._hass.entities;
+      this._prefixDevices = this._hass.devices;
       this._prefixConfig = this._config;
       this._prefixValue = prefix;
       return prefix;
