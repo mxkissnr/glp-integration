@@ -6,18 +6,15 @@ per new shot and never for a shot that was already known when the entity
 started (first refresh, or an HA restart).
 """
 import pytest
-from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.gaggiuino_profiler.const import DOMAIN
 from tests.common import mock_all_coordinator_endpoints
-from tests.test_entity_groups import _group_device
+from tests.test_entity_groups import HAS_CHILD_DEVICES, _group_device
 
 URL = "http://glp.example.com"
 ENTITY_ID = "event.gaggiuino_local_profiler_shot"
-
-HAS_CHILD_DEVICES = hasattr(dr, "ChildDeviceInfo")
 
 
 def _shot(shot_id: int, dose: float | None = None, weight: list | None = None) -> dict:
