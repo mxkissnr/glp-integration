@@ -283,8 +283,7 @@ def test_control_and_event_entities_have_a_translation_key_and_no_name_literal()
             assert description.icon is None, (platform, description.key)
 
     for platform, classes in CLASS_PLATFORMS.items():
-        for entity_class, key in classes:
-            assert vars(entity_class).get("_attr_translation_key") == key, (platform, key)
+        for entity_class, _key in classes:
             assert "_attr_name" not in vars(entity_class), (platform, entity_class.__name__)
             assert "_attr_icon" not in vars(entity_class), (platform, entity_class.__name__)
 
@@ -319,3 +318,32 @@ async def test_german_control_and_event_entity_ids_stay_the_same(hass, strict_ai
     for (platform, key), entity_id in expected.items():
         assert registry.async_get_entity_id(platform, DOMAIN, f"{entry.entry_id}_{key}") == entity_id, (platform, key)
         assert hass.states.get(entity_id) is not None, entity_id
+        # The keys come from the descriptions and classes, not from a name.
+        assert registry.async_get(entity_id).translation_key == key, (platform, key)
+
+
+async def test_english_control_and_event_names_come_from_the_translation_file(
+    hass, strict_aioclient_mock
+) -> None:
+    await _setup(hass, strict_aioclient_mock)
+
+    english = _translations("en")["entity"]
+    expected = (
+        ("event", "shot", "event.gaggiuino_local_profiler_shot"),
+        ("switch", "brew_delta_state", "switch.gaggiuino_local_profiler_brew_delta_state"),
+        ("number", "steam_set_point", "number.gaggiuino_local_profiler_steam_set_point"),
+        ("select", "operation_mode", "select.gaggiuino_local_profiler_operation_mode"),
+        ("light", "led", "light.gaggiuino_local_profiler_led"),
+        ("button", "tare_scale", "button.gaggiuino_local_profiler_tare_scale"),
+        ("update", "update", "update.gaggiuino_local_profiler_update"),
+    )
+    for platform, key, entity_id in expected:
+        state = hass.states.get(entity_id)
+        assert state is not None, entity_id
+        name = english[platform][key]["name"]
+        assert state.attributes["friendly_name"].endswith(name), (entity_id, name)
+    # The event entity sits on the Shots child device, so its own name must
+    # not repeat the device name.
+    assert hass.states.get("event.gaggiuino_local_profiler_shot").attributes["friendly_name"] == (
+        "Shots Last shot"
+    )
