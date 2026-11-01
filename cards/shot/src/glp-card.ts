@@ -11,7 +11,7 @@ import { T, TIn, SUPPORTED_LANGS, setLang, getLang } from './i18n.ts';
 import { roastAgeDays, esc, safeUrl, parseTs, THEME_PRESETS, HEX_COLOR_RE } from './helpers.ts';
 import { MACHINE_ICON_MINI, ICONS } from './icons.ts';
 import { applySemanticColorContrast } from '../../shared/contrast.ts';
-import { appMachineEntry, appMachineTheme, appMachineType, matchMachineStatusEntity } from '../../shared/machine.ts';
+import { appMachineEntry, appMachineTheme, appMachineType, findMachineStatusEntity } from '../../shared/machine.ts';
 import { moreInfo, toast, haptic } from '../../shared/ha-events.ts';
 import { GlpSheet } from '../../shared/sheet.ts';
 import type { GlpSheetContent } from '../../shared/sheet.ts';
@@ -229,6 +229,8 @@ class GlpCard extends HTMLElement {
   declare _stateKeysStates: Record<string, HassStateObject> | null;
   declare _stateKeysCache: string[] | null;
   declare _prefixStates: Record<string, HassStateObject> | null;
+  declare _prefixEntities: Hass['entities'];
+  declare _prefixDevices: Hass['devices'];
   declare _prefixConfig: CardConfig | null;
   declare _prefixValue: string | null;
   declare _machineEntryCached: boolean;
@@ -301,6 +303,8 @@ class GlpCard extends HTMLElement {
     this._stateKeysStates = null;
     this._stateKeysCache = null;
     this._prefixStates = null;
+    this._prefixEntities = undefined;
+    this._prefixDevices = undefined;
     this._prefixConfig = null;
     this._prefixValue = null;
     this._machineEntryCached = false;
@@ -1038,6 +1042,8 @@ class GlpCard extends HTMLElement {
     // switch entity, so nothing cached from the previous config may survive;
     // clearing the render inputs also makes the next hass render unconditionally.
     this._prefixStates = null;
+    this._prefixEntities = undefined;
+    this._prefixDevices = undefined;
     this._prefixConfig = null;
     this._prefixValue = null;
     this._machineEntryCached = false;
@@ -1242,11 +1248,13 @@ class GlpCard extends HTMLElement {
   // machine (#50): optional config option naming/slugging a specific
   // machine, for setups with more than one GLP machine device (see the app's
   // multi-machine mode, GLP #317, and glp-integration #47's forthcoming
-  // per-machine devices). When set, matches a *_machine_status entity whose
-  // friendly_name or entity_id references it, before falling back to the
-  // existing "first Gaggiuino-named entity, else any" heuristic — so cards
+  // per-machine devices). Resolution lives in shared/machine.ts
+  // (findMachineStatusEntity, #323): the entity registry identifies the
+  // status sensor and its device's name matches the option, with the older
+  // friendly-name match kept for frontends that expose no registry — so cards
   // without this option (the vast majority today, single-machine setups)
-  // behave exactly as before.
+  // behave exactly as before. `entity_prefix`, when set, still short-circuits
+  // the whole lookup.
   //
   // Scanned on every _s() call (~25 per render), so the result is remembered
   // alongside the states object and config it was computed from; setConfig()
@@ -1255,22 +1263,21 @@ class GlpCard extends HTMLElement {
   _resolvePrefix(): string {
     if (this._config.entity_prefix) return this._config.entity_prefix;
     const states = this._hass!.states;
-    if (this._prefixStates === states && this._prefixConfig === this._config && this._prefixValue !== null) {
+    // Keyed on the registries too: a device rename changes the answer without
+    // touching hass.states.
+    if (this._prefixStates === states && this._prefixEntities === this._hass!.entities &&
+        this._prefixDevices === this._hass!.devices &&
+        this._prefixConfig === this._config && this._prefixValue !== null) {
       return this._prefixValue;
     }
     const candidates = this._stateKeys().filter(id => id.endsWith('_machine_status'));
-    let prefix: string | null = null;
-    if (this._config?.machine) {
-      const matched = matchMachineStatusEntity(this._hass!, candidates, this._config.machine);
-      if (matched) prefix = matched.replace(/machine_status$/, '');
-    }
-    if (prefix === null) {
-      const found = candidates.find(id =>
-        (this._hass!.states[id]?.attributes?.friendly_name as string)?.toLowerCase().includes('gaggiuino'));
-      const chosen = found || candidates[0];
-      prefix = chosen ? chosen.replace(/machine_status$/, '') : 'sensor.gaggiuino_local_profiler_';
-    }
+    const matched = findMachineStatusEntity(this._hass, this._config?.machine, candidates);
+    const prefix = matched
+      ? matched.replace(/machine_status$/, '')
+      : 'sensor.gaggiuino_local_profiler_';
     this._prefixStates = states;
+    this._prefixEntities = this._hass!.entities;
+    this._prefixDevices = this._hass!.devices;
     this._prefixConfig = this._config;
     this._prefixValue = prefix;
     return prefix;

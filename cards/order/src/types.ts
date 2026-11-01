@@ -1,6 +1,8 @@
 // Home Assistant and GLP app shapes the card reads (#143). Type-only: this
 // module is imported with `import type` and emits nothing at runtime.
 
+import type { MachineDeviceEntry, MachineRegistryEntry } from '../../shared/types.ts';
+
 export interface HassStateObject {
   state?: string;
   attributes: Record<string, unknown>;
@@ -14,6 +16,11 @@ export interface HassUser {
 export interface Hass {
   states: Record<string, HassStateObject>;
   user?: HassUser;
+  // Home Assistant's entity and device registries (the frontend's
+  // `hass.entities` / `hass.devices`), read to find this card's machine
+  // sensor independently of entity names (#323).
+  entities?: Record<string, MachineRegistryEntry>;
+  devices?: Record<string, MachineDeviceEntry>;
   language?: string;
   fetchWithAuth?: (path: string, init?: RequestInit) => Promise<Response>;
 }

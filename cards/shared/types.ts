@@ -29,4 +29,24 @@ export interface MachineEntry {
 // types are structurally compatible with it.
 export interface MachineHass {
   states: Record<string, { attributes?: Record<string, unknown> }>;
+  // Home Assistant's entity and device registries (frontend `hass.entities` /
+  // `hass.devices`). Both are optional: a test or an older frontend may only
+  // provide `states`, and the lookups then fall back to names (#323).
+  entities?: Record<string, MachineRegistryEntry>;
+  devices?: Record<string, MachineDeviceEntry>;
 }
+
+// One entry of the entity registry, as much as the machine lookup reads.
+export interface MachineRegistryEntry {
+  entity_id?: string;
+  platform?: string;
+  translation_key?: string | null;
+  device_id?: string | null;
+}
+
+// One entry of the device registry, as much as the machine lookup reads.
+export interface MachineDeviceEntry {
+  name?: string | null;
+  name_by_user?: string | null;
+}
+

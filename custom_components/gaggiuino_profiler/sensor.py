@@ -47,6 +47,11 @@ SENSORS: tuple[GlpSensorDescription, ...] = (
     GlpSensorDescription(
         key="machine_status",
         data_key="machine_status",
+        # Lets the cards find this entity through the entity registry instead
+        # of its (translated, device-composed) friendly name (#323). The
+        # explicit `name` still wins, so the entity name and entity_id are
+        # unchanged.
+        translation_key="machine_status",
         name="Machine Status",
         icon="mdi:coffee-maker",
     ),

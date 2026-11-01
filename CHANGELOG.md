@@ -1,6 +1,8 @@
 # Changelog
 
 ## [Unreleased]
+### Changed
+- **The Shot Card and the Order Card find their machine through Home Assistant's entity registry, so a renamed device, a translated interface or the 2026.11 "main entity" setting no longer stops them from finding the machine.** Refs #323
 
 ## [1.34.0] – 2026-10-27
 ### Added
