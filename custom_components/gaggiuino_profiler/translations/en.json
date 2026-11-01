@@ -38,10 +38,10 @@
         "name": "Machine Status"
       },
       "shot_count": {
-        "name": "Shot Count"
+        "name": "Count"
       },
       "shots_today": {
-        "name": "Shots Today"
+        "name": "Today"
       },
       "last_shot_profile": {
         "name": "Last Shot Profile"
@@ -137,7 +137,7 @@
         "name": "Water Temperature"
       },
       "maint_grinders": {
-        "name": "Maintenance Grinders"
+        "name": "Grinders"
       },
       "status": {
         "name": "Status"
@@ -179,6 +179,107 @@
       },
       "reachable": {
         "name": "Reachable"
+      }
+    },
+    "button": {
+      "tare_scale": {
+        "name": "Tare Scale"
+      },
+      "save_settings": {
+        "name": "Save Settings"
+      },
+      "save_active_profile": {
+        "name": "Save Active Profile"
+      }
+    },
+    "event": {
+      "shot": {
+        "name": "Last shot"
+      }
+    },
+    "light": {
+      "led": {
+        "name": "LED"
+      }
+    },
+    "number": {
+      "steam_set_point": {
+        "name": "Steam Set Point"
+      },
+      "offset_temp": {
+        "name": "Offset Temperature"
+      },
+      "hpwr": {
+        "name": "Heating Power"
+      },
+      "main_divider": {
+        "name": "Main Divider"
+      },
+      "brew_divider": {
+        "name": "Brew Divider"
+      },
+      "startup_heat_delta": {
+        "name": "Startup Heat Delta"
+      },
+      "lcd_brightness": {
+        "name": "LCD Brightness"
+      },
+      "lcd_sleep": {
+        "name": "LCD Sleep Timeout"
+      },
+      "lcd_go_home": {
+        "name": "LCD Go Home Timeout"
+      },
+      "led_tof_min": {
+        "name": "LED Time-of-Flight Min"
+      },
+      "led_tof_max": {
+        "name": "LED Time-of-Flight Max"
+      }
+    },
+    "select": {
+      "profile": {
+        "name": "Profile"
+      },
+      "operation_mode": {
+        "name": "Operation Mode"
+      },
+      "release_channel": {
+        "name": "Release Channel"
+      }
+    },
+    "switch": {
+      "brew_delta_state": {
+        "name": "Brew Delta"
+      },
+      "dream_steam_state": {
+        "name": "Dream Steam"
+      },
+      "lcd_dark_mode": {
+        "name": "LCD Dark Mode"
+      },
+      "lcd_close_on_brew_off": {
+        "name": "LCD Close On Brew Off"
+      },
+      "simple_ui": {
+        "name": "Simple UI"
+      },
+      "force_predictive": {
+        "name": "Force Predictive Scales"
+      },
+      "hw_scales_enabled": {
+        "name": "Hardware Scales Enabled"
+      },
+      "bt_scales_enabled": {
+        "name": "Bluetooth Scales Enabled"
+      }
+    },
+    "update": {
+      "update": {
+        "name": "Update"
+      },
+      "firmware_update": {
+        "name": "Firmware"
       }
     }
   },

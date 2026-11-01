@@ -144,6 +144,107 @@
       "valve_state": {
         "default": "mdi:valve"
       }
+    },
+    "button": {
+      "save_active_profile": {
+        "default": "mdi:content-save-outline"
+      },
+      "save_settings": {
+        "default": "mdi:content-save-cog-outline"
+      },
+      "tare_scale": {
+        "default": "mdi:scale-balance"
+      }
+    },
+    "event": {
+      "shot": {
+        "default": "mdi:coffee"
+      }
+    },
+    "light": {
+      "led": {
+        "default": "mdi:led-strip-variant"
+      }
+    },
+    "number": {
+      "brew_divider": {
+        "default": "mdi:division"
+      },
+      "hpwr": {
+        "default": "mdi:flash"
+      },
+      "lcd_brightness": {
+        "default": "mdi:brightness-6"
+      },
+      "lcd_go_home": {
+        "default": "mdi:home-clock"
+      },
+      "lcd_sleep": {
+        "default": "mdi:sleep"
+      },
+      "led_tof_max": {
+        "default": "mdi:ruler"
+      },
+      "led_tof_min": {
+        "default": "mdi:ruler"
+      },
+      "main_divider": {
+        "default": "mdi:division"
+      },
+      "offset_temp": {
+        "default": "mdi:thermometer"
+      },
+      "startup_heat_delta": {
+        "default": "mdi:thermometer-plus"
+      },
+      "steam_set_point": {
+        "default": "mdi:kettle-steam"
+      }
+    },
+    "select": {
+      "operation_mode": {
+        "default": "mdi:tune-variant"
+      },
+      "profile": {
+        "default": "mdi:coffee"
+      },
+      "release_channel": {
+        "default": "mdi:source-branch"
+      }
+    },
+    "switch": {
+      "brew_delta_state": {
+        "default": "mdi:delta"
+      },
+      "bt_scales_enabled": {
+        "default": "mdi:bluetooth"
+      },
+      "dream_steam_state": {
+        "default": "mdi:kettle-steam"
+      },
+      "force_predictive": {
+        "default": "mdi:chart-line"
+      },
+      "hw_scales_enabled": {
+        "default": "mdi:scale"
+      },
+      "lcd_close_on_brew_off": {
+        "default": "mdi:coffee-off-outline"
+      },
+      "lcd_dark_mode": {
+        "default": "mdi:brightness-4"
+      },
+      "simple_ui": {
+        "default": "mdi:view-dashboard-outline"
+      }
+    },
+    "update": {
+      "firmware_update": {
+        "default": "mdi:chip"
+      },
+      "update": {
+        "default": "mdi:coffee-maker"
+      }
     }
   }
 }

@@ -38,10 +38,10 @@
         "name": "Maschinenstatus"
       },
       "shot_count": {
-        "name": "Shot-Anzahl"
+        "name": "Anzahl"
       },
       "shots_today": {
-        "name": "Shots heute"
+        "name": "Heute"
       },
       "last_shot_profile": {
         "name": "Letztes Profil"
@@ -179,6 +179,107 @@
       },
       "reachable": {
         "name": "Erreichbar"
+      }
+    },
+    "button": {
+      "tare_scale": {
+        "name": "Waage tarieren"
+      },
+      "save_settings": {
+        "name": "Einstellungen speichern"
+      },
+      "save_active_profile": {
+        "name": "Aktives Profil speichern"
+      }
+    },
+    "event": {
+      "shot": {
+        "name": "Letzter Shot"
+      }
+    },
+    "light": {
+      "led": {
+        "name": "LED"
+      }
+    },
+    "number": {
+      "steam_set_point": {
+        "name": "Dampf-Sollwert"
+      },
+      "offset_temp": {
+        "name": "Temperatur-Offset"
+      },
+      "hpwr": {
+        "name": "Heizleistung"
+      },
+      "main_divider": {
+        "name": "Hauptteiler"
+      },
+      "brew_divider": {
+        "name": "Brühteiler"
+      },
+      "startup_heat_delta": {
+        "name": "Start-Delta"
+      },
+      "lcd_brightness": {
+        "name": "LCD-Helligkeit"
+      },
+      "lcd_sleep": {
+        "name": "LCD-Schlafzeit"
+      },
+      "lcd_go_home": {
+        "name": "LCD-Home-Zeit"
+      },
+      "led_tof_min": {
+        "name": "LED-ToF Min"
+      },
+      "led_tof_max": {
+        "name": "LED-ToF Max"
+      }
+    },
+    "select": {
+      "profile": {
+        "name": "Profil"
+      },
+      "operation_mode": {
+        "name": "Betriebsmodus"
+      },
+      "release_channel": {
+        "name": "Release-Kanal"
+      }
+    },
+    "switch": {
+      "brew_delta_state": {
+        "name": "Brüh-Delta"
+      },
+      "dream_steam_state": {
+        "name": "Dream Steam"
+      },
+      "lcd_dark_mode": {
+        "name": "LCD-Dunkelmodus"
+      },
+      "lcd_close_on_brew_off": {
+        "name": "LCD aus bei Brühende"
+      },
+      "simple_ui": {
+        "name": "Einfache Oberfläche"
+      },
+      "force_predictive": {
+        "name": "Predictive-Waage erzwingen"
+      },
+      "hw_scales_enabled": {
+        "name": "Hardware-Waage aktiv"
+      },
+      "bt_scales_enabled": {
+        "name": "Bluetooth-Waage aktiv"
+      }
+    },
+    "update": {
+      "update": {
+        "name": "Update"
+      },
+      "firmware_update": {
+        "name": "Firmware"
       }
     }
   },

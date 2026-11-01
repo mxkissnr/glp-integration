@@ -33,9 +33,8 @@ class GlpUpdateEntity(GlpEntity[GlpDataCoordinator], UpdateEntity):
     /api/update always returned 503 there).
     """
 
-    _attr_name = "Update"
+    _attr_translation_key = "update"
     _attr_title = "Gaggiuino Local Profiler"
-    _attr_icon = "mdi:coffee-maker"
 
     def __init__(self, coordinator: GlpDataCoordinator, entry: ConfigEntry) -> None:
         super().__init__(coordinator, entry, "update")
@@ -91,9 +90,8 @@ class GlpMachineFirmwareUpdate(GlpEntity[GlpDataCoordinator], UpdateEntity):
     refresh still succeeds.
     """
 
-    _attr_name = "Firmware"
+    _attr_translation_key = "firmware_update"
     _attr_title = "Machine Firmware"
-    _attr_icon = "mdi:chip"
     _attr_supported_features = UpdateEntityFeature.INSTALL
 
     def __init__(self, coordinator: GlpDataCoordinator, entry: ConfigEntry) -> None:

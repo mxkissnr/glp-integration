@@ -66,8 +66,7 @@ class GlpProfileSelect(GlpEntity[GlpDataCoordinator], SelectEntity):
     Writing a new profile calls /api/machine/profile/set on the add-on.
     """
 
-    _attr_name = "Profile"
-    _attr_icon = "mdi:coffee"
+    _attr_translation_key = "profile"
 
     def __init__(
         self,
@@ -126,8 +125,7 @@ class GlpOperationModeSelect(GlpEntity[GlpMachineCoordinator], SelectEntity):
     HOT_WATER/HOME (BREW_MANUAL deliberately excluded, see module docstring
     constants above). Everyday-use control, not entity_category CONFIG."""
 
-    _attr_name = "Operation Mode"
-    _attr_icon = "mdi:tune-variant"
+    _attr_translation_key = "operation_mode"
     _attr_options = OPERATION_MODE_OPTIONS
 
     def __init__(self, coordinator: GlpMachineCoordinator, entry: ConfigEntry) -> None:
@@ -164,8 +162,7 @@ class GlpReleaseChannelSelect(GlpEntity[GlpSettingsCoordinator], SelectEntity):
     (0/1/2, mapped to stable/test/debug). Settings-backed, entity_category
     CONFIG like number.py/switch.py's settings entries."""
 
-    _attr_name = "Release Channel"
-    _attr_icon = "mdi:source-branch"
+    _attr_translation_key = "release_channel"
     _attr_options = RELEASE_CHANNEL_OPTIONS
     _attr_entity_category = EntityCategory.CONFIG
 

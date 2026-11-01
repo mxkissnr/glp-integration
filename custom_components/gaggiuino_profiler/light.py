@@ -37,8 +37,7 @@ class GlpLedLight(GlpEntity[GlpSettingsCoordinator], LightEntity):
     writes apply and persist in one call, unlike the WS-based opmode/tare/
     profile-save commands elsewhere in this round (button.py)."""
 
-    _attr_name = "LED"
-    _attr_icon = "mdi:led-strip-variant"
+    _attr_translation_key = "led"
     _attr_color_mode = ColorMode.RGB
     _attr_supported_color_modes = {ColorMode.RGB}
     _attr_supported_features = LightEntityFeature.EFFECT

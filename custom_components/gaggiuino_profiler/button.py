@@ -27,21 +27,18 @@ class GlpButtonDescription(ButtonEntityDescription):
 BUTTONS: tuple[GlpButtonDescription, ...] = (
     GlpButtonDescription(
         key="tare_scale",
+        translation_key="tare_scale",
         endpoint="/api/machine/tare",
-        name="Tare Scale",
-        icon="mdi:scale-balance",
     ),
     GlpButtonDescription(
         key="save_settings",
+        translation_key="save_settings",
         endpoint="/api/machine/settings/save",
-        name="Save Settings",
-        icon="mdi:content-save-cog-outline",
     ),
     GlpButtonDescription(
         key="save_active_profile",
+        translation_key="save_active_profile",
         endpoint="/api/machine/profile/save",
-        name="Save Active Profile",
-        icon="mdi:content-save-outline",
     ),
 )
 

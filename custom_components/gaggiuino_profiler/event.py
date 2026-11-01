@@ -31,9 +31,8 @@ async def async_setup_entry(
 class GlpShotEvent(GlpEntity[GlpDataCoordinator], EventEntity):
     """One `shot_finished` event per shot the coordinator reports as new."""
 
-    _attr_name = "Shot"
+    _attr_translation_key = "shot"
     _attr_event_types = ["shot_finished"]
-    _attr_icon = "mdi:coffee"
 
     def __init__(
         self,
