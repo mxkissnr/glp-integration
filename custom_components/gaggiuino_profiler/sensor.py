@@ -350,6 +350,7 @@ async def async_setup_entry(
 ) -> None:
     coordinator: GlpDataCoordinator         = hass.data[DOMAIN][entry.entry_id]["data"]
     machine_coordinator: GlpMachineCoordinator = hass.data[DOMAIN][entry.entry_id]["machine"]
+    parent_device_id: str | None            = hass.data[DOMAIN][entry.entry_id].get("parent_device_id")
     entities: list = [GlpSensor(coordinator, entry, d) for d in SENSORS]
     entities += [GlpMaintenanceSensor(coordinator, entry, d) for d in MAINTENANCE_SENSORS]
     entities.append(GlpGrinderMaintenanceSensor(coordinator, entry))
@@ -386,7 +387,11 @@ async def async_setup_entry(
             if mid is None or m.get("isDefault") or mid in known_machine_ids:
                 continue
             known_machine_ids.add(mid)
-            new_entities.append(GlpAdditionalMachineSensor(coordinator, entry, mid, m.get("name") or f"Machine {mid}"))
+            new_entities.append(
+                GlpAdditionalMachineSensor(
+                    coordinator, entry, mid, m.get("name") or f"Machine {mid}", parent_device_id
+                )
+            )
         if new_entities:
             async_add_entities(new_entities)
 
@@ -538,8 +543,15 @@ class GlpAdditionalMachineSensor(GlpAdditionalMachineEntity[GlpDataCoordinator],
     _attr_name = "Status"
     _attr_icon = "mdi:coffee-maker"
 
-    def __init__(self, coordinator: GlpDataCoordinator, entry: ConfigEntry, machine_id: int, machine_name: str) -> None:
-        super().__init__(coordinator, entry, machine_id, machine_name, "status")
+    def __init__(
+        self,
+        coordinator: GlpDataCoordinator,
+        entry: ConfigEntry,
+        machine_id: int,
+        machine_name: str,
+        parent_device_id: str | None = None,
+    ) -> None:
+        super().__init__(coordinator, entry, machine_id, machine_name, "status", parent_device_id)
 
     @property
     def suggested_object_id(self) -> str | None:

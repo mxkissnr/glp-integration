@@ -253,6 +253,8 @@ If you enable both, some entities will look duplicated (this integration's `Mach
 
 With multi-machine mode enabled (app v2.0.0+), a `Reachable` binary sensor is added automatically on its own device for every additional (non-default) machine — reachable/on are currently the only fields the app API (`machines[]` registry) provides per additional machine.
 
+On Home Assistant 2026.9 and newer that device is a child device of the Gaggiuino Local Profiler device, so the extra machine shows up nested under the main device instead of beside it. Device and entity ids are unchanged, and existing extra-machine devices are converted in place. On older Home Assistant versions the extra machine stays a separate device linked to the main one.
+
 The default machine's `Machine Status` sensor's `machines` attribute, and each additional machine's `Status` sensor (since v1.29.0), also expose a `theme` attribute — the accent color configured for that machine in the app's Settings → Machines, which the bundled Lovelace/Order cards read to color their header per machine.
 
 ¹ Goes `unavailable` when the Gaggiuino machine itself is powered off or unreachable, not just when the GLP add-on is unreachable — use this to detect "is the machine actually on" in automations. `Machine Status` stays available, but shows `error` when the machine is unreachable or the last sync failed.
