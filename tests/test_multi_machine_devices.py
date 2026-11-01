@@ -77,7 +77,7 @@ async def test_additional_machine_gets_a_status_sensor_and_reachable_binary_sens
     assert binary_state.state == "on"  # reachable: True
 
 
-async def test_additional_machine_device_is_separate_from_and_linked_to_the_default_device(
+async def test_additional_machine_device_is_a_child_of_the_default_device(
     hass, strict_aioclient_mock
 ) -> None:
     entry, _ = await _setup_entry(hass, strict_aioclient_mock, {"machines": MACHINES_TWO})
@@ -85,11 +85,14 @@ async def test_additional_machine_device_is_separate_from_and_linked_to_the_defa
     registry = dr.async_get(hass)
 
     default_device = registry.async_get_device_by_identifier((DOMAIN, entry.entry_id), entry.entry_id)
-    additional_device = registry.async_get_device_by_identifier((DOMAIN, f"{entry.entry_id}_2"), entry.entry_id)
+    additional_device = registry.async_get_child_device_by_identifier(
+        (DOMAIN, f"{entry.entry_id}_2"), entry.entry_id
+    )
     assert default_device is not None
     assert additional_device is not None
     assert additional_device.id != default_device.id
-    assert additional_device.via_device_id == default_device.id
+    # #322: a child of the GLP device, not a via_device-linked separate device.
+    assert additional_device.parent_device_id == default_device.id
     assert additional_device.name == "Kitchen GaggiMate"
 
 

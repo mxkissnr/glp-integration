@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+### Changed
+- **Additional machines now appear as child devices of the GLP device on Home Assistant 2026.9+, with unchanged device and entity IDs and no via_device deprecation warning on Home Assistant 2026.11.** Refs #322
+
 ## [1.34.0] – 2026-10-27
 ### Added
 - **The Order Card can now be set up in Home Assistant's visual card editor instead of YAML.** Refs #272
