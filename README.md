@@ -4,7 +4,7 @@
 
 <p align="center">
   <a href="https://github.com/mxkissnr/glp-integration/releases">
-    <img src="https://img.shields.io/github/v/tag/mxkissnr/glp-integration?color=%23f59e0b&label=Version&style=flat-square" alt="Version"/>
+    <img src="https://img.shields.io/github/v/release/mxkissnr/glp-integration?color=%23f59e0b&label=Version&style=flat-square" alt="Version"/>
   </a>
   <a href="https://github.com/mxkissnr/glp-integration/actions/workflows/validate.yml">
     <img src="https://img.shields.io/github/actions/workflow/status/mxkissnr/glp-integration/validate.yml?branch=main&label=Validate&style=flat-square" alt="Validate"/>
@@ -94,6 +94,8 @@ An existing HACS installation is migrated automatically when Home Assistant 2026
 ### Updates
 
 Updates for the integration and both bundled cards arrive through the Marketplace update entity: install the update there and restart Home Assistant when it asks. There is no separate update step for the cards.
+
+To run a beta release instead, either enable the *Pre-release* entity on the integration's Marketplace device page, or open the Marketplace's *Reinstall* dialog, which lists the beta releases marked *pre-release*, and pick one there.
 
 ---
 

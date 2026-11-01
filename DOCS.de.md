@@ -37,6 +37,8 @@ Auf Home Assistant 2026.11 oder neuer kommen Aktualisierungen für die Integrati
 
 Vorabversionen sind pro Repository opt-in. Auf Home Assistant 2026.11 oder neuer die Marketplace-Geräteseite der Integration öffnen, dort die Entity *Pre-release* aktivieren (sie ist standardmäßig deaktiviert) und einschalten. Der Marketplace bietet dann die Beta-Versionen an (Tags wie `v1.33.2b1`), du erhältst also den Entwicklungsstand der Integration und beider Karten. Er ist nur zum Testen gedacht und kann Fehler enthalten; zum Zurückwechseln die Entity wieder ausschalten, dann werden wie voreingestellt nur stabile Versionen angeboten.
 
+Ein zweiter Weg ist der Dialog *Erneut installieren* im Marketplace: Er listet die Beta-Versionen mit der Kennzeichnung *Vorabversion*, eine davon lässt sich direkt installieren.
+
 Auf älteren Home Assistant-Versionen bietet HACS die Beta-Versionen weiterhin über *Beta-Versionen anzeigen* an.
 
 ## Einrichtung
@@ -225,9 +227,9 @@ Erkannt aus der Sprache des angemeldeten Home-Assistant-Benutzers, mit der Brows
 
 Alle Sensoren/Entities aktualisieren sich mit dem Poll-Intervall des jeweiligen Coordinators: der Haupt-Coordinator (`coordinator.py`) alle 60 Sekunden (konfigurierbar, s.o.), und der Machine-Coordinator (`machine_coordinator.py`) alle 5 Sekunden für Live-Maschinenwerte. Der Live-Coordinator (`live_coordinator.py`, treibt den `Brewing`-Sensor) wird seit v1.30.0 per SSE-Stream des Add-ons in Echtzeit gepusht (nahezu verzögerungsfrei) und fällt nur auf einen 2-Sekunden-Poll zurück, solange dieser Stream nicht verfügbar ist.
 
-### Haupt-Entity (Home Assistant 2026.11+)
+### Haupt-Entität (Home Assistant 2026.11+)
 
-Der Sensor *Machine Status* lässt sich in seinen Entity-Einstellungen als Haupt-Entity des GLP-Geräts markieren (**Einstellungen → Geräte & Dienste → Gaggiuino Local Profiler → Entities → Machine Status → Haupt-Entity**). Das Gerät zeigt dann den Maschinennamen, und beide mitgelieferten Karten finden die Maschine weiterhin.
+Der Sensor *Machine Status* lässt sich als Haupt-Entität des GLP-Geräts markieren: **Einstellungen → Geräte & Dienste → Gaggiuino Local Profiler → Gerät öffnen → Machine Status → Zahnrad-Symbol → oberster Schalter „Haupt-Entität des Geräts (<Gerätename>)"**. Der Sensor zeigt dann den Gerätenamen und nutzt immer den Bereich des Geräts, und beide mitgelieferten Karten finden die Maschine weiterhin. Das Gerät selbst bleibt unverändert.
 
 ### Verhältnis zu Gaggiuinos eigenen MQTT-Entities
 
@@ -273,7 +275,7 @@ Wer beides aktiviert, sieht scheinbar doppelte Entities (`Machine Live Pressure`
 
 Bei aktiviertem Multi-Machine-Modus (App v2.0.0+) kommt pro zusätzlicher (nicht-Standard-)Maschine automatisch ein `Reachable`-Binary-Sensor auf einem eigenen Gerät hinzu — reachable/on sind aktuell die einzigen Felder, die die App-API (`machines[]`-Registry) pro Zusatzmaschine liefert.
 
-Unter Home Assistant 2026.9 und neuer ist dieses Gerät ein untergeordnetes Gerät (Child Device) des Geräts „Gaggiuino Local Profiler", die Zusatzmaschine erscheint also unter dem Hauptgerät statt daneben. Geräte- und Entity-IDs bleiben unverändert, bestehende Zusatzmaschinen-Geräte werden direkt umgewandelt. Auf älteren Home-Assistant-Versionen bleibt die Zusatzmaschine ein eigenes, mit dem Hauptgerät verknüpftes Gerät.
+Unter Home Assistant 2026.9 und neuer ist dieses Gerät ein untergeordnetes Gerät (Child Device) des Geräts „Gaggiuino Local Profiler", die Zusatzmaschine erscheint also unter dem Hauptgerät statt daneben. Geräte- und Entity-IDs bleiben unverändert, bestehende Zusatzmaschinen-Geräte werden direkt umgewandelt. Ein Zurückgehen auf v1.34.0 oder älter kann danach die Entities der Zusatzmaschinen nicht mehr anlegen (Home Assistant protokolliert Identifier, die mit denen des Child Devices überlappen), bis diese Geräte gelöscht werden; ein erneutes Upgrade stellt sie wieder her. Auf älteren Home-Assistant-Versionen bleibt die Zusatzmaschine ein eigenes, mit dem Hauptgerät verknüpftes Gerät.
 
 Das `machines`-Attribut des `Machine Status`-Sensors der Standardmaschine sowie der `Status`-Sensor jeder Zusatzmaschine (seit v1.29.0) liefern zusätzlich ein `theme`-Attribut — das für die jeweilige Maschine in den App-Einstellungen → Maschinen konfigurierte Farbthema, das die mitgelieferten Lovelace-/Order-Karten lesen, um ihren Kartenkopf passend zur Maschine einzufärben.
 

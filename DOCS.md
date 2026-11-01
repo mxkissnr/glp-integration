@@ -37,6 +37,8 @@ On Home Assistant 2026.11 or newer, updates for the integration and both bundled
 
 Pre-releases are opt-in per repository. On Home Assistant 2026.11 or newer, open the integration's Marketplace device page, enable the *Pre-release* entity there (it is disabled by default) and turn it on. The Marketplace then offers the beta releases (tags like `v1.33.2b1`), so you get the development build of the integration and both cards. It is for testing only and may be broken; turn the entity off again to go back to stable releases only, which is the default.
 
+A second way is the Marketplace's *Reinstall* dialog, which lists the beta releases marked *pre-release*; picking one installs it.
+
 On older Home Assistant versions the beta builds are still offered by HACS under *Show beta versions*.
 
 ## Setup
@@ -227,7 +229,7 @@ All sensors/entities update at the poll interval of their respective coordinator
 
 ### Main entity (Home Assistant 2026.11+)
 
-You can mark the *Machine Status* sensor as the main entity of the GLP device in its entity settings (**Settings → Devices & Services → Gaggiuino Local Profiler → Entities → Machine Status → Main entity**). The device then shows the machine name, and both bundled cards keep finding the machine as before.
+You can mark the *Machine Status* sensor as the main entity of the GLP device: **Settings → Devices & Services → Gaggiuino Local Profiler → open the device → Machine Status → gear icon → top toggle "Main entity of the device (<device name>)"**. The sensor then shows the device name and always uses the device's area, and both bundled cards keep finding the machine. The device itself is unchanged.
 
 ### Relationship to Gaggiuino firmware's own MQTT entities
 
@@ -273,7 +275,7 @@ If you enable both, some entities will look duplicated (this integration's `Mach
 
 With multi-machine mode enabled (app v2.0.0+), a `Reachable` binary sensor is added automatically on its own device for every additional (non-default) machine — reachable/on are currently the only fields the app API (`machines[]` registry) provides per additional machine.
 
-On Home Assistant 2026.9 and newer that device is a child device of the Gaggiuino Local Profiler device, so the extra machine shows up nested under the main device instead of beside it. Device and entity ids are unchanged, and existing extra-machine devices are converted in place. On older Home Assistant versions the extra machine stays a separate device linked to the main one.
+On Home Assistant 2026.9 and newer that device is a child device of the Gaggiuino Local Profiler device, so the extra machine shows up nested under the main device instead of beside it. Device and entity ids are unchanged, and existing extra-machine devices are converted in place. Going back to v1.34.0 or older afterwards cannot add the additional machines' entities again (Home Assistant logs identifiers that overlap with those of the child device) until those devices are removed; upgrading again restores them. On older Home Assistant versions the extra machine stays a separate device linked to the main one.
 
 The default machine's `Machine Status` sensor's `machines` attribute, and each additional machine's `Status` sensor (since v1.29.0), also expose a `theme` attribute — the accent color configured for that machine in the app's Settings → Machines, which the bundled Lovelace/Order cards read to color their header per machine.
 
