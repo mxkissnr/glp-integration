@@ -17,7 +17,7 @@ import re
 from unittest import mock
 
 import pytest
-from homeassistant.const import EntityCategory, Platform
+from homeassistant.const import EntityCategory
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
 from pytest_homeassistant_custom_component.common import MockConfigEntry
@@ -218,8 +218,9 @@ def test_grouped_sensor_id_is_pinned_from_the_platform_domain() -> None:
     entry.data = {"url": URL}
 
     description = next(d for d in SENSORS if d.group == "shots")
+
+    # The constructor pins the id; it must not go through the HA module layout.
     sensor = GlpSensor(coordinator, entry, description)
-    sensor.pin_grouped_entity_id(Platform.SENSOR.value)
 
     assert sensor.entity_id == f"sensor.gaggiuino_local_profiler_{description.key}"
 
