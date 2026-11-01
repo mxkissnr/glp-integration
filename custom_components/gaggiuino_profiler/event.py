@@ -46,7 +46,6 @@ class GlpShotEvent(GlpEntity[GlpDataCoordinator], EventEntity):
         # Seed from the coordinator's current count so a shot detected before
         # this entity existed (or before an HA restart) is never replayed.
         self._seen_new_shot_count = coordinator.new_shot_count
-        self._last_fired_shot_id: int | None = None
 
     @property
     def suggested_object_id(self) -> str | None:
@@ -54,11 +53,11 @@ class GlpShotEvent(GlpEntity[GlpDataCoordinator], EventEntity):
 
     @callback
     def _handle_coordinator_update(self) -> None:
-        payload = self.coordinator.last_new_shot
+        # The counter, not the shot id, decides: the app can reuse an id for a
+        # re-created shot, and only the coordinator knows what is genuinely new.
         if self.coordinator.new_shot_count != self._seen_new_shot_count:
             self._seen_new_shot_count = self.coordinator.new_shot_count
-            shot_id = payload.get("shot_id") if payload else None
-            if payload is not None and shot_id != self._last_fired_shot_id:
-                self._last_fired_shot_id = shot_id
+            payload = self.coordinator.last_new_shot
+            if payload is not None:
                 self._trigger_event("shot_finished", dict(payload))
         self.async_write_ha_state()

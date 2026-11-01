@@ -70,7 +70,7 @@ async def test_first_poll_fires_nothing(hass, strict_aioclient_mock) -> None:
     fired = _watch_entity_events(hass)
     await _setup(hass, strict_aioclient_mock, [_shot(1, dose=18, weight=[360])])
     assert fired == []
-    assert hass.states.get(ENTITY_ID).attributes["event_type"] is None
+    assert hass.states.get(ENTITY_ID).attributes.get("event_type") is None
 
 
 async def test_new_shot_fires_exactly_one_event_with_the_payload(hass, strict_aioclient_mock) -> None:
