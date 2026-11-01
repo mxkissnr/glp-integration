@@ -229,6 +229,10 @@ Erkannt aus der Sprache des angemeldeten Home-Assistant-Benutzers, mit der Brows
 
 Alle Sensoren/Entities aktualisieren sich mit dem Poll-Intervall des jeweiligen Coordinators: der Haupt-Coordinator (`coordinator.py`) alle 60 Sekunden (konfigurierbar, s.o.), und der Machine-Coordinator (`machine_coordinator.py`) alle 5 Sekunden für Live-Maschinenwerte. Der Live-Coordinator (`live_coordinator.py`, treibt den `Brewing`-Sensor) wird seit v1.30.0 per SSE-Stream des Add-ons in Echtzeit gepusht (nahezu verzögerungsfrei) und fällt nur auf einen 2-Sekunden-Poll zurück, solange dieser Stream nicht verfügbar ist.
 
+### Namen und Sprachen
+
+Entity- und Gerätenamen folgen der Home-Assistant-Sprache: Englisch, Deutsch, Spanisch, Französisch, Italienisch und Niederländisch. Andere Sprachen zeigen die englischen Namen. Entity-IDs hängen nicht von der Sprache ab und ändern sich beim Sprachwechsel nie.
+
 ### Haupt-Entität (Home Assistant 2026.11+)
 
 Der Sensor *Machine Status* lässt sich als Haupt-Entität des GLP-Geräts markieren: **Einstellungen → Geräte & Dienste → Gaggiuino Local Profiler → Gerät öffnen → Machine Status → Zahnrad-Symbol → oberster Schalter „Haupt-Entität des Geräts (<Gerätename>)"**. Der Sensor zeigt dann den Gerätenamen und nutzt immer den Bereich des Geräts, und beide mitgelieferten Karten finden die Maschine weiterhin. Das Gerät selbst bleibt unverändert.

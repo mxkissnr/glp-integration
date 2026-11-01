@@ -3432,7 +3432,7 @@ ${SHEET_STYLES}
   __name(metricLineHtml, "metricLineHtml");
 
   // shot/src/glp-card.ts
-  var GLP_CARD_VERSION = "2.23.0";
+  var GLP_CARD_VERSION = "2.23.1";
   var READY_BY_PENDING_FALLBACK_MS = 6e4;
   var HEADER_LONG_PRESS_MS = 500;
   var HEADER_PRESS_MOVE_PX = 10;
