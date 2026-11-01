@@ -15,7 +15,7 @@ import { STYLES } from './styles.ts';
 import { _esc, _originHtml, _safeUrl, THEME_PRESETS, _validHex } from './helpers.ts';
 import { MACHINE_ICON_MINI, ICONS, _menuIconHtml } from './icons.ts';
 import { applySemanticColorContrast } from '../../shared/contrast.ts';
-import { appMachineEntry, appMachineTheme, appMachineType, matchMachineStatusEntity } from '../../shared/machine.ts';
+import { appMachineEntry, appMachineTheme, appMachineType, findMachineStatusEntity } from '../../shared/machine.ts';
 import { haptic, toast } from '../../shared/ha-events.ts';
 import { GlpSheet } from '../../shared/sheet.ts';
 import { normalizeFormConfig } from '../../shared/config-form.ts';
@@ -241,19 +241,13 @@ class GlpOrderCard extends HTMLElement {
   // the one app instance regardless (see README — a documented limitation,
   // not a bug: there's still only one add-on), but `_getSwitchEntity()`
   // resolution and the order payload's `machine` field use it to target the
-  // right machine's switch/queue display. Falls back to the previous "first
-  // *_machine_status entity" behavior when unset, so existing single-machine
-  // cards are unaffected.
+  // right machine's switch/queue display. The entity registry identifies the
+  // status sensor (#323), so renamed devices and translated names still
+  // resolve; without a registry the previous name match answers, and without
+  // `machine` the first *_machine_status entity does, so existing
+  // single-machine cards are unaffected.
   _findMachineStatusEntity(): string | null {
-    if (!this._hass) return null;
-    const candidates = Object.keys(this._hass.states).filter(id => id.endsWith('_machine_status'));
-    if (this._config?.machine) {
-      const matched = matchMachineStatusEntity(this._hass, candidates, this._config.machine);
-      if (matched) return matched;
-    }
-    const found = candidates.find(id =>
-      (this._hass!.states[id]?.attributes?.friendly_name as string)?.toLowerCase().includes('gaggiuino'));
-    return found || candidates[0] || null;
+    return findMachineStatusEntity(this._hass, this._config?.machine) ?? null;
   }
 
   _getSwitchEntity(): string | null {
