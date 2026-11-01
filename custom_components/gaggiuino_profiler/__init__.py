@@ -279,11 +279,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except Exception:
         pass
 
+    # #322: the additional-machine entities register their devices as children of
+    # the default-machine device, which therefore has to exist before the
+    # platforms add any entity. Same values as GlpEntity's DeviceInfo, so this
+    # call and the entities' own registration agree on one device.
+    main_device = dr.async_get(hass).async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, entry.entry_id)},
+        name="Gaggiuino Local Profiler",
+        manufacturer="Gaggiuino",
+        model="Local Profiler",
+    )
+
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
         "data":     coordinator,
         "live":     live_coordinator,
         "machine":  machine_coordinator,
         "settings": settings_coordinator,
+        "parent_device_id": main_device.id,
     }
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

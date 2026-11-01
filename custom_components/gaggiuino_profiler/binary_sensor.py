@@ -95,6 +95,7 @@ async def async_setup_entry(
     live_coordinator: GlpLiveCoordinator       = hass.data[DOMAIN][entry.entry_id]["live"]
     data_coordinator: GlpDataCoordinator       = hass.data[DOMAIN][entry.entry_id]["data"]
     machine_coordinator: GlpMachineCoordinator = hass.data[DOMAIN][entry.entry_id]["machine"]
+    parent_device_id: str | None               = hass.data[DOMAIN][entry.entry_id].get("parent_device_id")
     async_add_entities([
         IsBrewingSensor(live_coordinator, entry),
         PreheatReadySensor(data_coordinator, entry),
@@ -119,7 +120,9 @@ async def async_setup_entry(
                 continue
             known_machine_ids.add(mid)
             new_entities.append(
-                GlpAdditionalMachineReachableSensor(data_coordinator, entry, mid, m.get("name") or f"Machine {mid}")
+                GlpAdditionalMachineReachableSensor(
+                    data_coordinator, entry, mid, m.get("name") or f"Machine {mid}", parent_device_id
+                )
             )
         if new_entities:
             async_add_entities(new_entities)
@@ -280,8 +283,15 @@ class GlpAdditionalMachineReachableSensor(GlpAdditionalMachineEntity[GlpDataCoor
     _attr_name = "Reachable"
     _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
 
-    def __init__(self, coordinator: GlpDataCoordinator, entry: ConfigEntry, machine_id: int, machine_name: str) -> None:
-        super().__init__(coordinator, entry, machine_id, machine_name, "reachable")
+    def __init__(
+        self,
+        coordinator: GlpDataCoordinator,
+        entry: ConfigEntry,
+        machine_id: int,
+        machine_name: str,
+        parent_device_id: str | None = None,
+    ) -> None:
+        super().__init__(coordinator, entry, machine_id, machine_name, "reachable", parent_device_id)
 
     @property
     def suggested_object_id(self) -> str | None:

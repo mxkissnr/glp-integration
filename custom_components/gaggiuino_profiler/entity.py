@@ -10,8 +10,9 @@ Two variants, matching the two device shapes actually used:
 - `GlpEntity`: entities describing the config entry's default machine --
   all of them live on one shared HA device.
 - `GlpAdditionalMachineEntity`: the per-machine entities added by the
-  multi-machine registry (#48), each on its own device linked back to the
-  default device via `via_device`.
+  multi-machine registry (#48), each on its own device. On HA Core 2026.9+
+  that device is a child device of the default device (#322); older cores
+  keep the `via_device` link, which 2026.11 deprecates.
 """
 from __future__ import annotations
 
@@ -22,6 +23,11 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity, DataUpdateCoordinator
 
 from .const import DOMAIN
+
+try:
+    from homeassistant.helpers.device_registry import ChildDeviceInfo
+except ImportError:  # HA Core < 2026.9
+    ChildDeviceInfo = None
 
 _CoordinatorT = TypeVar("_CoordinatorT", bound=DataUpdateCoordinator)
 
@@ -62,15 +68,27 @@ class GlpAdditionalMachineEntity(CoordinatorEntity[_CoordinatorT]):
         machine_id: int,
         machine_name: str,
         key_suffix: str,
+        parent_device_id: str | None = None,
     ) -> None:
         super().__init__(coordinator)
         self._machine_id = machine_id
         self._attr_unique_id = f"{entry.entry_id}_{machine_id}_{key_suffix}"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"{entry.entry_id}_{machine_id}")},
-            name=machine_name,
-            manufacturer="Gaggiuino",
-            model="Local Profiler (additional machine)",
-            configuration_url=entry.data["url"],
-            via_device=(DOMAIN, entry.entry_id),
-        )
+        identifiers = {(DOMAIN, f"{entry.entry_id}_{machine_id}")}
+        if ChildDeviceInfo is not None and parent_device_id:
+            # #322: the machine is a logical part of the GLP device, so HA models
+            # it as a child device instead of a separate device linked by
+            # via_device (deprecated in 2026.11).
+            self._attr_device_info = ChildDeviceInfo(
+                identifiers=identifiers,
+                name=machine_name,
+                parent_device_id=parent_device_id,
+            )
+        else:
+            self._attr_device_info = DeviceInfo(
+                identifiers=identifiers,
+                name=machine_name,
+                manufacturer="Gaggiuino",
+                model="Local Profiler (additional machine)",
+                configuration_url=entry.data["url"],
+                via_device=(DOMAIN, entry.entry_id),
+            )
