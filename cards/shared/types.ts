@@ -49,4 +49,3 @@ export interface MachineDeviceEntry {
   name?: string | null;
   name_by_user?: string | null;
 }
-

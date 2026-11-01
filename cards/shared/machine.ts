@@ -108,11 +108,15 @@ function appMachineType(entry: MachineEntry | null | undefined): 'gaggiuino' | '
 // The *_machine_status entity ids this integration registers, read from Home
 // Assistant's entity registry (frontend `hass.entities`). Sorted, so the
 // "no `machine` configured" pick does not depend on object insertion order.
+// Entities without a state are left out: a disabled or not-yet-added entity
+// cannot be this card's machine, and its attributes are unreadable.
 function registryMachineStatusEntities(hass: MachineHass): MachineRegistryEntry[] {
   const entities = hass.entities;
   if (!entities) return [];
   return Object.values(entities)
-    .filter(e => e?.platform === 'gaggiuino_profiler' && e?.translation_key === 'machine_status' && e.entity_id)
+    .filter(e =>
+      e?.platform === 'gaggiuino_profiler' && e.translation_key === 'machine_status' &&
+      Boolean(e.entity_id) && Boolean(hass.states[String(e.entity_id)]))
     .sort((a, b) => String(a.entity_id).localeCompare(String(b.entity_id)));
 }
 
@@ -133,11 +137,13 @@ function registryDeviceName(hass: MachineHass, entry: MachineRegistryEntry): str
 // sensor independently of any name.
 //
 // Matching a configured `machine` runs in that order: the device's name
-// (renamed devices included) first, then matchMachineStatusEntity() over the
-// registered ids — its exact entity-id/friendly-name match, then the
-// contains-match that keeps partial and legacy names working. Without
-// `machine` the first registration in entity-id order answers, which is the
-// same single-machine setup the cards used to find by name.
+// (renamed devices included) first, then the pre-existing name/id match over
+// the registered ids — exact id or friendly name, then the contains-match.
+// An unmatched `machine` still ends on a real machine (the first
+// Gaggiuino-named status entity, else the first registration), so a stale or
+// misspelt option never leaves the card without one. Without `machine` the
+// first registration in entity-id order answers, which is the same
+// single-machine setup the cards used to find by name.
 //
 // Without a registry (an older frontend, or a test that only seeds `states`)
 // both cards keep their previous friendly-name behaviour unchanged.
@@ -154,7 +160,7 @@ function findMachineStatusEntity(
     const needle = String(machine).toLowerCase();
     const byDevice = registered.find(e => registryDeviceName(hass, e).toLowerCase() === needle);
     if (byDevice) return byDevice.entity_id;
-    return matchMachineStatusEntity(hass, registered.map(e => String(e.entity_id)), machine);
+    return matchByFriendlyName(hass, machine, registered.map(e => String(e.entity_id)));
   }
   return matchByFriendlyName(hass, machine, candidates);
 }

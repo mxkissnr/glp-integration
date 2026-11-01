@@ -3230,7 +3230,7 @@ ${SHEET_STYLES}
   function registryMachineStatusEntities(hass) {
     const entities = hass.entities;
     if (!entities) return [];
-    return Object.values(entities).filter((e6) => e6?.platform === "gaggiuino_profiler" && e6?.translation_key === "machine_status" && e6.entity_id).sort((a3, b3) => String(a3.entity_id).localeCompare(String(b3.entity_id)));
+    return Object.values(entities).filter((e6) => e6?.platform === "gaggiuino_profiler" && e6.translation_key === "machine_status" && Boolean(e6.entity_id) && Boolean(hass.states[String(e6.entity_id)])).sort((a3, b3) => String(a3.entity_id).localeCompare(String(b3.entity_id)));
   }
   __name(registryMachineStatusEntities, "registryMachineStatusEntities");
   function registryDeviceName(hass, entry) {
@@ -3247,7 +3247,7 @@ ${SHEET_STYLES}
       const needle = String(machine).toLowerCase();
       const byDevice = registered.find((e6) => registryDeviceName(hass, e6).toLowerCase() === needle);
       if (byDevice) return byDevice.entity_id;
-      return matchMachineStatusEntity(hass, registered.map((e6) => String(e6.entity_id)), machine);
+      return matchByFriendlyName(hass, machine, registered.map((e6) => String(e6.entity_id)));
     }
     return matchByFriendlyName(hass, machine, candidates);
   }
