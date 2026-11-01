@@ -1,6 +1,9 @@
 # Changelog
 
 ## [Unreleased]
+### Added
+- **Every finished shot now also fires the event entity `event.gaggiuino_local_profiler_shot` on the Shots device, with the shot data as attributes, so an automation can trigger on it like on any other state; the existing `gaggiuino_profiler_shot_completed` bus event stays unchanged.** Refs #340
+
 ### Changed
 - **Entity and device names now follow the Home Assistant language, starting with the sensors in English and German.** Refs #339
 - **The entities of the Gaggiuino Local Profiler device are grouped into the child devices Shots, Maintenance and Preheat, the machine hostname, uptime and last sync moved to the Diagnostic section, and every entity ID stayed the same.** Refs #336
