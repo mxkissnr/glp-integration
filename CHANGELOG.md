@@ -6,7 +6,7 @@
 - **On Home Assistant OS the integration now finds the GLP app by itself once the app announces its address, and one confirmation adds it; a changed app port updates the existing entry instead of adding a second one, and manual setup is unchanged.** Refs #338
 
 ### Changed
-- **Entity and device names now follow the Home Assistant language for the sensors, binary sensors, switches, numbers, selects, buttons, lights, update and event entities in English and German, and a name on the Shots, Maintenance and Preheat child devices no longer repeats the device name, so Home Assistant shows "Shots Count" instead of "Shots Shot Count".** Refs #339
+- **Entity and device names now follow the Home Assistant language for the sensors, binary sensors, switches, numbers, selects, buttons, lights, update and event entities in English, German, Spanish, French, Italian and Dutch, and a name on the Shots, Maintenance and Preheat child devices no longer repeats the device name, so Home Assistant shows "Shots Count" instead of "Shots Shot Count".** Refs #339
 - **The entities of the Gaggiuino Local Profiler device are grouped into the child devices Shots, Maintenance and Preheat, the machine hostname, uptime and last sync moved to the Diagnostic section, and every entity ID stayed the same.** Refs #336
 - **The docs now describe installing and updating the integration and both cards through the Home Assistant Marketplace, and how to switch on pre-releases there.** Refs #326
 - **The Shot Card and the Order Card find their machine through Home Assistant's entity registry, so a renamed device, a translated interface or the 2026.11 "main entity" setting no longer stops them from finding the machine.** Refs #323
