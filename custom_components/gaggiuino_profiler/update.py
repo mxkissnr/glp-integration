@@ -133,6 +133,22 @@ class GlpMachineFirmwareUpdate(GlpEntity[GlpDataCoordinator], UpdateEntity):
             return None
         return self.coordinator.data.get("firmware_release_url")
 
+    @property
+    def has_update(self) -> bool:
+        # Gaggiuino/GaggiMate release tags are not reliably comparable as
+        # versions, so Home Assistant 2026.11+'s explicit availability hook
+        # (#325) reports the app's own `updateAvailable` flag instead.
+        data = self.coordinator.data
+        if data is not None and "firmware_update_available" in data:
+            return bool(data["firmware_update_available"])
+        base = getattr(super(), "has_update", None)
+        if base is not None:
+            return bool(base)
+        # Older cores have no UpdateEntity.has_update and never read this;
+        # fall back to the plain version comparison HA would have done.
+        installed, latest = self.installed_version, self.latest_version
+        return installed is not None and latest is not None and latest != installed
+
     async def async_install(self, version: str | None, backup: bool, **kwargs: object) -> None:
         await self.coordinator.auth.post("/api/machine/firmware/update", json={})
         await self.coordinator.async_request_refresh()

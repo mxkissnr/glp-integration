@@ -3,6 +3,7 @@
 ## [Unreleased]
 ### Changed
 - **The Shot Card and the Order Card find their machine through Home Assistant's entity registry, so a renamed device, a translated interface or the 2026.11 "main entity" setting no longer stops them from finding the machine.** Refs #323
+- **The machine firmware update entity now follows the app's "update available" flag instead of comparing version strings, so it reports correctly on Home Assistant 2026.11 and newer.** Refs #325
 
 ## [1.34.0] – 2026-10-27
 ### Added
