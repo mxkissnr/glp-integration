@@ -1,6 +1,8 @@
 # Changelog
 
 ## [Unreleased]
+### Changed
+- **The machine firmware update entity now follows the app's "update available" flag instead of comparing version strings, so it reports correctly on Home Assistant 2026.11 and newer.** Refs #325
 
 ## [1.34.0] – 2026-10-27
 ### Added
