@@ -82,6 +82,8 @@ async def test_additional_machine_is_a_child_device_of_the_glp_device(hass, stri
         for device in dr.async_get(hass).devices
         if device.config_entry_id == entry.entry_id and device.via_device_id
     ]
+    # The child path must not reach the registry's deprecated `via_device`
+    # parameter either, which HA logs as a deprecation warning from 2026.11.
     assert not [record for record in caplog.records if "via_device" in record.getMessage()]
 
 
