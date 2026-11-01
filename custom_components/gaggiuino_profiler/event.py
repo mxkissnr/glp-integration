@@ -59,5 +59,9 @@ class GlpShotEvent(GlpEntity[GlpDataCoordinator], EventEntity):
             self._seen_new_shot_count = self.coordinator.new_shot_count
             payload = self.coordinator.last_new_shot
             if payload is not None:
-                self._trigger_event("shot_finished", dict(payload))
+                try:
+                    self._trigger_event("shot_finished", dict(payload))
+                except TypeError:
+                    # HA Core < 2024.11 takes no attributes for an event.
+                    self._trigger_event("shot_finished")
         self.async_write_ha_state()
