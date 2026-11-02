@@ -1,13 +1,15 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.diagnostics import async_redact_data
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN
 from .coordinator import GlpDataCoordinator
+
+if TYPE_CHECKING:
+    from . import GlpConfigEntry
+
 
 # Diagnostics get pasted into public issue reports, so addresses, account
 # handles and names stay out. async_redact_data matches these keys at every
@@ -35,9 +37,9 @@ TO_REDACT = {
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, entry: ConfigEntry
+    hass: HomeAssistant, entry: GlpConfigEntry
 ) -> dict[str, Any]:
-    coordinator: GlpDataCoordinator = hass.data[DOMAIN][entry.entry_id]["data"]
+    coordinator: GlpDataCoordinator = entry.runtime_data.data
     return async_redact_data(
         {
             "config_entry": {"url": entry.data.get("url"), "options": dict(entry.options)},
