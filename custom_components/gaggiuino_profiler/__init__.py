@@ -2,13 +2,14 @@ import json
 import logging
 import os
 import re
+from dataclasses import dataclass
 from datetime import datetime
 
 import aiohttp
 import voluptuous as vol
 from homeassistant.components.frontend import add_extra_js_url
 from homeassistant.components.http import StaticPathConfig
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
@@ -32,6 +33,36 @@ _LOGGER = logging.getLogger(__name__)
 # data/machine coordinators (button, select's new operation-mode/release-
 # channel entries).
 PLATFORMS = ["sensor", "binary_sensor", "select", "update", "light", "number", "switch", "button", "event"]
+
+
+@dataclass
+class GlpRuntimeData:
+    """Coordinators and shared ids for one config entry."""
+
+    data: GlpDataCoordinator
+    live: GlpLiveCoordinator
+    machine: GlpMachineCoordinator
+    settings: GlpSettingsCoordinator
+    parent_device_id: str | None
+
+
+GlpConfigEntry = ConfigEntry[GlpRuntimeData]
+
+
+def _first_loaded_runtime_data(hass: HomeAssistant) -> GlpRuntimeData | None:
+    """Runtime data of the first loaded entry, for the domain-wide services.
+
+    Not `hass.config_entries.async_loaded_entries()`, which only exists from
+    HA 2024.10 -- hacs.json still allows 2024.7.
+    """
+    for candidate in hass.config_entries.async_entries(DOMAIN):
+        if candidate.state is not ConfigEntryState.LOADED:
+            continue
+        runtime_data = getattr(candidate, "runtime_data", None)
+        if isinstance(runtime_data, GlpRuntimeData):
+            return runtime_data
+    return None
+
 
 MAINTENANCE_DONE_SCHEMA = vol.Schema({
     vol.Required("task"): vol.All(str, vol.Length(min=1)),
@@ -103,7 +134,7 @@ async def _async_register_frontend(hass: HomeAssistant) -> None:
     add_extra_js_url(hass, f"/{DOMAIN}/www/glp-order-card.js?v={integration.version}")
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: GlpConfigEntry) -> bool:
     await _async_register_frontend(hass)
 
     # Register the maintenance_done service once (idempotent)
@@ -112,11 +143,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             task = call.data["task"]
             if not _MAINTENANCE_TASK_RE.fullmatch(task):
                 raise ServiceValidationError(f"Invalid maintenance task: {task!r}")
-            coord: GlpDataCoordinator | None = next(
-                (d["data"] for d in hass.data.get(DOMAIN, {}).values()
-                 if isinstance(d, dict) and "data" in d),
-                None,
-            )
+            runtime_data = _first_loaded_runtime_data(hass)
+            coord: GlpDataCoordinator | None = runtime_data.data if runtime_data else None
             if coord is None:
                 _LOGGER.error("maintenance_done: no GLP coordinator available")
                 return
@@ -139,11 +167,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Register the backup service once (idempotent)
     if not hass.services.has_service(DOMAIN, "backup"):
         async def _handle_backup(call: ServiceCall) -> None:
-            coord: GlpDataCoordinator | None = next(
-                (d["data"] for d in hass.data.get(DOMAIN, {}).values()
-                 if isinstance(d, dict) and "data" in d),
-                None,
-            )
+            runtime_data = _first_loaded_runtime_data(hass)
+            coord: GlpDataCoordinator | None = runtime_data.data if runtime_data else None
             if coord is None:
                 _LOGGER.error("backup: no GLP coordinator available")
                 return
@@ -207,11 +232,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Register the set_ready_by service once (idempotent)
     if not hass.services.has_service(DOMAIN, "set_ready_by"):
         async def _handle_set_ready_by(call: ServiceCall) -> None:
-            coord: GlpDataCoordinator | None = next(
-                (d["data"] for d in hass.data.get(DOMAIN, {}).values()
-                 if isinstance(d, dict) and "data" in d),
-                None,
-            )
+            runtime_data = _first_loaded_runtime_data(hass)
+            coord: GlpDataCoordinator | None = runtime_data.data if runtime_data else None
             if coord is None:
                 _LOGGER.error("set_ready_by: no GLP coordinator available")
                 return
@@ -291,6 +313,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         model="Local Profiler",
     )
 
+    entry.runtime_data = GlpRuntimeData(
+        data=coordinator,
+        live=live_coordinator,
+        machine=machine_coordinator,
+        settings=settings_coordinator,
+        parent_device_id=main_device.id,
+    )
+    # TODO(#341 slice 2): remove -- switch/number/select/button/light still
+    # read the plain digest until they move to entry.runtime_data.
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
         "data":     coordinator,
         "live":     live_coordinator,
@@ -341,11 +372,11 @@ def _async_sync_device_metadata(
         registry.async_update_device(device.id, **changes)
 
 
-async def _async_options_updated(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def _async_options_updated(hass: HomeAssistant, entry: GlpConfigEntry) -> None:
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: GlpConfigEntry) -> bool:
     ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if ok:
         hass.data[DOMAIN].pop(entry.entry_id)

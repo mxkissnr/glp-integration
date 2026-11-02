@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -9,7 +9,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
     EntityCategory,
@@ -22,10 +21,15 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
 from .coordinator import GlpDataCoordinator
 from .entity import GlpAdditionalMachineEntity, GlpEntity
 from .machine_coordinator import GlpMachineCoordinator
+
+if TYPE_CHECKING:
+    from . import GlpConfigEntry
+
+# Read-only platform: entities only mirror the coordinator.
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True)
@@ -337,12 +341,12 @@ MACHINE_SENSORS: tuple[GlpMachineSensorDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: GlpConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    coordinator: GlpDataCoordinator         = hass.data[DOMAIN][entry.entry_id]["data"]
-    machine_coordinator: GlpMachineCoordinator = hass.data[DOMAIN][entry.entry_id]["machine"]
-    parent_device_id: str | None            = hass.data[DOMAIN][entry.entry_id].get("parent_device_id")
+    coordinator: GlpDataCoordinator         = entry.runtime_data.data
+    machine_coordinator: GlpMachineCoordinator = entry.runtime_data.machine
+    parent_device_id: str | None            = entry.runtime_data.parent_device_id
     entities: list = [GlpSensor(coordinator, entry, d, parent_device_id=parent_device_id) for d in SENSORS]
     entities += [
         GlpMaintenanceSensor(coordinator, entry, d, parent_device_id=parent_device_id)
@@ -402,7 +406,7 @@ class GlpSensor(GlpEntity[GlpDataCoordinator], SensorEntity):
     def __init__(
         self,
         coordinator: GlpDataCoordinator,
-        entry: ConfigEntry,
+        entry: GlpConfigEntry,
         description: GlpSensorDescription,
         parent_device_id: str | None = None,
     ) -> None:
@@ -463,7 +467,7 @@ class GlpGrinderMaintenanceSensor(GlpEntity[GlpDataCoordinator], SensorEntity):
     def __init__(
         self,
         coordinator: GlpDataCoordinator,
-        entry: ConfigEntry,
+        entry: GlpConfigEntry,
         parent_device_id: str | None = None,
     ) -> None:
         super().__init__(
@@ -488,7 +492,7 @@ class GlpMaintenanceSensor(GlpEntity[GlpDataCoordinator], SensorEntity):
     def __init__(
         self,
         coordinator: GlpDataCoordinator,
-        entry: ConfigEntry,
+        entry: GlpConfigEntry,
         description: GlpMaintenanceSensorDescription,
         parent_device_id: str | None = None,
     ) -> None:
@@ -530,7 +534,7 @@ class GlpMachineSensor(GlpEntity[GlpMachineCoordinator], SensorEntity):
     def __init__(
         self,
         coordinator: GlpMachineCoordinator,
-        entry: ConfigEntry,
+        entry: GlpConfigEntry,
         description: GlpMachineSensorDescription,
     ) -> None:
         super().__init__(coordinator, entry, description.key)
@@ -563,7 +567,7 @@ class GlpAdditionalMachineSensor(GlpAdditionalMachineEntity[GlpDataCoordinator],
     def __init__(
         self,
         coordinator: GlpDataCoordinator,
-        entry: ConfigEntry,
+        entry: GlpConfigEntry,
         machine_id: int,
         machine_name: str,
         parent_device_id: str | None = None,

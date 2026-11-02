@@ -7,24 +7,30 @@ shows up on the device page.
 """
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from homeassistant.components.event import EventEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
 from .coordinator import GlpDataCoordinator
 from .entity import GlpEntity
+
+if TYPE_CHECKING:
+    from . import GlpConfigEntry
+
+# Read-only platform: entities only mirror the coordinator.
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: GlpConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    coordinator: GlpDataCoordinator = hass.data[DOMAIN][entry.entry_id]["data"]
-    parent_device_id: str | None = hass.data[DOMAIN][entry.entry_id].get("parent_device_id")
+    coordinator: GlpDataCoordinator = entry.runtime_data.data
+    parent_device_id: str | None = entry.runtime_data.parent_device_id
     async_add_entities([GlpShotEvent(coordinator, entry, parent_device_id=parent_device_id)])
 
 
@@ -37,7 +43,7 @@ class GlpShotEvent(GlpEntity[GlpDataCoordinator], EventEntity):
     def __init__(
         self,
         coordinator: GlpDataCoordinator,
-        entry: ConfigEntry,
+        entry: GlpConfigEntry,
         parent_device_id: str | None = None,
     ) -> None:
         super().__init__(coordinator, entry, "shot", group="shots", parent_device_id=parent_device_id)
