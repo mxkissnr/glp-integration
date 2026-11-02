@@ -103,7 +103,7 @@ async def test_entities_go_unavailable_after_coordinator_update_failure(hass, ai
         assert state.state != "unavailable", entity_id
 
     for key in ("data", "machine", "settings"):
-        hass.data[DOMAIN][entry.entry_id][key].async_set_update_error(UpdateFailed("unreachable"))
+        getattr(entry.runtime_data, key).async_set_update_error(UpdateFailed("unreachable"))
     await hass.async_block_till_done()
 
     for entity_id in ENTITY_IDS:
@@ -117,7 +117,7 @@ async def test_number_write_uses_freshly_fetched_category(hass, aioclient_mock) 
     must survive the read-modify-write."""
     boiler_holder = {"response": BOILER_SETTINGS}
     entry = await _setup_entry(hass, aioclient_mock, boiler_holder)
-    settings = hass.data[DOMAIN][entry.entry_id]["settings"]
+    settings = entry.runtime_data.settings
     # Simulate a stale poll snapshot: hpwr still 800 in the coordinator data.
     settings.async_set_updated_data({"boiler": dict(BOILER_SETTINGS)})
     # Meanwhile the machine itself now reports hpwr=900.

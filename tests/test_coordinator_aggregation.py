@@ -183,7 +183,7 @@ async def test_shot_completed_event_fires_on_new_last_shot(hass, strict_aioclien
     mock_all_coordinator_endpoints(
         strict_aioclient_mock, URL, shots=[_shot(shot_id=1), _shot(shot_id=2, dose=18, weight=[360])]
     )
-    coordinator = hass.data[DOMAIN][entry.entry_id]["data"]
+    coordinator = entry.runtime_data.data
     await coordinator.async_refresh()
     await hass.async_block_till_done()
 

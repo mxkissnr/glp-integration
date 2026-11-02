@@ -35,13 +35,13 @@ def _entity_id(key: str) -> str:
 
 async def test_coordinator_exposes_machine_reachable_true(hass, strict_aioclient_mock) -> None:
     entry, _ = await _setup_entry(hass, strict_aioclient_mock, {"machineReachable": True})
-    coordinator = hass.data[DOMAIN][entry.entry_id]["data"]
+    coordinator = entry.runtime_data.data
     assert coordinator.data["machine_reachable"] is True
 
 
 async def test_coordinator_exposes_machine_reachable_false(hass, strict_aioclient_mock) -> None:
     entry, _ = await _setup_entry(hass, strict_aioclient_mock, {"machineReachable": False})
-    coordinator = hass.data[DOMAIN][entry.entry_id]["data"]
+    coordinator = entry.runtime_data.data
     assert coordinator.data["machine_reachable"] is False
 
 
@@ -50,7 +50,7 @@ async def test_coordinator_defaults_machine_reachable_false_when_absent(hass, st
     key in /api/status) must not crash setup -- and the affected sensors
     correctly fall back to unavailable rather than assuming reachability."""
     entry, _ = await _setup_entry(hass, strict_aioclient_mock, {})
-    coordinator = hass.data[DOMAIN][entry.entry_id]["data"]
+    coordinator = entry.runtime_data.data
     assert coordinator.data["machine_reachable"] is False
 
 

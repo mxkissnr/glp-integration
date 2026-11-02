@@ -58,7 +58,7 @@ async def test_metadata_updated_on_later_coordinator_refresh(hass, strict_aiocli
     mock_all_coordinator_endpoints(
         strict_aioclient_mock, URL, status={"machineHostname": "gaggia.intern"}, firmware_version=_FW
     )
-    coordinator = hass.data[DOMAIN][entry.entry_id]["data"]
+    coordinator = entry.runtime_data.data
     await coordinator.async_refresh()
     await hass.async_block_till_done()
 
