@@ -10,8 +10,6 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN
-
 _TIMEOUT = aiohttp.ClientTimeout(total=10)
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,12 +52,11 @@ def _rejected(view_name: str, method: str) -> Response:
 
 
 def _coordinator(hass: HomeAssistant):
-    for entry_data in hass.data.get(DOMAIN, {}).values():
-        if isinstance(entry_data, dict):
-            c = entry_data.get("data")
-            if c is not None:
-                return c
-    return None
+    # Imported here: __init__ imports this module at load time.
+    from . import _first_loaded_runtime_data
+
+    runtime_data = _first_loaded_runtime_data(hass)
+    return runtime_data.data if runtime_data is not None else None
 
 
 async def _proxy(request: Request, method: str, addon_path: str) -> Response:

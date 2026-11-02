@@ -75,6 +75,18 @@ async def test_runtime_data_holds_every_coordinator(hass, strict_aioclient_mock)
     assert entry.state is ConfigEntryState.NOT_LOADED
 
 
+async def test_no_per_entry_hass_data_mirror(hass, strict_aioclient_mock) -> None:
+    """Setup no longer publishes the coordinators under `hass.data[DOMAIN]`."""
+    entry = await _setup_entry(hass, strict_aioclient_mock)
+
+    assert entry.entry_id not in hass.data.get(DOMAIN, {})
+    assert entry.runtime_data.data is not None
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+    assert entry.state is ConfigEntryState.NOT_LOADED
+
+
 async def test_main_coordinator_failure_leaves_entry_in_setup_retry(hass, strict_aioclient_mock) -> None:
     """ConfigEntryNotReady from the main coordinator -> HA retries setup."""
     mock_all_coordinator_endpoints(strict_aioclient_mock, URL, statuses={"status": 500})
@@ -101,10 +113,6 @@ async def test_machine_coordinator_failure_does_not_block_setup(hass, strict_aio
 async def test_maintenance_done_service_uses_runtime_data_coordinator(hass, strict_aioclient_mock) -> None:
     entry = await _setup_entry(hass, strict_aioclient_mock)
     strict_aioclient_mock.post(f"{URL}/api/maintenance/descaling/done", json={"ok": True})
-
-    # The entry's own dict is no longer what the service reads: blank it out
-    # and the call must still reach the app through entry.runtime_data.
-    hass.data[DOMAIN][entry.entry_id] = {}
 
     await hass.services.async_call(DOMAIN, "maintenance_done", {"task": "descaling"}, blocking=True)
     await hass.async_block_till_done()
