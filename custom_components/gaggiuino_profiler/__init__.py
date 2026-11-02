@@ -9,7 +9,7 @@ import aiohttp
 import voluptuous as vol
 from homeassistant.components.frontend import add_extra_js_url
 from homeassistant.components.http import StaticPathConfig
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
@@ -50,9 +50,15 @@ GlpConfigEntry = ConfigEntry[GlpRuntimeData]
 
 
 def _first_loaded_runtime_data(hass: HomeAssistant) -> GlpRuntimeData | None:
-    """Runtime data of the first loaded entry, for the domain-wide services."""
-    for loaded in hass.config_entries.async_loaded_entries(DOMAIN):
-        runtime_data = getattr(loaded, "runtime_data", None)
+    """Runtime data of the first loaded entry, for the domain-wide services.
+
+    Not `hass.config_entries.async_loaded_entries()`, which only exists from
+    HA 2024.10 -- hacs.json still allows 2024.7.
+    """
+    for candidate in hass.config_entries.async_entries(DOMAIN):
+        if candidate.state is not ConfigEntryState.LOADED:
+            continue
+        runtime_data = getattr(candidate, "runtime_data", None)
         if isinstance(runtime_data, GlpRuntimeData):
             return runtime_data
     return None
