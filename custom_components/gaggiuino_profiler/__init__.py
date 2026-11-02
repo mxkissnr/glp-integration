@@ -320,16 +320,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: GlpConfigEntry) -> bool:
         settings=settings_coordinator,
         parent_device_id=main_device.id,
     )
-    # TODO(#341 slice 2): remove -- switch/number/select/button/light still
-    # read the plain digest until they move to entry.runtime_data.
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
-        "data":     coordinator,
-        "live":     live_coordinator,
-        "machine":  machine_coordinator,
-        "settings": settings_coordinator,
-        "parent_device_id": main_device.id,
-    }
-
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(_async_options_updated))
 
@@ -377,7 +367,4 @@ async def _async_options_updated(hass: HomeAssistant, entry: GlpConfigEntry) -> 
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: GlpConfigEntry) -> bool:
-    ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
-    return ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

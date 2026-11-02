@@ -5,11 +5,11 @@ GlpOrdersSubView.post/delete are admin-only. The customer-facing paths stay
 open to any authenticated user: the `mine` list and the sub-view GETs, plus
 placing an order via POST on the root.
 """
+from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from custom_components.gaggiuino_profiler.const import DOMAIN
 from custom_components.gaggiuino_profiler.orders_api import (
     GlpOrdersSubView,
     GlpOrdersView,
@@ -199,7 +199,10 @@ async def test_orders_root_get_appends_query_string_exactly_once(monkeypatch) ->
     coordinator.auth.headers = AsyncMock(return_value={})
 
     hass = MagicMock()
-    hass.data = {DOMAIN: {"entry": {"data": coordinator}}}
+    monkeypatch.setattr(
+        "custom_components.gaggiuino_profiler._first_loaded_runtime_data",
+        lambda _hass: SimpleNamespace(data=coordinator),
+    )
 
     session = _FakeSession()
     monkeypatch.setattr(
