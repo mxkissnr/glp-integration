@@ -1,17 +1,24 @@
 """Profile selector for the Gaggiuino machine — replaces ALERTua/hass-gaggiuino."""
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
 from .coordinator import GlpDataCoordinator
 from .entity import GlpEntity
 from .machine_coordinator import GlpMachineCoordinator
 from .settings_coordinator import GlpSettingsCoordinator
+
+if TYPE_CHECKING:
+    from . import GlpConfigEntry
+
+# Every entity in this platform talks to the app, so serialize its updates.
+PARALLEL_UPDATES = 1
 
 # #109: OperationModeDto enum, transcribed from
 # gaggiuino-local-profiler's lib/gaggiuino-proto.js -- the add-on's
@@ -44,12 +51,12 @@ RELEASE_CHANNEL_OPTIONS: list[str] = list(_RELEASE_CHANNEL_BY_NAME)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: GlpConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    coordinator: GlpDataCoordinator            = hass.data[DOMAIN][entry.entry_id]["data"]
-    machine_coordinator: GlpMachineCoordinator = hass.data[DOMAIN][entry.entry_id]["machine"]
-    settings_coordinator: GlpSettingsCoordinator = hass.data[DOMAIN][entry.entry_id]["settings"]
+    coordinator: GlpDataCoordinator            = entry.runtime_data.data
+    machine_coordinator: GlpMachineCoordinator = entry.runtime_data.machine
+    settings_coordinator: GlpSettingsCoordinator = entry.runtime_data.settings
     async_add_entities([
         GlpProfileSelect(coordinator, machine_coordinator, entry),
         GlpOperationModeSelect(machine_coordinator, entry),
