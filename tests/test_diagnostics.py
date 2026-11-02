@@ -25,15 +25,14 @@ ENTRY_ID = "entry-1"
 
 async def _diagnostics(coordinator_data, entry_data=None, options=None):
     """Call the real diagnostics handler with a real config entry."""
-    hass = SimpleNamespace(
-        data={DOMAIN: {ENTRY_ID: {"data": SimpleNamespace(data=coordinator_data)}}}
-    )
+    hass = SimpleNamespace()
     entry = MockConfigEntry(
         domain=DOMAIN,
         entry_id=ENTRY_ID,
         data=entry_data if entry_data is not None else {"url": URL},
         options=options or {},
     )
+    entry.runtime_data = SimpleNamespace(data=SimpleNamespace(data=coordinator_data))
     return await async_get_config_entry_diagnostics(hass, entry)
 
 
