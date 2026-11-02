@@ -39,7 +39,7 @@ async def _setup(hass, aioclient_mock, shots: list):
 async def _poll(hass, aioclient_mock, entry, shots: list) -> None:
     aioclient_mock.clear_requests()
     mock_all_coordinator_endpoints(aioclient_mock, URL, shots=shots)
-    await hass.data[DOMAIN][entry.entry_id]["data"].async_refresh()
+    await entry.runtime_data.data.async_refresh()
     await hass.async_block_till_done()
 
 

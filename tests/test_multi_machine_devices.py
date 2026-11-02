@@ -129,7 +129,7 @@ async def test_new_machine_added_at_runtime_gets_its_entity_without_reload(hass,
     # Simulate the app registering a second machine: next poll returns it.
     strict_aioclient_mock.clear_requests()
     mock_all_coordinator_endpoints(strict_aioclient_mock, url, status={"machines": MACHINES_TWO})
-    coordinator = hass.data[DOMAIN][entry.entry_id]["data"]
+    coordinator = entry.runtime_data.data
     await coordinator.async_refresh()
     await hass.async_block_till_done()
 
