@@ -44,7 +44,7 @@ async def _setup_entry(hass, strict_aioclient_mock, status_json: dict):
 
 async def test_coordinator_exposes_machines_array(hass, strict_aioclient_mock) -> None:
     entry, url = await _setup_entry(hass, strict_aioclient_mock, {"machines": MACHINES_PAYLOAD})
-    coordinator = hass.data[DOMAIN][entry.entry_id]["data"]
+    coordinator = entry.runtime_data.data
     assert coordinator.data["machines"] == MACHINES_PAYLOAD
 
 
@@ -52,7 +52,7 @@ async def test_coordinator_defaults_to_empty_machines_list_when_absent(hass, str
     """Backward compat: an app instance running an app version older than
     GLP #317 (no "machines" key in /api/status at all) must not break setup."""
     entry, url = await _setup_entry(hass, strict_aioclient_mock, {})
-    coordinator = hass.data[DOMAIN][entry.entry_id]["data"]
+    coordinator = entry.runtime_data.data
     assert coordinator.data["machines"] == []
 
 

@@ -3,7 +3,7 @@
 ## [Unreleased]
 
 ### Changed
-- **The control entities (switch, number, select, button and light) now read their data straight from the integration's config entry, and they send their commands to the app one at a time, so rapid changes no longer queue up against each other.** Refs #341
+- **Commands from the control entities (switch, number, select, button and light) now reach the app one at a time instead of in parallel, and the integration stores its data the way current Home Assistant versions expect.** Refs #341
 
 ## [1.35.0] – 2026-11-01
 ### Added
