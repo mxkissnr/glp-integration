@@ -1,6 +1,8 @@
 # Changelog
 
 ## [Unreleased]
+### Changed
+- **The coordinators now live on the config entry itself, and the read-only platforms (sensor, binary sensor, event, update) declare how many of their entities may update at the same time, as the Home Assistant integration quality scale asks; entity IDs, services and setup behaviour stay unchanged, and setup still retries when the app is unreachable.** Part of #341
 
 ## [1.35.0] – 2026-11-01
 ### Added
