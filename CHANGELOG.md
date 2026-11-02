@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+### Changed
+- **The control entities (switch, number, select, button and light) now read their data straight from the integration's config entry, and they send their commands to the app one at a time, so rapid changes no longer queue up against each other.** Refs #341
+
 ## [1.35.0] – 2026-11-01
 ### Added
 - **Every finished shot now also fires the event entity `event.gaggiuino_local_profiler_shot` on the Shots device, with the shot data as attributes, so an automation can trigger on it like on any other state; the existing `gaggiuino_profiler_shot_completed` bus event stays unchanged.** Refs #340

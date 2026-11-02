@@ -7,6 +7,7 @@ for the same note on the write semantics.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from typing import TYPE_CHECKING
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -14,9 +15,14 @@ from homeassistant.const import EntityCategory, UnitOfTemperature, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
 from .entity import GlpEntity
 from .settings_coordinator import GlpSettingsCoordinator
+
+if TYPE_CHECKING:
+    from . import GlpConfigEntry
+
+# Every entity in this platform talks to the app, so serialize its updates.
+PARALLEL_UPDATES = 1
 
 
 @dataclass(frozen=True)
@@ -152,10 +158,10 @@ NUMBERS: tuple[GlpNumberDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: GlpConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    settings_coordinator: GlpSettingsCoordinator = hass.data[DOMAIN][entry.entry_id]["settings"]
+    settings_coordinator: GlpSettingsCoordinator = entry.runtime_data.settings
     async_add_entities([GlpMachineNumber(settings_coordinator, entry, d) for d in NUMBERS])
 
 

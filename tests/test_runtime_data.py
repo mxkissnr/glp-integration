@@ -1,13 +1,21 @@
-"""Tests for storing the coordinators on the config entry (#341, part 1).
+"""Tests for storing the coordinators on the config entry (#341, parts 1-2).
 
 `async_setup_entry` used to publish the coordinators only through
 `hass.data[DOMAIN][entry_id]`; they now live on `entry.runtime_data` as a
-`GlpRuntimeData` instance, which is what the read-only platforms and the
-domain services read. The same tests pin the not-ready behaviour: a failing
-main coordinator must leave the entry in SETUP_RETRY (HA retries) while the
+`GlpRuntimeData` instance, which is what every platform and the domain
+services read. The same tests pin the not-ready behaviour: a failing main
+coordinator must leave the entry in SETUP_RETRY (HA retries) while the
 deliberately best-effort machine coordinator must not block setup.
+
+Part 2 moves the writable platforms (switch/number/select/button/light) onto
+`entry.runtime_data` and sets PARALLEL_UPDATES = 1 there, since those
+entities call the app.
 """
+import importlib
+
+import pytest
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.helpers import entity_registry as er
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.gaggiuino_profiler import GlpRuntimeData
@@ -20,9 +28,30 @@ from tests.common import mock_all_coordinator_endpoints
 
 URL = "http://glp.example.com"
 
+WRITABLE_PLATFORMS = ("switch", "number", "select", "button", "light")
+
+# Enough payload for every writable platform to add an entity that reports
+# available: the settings-backed ones need a non-empty category, the profile
+# select needs a non-empty option list.
+SETTINGS_PAYLOAD = {
+    "boiler": {"steamSetPoint": 145, "brewDeltaState": "true"},
+    "display": {"lcdDarkMode": "false"},
+    "led": {"state": "true", "color": {"R": 10, "G": 20, "B": 30}},
+    "scales": {"forcePredictive": "true", "hwScalesEnabled": "true", "btScalesEnabled": "false"},
+    "system": {"releaseChannel": 1},
+}
+
 
 async def _setup_entry(hass, aioclient_mock, *, statuses=None):
-    mock_all_coordinator_endpoints(aioclient_mock, URL, statuses=statuses)
+    mock_all_coordinator_endpoints(
+        aioclient_mock,
+        URL,
+        statuses=statuses,
+        settings=SETTINGS_PAYLOAD,
+        profiles={"options": ["Adaptive", "Default"], "current": "Adaptive"},
+        machine_status={"available": True, "profileName": "Adaptive"},
+        machine_live={"sensorSnap": None, "sysState": {"operationMode": 4}},
+    )
     entry = MockConfigEntry(domain=DOMAIN, data={"url": URL})
     entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(entry.entry_id)
@@ -83,6 +112,33 @@ async def test_maintenance_done_service_uses_runtime_data_coordinator(hass, stri
     posts = [c for c in strict_aioclient_mock.mock_calls if c[0].lower() == "post"]
     assert len(posts) == 1
     assert str(posts[0][1]) == f"{URL}/api/maintenance/descaling/done"
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+@pytest.mark.parametrize("platform", WRITABLE_PLATFORMS)
+def test_writable_platform_serializes_updates(platform) -> None:
+    """Those entities call the app, so HA must not run their updates in parallel."""
+    module = importlib.import_module(f"custom_components.gaggiuino_profiler.{platform}")
+    assert module.PARALLEL_UPDATES == 1
+
+
+@pytest.mark.parametrize("platform", WRITABLE_PLATFORMS)
+async def test_writable_platform_entities_are_set_up(hass, strict_aioclient_mock, platform) -> None:
+    """Every writable platform reads `entry.runtime_data` and adds its entities."""
+    entry = await _setup_entry(hass, strict_aioclient_mock)
+
+    entity_ids = [
+        entity.entity_id
+        for entity in er.async_get(hass).entities.values()
+        if entity.config_entry_id == entry.entry_id and entity.domain == platform
+    ]
+    assert entity_ids, f"no {platform} entity was added"
+    for entity_id in entity_ids:
+        state = hass.states.get(entity_id)
+        assert state is not None, entity_id
+        assert state.state != "unavailable", entity_id
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()

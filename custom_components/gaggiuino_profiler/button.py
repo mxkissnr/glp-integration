@@ -8,15 +8,21 @@ resolved.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
 from .coordinator import GlpDataCoordinator
 from .entity import GlpEntity
+
+if TYPE_CHECKING:
+    from . import GlpConfigEntry
+
+# Every entity in this platform talks to the app, so serialize its updates.
+PARALLEL_UPDATES = 1
 
 
 @dataclass(frozen=True)
@@ -45,10 +51,10 @@ BUTTONS: tuple[GlpButtonDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: GlpConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    coordinator: GlpDataCoordinator = hass.data[DOMAIN][entry.entry_id]["data"]
+    coordinator: GlpDataCoordinator = entry.runtime_data.data
     async_add_entities([GlpMachineButton(coordinator, entry, d) for d in BUTTONS])
 
 
