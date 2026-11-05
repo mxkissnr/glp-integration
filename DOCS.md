@@ -51,7 +51,7 @@ On older Home Assistant versions the beta builds are still offered by HACS under
 
 The integration tests the connection right away during setup.
 
-On Home Assistant OS with the GLP app installed, Home Assistant also offers the integration by itself: once the app supports it, its announcement shows up under *Discovered* and one confirmation adds the integration with the address the app reported. Manual setup is unchanged and still works the same way.
+On Home Assistant OS with the GLP app installed, Home Assistant also offers the integration by itself: once the app supports it, its announcement shows up under *Discovered* and one confirmation adds the integration with the address the app reported. Manual setup is unchanged and still works the same way. An app that is already set up is recognised by its install id, whichever address the entry uses, and is not offered again. A second app with its own database is offered separately.
 
 ## Shot Card
 
