@@ -10,7 +10,7 @@
       },
       "hassio_confirm": {
         "title": "Gaggiuino Local Profiler found",
-        "description": "The Gaggiuino Local Profiler app was found at {name}. Add the integration for this address?"
+        "description": "The app {name} was found at {address}. Add the integration for this address?"
       }
     },
     "error": {
