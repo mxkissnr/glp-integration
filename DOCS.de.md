@@ -5,7 +5,7 @@ Bindet den [Gaggiuino Local Profiler](https://github.com/mxkissnr/gaggiuino-loca
 ## Voraussetzungen
 
 - [Gaggiuino Local Profiler App](https://github.com/mxkissnr/gaggiuino-local-profiler) installiert und gestartet
-- Home Assistant 2024.7.0 oder neuer
+- Home Assistant 2026.8.0 oder neuer
 
 ## Installation
 
@@ -51,7 +51,7 @@ Auf älteren Home Assistant-Versionen bietet HACS die Beta-Versionen weiterhin �
 
 Die Integration testet die Verbindung direkt beim Einrichten.
 
-Auf Home Assistant OS mit installierter GLP-App bietet Home Assistant die Integration außerdem von selbst an: Sobald die App das unterstützt, erscheint ihre Meldung unter *Entdeckt*, und eine Bestätigung fügt die Integration mit der von der App gemeldeten Adresse hinzu. Die manuelle Einrichtung bleibt unverändert und funktioniert wie bisher. Eine bereits eingerichtete App wird an ihrer Installations-ID erkannt, egal unter welcher Adresse der Eintrag sie anspricht, und nicht erneut angeboten. Eine zweite App mit eigener Datenbank wird separat angeboten.
+Auf Home Assistant OS mit installierter GLP-App bietet Home Assistant die Integration außerdem von selbst an: Sobald die App das unterstützt, erscheint ihre Meldung unter *Entdeckt*, und eine Bestätigung fügt die Integration mit der von der App gemeldeten Adresse hinzu. Die manuelle Einrichtung bleibt unverändert und funktioniert wie bisher. Eine bereits eingerichtete App wird an ihrer Installations-ID erkannt, egal unter welcher Adresse der Eintrag sie anspricht, und nicht erneut angeboten. Eine zweite App mit eigener Datenbank wird separat angeboten. Die Karte und der neue Eintrag tragen den Namen der App, die Bestätigung zeigt zusätzlich ihre Adresse.
 
 ## Shot Card
 

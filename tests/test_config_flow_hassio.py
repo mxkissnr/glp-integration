@@ -11,6 +11,8 @@ Since #363 an already configured app is also recognised under another address
 /api/status carries; only a live entry's own id may abort, and the stored id
 may move an unreachable entry to the discovered address.
 """
+import json
+from pathlib import Path
 from urllib.parse import urlparse
 
 import pytest
@@ -18,6 +20,7 @@ from homeassistant.config_entries import SOURCE_HASSIO, ConfigEntryState
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
+from custom_components.gaggiuino_profiler.config_flow import GlpConfigFlow, _app_name
 from custom_components.gaggiuino_profiler.const import DOMAIN
 from custom_components.gaggiuino_profiler.diagnostics import TO_REDACT
 from tests.common import mock_all_coordinator_endpoints
@@ -30,6 +33,10 @@ PROD_ID = "11111111-1111-4111-8111-111111111111"
 DEV_ID = "22222222-2222-4222-8222-222222222222"
 LOCAL_URL = "http://localhost:8099"
 IP_URL = "http://192.0.2.10:8099"
+STABLE_NAME = "GLP — Gaggiuino Local Profiler"
+DEV_NAME = "GLP DEV — Gaggiuino Local Profiler (unstable)"
+ANNOUNCED_DEV_HOST = "5822a3e5-gaggiuino-local-profiler-dev"
+COMPONENT_DIR = Path(__file__).resolve().parent.parent / "custom_components" / "gaggiuino_profiler"
 
 
 def _host_of(call) -> str | None:
@@ -42,20 +49,20 @@ def _headers_of(call) -> dict:
     return call[3] or {}
 
 
-def _discovery(config: dict, uuid: str = "abc123") -> HassioServiceInfo:
+def _discovery(config: dict, uuid: str = "abc123", name: str = STABLE_NAME) -> HassioServiceInfo:
     return HassioServiceInfo(
         config=config,
-        name="GLP — Gaggiuino Local Profiler",
+        name=name,
         slug="5611d8a7_gaggiuino_local_profiler",
         uuid=uuid,
     )
 
 
-async def _start(hass, config: dict):
+async def _start(hass, config: dict, name: str = STABLE_NAME):
     return await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_HASSIO},
-        data=_discovery(config),
+        data=_discovery(config, name=name),
     )
 
 
@@ -464,3 +471,113 @@ async def test_setup_keeps_the_stored_install_id_when_status_has_none(
 
 def test_install_id_is_redacted_in_diagnostics() -> None:
     assert "install_id" in TO_REDACT
+
+
+@pytest.mark.parametrize("language", ["de", "en", "es", "fr", "it", "nl"])
+def test_confirm_text_has_the_name_and_the_address(language) -> None:
+    translations = json.loads((COMPONENT_DIR / "translations" / f"{language}.json").read_text(encoding="utf-8"))
+    description = translations["config"]["step"]["hassio_confirm"]["description"]
+    assert "{name}" in description
+    assert "{address}" in description
+    # An apostrophe directly before a placeholder quotes it in ICU MessageFormat.
+    assert "'{" not in description
+
+
+@pytest.mark.parametrize(("name", "host"), [(STABLE_NAME, HOST), (DEV_NAME, ANNOUNCED_DEV_HOST)])
+async def test_card_dialog_and_entry_use_the_app_name(hass, aioclient_mock, name, host) -> None:
+    url = f"http://{host}:8099"
+    mock_all_coordinator_endpoints(aioclient_mock, url)
+
+    result = await _start(hass, {"host": host, "port": 8099}, name=name)
+
+    assert result["description_placeholders"] == {"name": name, "address": f"{host}:8099"}
+    context = hass.config_entries.flow.async_get(result["flow_id"])["context"]
+    assert context["title_placeholders"] == {"name": name}
+
+    created = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    await hass.async_block_till_done()
+
+    assert created["type"] == "create_entry"
+    assert created["title"] == name
+    assert created["result"].title == name
+    assert created["data"] == {"url": url}
+
+
+@pytest.mark.parametrize("name", ["", "   ", "\n\t", "\u202e", "<>[]`"])
+async def test_empty_name_falls_back_to_glp(hass, aioclient_mock, name) -> None:
+    mock_all_coordinator_endpoints(aioclient_mock, URL)
+
+    result = await _start(hass, {"host": HOST, "port": 8099}, name=name)
+
+    assert result["description_placeholders"] == {"name": "GLP", "address": f"{HOST}:8099"}
+    context = hass.config_entries.flow.async_get(result["flow_id"])["context"]
+    assert context["title_placeholders"] == {"name": "GLP"}
+
+    created = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    await hass.async_block_till_done()
+
+    assert created["title"] == "GLP"
+
+
+@pytest.mark.parametrize(
+    ("announced", "expected"),
+    [
+        (STABLE_NAME, STABLE_NAME),
+        (DEV_NAME, DEV_NAME),
+        ("  GLP \n  two ", "GLP two"),
+        ("GLP\n[click](http://evil.example)", "GLP click (http://evil.example)"),
+        ("<img src=x>", "img src=x"),
+        ("`code`", "code"),
+        ("A\u202eB", "A B"),
+        ("x" * 200, "x" * 64),
+        ("x" * 63 + " y", "x" * 63),
+        (None, "GLP"),
+    ],
+)
+def test_announced_name_is_treated_as_untrusted_text(announced, expected) -> None:
+    assert _app_name(announced) == expected
+
+
+@pytest.mark.parametrize(
+    ("context_name", "expected"), [(DEV_NAME, DEV_NAME), (None, "GLP")]
+)
+async def test_confirm_works_from_the_context_alone(hass, context_name, expected) -> None:
+    """A restored flow is a new handler with only the stored context. None is
+    a context written before the name was stored."""
+    flow = GlpConfigFlow()
+    flow.hass = hass
+    flow.handler = DOMAIN
+    flow.flow_id = "restored"
+    flow.context = {"source": SOURCE_HASSIO, "glp_discovered_url": DEV_URL}
+    if context_name is not None:
+        flow.context["glp_discovered_name"] = context_name
+
+    shown = await flow.async_step_hassio_confirm()
+
+    assert shown["type"] == "form"
+    assert shown["description_placeholders"] == {"name": expected, "address": f"{DEV_HOST}:8099"}
+
+    created = await flow.async_step_hassio_confirm({})
+
+    assert created["type"] == "create_entry"
+    assert created["title"] == expected
+    assert created["data"] == {"url": DEV_URL}
+
+
+async def test_moving_an_entry_keeps_its_title(hass, aioclient_mock) -> None:
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="GLP (localhost:8099)",
+        data={"url": LOCAL_URL, "install_id": PROD_ID},
+        unique_id=LOCAL_URL,
+    )
+    entry.add_to_hass(hass)
+    aioclient_mock.get(f"{LOCAL_URL}/api/status", status=500)
+    aioclient_mock.get(f"{URL}/api/status", json={"installId": PROD_ID})
+
+    result = await _start(hass, {"host": HOST, "port": 8099})
+    await hass.async_block_till_done()
+
+    assert result["reason"] == "already_configured"
+    assert entry.data["url"] == URL
+    assert entry.title == "GLP (localhost:8099)"

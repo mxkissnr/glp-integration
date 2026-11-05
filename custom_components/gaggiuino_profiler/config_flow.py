@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import re
+import unicodedata
 from urllib.parse import urlparse
 
 import aiohttp
@@ -231,6 +232,29 @@ def _parse_discovery_info(
     return host.strip(), port
 
 
+_DEFAULT_APP_NAME = "GLP"
+_MAX_APP_NAME_LEN = 64
+# The confirm dialog is rendered as Markdown, so an announced name must not
+# bring HTML, a link, an image or a code span along.
+_APP_NAME_MARKUP = frozenset("<>[]`")
+
+
+def _app_name(value: object) -> str:
+    """The name to display for an announced app name, which is untrusted text.
+
+    Control and format characters and Markdown markup become spaces, runs of
+    whitespace collapse, and the result is cut to a bounded length. Anything
+    that leaves nothing falls back to `GLP`.
+    """
+    if not isinstance(value, str):
+        return _DEFAULT_APP_NAME
+    cleaned = "".join(
+        " " if ch in _APP_NAME_MARKUP or unicodedata.category(ch).startswith("C") else ch
+        for ch in value
+    )
+    return " ".join(cleaned.split())[:_MAX_APP_NAME_LEN].rstrip() or _DEFAULT_APP_NAME
+
+
 def _entry_url(entry: ConfigEntry) -> str:
     """The URL an entry actually connects to (options override data, see
     async_setup_entry)."""
@@ -377,8 +401,10 @@ class GlpConfigFlow(ConfigFlow, domain=DOMAIN):
 
         # Kept in the flow context (not an attribute) so a discovery flow that
         # Home Assistant restores after a restart can still finish the confirm.
+        name = _app_name(discovery_info.name)
         self.context["glp_discovered_url"] = url
-        self.context["title_placeholders"] = {"name": f"GLP ({host}:{port})"}
+        self.context["glp_discovered_name"] = name
+        self.context["title_placeholders"] = {"name": name}
         return await self.async_step_hassio_confirm()
 
     async def async_step_hassio_confirm(
@@ -386,12 +412,13 @@ class GlpConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Confirm the discovered address before creating the entry."""
         url = self.context["glp_discovered_url"]
+        name = _app_name(self.context.get("glp_discovered_name"))
         if user_input is not None:
-            return self.async_create_entry(
-                title=f"GLP ({url.removeprefix('http://')})",
-                data={"url": url},
-            )
-        return self.async_show_form(step_id="hassio_confirm")
+            return self.async_create_entry(title=name, data={"url": url})
+        return self.async_show_form(
+            step_id="hassio_confirm",
+            description_placeholders={"name": name, "address": url.removeprefix("http://")},
+        )
 
     @staticmethod
     @callback
