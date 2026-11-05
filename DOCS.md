@@ -5,7 +5,7 @@ Integrates the [Gaggiuino Local Profiler](https://github.com/mxkissnr/gaggiuino-
 ## Requirements
 
 - [Gaggiuino Local Profiler App](https://github.com/mxkissnr/gaggiuino-local-profiler) installed and running
-- Home Assistant 2024.7.0 or newer
+- Home Assistant 2026.8.0 or newer
 
 ## Installation
 

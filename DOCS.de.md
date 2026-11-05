@@ -5,7 +5,7 @@ Bindet den [Gaggiuino Local Profiler](https://github.com/mxkissnr/gaggiuino-loca
 ## Voraussetzungen
 
 - [Gaggiuino Local Profiler App](https://github.com/mxkissnr/gaggiuino-local-profiler) installiert und gestartet
-- Home Assistant 2024.7.0 oder neuer
+- Home Assistant 2026.8.0 oder neuer
 
 ## Installation
 
