@@ -317,7 +317,6 @@ async def test_live_entry_wins_over_a_dead_duplicate_with_a_stored_id(
 
 
 @pytest.mark.parametrize("bad_id", [123, "", "{}", "not-a-uuid"])
-
 async def test_malformed_discovered_id_skips_the_id_comparison(
     hass, aioclient_mock, bad_id
 ) -> None:
@@ -357,7 +356,9 @@ async def test_non_json_status_body_aborts_cannot_connect(hass, aioclient_mock) 
 async def test_discovery_probes_send_no_token(hass, aioclient_mock) -> None:
     """The announced host is untrusted, so the probes must not carry the
     token that belongs to the configured app."""
-    mock_all_coordinator_endpoints(aioclient_mock, LOCAL_URL, token={"apiToken": "old-token"})
+    mock_all_coordinator_endpoints(
+        aioclient_mock, LOCAL_URL, status={"installId": PROD_ID}, token={"apiToken": "old-token"}
+    )
     entry = MockConfigEntry(domain=DOMAIN, data={"url": LOCAL_URL}, unique_id=LOCAL_URL)
     entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(entry.entry_id)
