@@ -373,17 +373,19 @@ async def test_discovery_probes_send_no_token(hass, aioclient_mock) -> None:
 
     assert result["type"] == "form"
     calls = aioclient_mock.mock_calls[start:]
-    assert [call for call in calls if _host_of(call) == DEV_HOST], "discovery made no probe"
-    for call in calls:
-        if _host_of(call) == DEV_HOST:
-            assert "X-GLP-Token" not in _headers_of(call)
+    probes = [call for call in calls if _host_of(call) == DEV_HOST]
+    assert probes, "discovery made no probe against the announced host"
+    for call in probes:
+        assert "X-GLP-Token" not in _headers_of(call)
     assert not any(str(call[1]).endswith("/api/token") for call in calls)
 
 
 async def test_move_refetches_the_token_from_the_new_host(hass, aioclient_mock) -> None:
     """After the move the entry reloads with a fresh GlpAuth, so the token the
     old host issued never reaches the new one."""
-    mock_all_coordinator_endpoints(aioclient_mock, LOCAL_URL, token={"apiToken": "old-token"})
+    mock_all_coordinator_endpoints(
+        aioclient_mock, LOCAL_URL, status={"installId": PROD_ID}, token={"apiToken": "old-token"}
+    )
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={"url": LOCAL_URL, "install_id": PROD_ID},
