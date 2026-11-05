@@ -20,7 +20,7 @@ from homeassistant.util import dt as dt_util
 
 from .auth import GlpAuth
 from .const import CONF_SCAN_INTERVAL, DOMAIN, SCAN_INTERVAL_SECONDS
-from .coordinator import GlpDataCoordinator
+from .coordinator import CONF_INSTALL_ID, GlpDataCoordinator
 from .live_coordinator import GlpLiveCoordinator
 from .machine_coordinator import GlpMachineCoordinator
 from .orders_api import GlpBeansInfoView, GlpOrdersSubView, GlpOrdersView, GlpShotsSubView
@@ -275,6 +275,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: GlpConfigEntry) -> bool:
     auth             = GlpAuth(session, url)
     coordinator      = GlpDataCoordinator(hass, session, url, scan_interval, auth)
     await coordinator.async_config_entry_first_refresh()
+    # #363: lets a later discovery recognise this app under another address.
+    # Written before the update listener below is added, so it causes no reload.
+    install_id = coordinator.data.get("install_id")
+    if install_id and entry.data.get(CONF_INSTALL_ID) != install_id:
+        hass.config_entries.async_update_entry(
+            entry, data={**entry.data, CONF_INSTALL_ID: install_id}
+        )
     live_coordinator = GlpLiveCoordinator(hass, session, url, auth)
     await live_coordinator.async_config_entry_first_refresh()
     # #708/#736: SSE push (GET /api/events) is the primary path for live data,

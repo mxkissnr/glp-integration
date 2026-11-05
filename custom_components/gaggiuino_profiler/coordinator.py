@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import re
 from datetime import UTC, datetime, timedelta
 
 import aiohttp
@@ -48,6 +49,18 @@ def _parse_ts(value: object) -> datetime | None:
         return dt
     except Exception:
         return None
+
+
+CONF_INSTALL_ID = "install_id"
+
+_INSTALL_ID_RE = re.compile(r"[0-9a-fA-F]{8}(?:-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}")
+
+
+def install_id_from_status(status: dict) -> str | None:
+    """The app's install id from a GET /api/status body, or None when it is
+    missing or not UUID-shaped (older app, malformed value, spoofed host)."""
+    value = status.get("installId")
+    return value if isinstance(value, str) and _INSTALL_ID_RE.fullmatch(value) else None
 
 
 class GlpDataCoordinator(DataUpdateCoordinator):
@@ -259,6 +272,7 @@ class GlpDataCoordinator(DataUpdateCoordinator):
             "last_shot_dose":      _num(dose, float) if dose else None,
             "last_sync":           _parse_ts(status.get("lastSync")),
             "machine_url":         status.get("machineHostname"),
+            "install_id":          install_id_from_status(status),
             # Multi-machine registry (#47, mirrors the app's additive
             # GET /api/status "machines" array added in GLP #317). Every
             # other field in `data` still describes only the default
