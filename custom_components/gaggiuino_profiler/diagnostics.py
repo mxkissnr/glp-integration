@@ -20,6 +20,7 @@ if TYPE_CHECKING:
 TO_REDACT = {
     "url",  # config entry URL and its options override
     "machine_url",  # bare machine hostname from /api/status
+    "install_id",  # identifies the install; readable without a token, so never paste it
     "machines",  # registry: each machine's name, type and reachability
     "switch_entity",  # HA entity id of the machine's power switch
     "last_shot_coffee",  # free-text bean name from the shot annotation

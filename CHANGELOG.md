@@ -5,6 +5,9 @@
 ### Changed
 - **Commands from the control entities (switch, number, select, button and light) now reach the app one at a time instead of in parallel, and the integration stores its data the way current Home Assistant versions expect.** Refs #341
 
+### Fixed
+- **Home Assistant no longer offers the GLP app as newly discovered when it is set up under another address, such as `http://localhost:8099` or an IP address; a second app with its own database is still offered.** Refs #363
+
 ## [1.35.0] – 2026-11-01
 ### Added
 - **Every finished shot now also fires the event entity `event.gaggiuino_local_profiler_shot` on the Shots device, with the shot data as attributes, so an automation can trigger on it like on any other state; the existing `gaggiuino_profiler_shot_completed` bus event stays unchanged.** Refs #340
