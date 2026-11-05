@@ -208,7 +208,9 @@ async def test_a_different_install_id_is_offered_as_a_second_app(
     database, so it is offered separately (and stores its own id)."""
     entry = MockConfigEntry(domain=DOMAIN, data={"url": LOCAL_URL}, unique_id=LOCAL_URL)
     entry.add_to_hass(hass)
-    aioclient_mock.get(f"{LOCAL_URL}/api/status", json={"installId": PROD_ID})
+    # Both entries get set up once the domain loads, so both need their
+    # coordinator endpoints -- the mock guard fails on any unmocked URL.
+    mock_all_coordinator_endpoints(aioclient_mock, LOCAL_URL, status={"installId": PROD_ID})
     mock_all_coordinator_endpoints(aioclient_mock, DEV_URL, status={"installId": DEV_ID})
 
     result = await _start(hass, {"host": DEV_HOST, "port": 8099})
@@ -224,7 +226,9 @@ async def test_a_different_install_id_is_offered_as_a_second_app(
     new_entry = next(e for e in entries if e.entry_id != entry.entry_id)
     assert new_entry.data["url"] == DEV_URL
     assert new_entry.data["install_id"] == DEV_ID
-    assert entry.data == {"url": LOCAL_URL}
+    # The first app kept its own address and id.
+    assert entry.data["url"] == LOCAL_URL
+    assert entry.data["install_id"] == PROD_ID
     assert entry.unique_id == LOCAL_URL
 
 
