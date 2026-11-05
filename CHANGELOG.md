@@ -9,6 +9,7 @@
 - **Home Assistant no longer offers the GLP app as newly discovered when it is set up under another address, such as `http://localhost:8099` or an IP address; a second app with its own database is still offered.** Refs #363
 - **The confirmation for a discovered GLP app now names the app and its address separately, in all six languages.** Refs #365
 - **The integration now requires Home Assistant 2026.8.0 or newer, because it relies on features that older versions do not have.** Refs #364
+- **A discovered GLP app and the entry it creates now show the app's own name instead of its internal hostname, so the stable and the dev app are easy to tell apart; existing entries keep their titles.** Refs #365
 
 ## [1.35.0] – 2026-11-01
 ### Added
