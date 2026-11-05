@@ -11,6 +11,8 @@ Since #363 an already configured app is also recognised under another address
 /api/status carries; only a live entry's own id may abort, and the stored id
 may move an unreachable entry to the discovered address.
 """
+import json
+from pathlib import Path
 from urllib.parse import urlparse
 
 import pytest
@@ -30,6 +32,7 @@ PROD_ID = "11111111-1111-4111-8111-111111111111"
 DEV_ID = "22222222-2222-4222-8222-222222222222"
 LOCAL_URL = "http://localhost:8099"
 IP_URL = "http://192.0.2.10:8099"
+COMPONENT_DIR = Path(__file__).resolve().parent.parent / "custom_components" / "gaggiuino_profiler"
 
 
 def _host_of(call) -> str | None:
@@ -464,3 +467,13 @@ async def test_setup_keeps_the_stored_install_id_when_status_has_none(
 
 def test_install_id_is_redacted_in_diagnostics() -> None:
     assert "install_id" in TO_REDACT
+
+
+@pytest.mark.parametrize("language", ["de", "en", "es", "fr", "it", "nl"])
+def test_confirm_text_has_the_name_and_the_address(language) -> None:
+    translations = json.loads((COMPONENT_DIR / "translations" / f"{language}.json").read_text(encoding="utf-8"))
+    description = translations["config"]["step"]["hassio_confirm"]["description"]
+    assert "{name}" in description
+    assert "{address}" in description
+    # An apostrophe directly before a placeholder quotes it in ICU MessageFormat.
+    assert "'{" not in description
