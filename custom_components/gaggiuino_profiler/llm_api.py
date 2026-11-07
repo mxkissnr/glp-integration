@@ -108,7 +108,7 @@ class GlpLastShotTool(GlpTool):
         data = runtime.data.data
         shot_id = data.get("last_shot_id")
         if shot_id is None:
-            return {"message": "No shot has been recorded yet.", "machine": _default_machine_name(data)}
+            return {"message": "No shot has been recorded yet."}
 
         recent = data.get("recent_shots") or []
         newest = recent[0] if recent else None

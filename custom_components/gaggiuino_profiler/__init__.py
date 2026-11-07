@@ -330,8 +330,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: GlpConfigEntry) -> bool:
     )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(_async_options_updated))
-    # #343: read-only Assist tools for this entry, registered only now that
-    # runtime_data holds the coordinators.
+    # #343: read-only Assist tools, registered only now that runtime_data is set.
     entry.async_on_unload(async_register_llm_api(hass, entry))
 
     # #191: keep the default-machine device's "Visit" link pointed at the
