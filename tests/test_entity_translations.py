@@ -34,6 +34,7 @@ from custom_components.gaggiuino_profiler.button import BUTTONS
 from custom_components.gaggiuino_profiler.const import DOMAIN
 from custom_components.gaggiuino_profiler.entity import DEVICE_GROUP_KEYS, GlpEntity
 from custom_components.gaggiuino_profiler.event import GlpShotEvent
+from custom_components.gaggiuino_profiler.image import GlpLastShotChartImage
 from custom_components.gaggiuino_profiler.light import GlpLedLight
 from custom_components.gaggiuino_profiler.number import NUMBERS
 from custom_components.gaggiuino_profiler.select import (
@@ -96,6 +97,7 @@ CLASS_PLATFORMS = {
                (GlpMachineFirmwareUpdate, "firmware_update")),
     "light": ((GlpLedLight, "led"),),
     "event": ((GlpShotEvent, "shot"),),
+    "image": ((GlpLastShotChartImage, "last_shot_chart"),),
 }
 
 # Entities that sit on a child device of the GLP device, so HA shows
@@ -106,6 +108,7 @@ CHILD_DEVICE_KEYS = {
                "maint_grinders": "maintenance"},
     "binary_sensor": {"preheat_ready": "preheat"},
     "event": {"shot": "shots"},
+    "image": {"last_shot_chart": "shots"},
 }
 
 
@@ -383,6 +386,7 @@ async def test_german_control_and_event_entity_ids_stay_the_same(hass, strict_ai
     registry = er.async_get(hass)
     expected = {
         ("event", "shot"): "event.gaggiuino_local_profiler_shot",
+        ("image", "last_shot_chart"): "image.gaggiuino_local_profiler_last_shot_chart",
         ("switch", "brew_delta_state"): "switch.gaggiuino_local_profiler_brew_delta_state",
         ("switch", "bt_scales_enabled"): "switch.gaggiuino_local_profiler_bt_scales_enabled",
         ("number", "steam_set_point"): "number.gaggiuino_local_profiler_steam_set_point",
