@@ -402,12 +402,16 @@ def _async_remove_stale_machine_devices(
         return
 
     registry = dr.async_get(hass)
-    devices = list(dr.async_entries_for_config_entry(registry, entry.entry_id))
+    devices = {
+        device.id: device
+        for device in dr.async_entries_for_config_entry(registry, entry.entry_id)
+    }
     async_child_entries = getattr(dr, "async_child_entries_for_config_entry", None)
     if async_child_entries is not None:  # HA Core >= 2026.9
-        devices.extend(async_child_entries(registry, entry.entry_id))
+        for device in async_child_entries(registry, entry.entry_id):
+            devices[device.id] = device
 
-    for device in devices:
+    for device in list(devices.values()):
         machine_id = _additional_machine_id(entry, device)
         if machine_id is None or machine_id in listed:
             continue
