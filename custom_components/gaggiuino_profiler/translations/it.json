@@ -304,5 +304,25 @@
     "preheat": {
       "name": "Preriscaldamento"
     }
+  },
+  "exceptions": {
+    "invalid_maintenance_task": {
+      "message": "Attività di manutenzione sconosciuta: {task}"
+    },
+    "ready_by_rejected": {
+      "message": "L'app GLP ha rifiutato l'orario in cui la macchina deve essere pronta: {reason}"
+    },
+    "ready_by_rejected_no_reason": {
+      "message": "L'app GLP ha rifiutato l'orario in cui la macchina deve essere pronta. Controlla che nell'app sia configurato un interruttore di preriscaldamento."
+    },
+    "settings_unreachable": {
+      "message": "Impossibile leggere le impostazioni della macchina ({category}): {error}"
+    },
+    "settings_unavailable": {
+      "message": "Le impostazioni della macchina ({category}) non sono disponibili. La macchina è accesa e raggiungibile?"
+    },
+    "request_failed": {
+      "message": "La richiesta all'app GLP non è riuscita: {error}"
+    }
   }
 }
