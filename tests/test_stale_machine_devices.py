@@ -19,6 +19,7 @@ from pytest_homeassistant_custom_component.common import MockConfigEntry
 from custom_components.gaggiuino_profiler import async_remove_config_entry_device
 from custom_components.gaggiuino_profiler.const import DOMAIN
 from tests.common import mock_all_coordinator_endpoints
+from tests.test_entity_groups import _group_device
 from tests.test_multi_machine_devices import MACHINES_ONE, MACHINES_TWO
 
 URL = "http://glp.example.com"
@@ -54,14 +55,6 @@ def _machine_device(hass, entry, machine_id):
 def _entity_registry_entry(hass, unique_id):
     registry = er.async_get(hass)
     return next((e for e in registry.entities.values() if e.unique_id == unique_id), None)
-
-
-def _group_device(hass, entry, group):
-    registry = dr.async_get(hass)
-    identifier = (DOMAIN, f"{entry.entry_id}_group_{group}")
-    if HAS_CHILD_DEVICES:
-        return registry.async_get_child_device_by_identifier(identifier, entry.entry_id)
-    return registry.async_get_device_by_identifier(identifier, entry.entry_id)
 
 
 async def test_machine_deleted_in_the_app_loses_its_device_and_entities(
