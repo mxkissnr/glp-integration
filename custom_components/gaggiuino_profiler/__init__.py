@@ -381,10 +381,10 @@ def _listed_machine_ids(data: dict | None) -> set[int] | None:
     cannot be trusted to be complete, and an id missing from it must not be
     treated as deleted.
     """
-    machines = (data or {}).get("machines") or []
-    if not any(m.get("isDefault") for m in machines if isinstance(m, dict)):
+    machines = [m for m in (data or {}).get("machines") or [] if isinstance(m, dict)]
+    if not any(m.get("isDefault") for m in machines):
         return None
-    return {m["id"] for m in machines if isinstance(m, dict) and m.get("id") is not None}
+    return {m["id"] for m in machines if m.get("id") is not None}
 
 
 @callback
@@ -439,10 +439,8 @@ async def async_remove_config_entry_device(
 
     runtime_data = getattr(config_entry, "runtime_data", None)
     data = runtime_data.data.data if isinstance(runtime_data, GlpRuntimeData) else None
-    machines = (data or {}).get("machines") or []
-    return not any(
-        m.get("id") == machine_id for m in machines if isinstance(m, dict)
-    )
+    machines = [m for m in (data or {}).get("machines") or [] if isinstance(m, dict)]
+    return not any(m.get("id") == machine_id for m in machines)
 
 
 def _async_sync_device_metadata(
