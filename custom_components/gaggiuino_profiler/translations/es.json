@@ -203,6 +203,11 @@
         "name": "Último shot"
       }
     },
+    "image": {
+      "last_shot_chart": {
+        "name": "Curva del último shot"
+      }
+    },
     "light": {
       "led": {
         "name": "LED"
