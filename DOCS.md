@@ -373,6 +373,18 @@ All light/number/switch/button/select (Operation Mode, Release Channel) entities
 
 The GLP device page's **Visit** link opens the espresso machine's own web interface (`http://<machine hostname>`), and the device shows the machine's installed firmware version as its software version — both populate once the machine has been reachable at least once.
 
+### Image
+
+| Entity | Description |
+|---|---|
+| Last shot curve | A picture of the last shot's pressure, pump flow, weight and temperature curves, drawn by the GLP app (PNG, 960 × 480, light background) with the legend in the Home Assistant language. |
+
+The state of the entity is the time of the last shot, so it changes only when the last shot changes. The integration keeps the current picture in memory: dashboards would otherwise make the app redraw the same curve over and over, and the app renders on every request and allows 30 renders per minute per IP.
+
+It needs GLP app 3.7.0 or newer. With an older app the entity becomes unavailable the first time the picture is requested, and it tries again with the next shot. It is also unavailable while there is no shot yet.
+
+For a dashboard, use a Picture entity card with this entity.
+
 ### Migrating from ALERTua/hass-gaggiuino
 
 This integration now covers the control surface that community integration exposes: profile selection, operation mode, boiler/display/scales settings (number/switch), the status LED (light), tare/save-settings/save-profile (button), plus live sensors/binary sensors for flow, water temperature, relay states and sensor faults (added in v1.25.0). If you're switching over, you can remove `hass-gaggiuino` once you've re-pointed any automations at this integration's equivalent entities — no data migration needed, everything here is read fresh from the machine/add-on.
@@ -436,6 +448,28 @@ automation:
 ```
 
 ### Automation examples
+
+**Notification with the last shot's curve:**
+```yaml
+automation:
+  trigger:
+    platform: state
+    entity_id: event.gaggiuino_local_profiler_shot
+  condition:
+    - condition: template
+      value_template: "{{ trigger.to_state.attributes.event_type == 'shot_finished' }}"
+  action:
+    service: notify.mobile_app_<your_phone>
+    data:
+      title: "Shot complete"
+      message: >
+        {{ trigger.to_state.attributes.profile }} –
+        {{ trigger.to_state.attributes.duration_s }}s
+      data:
+        image: /api/image_proxy/image.gaggiuino_local_profiler_last_shot_chart
+```
+
+The companion app loads the picture through Home Assistant, so it also works away from home as long as the app can reach Home Assistant.
 
 **Notification after every shot:**
 ```yaml
