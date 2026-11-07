@@ -113,8 +113,16 @@ async def _instance(hass, entry: MockConfigEntry) -> llm.APIInstance:
 
 
 async def _call(hass, entry: MockConfigEntry, tool_name: str):
+    """Call one tool of the entry's API the way the llm helper does.
+
+    `APIInstance.async_call_tool` imports the conversation component for its
+    trace hook, and that component needs `hassil`, which is not a test
+    dependency. Looking the tool up in the instance and awaiting it is the
+    same call the helper makes.
+    """
     instance = await _instance(hass, entry)
-    return await instance.async_call_tool(llm.ToolInput(tool_name=tool_name, tool_args={}))
+    tool = next(tool for tool in instance.tools if tool.name == tool_name)
+    return await tool.async_call(hass, llm.ToolInput(tool_name=tool_name, tool_args={}), instance.llm_context)
 
 
 def _data(result) -> dict:
@@ -310,7 +318,8 @@ async def test_tools_are_read_only(hass, strict_aioclient_mock) -> None:
         type(hass.services), "async_call", side_effect=AssertionError("no service call expected")
     ):
         for tool_name in TOOL_NAMES:
-            await instance.async_call_tool(llm.ToolInput(tool_name=tool_name, tool_args={}))
+            tool = next(tool for tool in instance.tools if tool.name == tool_name)
+            await tool.async_call(hass, llm.ToolInput(tool_name=tool_name, tool_args={}), instance.llm_context)
 
     # The live coordinator may reconnect to its SSE stream; every other
     # request would be the tool reaching the app, which must never happen.
