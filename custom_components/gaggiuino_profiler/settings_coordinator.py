@@ -93,9 +93,20 @@ class GlpSettingsCoordinator(DataUpdateCoordinator):
             headers = await self.auth.headers()
             _, payload = await self._fetch_category(headers, category)
         except Exception as err:
-            raise HomeAssistantError(f"GLP machine settings category {category} unreachable: {err}") from err
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="settings_unreachable",
+                translation_placeholders={
+                    "category": category,
+                    "error": str(err) or type(err).__name__,
+                },
+            ) from err
         if payload is None:
-            raise HomeAssistantError(f"GLP machine settings category {category} unavailable")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="settings_unavailable",
+                translation_placeholders={"category": category},
+            )
         return payload
 
     async def _async_update_data(self) -> dict:

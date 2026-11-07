@@ -130,9 +130,11 @@ async def test_post_gives_up_after_second_401() -> None:
     session = _FakeSession(tokens=["old-token", "new-token"], post_statuses=[401, 401])
     auth = GlpAuth(session, URL)
 
-    with pytest.raises(HomeAssistantError, match="401"):
+    with pytest.raises(HomeAssistantError) as exc_info:
         await auth.post("/api/machine/tare", json={})
 
+    assert exc_info.value.translation_key == "request_failed"
+    assert "401" in exc_info.value.translation_placeholders["error"]
     assert len(session.posts) == 2
 
 
@@ -143,8 +145,11 @@ async def test_post_wraps_aiohttp_errors(hass, aioclient_mock) -> None:
     )
     auth = GlpAuth(async_get_clientsession(hass), URL)
 
-    with pytest.raises(HomeAssistantError, match="connection lost"):
+    with pytest.raises(HomeAssistantError) as exc_info:
         await auth.post("/api/machine/tare", json={})
+
+    assert exc_info.value.translation_key == "request_failed"
+    assert "connection lost" in exc_info.value.translation_placeholders["error"]
 
 
 async def test_data_coordinator_401_on_status_invalidates_cached_token(

@@ -142,7 +142,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: GlpConfigEntry) -> bool:
         async def _handle_maintenance_done(call: ServiceCall) -> None:
             task = call.data["task"]
             if not _MAINTENANCE_TASK_RE.fullmatch(task):
-                raise ServiceValidationError(f"Invalid maintenance task: {task!r}")
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="invalid_maintenance_task",
+                    translation_placeholders={"task": task},
+                )
             runtime_data = _first_loaded_runtime_data(hass)
             coord: GlpDataCoordinator | None = runtime_data.data if runtime_data else None
             if coord is None:
@@ -251,11 +255,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: GlpConfigEntry) -> bool:
                             body = await r.json(content_type=None)
                         except Exception:
                             body = None
-                        message = (
+                        reason = (
                             (body or {}).get("error") or (body or {}).get("message")
                             if isinstance(body, dict) else None
-                        ) or "the app rejected the request (is the preheat switch configured?)"
-                        raise HomeAssistantError(f"set_ready_by failed: {message}")
+                        )
+                        if reason:
+                            raise HomeAssistantError(
+                                translation_domain=DOMAIN,
+                                translation_key="ready_by_rejected",
+                                translation_placeholders={"reason": str(reason)},
+                            )
+                        raise HomeAssistantError(
+                            translation_domain=DOMAIN,
+                            translation_key="ready_by_rejected_no_reason",
+                        )
                     r.raise_for_status()
             except HomeAssistantError:
                 raise
