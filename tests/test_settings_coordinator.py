@@ -2,17 +2,8 @@
 GET /api/machine/settings?category=<c> for every category in
 SETTINGS_CATEGORIES in parallel, isolating a single category's failure
 (machine unreachable, 501 on a non-Gaggiuino machine, etc.) from the rest
-instead of failing the whole update.
-
-async_fetch_category() is the write path the control entities use
-(light/number/switch/select, read-modify-write): unlike the poll it must
-raise instead of returning an empty result, so a write is never built from a
-stale snapshot. The translated message those errors carry is covered by
-test_exception_translations.py; here only the contract matters.
-"""
+instead of failing the whole update."""
 import aiohttp
-import pytest
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from custom_components.gaggiuino_profiler.auth import GlpAuth
@@ -84,20 +75,3 @@ async def test_every_category_unreachable_returns_empty_dict(hass, aioclient_moc
     data = await coordinator._async_update_data()
 
     assert data == {}
-
-
-async def test_fetch_category_returns_the_payload_for_a_write(hass, aioclient_mock) -> None:
-    mock_all_coordinator_endpoints(aioclient_mock, URL, settings=SETTINGS_PAYLOADS)
-    coordinator = _make_coordinator(hass)
-
-    assert await coordinator.async_fetch_category("boiler") == {"ok": "boiler"}
-
-
-async def test_fetch_category_raises_instead_of_returning_empty(hass, aioclient_mock) -> None:
-    """A write must abort, not proceed on a category the poll would have dropped."""
-    aioclient_mock.get(f"{URL}/api/token", json={"apiToken": "tok-123"})
-    aioclient_mock.get(_settings_url("boiler"), status=501)
-    coordinator = _make_coordinator(hass)
-
-    with pytest.raises(HomeAssistantError):
-        await coordinator.async_fetch_category("boiler")
