@@ -6,7 +6,7 @@ about shots, maintenance and the machine. Every tool only reads the data the
 coordinators hold: no HTTP request, no service call, no state change.
 """
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest import mock
 
 from homeassistant.core import Context
@@ -24,7 +24,7 @@ TOOL_NAMES = ["glp_last_shot", "glp_shots_today", "glp_maintenance_due", "glp_ma
 
 
 def _now() -> datetime:
-    return datetime.now(timezone.utc).replace(microsecond=0)
+    return datetime.now(UTC).replace(microsecond=0)
 
 
 def _status() -> dict:
@@ -232,6 +232,38 @@ async def test_empty_app(hass, strict_aioclient_mock) -> None:
     assert maintenance["due"] == []
     assert maintenance["due_soon"] == []
     assert maintenance["never_done"] == []
+
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+async def test_missing_optional_fields(hass, strict_aioclient_mock) -> None:
+    """An app without a machine registry and without scores must not break a tool."""
+    entry = await _setup(
+        hass,
+        strict_aioclient_mock,
+        status={"shotCount": 1, "machineReachable": True},
+        shots=[{"id": 7, "timestamp": int(datetime.now(UTC).timestamp())}],
+        maintenance={"grinder_5": {"grinderName": "Handmill", "status": "ok"}},
+    )
+
+    last_shot = (await _call(hass, entry, "glp_last_shot")).data
+    assert last_shot["machine"] is None
+    assert last_shot["score"] is None
+    assert last_shot["grind_setting"] is None
+    assert last_shot["time"] is not None
+    assert json.dumps(last_shot)
+
+    maintenance = (await _call(hass, entry, "glp_maintenance_due")).data
+    assert maintenance["tasks"] == {}
+    assert maintenance["grinders"]["Handmill"]["progress_pct"] is None
+    assert json.dumps(maintenance)
+
+    status = (await _call(hass, entry, "glp_machine_status")).data
+    assert status["machines"] == []
+    assert status["last_sync"] is None
+    assert status["ready_by"] is None
+    assert json.dumps(status)
 
     await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
