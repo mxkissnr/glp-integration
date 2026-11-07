@@ -27,7 +27,6 @@ from custom_components.gaggiuino_profiler.const import DOMAIN
 from custom_components.gaggiuino_profiler.sensor import SENSORS, GlpSensor
 from tests.common import mock_all_coordinator_endpoints
 from tests.test_additional_machine_child_device import _entity_ids_by_unique_id, _main_device
-from tests.test_multi_machine_devices import MACHINES_TWO
 
 URL = "http://glp.example.com"
 
@@ -232,37 +231,3 @@ async def test_machine_hostname_uptime_and_last_sync_are_diagnostic(hass, strict
     registry = er.async_get(hass)
     for key in ("last_sync", "machine_url", "machine_uptime"):
         assert registry.async_get(_registry_entry(hass, entry, key)).entity_category is EntityCategory.DIAGNOSTIC
-
-
-async def test_group_devices_survive_removing_a_deleted_machine(hass, strict_aioclient_mock) -> None:
-    """#341: pruning a stale additional machine must not touch the group
-    devices -- their identifiers share the `{entry_id}_` prefix but the rest
-    is not a machine id."""
-    entry = await _setup(hass, strict_aioclient_mock)
-    before = {group: _group_device(hass, entry, group) for group in GROUPS}
-    assert all(device is not None for device in before.values())
-
-    # Add machine 2, then withdraw it again: the removal path really runs.
-    strict_aioclient_mock.clear_requests()
-    mock_all_coordinator_endpoints(strict_aioclient_mock, URL, status={"machines": MACHINES_TWO})
-    await entry.runtime_data.data.async_refresh()
-    await hass.async_block_till_done()
-    removed = dr.async_get(hass)
-    identifier = (DOMAIN, f"{entry.entry_id}_2")
-    lookup = (
-        removed.async_get_child_device_by_identifier
-        if HAS_CHILD_DEVICES
-        else removed.async_get_device_by_identifier
-    )
-    assert lookup(identifier, entry.entry_id) is not None
-
-    strict_aioclient_mock.clear_requests()
-    mock_all_coordinator_endpoints(strict_aioclient_mock, URL, status={"machines": MACHINES_ONE})
-    await entry.runtime_data.data.async_refresh()
-    await hass.async_block_till_done()
-
-    assert lookup(identifier, entry.entry_id) is None
-    for group in GROUPS:
-        device = _group_device(hass, entry, group)
-        assert device is not None, group
-        assert device.id == before[group].id, group

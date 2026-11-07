@@ -19,7 +19,6 @@ from pytest_homeassistant_custom_component.common import MockConfigEntry
 from custom_components.gaggiuino_profiler import async_remove_config_entry_device
 from custom_components.gaggiuino_profiler.const import DOMAIN
 from tests.common import mock_all_coordinator_endpoints
-from tests.test_entity_groups import _group_device
 from tests.test_multi_machine_devices import MACHINES_ONE, MACHINES_TWO
 
 URL = "http://glp.example.com"
@@ -47,6 +46,14 @@ async def _poll(hass, aioclient_mock, entry, url, **mock_kwargs) -> None:
 def _machine_device(hass, entry, machine_id):
     registry = dr.async_get(hass)
     identifier = (DOMAIN, f"{entry.entry_id}_{machine_id}")
+    if HAS_CHILD_DEVICES:
+        return registry.async_get_child_device_by_identifier(identifier, entry.entry_id)
+    return registry.async_get_device_by_identifier(identifier, entry.entry_id)
+
+
+def _group_device(hass, entry, group):
+    registry = dr.async_get(hass)
+    identifier = (DOMAIN, f"{entry.entry_id}_group_{group}")
     if HAS_CHILD_DEVICES:
         return registry.async_get_child_device_by_identifier(identifier, entry.entry_id)
     return registry.async_get_device_by_identifier(identifier, entry.entry_id)

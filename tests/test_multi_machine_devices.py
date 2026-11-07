@@ -136,26 +136,6 @@ async def test_new_machine_added_at_runtime_gets_its_entity_without_reload(hass,
     assert _entity_by_unique_id(hass, f"{entry.entry_id}_2_status") is not None
 
 
-async def test_machine_removed_at_runtime_loses_its_entities(hass, strict_aioclient_mock) -> None:
-    """The counterpart of test_new_machine_added_at_runtime_gets_its_entity_without_reload
-    (#341): the fan-out only ever adds, so a machine the app stops listing has
-    to lose its device and its two entities on the next refresh instead of
-    staying behind unavailable forever."""
-    entry, url = await _setup_entry(hass, strict_aioclient_mock, {"machines": MACHINES_TWO})
-    assert _entity_by_unique_id(hass, f"{entry.entry_id}_2_status") is not None
-    assert _entity_by_unique_id(hass, f"{entry.entry_id}_2_reachable") is not None
-
-    strict_aioclient_mock.clear_requests()
-    mock_all_coordinator_endpoints(strict_aioclient_mock, url, status={"machines": MACHINES_ONE})
-    await entry.runtime_data.data.async_refresh()
-    await hass.async_block_till_done()
-
-    assert _entity_by_unique_id(hass, f"{entry.entry_id}_2_status") is None
-    assert _entity_by_unique_id(hass, f"{entry.entry_id}_2_reachable") is None
-    # The default machine keeps everything it had.
-    assert _entity_by_unique_id(hass, f"{entry.entry_id}_machine_status") is not None
-
-
 async def test_maintenance_done_service_appends_machine_query_param(hass, strict_aioclient_mock) -> None:
     entry, url = await _setup_entry(hass, strict_aioclient_mock, {"machines": MACHINES_TWO})
     strict_aioclient_mock.post(f"{url}/api/maintenance/descaling/done?machineId=2", json={"ok": True})
