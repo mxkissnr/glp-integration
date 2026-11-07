@@ -505,6 +505,21 @@ automation:
       brightness_pct: 30
 ```
 
+## Assist and AI agents
+
+The integration offers its data to any AI conversation agent that supports tools, for example OpenAI, Anthropic, Google Gemini or a local Ollama model. The agent then answers questions about your espresso shots, the maintenance tasks and the machine, inside Assist or any other chat that uses the agent.
+
+**To enable it:** open the options of the conversation agent (Settings > Devices & services > the AI integration > the agent's configure button, also reachable from Settings > Voice assistants > your assistant > the settings button next to the conversation agent) and tick "Gaggiuino Local Profiler (<app name>)" under "Control Home Assistant". The option sits next to "Assist". One entry appears per GLP app, so with a stable and a DEV app you choose which one the agent may read.
+
+| Tool | Answers questions like |
+|---|---|
+| `glp_last_shot` | "How was my last shot?" — profile, duration, yield, dose, ratio, pressure, score and rating |
+| `glp_shots_today` | "How many shots today?" — today's count, the total count and the time of the last shot |
+| `glp_maintenance_due` | "Is descaling due?" — which tasks are due, soon due or never done, including the grinders |
+| `glp_machine_status` | "Is the machine ready?" — reachability, preheat state, temperature, brewing, water level and the active profile |
+
+The tools only read data the integration already has; nothing can be changed this way. Use the services or the cards for that. Shot and maintenance answers always describe the default machine. The built-in Assist without an AI agent cannot use these tools.
+
 ## Diagnostics
 
 **Settings → Devices & Services → Gaggiuino Local Profiler → Device → Download diagnostics**
