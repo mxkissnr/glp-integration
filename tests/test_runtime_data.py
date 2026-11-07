@@ -140,7 +140,11 @@ async def test_writable_platform_entities_are_set_up(hass, strict_aioclient_mock
     entity_ids = [
         entity.entity_id
         for entity in er.async_get(hass).entities.values()
-        if entity.config_entry_id == entry.entry_id and entity.domain == platform
+        if entity.config_entry_id == entry.entry_id
+        and entity.domain == platform
+        # An entity disabled by the integration (#341) is registered without a
+        # state object, so only the enabled ones can be checked here.
+        and entity.disabled_by is None
     ]
     assert entity_ids, f"no {platform} entity was added"
     for entity_id in entity_ids:
