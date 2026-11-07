@@ -33,6 +33,9 @@ class GlpNumberDescription(NumberEntityDescription):
     data_path: tuple[str, ...] = field(default_factory=tuple)
 
 
+# #341: the rarely used calibration, PID and sensor-threshold values start
+# disabled on new installs. HA only applies entity_registry_enabled_default
+# when it creates a registry entry, so existing installs stay as they are.
 NUMBERS: tuple[GlpNumberDescription, ...] = (
     GlpNumberDescription(
         key="steam_set_point",
@@ -47,6 +50,7 @@ NUMBERS: tuple[GlpNumberDescription, ...] = (
     ),
     GlpNumberDescription(
         key="offset_temp",
+        entity_registry_enabled_default=False,
         translation_key="offset_temp",
         category="boiler",
         data_path=("offsetTemp",),
@@ -58,6 +62,7 @@ NUMBERS: tuple[GlpNumberDescription, ...] = (
     ),
     GlpNumberDescription(
         key="hpwr",
+        entity_registry_enabled_default=False,
         translation_key="hpwr",
         category="boiler",
         data_path=("hpwr",),
@@ -68,6 +73,7 @@ NUMBERS: tuple[GlpNumberDescription, ...] = (
     ),
     GlpNumberDescription(
         key="main_divider",
+        entity_registry_enabled_default=False,
         translation_key="main_divider",
         category="boiler",
         data_path=("mainDivider",),
@@ -78,6 +84,7 @@ NUMBERS: tuple[GlpNumberDescription, ...] = (
     ),
     GlpNumberDescription(
         key="brew_divider",
+        entity_registry_enabled_default=False,
         translation_key="brew_divider",
         category="boiler",
         data_path=("brewDivider",),
@@ -135,6 +142,7 @@ NUMBERS: tuple[GlpNumberDescription, ...] = (
     ),
     GlpNumberDescription(
         key="led_tof_min",
+        entity_registry_enabled_default=False,
         translation_key="led_tof_min",
         category="led",
         data_path=("tof", "min"),
@@ -145,6 +153,7 @@ NUMBERS: tuple[GlpNumberDescription, ...] = (
     ),
     GlpNumberDescription(
         key="led_tof_max",
+        entity_registry_enabled_default=False,
         translation_key="led_tof_max",
         category="led",
         data_path=("tof", "max"),

@@ -8,6 +8,7 @@
 ### Changed
 - **Commands from the control entities (switch, number, select, button and light) now reach the app one at a time instead of in parallel, and the integration stores its data the way current Home Assistant versions expect.** Refs #341
 - **Error messages from the controls and the services, such as a failed command to the app, unreadable machine settings or a rejected ready-by time, now appear in the Home Assistant language.** Refs #341
+- **On new installs the rarely used technical settings Offset Temperature, Heating Power, Main Divider, Brew Divider and LED Time-of-Flight Min/Max start disabled and can be enabled in the entity settings; existing installs keep them as they are.** Refs #341
 
 ### Fixed
 - **Home Assistant no longer offers the GLP app as newly discovered when it is set up under another address, such as `http://localhost:8099` or an IP address; a second app with its own database is still offered.** Refs #363
