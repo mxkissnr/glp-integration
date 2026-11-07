@@ -327,15 +327,15 @@ Das `machines`-Attribut des `Machine Status`-Sensors der Standardmaschine sowie 
 | Entity | Beschreibung | Einheit | Bereich |
 |---|---|---|---|
 | Steam Set Point | Ziel-Dampftemperatur des Kessels | °C | 100–160 |
-| Offset Temperature | Kalibrierungs-Offset der Kesseltemperatur | °C | -10–10 |
-| Heating Power | Heizleistung des Kessels | — | 100–1500 |
-| Main Divider | PID-Divider des Hauptkessels | — | 1–5 |
-| Brew Divider | PID-Divider des Brühkessels | — | 1–5 |
+| Offset Temperature⁴ | Kalibrierungs-Offset der Kesseltemperatur | °C | -10–10 |
+| Heating Power⁴ | Heizleistung des Kessels | — | 100–1500 |
+| Main Divider⁴ | PID-Divider des Hauptkessels | — | 1–5 |
+| Brew Divider⁴ | PID-Divider des Brühkessels | — | 1–5 |
 | Startup Heat Delta | Zusätzliche Aufheizreserve beim Start | °C | 0–10 |
 | LCD Brightness | Helligkeit des Touchscreens | % | 0–100 |
 | LCD Sleep Timeout | Leerlaufzeit bis der Screen schläft | min | 0–120 |
 | LCD Go Home Timeout | Leerlaufzeit bis zur Rückkehr zum Startbildschirm | s | 0–60 |
-| LED Time-of-Flight Min/Max | Abstandssensor-Schwellenwerte für den Näherungstrigger der LED | — | 0–200 |
+| LED Time-of-Flight Min/Max⁴ | Abstandssensor-Schwellenwerte für den Näherungstrigger der LED | — | 0–200 |
 
 ### Switch³
 
@@ -351,6 +351,8 @@ Das `machines`-Attribut des `Machine Status`-Sensors der Standardmaschine sowie 
 | Bluetooth Scales Enabled | Bluetooth-Waage |
 
 ³ `entity_category: config` — in der UI unter "Konfiguration" des Geräts gruppiert, nicht standardmäßig neben den Alltagssteuerungen sichtbar.
+
+⁴ Bei Neuinstallationen standardmäßig deaktiviert; in den Einstellungen der Entity aktivierbar. Bestehende Installationen behalten die Entity aktiviert.
 
 ### Button
 
