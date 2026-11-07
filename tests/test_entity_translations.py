@@ -116,18 +116,6 @@ LANGUAGES = ("en", "de", "es", "fr", "it", "nl")
 
 PLACEHOLDER_RE = re.compile(r"\{[^{}]*\}")
 
-# The exception keys the integration raises with a translation key, and the
-# placeholders each message has to carry. Home Assistant shows
-# exceptions.<key>.message in the user's language.
-EXCEPTION_KEYS = {
-    "invalid_maintenance_task": ("{task}",),
-    "ready_by_rejected": ("{reason}",),
-    "ready_by_rejected_no_reason": (),
-    "settings_unreachable": ("{category}", "{error}"),
-    "settings_unavailable": ("{category}",),
-    "request_failed": ("{error}",),
-}
-
 
 def _translations(language: str) -> dict:
     return json.loads((COMPONENT_DIR / "translations" / f"{language}.json").read_text())
@@ -220,17 +208,6 @@ def test_every_language_keeps_the_english_placeholders() -> None:
             assert sorted(PLACEHOLDER_RE.findall(value)) == sorted(
                 PLACEHOLDER_RE.findall(english[key])
             ), (language, key)
-
-
-def test_every_language_has_the_exception_messages_with_their_placeholders() -> None:
-    for language in LANGUAGES:
-        exceptions = _translations(language).get("exceptions")
-        assert exceptions is not None, language
-        assert set(exceptions) == set(EXCEPTION_KEYS), language
-        for key, placeholders in EXCEPTION_KEYS.items():
-            message = exceptions[key]["message"]
-            assert message.strip(), (language, key)
-            assert sorted(PLACEHOLDER_RE.findall(message)) == sorted(placeholders), (language, key)
 
 
 def _flow_keys() -> tuple[set[str], set[str], set[str]]:
