@@ -10,7 +10,7 @@ import voluptuous as vol
 from homeassistant.components.frontend import add_extra_js_url
 from homeassistant.components.http import StaticPathConfig
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import device_registry as dr
@@ -335,13 +335,112 @@ async def async_setup_entry(hass: HomeAssistant, entry: GlpConfigEntry) -> bool:
     # data coordinator. Done centrally here (not per-entity DeviceInfo) because
     # both values are dynamic and shared across entities from three coordinators
     # -- racing them through DeviceInfo gives a non-deterministic result.
-    _async_sync_device_metadata(hass, entry, coordinator)
+    # The same listener also drops the devices of machines the app has deleted
+    # (part of #341), so the first run doubles as cleanup after a downtime.
+    _async_update_devices(hass, entry, coordinator)
     entry.async_on_unload(
         coordinator.async_add_listener(
-            lambda: _async_sync_device_metadata(hass, entry, coordinator)
+            lambda: _async_update_devices(hass, entry, coordinator)
         )
     )
     return True
+
+
+@callback
+def _async_update_devices(
+    hass: HomeAssistant, entry: ConfigEntry, coordinator: GlpDataCoordinator
+) -> None:
+    _async_sync_device_metadata(hass, entry, coordinator)
+    _async_remove_stale_machine_devices(hass, entry, coordinator)
+
+
+def _additional_machine_id(entry: ConfigEntry, device: dr.DeviceEntry) -> int | None:
+    """The machine id of an additional-machine device, else None.
+
+    Only those devices carry an identifier `<entry_id>_<int>` (#48); the GLP
+    device is `<entry_id>` and the group devices are `<entry_id>_group_<name>`.
+    """
+    prefix = f"{entry.entry_id}_"
+    for domain, identifier in device.identifiers:
+        if domain != DOMAIN or not identifier.startswith(prefix):
+            continue
+        rest = identifier.removeprefix(prefix)
+        # isdigit() also accepts superscripts ("\u00b2") that int() rejects.
+        if rest.isascii() and rest.isdigit():
+            return int(rest)
+    return None
+
+
+def _listed_machine_ids(data: dict | None) -> set[int] | None:
+    """Ids of the machines the app currently lists, or None if the list is
+    not complete.
+
+    `GET /api/status` returns `machines` from the app's registry and includes
+    the default machine when the read succeeds; on a registry read error the
+    app sends no list at all. A list without the default machine therefore
+    cannot be trusted to be complete, and an id missing from it must not be
+    treated as deleted.
+    """
+    machines = [m for m in (data or {}).get("machines") or [] if isinstance(m, dict)]
+    if not any(m.get("isDefault") for m in machines):
+        return None
+    return {m["id"] for m in machines if m.get("id") is not None}
+
+
+@callback
+def _async_remove_stale_machine_devices(
+    hass: HomeAssistant, entry: ConfigEntry, coordinator: GlpDataCoordinator
+) -> None:
+    """Remove the devices of machines that the app no longer lists (part of #341).
+
+    The platforms only ever add additional-machine entities, so a machine
+    deleted in the app would otherwise keep a device with two permanently
+    unavailable entities.
+    """
+    listed = _listed_machine_ids(coordinator.data)
+    if listed is None:
+        return
+
+    registry = dr.async_get(hass)
+    devices = {
+        device.id: device
+        for device in dr.async_entries_for_config_entry(registry, entry.entry_id)
+    }
+    async_child_entries = getattr(dr, "async_child_entries_for_config_entry", None)
+    if async_child_entries is not None:  # HA Core >= 2026.9
+        for device in async_child_entries(registry, entry.entry_id):
+            devices[device.id] = device
+
+    for device in list(devices.values()):
+        machine_id = _additional_machine_id(entry, device)
+        if machine_id is None or machine_id in listed:
+            continue
+        _LOGGER.info(
+            "Removing the device of machine %s, which the GLP app no longer lists",
+            machine_id,
+        )
+        registry.async_remove_device(device.id)
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, config_entry: GlpConfigEntry, device_entry: dr.DeviceEntry
+) -> bool:
+    """Whether a device can be deleted by hand (#341).
+
+    Home Assistant calls this for the Delete button on a device page; on
+    2026.9+ `device_entry` may be a child device entry, so only its
+    identifiers are used. The GLP device and its Shots/Maintenance/Preheat
+    devices are not deletable by hand, and neither is an additional machine
+    the app still lists -- it would come straight back on the next update.
+    """
+    machine_id = _additional_machine_id(config_entry, device_entry)
+    if machine_id is None:
+        return False
+
+    runtime_data = getattr(config_entry, "runtime_data", None)
+    data = runtime_data.data.data if isinstance(runtime_data, GlpRuntimeData) else None
+    machines = [m for m in (data or {}).get("machines") or [] if isinstance(m, dict)]
+    return not any(m.get("id") == machine_id for m in machines)
 
 
 def _async_sync_device_metadata(

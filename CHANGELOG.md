@@ -13,6 +13,7 @@
 - **The confirmation for a discovered GLP app now names the app and its address separately, in all six languages.** Refs #365
 - **The integration now requires Home Assistant 2026.8.0 or newer, because it relies on features that older versions do not have.** Refs #364
 - **A discovered GLP app and the entry it creates now show the app's own name instead of its internal hostname, so the stable and the dev app are easy to tell apart; existing entries keep their titles.** Refs #365
+- **A machine deleted in the GLP app now disappears from Home Assistant together with its device and entities at the next update, and a machine the app no longer lists can also be deleted on its device page.** Refs #341
 
 ## [1.35.0] – 2026-11-01
 ### Added
