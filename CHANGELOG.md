@@ -7,6 +7,7 @@
 
 ### Changed
 - **Commands from the control entities (switch, number, select, button and light) now reach the app one at a time instead of in parallel, and the integration stores its data the way current Home Assistant versions expect.** Refs #341
+- **The integration's error messages are now translated into English, German, Spanish, French, Italian and Dutch, so Home Assistant can show them in the user's language instead of English only.** Refs #341
 
 ### Fixed
 - **Home Assistant no longer offers the GLP app as newly discovered when it is set up under another address, such as `http://localhost:8099` or an IP address; a second app with its own database is still offered.** Refs #363
