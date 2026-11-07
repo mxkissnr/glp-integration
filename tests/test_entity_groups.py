@@ -26,8 +26,8 @@ from custom_components.gaggiuino_profiler import entity as entity_module
 from custom_components.gaggiuino_profiler.const import DOMAIN
 from custom_components.gaggiuino_profiler.sensor import SENSORS, GlpSensor
 from tests.common import mock_all_coordinator_endpoints
-from tests.test_multi_machine_devices import MACHINES_TWO
 from tests.test_additional_machine_child_device import _entity_ids_by_unique_id, _main_device
+from tests.test_multi_machine_devices import MACHINES_TWO
 
 URL = "http://glp.example.com"
 
