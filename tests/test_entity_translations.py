@@ -106,7 +106,6 @@ CHILD_DEVICE_KEYS = {
                "maint_grinders": "maintenance"},
     "binary_sensor": {"preheat_ready": "preheat"},
     "event": {"shot": "shots"},
-    "image": {"last_shot_chart": "shots"},
 }
 
 
