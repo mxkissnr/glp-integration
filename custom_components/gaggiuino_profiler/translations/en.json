@@ -304,5 +304,25 @@
     "preheat": {
       "name": "Preheat"
     }
+  },
+  "exceptions": {
+    "invalid_maintenance_task": {
+      "message": "Unknown maintenance task: {task}"
+    },
+    "ready_by_rejected": {
+      "message": "The GLP app rejected the ready-by time: {reason}"
+    },
+    "ready_by_rejected_no_reason": {
+      "message": "The GLP app rejected the ready-by time. Check that a preheat switch is set up in the app."
+    },
+    "settings_unreachable": {
+      "message": "Could not read the machine settings ({category}): {error}"
+    },
+    "settings_unavailable": {
+      "message": "The machine settings ({category}) are not available. Is the machine switched on and reachable?"
+    },
+    "request_failed": {
+      "message": "The request to the GLP app failed: {error}"
+    }
   }
 }

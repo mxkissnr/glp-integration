@@ -304,5 +304,25 @@
     "preheat": {
       "name": "Precalentamiento"
     }
+  },
+  "exceptions": {
+    "invalid_maintenance_task": {
+      "message": "Tarea de mantenimiento desconocida: {task}"
+    },
+    "ready_by_rejected": {
+      "message": "La aplicación GLP ha rechazado la hora a la que la máquina debe estar lista: {reason}"
+    },
+    "ready_by_rejected_no_reason": {
+      "message": "La aplicación GLP ha rechazado la hora a la que la máquina debe estar lista. Comprueba que hay un interruptor de precalentamiento configurado en la aplicación."
+    },
+    "settings_unreachable": {
+      "message": "No se pudieron leer los ajustes de la máquina ({category}): {error}"
+    },
+    "settings_unavailable": {
+      "message": "Los ajustes de la máquina ({category}) no están disponibles. ¿Está la máquina encendida y accesible?"
+    },
+    "request_failed": {
+      "message": "La solicitud a la aplicación GLP ha fallado: {error}"
+    }
   }
 }
