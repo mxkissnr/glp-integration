@@ -297,9 +297,11 @@ async def test_tools_are_read_only(hass, strict_aioclient_mock) -> None:
                 read_only=True, destructive=False, idempotent=True, open_world=False
             )
 
-    # Stop the pollers so the snapshots below cannot be crossed by a refresh.
+    # Stop the pollers, including an already scheduled tick, so the snapshots
+    # below cannot be crossed by a refresh.
     for coordinator in (entry.runtime_data.data, entry.runtime_data.live, entry.runtime_data.machine):
         coordinator.update_interval = None
+        coordinator._async_unsub_refresh()
 
     before_calls = len(strict_aioclient_mock.mock_calls)
     before_states = _snapshot_states(hass)
