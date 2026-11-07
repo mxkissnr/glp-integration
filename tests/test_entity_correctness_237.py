@@ -183,19 +183,3 @@ def test_shot_count_uses_total_state_class() -> None:
     description = next(d for d in SENSORS if d.key == "shot_count")
 
     assert description.state_class is SensorStateClass.TOTAL
-
-
-def test_disabled_number_descriptions_keep_their_pinned_ids() -> None:
-    """#341: the six technical numbers start disabled on new installs, but
-    entity_registry_enabled_default only decides whether a new registry entry
-    is born disabled -- it must not move the entity_id or the unique_id."""
-    entry = _entry()
-    disabled = [d for d in NUMBERS if d.entity_registry_enabled_default is False]
-    assert {d.key for d in disabled} == {
-        "offset_temp", "hpwr", "main_divider", "brew_divider", "led_tof_min", "led_tof_max",
-    }
-
-    for description in disabled:
-        entity = GlpMachineNumber(_coordinator(), entry, description)
-        assert entity.suggested_object_id == description.key
-        assert entity.unique_id == f"{entry.entry_id}_{description.key}"

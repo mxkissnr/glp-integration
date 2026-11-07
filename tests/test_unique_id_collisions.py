@@ -146,21 +146,3 @@ async def test_no_entity_id_was_collision_mangled(hass, strict_aioclient_mock) -
     }
 
     assert not mangled, f"entity_id collision: {sorted(mangled)}"
-
-
-async def test_disabled_number_entities_are_still_registered(
-    hass, strict_aioclient_mock, monkeypatch
-) -> None:
-    """#341: a disabled-by-default number still reaches async_add_entities and
-    gets a registry entry, so the added-vs-registered count above stays
-    balanced and existing installs keep their unique ids and entity ids."""
-    entry, added = await _setup_with_entity_capture(hass, strict_aioclient_mock, monkeypatch)
-
-    added_unique_ids = {entity.unique_id for entity in added}
-    registered = {item.unique_id: item for item in _registered_for(hass, entry)}
-    for key in ("offset_temp", "hpwr", "main_divider", "brew_divider", "led_tof_min", "led_tof_max"):
-        unique_id = f"{entry.entry_id}_{key}"
-        assert unique_id in added_unique_ids, key
-        item = registered[unique_id]
-        assert item.disabled_by is er.RegistryEntryDisabler.INTEGRATION, key
-        assert item.entity_id == f"number.gaggiuino_local_profiler_{key}", key

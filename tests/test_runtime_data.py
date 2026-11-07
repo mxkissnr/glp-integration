@@ -30,6 +30,10 @@ URL = "http://glp.example.com"
 
 WRITABLE_PLATFORMS = ("switch", "number", "select", "button", "light")
 
+# #341: these numbers start disabled on new installs, so this test registers
+# them as pre-existing entities to get the enabled path, as a real install has.
+DISABLED_NUMBER_KEYS = ("offset_temp", "hpwr", "main_divider", "brew_divider", "led_tof_min", "led_tof_max")
+
 # Enough payload for every writable platform to add an entity that reports
 # available: the settings-backed ones need a non-empty category, the profile
 # select needs a non-empty option list.
@@ -42,7 +46,7 @@ SETTINGS_PAYLOAD = {
 }
 
 
-async def _setup_entry(hass, aioclient_mock, *, statuses=None):
+async def _setup_entry(hass, aioclient_mock, *, statuses=None, enable: tuple[str, ...] = ()):
     mock_all_coordinator_endpoints(
         aioclient_mock,
         URL,
@@ -54,6 +58,15 @@ async def _setup_entry(hass, aioclient_mock, *, statuses=None):
     )
     entry = MockConfigEntry(domain=DOMAIN, data={"url": URL})
     entry.add_to_hass(hass)
+    registry = er.async_get(hass)
+    for key in enable:
+        registry.async_get_or_create(
+            "number",
+            DOMAIN,
+            f"{entry.entry_id}_{key}",
+            config_entry=entry,
+            suggested_object_id=f"gaggiuino_local_profiler_{key}",
+        )
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
     return entry
@@ -134,17 +147,17 @@ def test_writable_platform_serializes_updates(platform) -> None:
 
 @pytest.mark.parametrize("platform", WRITABLE_PLATFORMS)
 async def test_writable_platform_entities_are_set_up(hass, strict_aioclient_mock, platform) -> None:
-    """Every writable platform reads `entry.runtime_data` and adds its entities."""
-    entry = await _setup_entry(hass, strict_aioclient_mock)
+    """Every writable platform reads `entry.runtime_data` and adds its entities.
+
+    The six numbers that start disabled (#341) are pre-registered so this covers
+    the existing-install path; a fresh install leaves them without a state.
+    """
+    entry = await _setup_entry(hass, strict_aioclient_mock, enable=DISABLED_NUMBER_KEYS)
 
     entity_ids = [
         entity.entity_id
         for entity in er.async_get(hass).entities.values()
-        if entity.config_entry_id == entry.entry_id
-        and entity.domain == platform
-        # An entity disabled by the integration (#341) is registered without a
-        # state object, so only the enabled ones can be checked here.
-        and entity.disabled_by is None
+        if entity.config_entry_id == entry.entry_id and entity.domain == platform
     ]
     assert entity_ids, f"no {platform} entity was added"
     for entity_id in entity_ids:
