@@ -78,12 +78,16 @@ async def test_set_ready_by_surfaces_400_as_home_assistant_error(hass, strict_ai
     )
 
     target_time = datetime.fromtimestamp(READY_BY_TARGET_AT_MS / 1000, tz=UTC)
-    with pytest.raises(HomeAssistantError, match="switch_entity not configured"):
+    with pytest.raises(HomeAssistantError, match="switch_entity not configured") as exc_info:
         await hass.services.async_call(
             DOMAIN, "set_ready_by", {"target_time": target_time}, blocking=True
         )
     await hass.async_block_till_done()
 
+    # The entry is set up, so the match above proves the English text renders;
+    # this pins the key and placeholder the frontend translates instead.
+    assert exc_info.value.translation_key == "ready_by_rejected"
+    assert exc_info.value.translation_placeholders == {"reason": "switch_entity not configured"}
 
 async def test_ready_by_sensors_read_coordinator_data(hass, strict_aioclient_mock) -> None:
     entry, url = await _setup_entry(
