@@ -327,15 +327,15 @@ The default machine's `Machine Status` sensor's `machines` attribute, and each a
 | Entity | Description | Unit | Range |
 |---|---|---|---|
 | Steam Set Point | Boiler steam target temperature | °C | 100–160 |
-| Offset Temperature | Boiler temperature calibration offset | °C | -10–10 |
-| Heating Power | Boiler heating power | — | 100–1500 |
-| Main Divider | Main boiler PID divider | — | 1–5 |
-| Brew Divider | Brew boiler PID divider | — | 1–5 |
+| Offset Temperature⁴ | Boiler temperature calibration offset | °C | -10–10 |
+| Heating Power⁴ | Boiler heating power | — | 100–1500 |
+| Main Divider⁴ | Main boiler PID divider | — | 1–5 |
+| Brew Divider⁴ | Brew boiler PID divider | — | 1–5 |
 | Startup Heat Delta | Extra heat added during startup | °C | 0–10 |
 | LCD Brightness | Touchscreen brightness | % | 0–100 |
 | LCD Sleep Timeout | Idle time before the screen sleeps | min | 0–120 |
 | LCD Go Home Timeout | Idle time before returning to the home screen | s | 0–60 |
-| LED Time-of-Flight Min/Max | Distance sensor thresholds for the LED's proximity trigger | — | 0–200 |
+| LED Time-of-Flight Min/Max⁴ | Distance sensor thresholds for the LED's proximity trigger | — | 0–200 |
 
 ### Switch³
 
@@ -351,6 +351,8 @@ The default machine's `Machine Status` sensor's `machines` attribute, and each a
 | Bluetooth Scales Enabled | Bluetooth scale |
 
 ³ `entity_category: config` — grouped under the device's "Configuration" section in the UI, not shown alongside everyday controls by default.
+
+⁴ Disabled by default on new installs; enable it on the entity's settings page. Installs that already had the entity keep it enabled.
 
 ### Button
 
