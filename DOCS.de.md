@@ -371,6 +371,18 @@ Alle Light-/Number-/Switch-/Button-/Select-Entities (Operation Mode, Release Cha
 
 Der **Besuchen**-Link auf der GLP-Geräteseite öffnet das Webinterface der Espressomaschine selbst (`http://<Maschinen-Hostname>`), und das Gerät zeigt die installierte Firmware-Version der Maschine als Software-Version — beides wird gesetzt, sobald die Maschine mindestens einmal erreichbar war.
 
+### Bild
+
+| Entity | Beschreibung |
+|---|---|
+| Last shot curve | Ein Bild der Druck-, Pumpendurchfluss-, Gewichts- und Temperaturkurven des letzten Shots, gezeichnet von der GLP-App (PNG, 960 × 480, heller Hintergrund) mit der Legende in der Sprache von Home Assistant. |
+
+Der Zustand der Entity ist die Uhrzeit des letzten Shots, ändert sich also nur, wenn sich der letzte Shot ändert. Die Integration hält das aktuelle Bild im Speicher: sonst würden Dashboards die App dieselbe Kurve immer wieder neu zeichnen lassen, und die App rendert bei jeder Anfrage und erlaubt 30 Renderings pro Minute und IP.
+
+Die Entity braucht GLP-App 3.7.0 oder neuer. Bei einer älteren App wird die Entity beim ersten Abruf des Bildes nicht verfügbar und versucht es mit dem nächsten Shot erneut. Solange es noch keinen Shot gibt, ist sie ebenfalls nicht verfügbar.
+
+Für ein Dashboard eignet sich eine Picture-Entity-Karte mit dieser Entity.
+
 ### Umstieg von ALERTua/hass-gaggiuino
 
 Diese Integration deckt inzwischen die Steuerfläche ab, die die Community-Integration bietet: Profilauswahl, Operation Mode, Kessel-/Display-/Waagen-Einstellungen (Number/Switch), die Status-LED (Light), Tare/Save-Settings/Save-Profile (Button), sowie Live-Sensoren/Binary-Sensoren für Durchfluss, Wassertemperatur, Relaiszustände und Sensorfehler (seit v1.25.0). Bei einem Umstieg kann `hass-gaggiuino` entfernt werden, sobald Automatisierungen auf die entsprechenden Entities dieser Integration umgestellt sind — keine Datenmigration nötig, alles hier wird frisch von Maschine/Add-on gelesen.
@@ -434,6 +446,28 @@ automation:
 ```
 
 ### Automationsbeispiele
+
+**Benachrichtigung mit der Kurve des letzten Shots:**
+```yaml
+automation:
+  trigger:
+    platform: state
+    entity_id: event.gaggiuino_local_profiler_shot
+  condition:
+    - condition: template
+      value_template: "{{ trigger.to_state.attributes.event_type == 'shot_finished' }}"
+  action:
+    service: notify.mobile_app_<dein_telefon>
+    data:
+      title: "Shot fertig"
+      message: >
+        {{ trigger.to_state.attributes.profile }} –
+        {{ trigger.to_state.attributes.duration_s }}s
+      data:
+        image: /api/image_proxy/image.gaggiuino_local_profiler_last_shot_chart
+```
+
+Die Companion-App lädt das Bild über Home Assistant, es funktioniert also auch unterwegs, solange die App Home Assistant erreicht.
 
 **Benachrichtigung nach jedem Shot:**
 ```yaml

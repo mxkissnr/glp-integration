@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+### Added
+- **The new image entity `image.gaggiuino_local_profiler_last_shot_chart` on the Shots device shows the last shot's pressure, flow, weight and temperature curves as a picture for dashboards and phone notifications; it needs GLP app 3.7.0 or newer and is unavailable with older ones.** Refs #342
+
 ### Changed
 - **Commands from the control entities (switch, number, select, button and light) now reach the app one at a time instead of in parallel, and the integration stores its data the way current Home Assistant versions expect.** Refs #341
 
