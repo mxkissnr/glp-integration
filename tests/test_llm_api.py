@@ -94,6 +94,10 @@ async def _setup(hass, aioclient_mock, *, url: str = URL, title: str = "Stable",
     return entry
 
 
+def _snapshot_states(hass) -> list:
+    return [(state.entity_id, state.state, dict(state.attributes)) for state in hass.states.async_all()]
+
+
 def _llm_context() -> llm.LLMContext:
     return llm.LLMContext(
         platform="test",
@@ -258,16 +262,20 @@ async def test_tools_are_read_only(hass, strict_aioclient_mock) -> None:
         coordinator.update_interval = None
 
     before_calls = len(strict_aioclient_mock.mock_calls)
-    before_states = [state.as_dict() for state in hass.states.async_all()]
+    before_states = _snapshot_states(hass)
 
-    with mock.patch.object(hass.services, "async_call", side_effect=AssertionError("no service call expected")):
+    with mock.patch.object(
+        type(hass.services), "async_call", side_effect=AssertionError("no service call expected")
+    ):
         for tool_name in TOOL_NAMES:
             await instance.async_call_tool(llm.ToolInput(tool_name=tool_name, tool_args={}))
 
+    # The live coordinator may reconnect to its SSE stream; every other
+    # request would be the tool reaching the app, which must never happen.
     new_calls = strict_aioclient_mock.mock_calls[before_calls:]
     offenders = [call for call in new_calls if not str(call[1]).endswith("/api/events")]
     assert offenders == []
-    assert [state.as_dict() for state in hass.states.async_all()] == before_states
+    assert _snapshot_states(hass) == before_states
 
     await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
