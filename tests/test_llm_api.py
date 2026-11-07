@@ -112,9 +112,14 @@ async def _instance(hass, entry: MockConfigEntry) -> llm.APIInstance:
     return await llm.async_get_api(hass, f"{DOMAIN}-{entry.entry_id}", _llm_context())
 
 
-async def _call(hass, entry: MockConfigEntry, tool_name: str) -> llm.ToolResult:
+async def _call(hass, entry: MockConfigEntry, tool_name: str):
     instance = await _instance(hass, entry)
     return await instance.async_call_tool(llm.ToolInput(tool_name=tool_name, tool_args={}))
+
+
+def _data(result) -> dict:
+    """The tool payload, whether the helper wrapped it in ToolResult or not."""
+    return result.data if isinstance(getattr(result, "data", None), dict) else result
 
 
 async def test_registers_one_api_per_entry(hass, strict_aioclient_mock) -> None:
@@ -137,9 +142,10 @@ async def test_last_shot(hass, strict_aioclient_mock) -> None:
 
     result = await _call(hass, entry, "glp_last_shot")
 
-    assert isinstance(result, llm.ToolResult)
-    assert result.error is False
-    data = result.data
+    if hasattr(llm, "ToolResult"):
+        assert isinstance(result, llm.ToolResult)
+        assert result.error is False
+    data = _data(result)
     assert data["machine"] == "Gaggiuino"
     assert data["shot_id"] == 42
     assert data["profile"] == "Adaptive"
@@ -164,7 +170,7 @@ async def test_last_shot(hass, strict_aioclient_mock) -> None:
 async def test_shots_today(hass, strict_aioclient_mock) -> None:
     entry = await _setup(hass, strict_aioclient_mock)
 
-    data = (await _call(hass, entry, "glp_shots_today")).data
+    data = _data(await _call(hass, entry, "glp_shots_today"))
 
     assert data["machine"] == "Gaggiuino"
     assert data["shots_today"] == 1
@@ -179,7 +185,7 @@ async def test_shots_today(hass, strict_aioclient_mock) -> None:
 async def test_maintenance_due(hass, strict_aioclient_mock) -> None:
     entry = await _setup(hass, strict_aioclient_mock)
 
-    data = (await _call(hass, entry, "glp_maintenance_due")).data
+    data = _data(await _call(hass, entry, "glp_maintenance_due"))
 
     assert data["machine"] == "Gaggiuino"
     assert data["due"] == ["descaling"]
@@ -201,7 +207,7 @@ async def test_maintenance_due(hass, strict_aioclient_mock) -> None:
 async def test_machine_status(hass, strict_aioclient_mock) -> None:
     entry = await _setup(hass, strict_aioclient_mock)
 
-    data = (await _call(hass, entry, "glp_machine_status")).data
+    data = _data(await _call(hass, entry, "glp_machine_status"))
 
     assert data["machine"] == "Gaggiuino"
     assert data["status"] == "online"
@@ -223,10 +229,10 @@ async def test_machine_status(hass, strict_aioclient_mock) -> None:
 async def test_empty_app(hass, strict_aioclient_mock) -> None:
     entry = await _setup(hass, strict_aioclient_mock, shots=[], maintenance={})
 
-    last_shot = (await _call(hass, entry, "glp_last_shot")).data
+    last_shot = _data(await _call(hass, entry, "glp_last_shot"))
     assert last_shot["message"] == "No shot has been recorded yet."
 
-    maintenance = (await _call(hass, entry, "glp_maintenance_due")).data
+    maintenance = _data(await _call(hass, entry, "glp_maintenance_due"))
     assert maintenance["tasks"] == {}
     assert maintenance["grinders"] == {}
     assert maintenance["due"] == []
@@ -247,19 +253,19 @@ async def test_missing_optional_fields(hass, strict_aioclient_mock) -> None:
         maintenance={"grinder_5": {"grinderName": "Handmill", "status": "ok"}},
     )
 
-    last_shot = (await _call(hass, entry, "glp_last_shot")).data
+    last_shot = _data(await _call(hass, entry, "glp_last_shot"))
     assert last_shot["machine"] is None
     assert last_shot["score"] is None
     assert last_shot["grind_setting"] is None
     assert last_shot["time"] is not None
     assert json.dumps(last_shot)
 
-    maintenance = (await _call(hass, entry, "glp_maintenance_due")).data
+    maintenance = _data(await _call(hass, entry, "glp_maintenance_due"))
     assert maintenance["tasks"] == {}
     assert maintenance["grinders"]["Handmill"]["progress_pct"] is None
     assert json.dumps(maintenance)
 
-    status = (await _call(hass, entry, "glp_machine_status")).data
+    status = _data(await _call(hass, entry, "glp_machine_status"))
     assert status["machines"] == []
     assert status["last_sync"] is None
     assert status["ready_by"] is None
@@ -274,7 +280,7 @@ async def test_stale_data_reports_unreachable(hass, strict_aioclient_mock) -> No
     entry.runtime_data.data.last_update_success = False
 
     for tool_name in TOOL_NAMES:
-        assert (await _call(hass, entry, tool_name)).data["app_reachable"] is False
+        assert _data(await _call(hass, entry, tool_name))["app_reachable"] is False
 
     await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
@@ -284,10 +290,12 @@ async def test_tools_are_read_only(hass, strict_aioclient_mock) -> None:
     entry = await _setup(hass, strict_aioclient_mock)
     instance = await _instance(hass, entry)
 
-    for tool in instance.tools:
-        assert tool.annotations is not None
-        assert tool.annotations.read_only is True
-        assert tool.annotations.destructive is False
+    # ToolAnnotations only exists from 2026.10; the minimum HA has no annotations.
+    if hasattr(llm, "ToolAnnotations"):
+        for tool in instance.tools:
+            assert tool.annotations == llm.ToolAnnotations(
+                read_only=True, destructive=False, idempotent=True, open_world=False
+            )
 
     # Stop the pollers so the snapshots below cannot be crossed by a refresh.
     for coordinator in (entry.runtime_data.data, entry.runtime_data.live, entry.runtime_data.machine):
@@ -342,7 +350,7 @@ async def test_two_entries_coexist(hass, strict_aioclient_mock) -> None:
     await hass.async_block_till_done()
     assert first_id not in [api.id for api in llm.async_get_apis(hass)]
     assert second_id in [api.id for api in llm.async_get_apis(hass)]
-    assert (await _call(hass, second, "glp_shots_today")).data["shots_today"] == 1
+    assert _data(await _call(hass, second, "glp_shots_today"))["shots_today"] == 1
 
     await hass.config_entries.async_unload(second.entry_id)
     await hass.async_block_till_done()
