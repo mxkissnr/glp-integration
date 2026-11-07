@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 ### Changed
+- **The name of the last shot curve image entity is now translated into English, German, Spanish, French, Italian and Dutch.** Refs #342
 - **Commands from the control entities (switch, number, select, button and light) now reach the app one at a time instead of in parallel, and the integration stores its data the way current Home Assistant versions expect.** Refs #341
 
 ### Fixed
