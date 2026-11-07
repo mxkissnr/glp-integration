@@ -509,14 +509,14 @@ automation:
 
 Die Integration stellt ihre Daten jedem KI-Konversationsagenten zur Verfügung, der Tools unterstützt, zum Beispiel OpenAI, Anthropic, Google Gemini oder ein lokales Ollama-Modell. Der Agent beantwortet dann Fragen zu deinen Espressoshots, den Wartungsaufgaben und der Maschine, in Assist oder in jedem anderen Chat, der den Agenten nutzt.
 
-**So schaltest du es ein:** Öffne die Optionen des Konversationsagenten (Einstellungen > Geräte & Dienste > die KI-Integration > Konfigurieren-Button des Agenten, auch erreichbar über Einstellungen > Sprachassistenten > dein Assistent > der Einstellungs-Button neben dem Konversationsagenten) und setze das Häkchen bei „Gaggiuino Local Profiler (<App-Name>)" unter „Home Assistant steuern" (englisch „Control Home Assistant"). Die Option steht neben „Assist". Pro GLP-App erscheint ein Eintrag, bei einer stabilen und einer DEV-App wählst du also, welche der Agent lesen darf.
+**So schaltest du es ein:** Öffne die Optionen des Konversationsagenten (Einstellungen > Geräte & Dienste > die KI-Integration > Konfigurieren-Button des Agenten, auch erreichbar über Einstellungen > Sprachassistenten > dein Assistent > der Einstellungs-Button neben dem Konversationsagenten) und setze das Häkchen bei „Gaggiuino Local Profiler (<App-Name>)“ unter „Home Assistant steuern“ (englisch „Control Home Assistant“). Die Option steht neben „Assist“. Pro GLP-App erscheint ein Eintrag, bei einer stabilen und einer DEV-App wählst du also, welche der Agent lesen darf.
 
 | Tool | Beantwortet Fragen wie |
 |---|---|
-| `glp_last_shot` | „Wie war mein letzter Shot?" — Profil, Dauer, Ausbeute, Dosis, Ratio, Druck, Score und Bewertung |
-| `glp_shots_today` | „Wie viele Shots heute?" — Anzahl heute, Gesamtzahl und Zeitpunkt des letzten Shots |
-| `glp_maintenance_due` | „Ist Entkalken fällig?" — welche Aufgaben fällig, bald fällig oder nie erledigt sind, inklusive der Mühlen |
-| `glp_machine_status` | „Ist die Maschine bereit?" — Erreichbarkeit, Vorheizstatus, Temperatur, Bezug, Wasserstand und aktives Profil |
+| `glp_last_shot` | „Wie war mein letzter Shot?“ — Profil, Dauer, Ausbeute, Dosis, Ratio, Druck, Score und Bewertung |
+| `glp_shots_today` | „Wie viele Shots heute?“ — Anzahl heute, Gesamtzahl und Zeitpunkt des letzten Shots |
+| `glp_maintenance_due` | „Ist Entkalken fällig?“ — welche Aufgaben fällig, bald fällig oder nie erledigt sind, inklusive der Mühlen |
+| `glp_machine_status` | „Ist die Maschine bereit?“ — Erreichbarkeit, Vorheizstatus, Temperatur, Bezug, Wasserstand und aktives Profil |
 
 Die Tools lesen nur Daten, die die Integration bereits hat; auf diesem Weg lässt sich nichts ändern. Dafür dienen die Dienste oder die Karten. Antworten zu Shots und Wartung beziehen sich immer auf die Standardmaschine. Das eingebaute Assist ohne KI-Agent kann diese Tools nicht nutzen.
 
