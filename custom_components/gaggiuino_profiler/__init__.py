@@ -22,6 +22,7 @@ from .auth import GlpAuth
 from .const import CONF_SCAN_INTERVAL, DOMAIN, SCAN_INTERVAL_SECONDS
 from .coordinator import CONF_INSTALL_ID, GlpDataCoordinator
 from .live_coordinator import GlpLiveCoordinator
+from .llm_api import async_register_llm_api
 from .machine_coordinator import GlpMachineCoordinator
 from .orders_api import GlpBeansInfoView, GlpOrdersSubView, GlpOrdersView, GlpShotsSubView
 from .settings_coordinator import GlpSettingsCoordinator
@@ -342,6 +343,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: GlpConfigEntry) -> bool:
     )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(_async_options_updated))
+    # #343: read-only Assist tools, registered only now that runtime_data is set.
+    entry.async_on_unload(async_register_llm_api(hass, entry))
 
     # #191: keep the default-machine device's "Visit" link pointed at the
     # machine's own web UI and its firmware version shown, sourced from the
