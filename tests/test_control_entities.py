@@ -9,7 +9,10 @@ test_ready_by_service.py: set up a real config entry through
 tests.common.mock_all_coordinator_endpoints, then assert entity state and
 (for writes) the exact POST url/body recorded on mock_calls. Runs on
 strict_aioclient_mock, so a request this file did not mock fails the test.
+`_setup_entry(enable=...)` pre-registers entities that start disabled on new
+installs (#341), so the existing-install path sees them enabled.
 """
+from homeassistant.helpers import entity_registry as er
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.gaggiuino_profiler.const import DOMAIN
@@ -37,7 +40,7 @@ SCALES_SETTINGS = {"forcePredictive": "true", "hwScalesEnabled": "true", "btScal
 SYSTEM_SETTINGS = {"releaseChannel": 1}
 
 
-async def _setup_entry(hass, strict_aioclient_mock):
+async def _setup_entry(hass, strict_aioclient_mock, *, enable: tuple[str, ...] = ()):
     url = "http://glp.example.com"
     mock_all_coordinator_endpoints(
         strict_aioclient_mock,
@@ -57,6 +60,15 @@ async def _setup_entry(hass, strict_aioclient_mock):
     )
     entry = MockConfigEntry(domain=DOMAIN, data={"url": url})
     entry.add_to_hass(hass)
+    registry = er.async_get(hass)
+    for key in enable:
+        registry.async_get_or_create(
+            "number",
+            DOMAIN,
+            f"{entry.entry_id}_{key}",
+            config_entry=entry,
+            suggested_object_id=f"gaggiuino_local_profiler_{key}",
+        )
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
     return entry, url
@@ -121,7 +133,7 @@ async def test_led_light_turn_off_preserves_color(hass, strict_aioclient_mock) -
 
 
 async def test_number_reads_flat_and_nested_values(hass, strict_aioclient_mock) -> None:
-    await _setup_entry(hass, strict_aioclient_mock)
+    await _setup_entry(hass, strict_aioclient_mock, enable=("led_tof_min",))
     steam = hass.states.get("number.gaggiuino_local_profiler_steam_set_point")
     assert steam is not None and steam.state == "145"
     tof_min = hass.states.get("number.gaggiuino_local_profiler_led_tof_min")
@@ -146,7 +158,7 @@ async def test_number_set_value_merges_into_flat_boiler_field(hass, strict_aiocl
 
 
 async def test_number_set_value_merges_into_nested_led_field(hass, strict_aioclient_mock) -> None:
-    entry, url = await _setup_entry(hass, strict_aioclient_mock)
+    entry, url = await _setup_entry(hass, strict_aioclient_mock, enable=("led_tof_min",))
     strict_aioclient_mock.post(f"{url}/api/machine/settings/led", json={"success": True})
 
     await hass.services.async_call(
