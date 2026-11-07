@@ -364,8 +364,9 @@ def _additional_machine_id(entry: ConfigEntry, device: dr.DeviceEntry) -> int | 
     for domain, identifier in device.identifiers:
         if domain != DOMAIN or not identifier.startswith(prefix):
             continue
-        rest = identifier[len(prefix):]
-        if rest.isdigit():
+        rest = identifier.removeprefix(prefix)
+        # isdigit() also accepts superscripts ("\u00b2") that int() rejects.
+        if rest.isascii() and rest.isdigit():
             return int(rest)
     return None
 
