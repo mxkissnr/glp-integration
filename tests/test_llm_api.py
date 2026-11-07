@@ -76,18 +76,17 @@ def _maintenance() -> dict:
     }
 
 
-async def _setup(hass, aioclient_mock, *, url: str = URL, title: str = "Stable", **kwargs) -> MockConfigEntry:
-    mock_all_coordinator_endpoints(
-        aioclient_mock,
-        url,
-        status=_status(),
-        shots=_shots(),
-        maintenance=_maintenance(),
-        preheat={"ready": True, "temp": 93.1, "targetTemp": 93},
-        live_data={"isLive": False},
-        machine_status={"available": True, "waterLevel": 64},
-        **kwargs,
-    )
+async def _setup(hass, aioclient_mock, *, url: str = URL, title: str = "Stable", **overrides) -> MockConfigEntry:
+    payloads = {
+        "status": _status(),
+        "shots": _shots(),
+        "maintenance": _maintenance(),
+        "preheat": {"ready": True, "temp": 93.1, "targetTemp": 93},
+        "live_data": {"isLive": False},
+        "machine_status": {"available": True, "waterLevel": 64},
+    }
+    payloads.update(overrides)
+    mock_all_coordinator_endpoints(aioclient_mock, url, **payloads)
     entry = MockConfigEntry(domain=DOMAIN, title=title, data={"url": url})
     entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(entry.entry_id)
