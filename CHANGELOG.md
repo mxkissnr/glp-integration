@@ -2,21 +2,22 @@
 
 ## [Unreleased]
 
-### Added
-- **The new image entity `image.gaggiuino_local_profiler_last_shot_chart` on the Shots device shows the last shot's pressure, flow, weight and temperature curves as a picture for dashboards and phone notifications; it needs GLP app 3.7.0 or newer and is unavailable with older ones.** Refs #342
-- **AI conversation agents in Assist can now answer questions about the last shot, today's shots, due maintenance and the machine status once the GLP app is ticked under "Control Home Assistant" in the agent's options; they can only read this data, never change it.** Refs #343
+## [1.36.0] – 2026-11-08
 
-### Changed
-- **Commands from the control entities (switch, number, select, button and light) now reach the app one at a time instead of in parallel, and the integration stores its data the way current Home Assistant versions expect.** Refs #341
-- **Error messages from the controls and the services, such as a failed command to the app, unreadable machine settings or a rejected ready-by time, now appear in the Home Assistant language.** Refs #341
-- **On new installs the rarely used technical settings Offset Temperature, Heating Power, Main Divider, Brew Divider and LED Time-of-Flight Min/Max start disabled and can be enabled in the entity settings; existing installs keep them as they are.** Refs #341
+**Before you update:** this version needs Home Assistant 2026.8 or newer.
 
-### Fixed
-- **Home Assistant no longer offers the GLP app as newly discovered when it is set up under another address, such as `http://localhost:8099` or an IP address; a second app with its own database is still offered.** Refs #363
-- **The confirmation for a discovered GLP app now names the app and its address separately, in all six languages.** Refs #365
-- **The integration now requires Home Assistant 2026.8.0 or newer, because it relies on features that older versions do not have.** Refs #364
-- **A discovered GLP app and the entry it creates now show the app's own name instead of its internal hostname, so the stable and the dev app are easy to tell apart; existing entries keep their titles.** Refs #365
-- **A machine deleted in the GLP app now disappears from Home Assistant together with its device and entities at the next update, and a machine the app no longer lists can also be deleted on its device page.** Refs #341
+**New**
+- A new picture entity shows the last shot's curves for dashboards and phone notifications. It needs GLP app 3.7.0 or newer.
+- Voice and chat assistants in Home Assistant can now answer questions about your last shot, today's shots, due maintenance and the machine status. Turn on the GLP app under "Control Home Assistant" in the assistant's options. They can only read this data.
+
+**Changed**
+- Error messages now appear in your Home Assistant language.
+- On new installs, rarely used technical settings start switched off. You can enable them in the entity settings. Existing installs stay as they are.
+
+**Fixed**
+- A machine you delete in the app now disappears from Home Assistant too.
+- Home Assistant no longer offers an app you already set up as newly found. The discovery message now shows the app's real name, so the stable and the dev app are easy to tell apart.
+- Commands from the controls are sent one at a time, so they no longer get in each other's way.
 
 ## [1.35.0] – 2026-11-01
 ### Added
