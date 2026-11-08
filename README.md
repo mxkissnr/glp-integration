@@ -58,6 +58,7 @@ On older Home Assistant versions, use the HACS button in [Installation](#-instal
 | 🎨 | **Theme Sync** | Machine status sensor exposes a `theme` attribute the bundled cards read to match each machine's configured accent color |
 | 💾 | **Backup & Maintenance Services** | `backup` service exports shots/annotations/coffee library/blocklist to `<config>/glp_backups/`; `maintenance_done` marks a maintenance task complete |
 | 🔔 | **Shot Event** | Fires `gaggiuino_profiler_shot_completed` with full shot data after every pull, and the same shot on the `event.gaggiuino_local_profiler_shot` event entity |
+| 🖼️ | **Last Shot Picture** | `image` entity with the last shot's pressure, flow, weight and temperature curves for dashboards and phone notifications (needs GLP app 3.7.0 or newer) — see [Image](DOCS.md#image) |
 | 🗣️ | **Assist Tools** | AI conversation agents can read the last shot, today's shots, due maintenance and machine status — see [Assist and AI agents](DOCS.md#assist-and-ai-agents) |
 | 🗂️ | **Grouped Devices** | The GLP device's entities are grouped into the child devices Shots, Maintenance and Preheat; additional machines are child devices too |
 | 🌍 | **Translated Names** | Entity and device names follow the Home Assistant language: English, German, Spanish, French, Italian and Dutch |
