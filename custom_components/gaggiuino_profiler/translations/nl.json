@@ -10,7 +10,7 @@
       },
       "hassio_confirm": {
         "title": "Gaggiuino Local Profiler gevonden",
-        "description": "De Gaggiuino Local Profiler-app is gevonden op {name}. Integratie voor dit adres toevoegen?"
+        "description": "De app {name} is gevonden op {address}. Integratie voor dit adres toevoegen?"
       }
     },
     "error": {
@@ -203,6 +203,11 @@
         "name": "Laatste shot"
       }
     },
+    "image": {
+      "last_shot_chart": {
+        "name": "Curve van laatste shot"
+      }
+    },
     "light": {
       "led": {
         "name": "LED"
@@ -298,6 +303,26 @@
     },
     "preheat": {
       "name": "Voorverwarmen"
+    }
+  },
+  "exceptions": {
+    "invalid_maintenance_task": {
+      "message": "Onbekende onderhoudstaak: {task}"
+    },
+    "ready_by_rejected": {
+      "message": "De GLP-app heeft het tijdstip waarop de machine klaar moet zijn geweigerd: {reason}"
+    },
+    "ready_by_rejected_no_reason": {
+      "message": "De GLP-app heeft het tijdstip waarop de machine klaar moet zijn geweigerd. Controleer of er in de app een voorverwarmschakelaar is ingesteld."
+    },
+    "settings_unreachable": {
+      "message": "De machine-instellingen ({category}) konden niet worden gelezen: {error}"
+    },
+    "settings_unavailable": {
+      "message": "De machine-instellingen ({category}) zijn niet beschikbaar. Staat de machine aan en is ze bereikbaar?"
+    },
+    "request_failed": {
+      "message": "Het verzoek aan de GLP-app is mislukt: {error}"
     }
   }
 }

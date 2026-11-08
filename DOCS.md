@@ -5,7 +5,7 @@ Integrates the [Gaggiuino Local Profiler](https://github.com/mxkissnr/gaggiuino-
 ## Requirements
 
 - [Gaggiuino Local Profiler App](https://github.com/mxkissnr/gaggiuino-local-profiler) installed and running
-- Home Assistant 2024.7.0 or newer
+- Home Assistant 2026.8.0 or newer
 
 ## Installation
 
@@ -51,7 +51,7 @@ On older Home Assistant versions the beta builds are still offered by HACS under
 
 The integration tests the connection right away during setup.
 
-On Home Assistant OS with the GLP app installed, Home Assistant also offers the integration by itself: once the app supports it, its announcement shows up under *Discovered* and one confirmation adds the integration with the address the app reported. Manual setup is unchanged and still works the same way.
+On Home Assistant OS with the GLP app installed, Home Assistant also offers the integration by itself: once the app supports it, its announcement shows up under *Discovered* and one confirmation adds the integration with the address the app reported. Manual setup is unchanged and still works the same way. An app that is already set up is recognised by its install id, whichever address the entry uses, and is not offered again. A second app with its own database is offered separately. The card and the new entry use the app's own name, and the confirmation also shows its address.
 
 ## Shot Card
 
@@ -283,6 +283,8 @@ With multi-machine mode enabled (app v2.0.0+), a `Reachable` binary sensor is ad
 
 On Home Assistant 2026.9 and newer that device is a child device of the Gaggiuino Local Profiler device, so the extra machine shows up nested under the main device instead of beside it. Device and entity ids are unchanged, and existing extra-machine devices are converted in place. Going back to v1.34.0 or older afterwards cannot add the additional machines' entities again (Home Assistant logs identifiers that overlap with those of the child device) until those devices are removed; upgrading again restores them. Going back to v1.34.x also leaves the empty Shots, Maintenance and Preheat child devices of the GLP device behind; they can be deleted. On older Home Assistant versions the extra machine stays a separate device linked to the main one.
 
+When a machine is deleted in the app, its device and entities disappear from Home Assistant at the next update — within the update interval, 60 s by default. A machine the app no longer lists can also be deleted by hand on its device page; the Gaggiuino Local Profiler device and its Shots, Maintenance and Preheat devices cannot.
+
 The default machine's `Machine Status` sensor's `machines` attribute, and each additional machine's `Status` sensor (since v1.29.0), also expose a `theme` attribute — the accent color configured for that machine in the app's Settings → Machines, which the bundled Lovelace/Order cards read to color their header per machine.
 
 ¹ Goes `unavailable` when the Gaggiuino machine itself is powered off or unreachable, not just when the GLP add-on is unreachable — use this to detect "is the machine actually on" in automations. `Machine Status` stays available, but shows `error` when the machine is unreachable or the last sync failed.
@@ -325,15 +327,15 @@ The default machine's `Machine Status` sensor's `machines` attribute, and each a
 | Entity | Description | Unit | Range |
 |---|---|---|---|
 | Steam Set Point | Boiler steam target temperature | °C | 100–160 |
-| Offset Temperature | Boiler temperature calibration offset | °C | -10–10 |
-| Heating Power | Boiler heating power | — | 100–1500 |
-| Main Divider | Main boiler PID divider | — | 1–5 |
-| Brew Divider | Brew boiler PID divider | — | 1–5 |
+| Offset Temperature⁴ | Boiler temperature calibration offset | °C | -10–10 |
+| Heating Power⁴ | Boiler heating power | — | 100–1500 |
+| Main Divider⁴ | Main boiler PID divider | — | 1–5 |
+| Brew Divider⁴ | Brew boiler PID divider | — | 1–5 |
 | Startup Heat Delta | Extra heat added during startup | °C | 0–10 |
 | LCD Brightness | Touchscreen brightness | % | 0–100 |
 | LCD Sleep Timeout | Idle time before the screen sleeps | min | 0–120 |
 | LCD Go Home Timeout | Idle time before returning to the home screen | s | 0–60 |
-| LED Time-of-Flight Min/Max | Distance sensor thresholds for the LED's proximity trigger | — | 0–200 |
+| LED Time-of-Flight Min/Max⁴ | Distance sensor thresholds for the LED's proximity trigger | — | 0–200 |
 
 ### Switch³
 
@@ -349,6 +351,8 @@ The default machine's `Machine Status` sensor's `machines` attribute, and each a
 | Bluetooth Scales Enabled | Bluetooth scale |
 
 ³ `entity_category: config` — grouped under the device's "Configuration" section in the UI, not shown alongside everyday controls by default.
+
+⁴ Disabled by default on new installs; enable it on the entity's settings page. Installs that already had the entity keep it enabled.
 
 ### Button
 
@@ -370,6 +374,18 @@ All light/number/switch/button/select (Operation Mode, Release Channel) entities
 | Firmware (Machine Firmware) | Shows whether a newer firmware build is available for the espresso machine itself, comparing the machine's installed version against the latest matching release on the firmware's own GitHub project. Supports installing: triggering it starts the machine's own OTA update flow. There is no live progress reporting during the OTA — `installed_version` catches up once the machine reports its new version on the next poll. Gaggiuino machines only; on GaggiMate the add-on returns 501 for the firmware endpoint, so the entity has no versions and Home Assistant shows it as "Unknown". If the add-on can't currently resolve the latest release (machine unreachable, GitHub rate-limited), the entity shows the installed version as up to date rather than "Unknown", and the last known firmware version is kept across brief machine outages; it flips back to "update available" on its own once the check succeeds. |
 
 The GLP device page's **Visit** link opens the espresso machine's own web interface (`http://<machine hostname>`), and the device shows the machine's installed firmware version as its software version — both populate once the machine has been reachable at least once.
+
+### Image
+
+| Entity | Description |
+|---|---|
+| Last shot curve | A picture of the last shot's pressure, pump flow, weight and temperature curves, drawn by the GLP app (PNG, 960 × 480, light background) with the legend in the Home Assistant language. |
+
+The state of the entity is the time of the last shot, so it changes only when the last shot changes. The integration keeps the current picture in memory: dashboards would otherwise make the app redraw the same curve over and over, and the app renders on every request and allows 30 renders per minute per IP.
+
+It needs GLP app 3.7.0 or newer. With an older app the entity becomes unavailable the first time the picture is requested, and it tries again with the next shot. It is also unavailable while there is no shot yet.
+
+For a dashboard, use a Picture entity card with this entity.
 
 ### Migrating from ALERTua/hass-gaggiuino
 
@@ -435,6 +451,28 @@ automation:
 
 ### Automation examples
 
+**Notification with the last shot's curve:**
+```yaml
+automation:
+  trigger:
+    platform: state
+    entity_id: event.gaggiuino_local_profiler_shot
+  condition:
+    - condition: template
+      value_template: "{{ trigger.to_state.attributes.event_type == 'shot_finished' }}"
+  action:
+    service: notify.mobile_app_<your_phone>
+    data:
+      title: "Shot complete"
+      message: >
+        {{ trigger.to_state.attributes.profile }} –
+        {{ trigger.to_state.attributes.duration_s }}s
+      data:
+        image: /api/image_proxy/image.gaggiuino_local_profiler_last_shot_chart
+```
+
+The companion app loads the picture through Home Assistant, so it also works away from home as long as the app can reach Home Assistant.
+
 **Notification after every shot:**
 ```yaml
 automation:
@@ -466,6 +504,21 @@ automation:
     data:
       brightness_pct: 30
 ```
+
+## Assist and AI agents
+
+The integration offers its data to any AI conversation agent that supports tools, for example OpenAI, Anthropic, Google Gemini or a local Ollama model. The agent then answers questions about your espresso shots, the maintenance tasks and the machine, inside Assist or any other chat that uses the agent.
+
+**To enable it:** open the options of the conversation agent (Settings > Devices & services > the AI integration > the agent's configure button, also reachable from Settings > Voice assistants > your assistant > the settings button next to the conversation agent) and tick "Gaggiuino Local Profiler (<app name>)" under "Control Home Assistant". The option sits next to "Assist". One entry appears per GLP app, so with a stable and a DEV app you choose which one the agent may read.
+
+| Tool | Answers questions like |
+|---|---|
+| `glp_last_shot` | "How was my last shot?" — profile, duration, yield, dose, ratio, pressure, score and rating |
+| `glp_shots_today` | "How many shots today?" — today's count, the total count and the time of the last shot |
+| `glp_maintenance_due` | "Is descaling due?" — which tasks are due, soon due or never done, including the grinders |
+| `glp_machine_status` | "Is the machine ready?" — reachability, preheat state, temperature, brewing, water level and the active profile |
+
+The tools only read data the integration already has; nothing can be changed this way. Use the services or the cards for that. Shot and maintenance answers always describe the default machine. The built-in Assist without an AI agent cannot use these tools.
 
 ## Diagnostics
 

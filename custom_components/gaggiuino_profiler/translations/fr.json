@@ -10,7 +10,7 @@
       },
       "hassio_confirm": {
         "title": "Gaggiuino Local Profiler détecté",
-        "description": "L'application Gaggiuino Local Profiler a été trouvée à l'adresse {name}. Ajouter l'intégration pour cette adresse ?"
+        "description": "L'application {name} a été trouvée à l'adresse {address}. Ajouter l'intégration pour cette adresse ?"
       }
     },
     "error": {
@@ -203,6 +203,11 @@
         "name": "Dernier shot"
       }
     },
+    "image": {
+      "last_shot_chart": {
+        "name": "Courbe du dernier shot"
+      }
+    },
     "light": {
       "led": {
         "name": "LED"
@@ -298,6 +303,26 @@
     },
     "preheat": {
       "name": "Préchauffage"
+    }
+  },
+  "exceptions": {
+    "invalid_maintenance_task": {
+      "message": "Tâche d'entretien inconnue : {task}"
+    },
+    "ready_by_rejected": {
+      "message": "L'application GLP a refusé l'heure à laquelle la machine doit être prête : {reason}"
+    },
+    "ready_by_rejected_no_reason": {
+      "message": "L'application GLP a refusé l'heure à laquelle la machine doit être prête. Vérifiez qu'un interrupteur de préchauffage est configuré dans l'application."
+    },
+    "settings_unreachable": {
+      "message": "Impossible de lire les réglages de la machine ({category}) : {error}"
+    },
+    "settings_unavailable": {
+      "message": "Les réglages de la machine ({category}) ne sont pas disponibles. La machine est-elle allumée et joignable ?"
+    },
+    "request_failed": {
+      "message": "La requête vers l'application GLP a échoué : {error}"
     }
   }
 }

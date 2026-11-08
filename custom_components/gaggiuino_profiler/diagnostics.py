@@ -1,13 +1,15 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.diagnostics import async_redact_data
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN
 from .coordinator import GlpDataCoordinator
+
+if TYPE_CHECKING:
+    from . import GlpConfigEntry
+
 
 # Diagnostics get pasted into public issue reports, so addresses, account
 # handles and names stay out. async_redact_data matches these keys at every
@@ -18,6 +20,7 @@ from .coordinator import GlpDataCoordinator
 TO_REDACT = {
     "url",  # config entry URL and its options override
     "machine_url",  # bare machine hostname from /api/status
+    "install_id",  # identifies the install; readable without a token, so never paste it
     "machines",  # registry: each machine's name, type and reachability
     "switch_entity",  # HA entity id of the machine's power switch
     "last_shot_coffee",  # free-text bean name from the shot annotation
@@ -35,9 +38,9 @@ TO_REDACT = {
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, entry: ConfigEntry
+    hass: HomeAssistant, entry: GlpConfigEntry
 ) -> dict[str, Any]:
-    coordinator: GlpDataCoordinator = hass.data[DOMAIN][entry.entry_id]["data"]
+    coordinator: GlpDataCoordinator = entry.runtime_data.data
     return async_redact_data(
         {
             "config_entry": {"url": entry.data.get("url"), "options": dict(entry.options)},

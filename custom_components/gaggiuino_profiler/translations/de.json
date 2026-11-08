@@ -10,7 +10,7 @@
       },
       "hassio_confirm": {
         "title": "Gaggiuino Local Profiler gefunden",
-        "description": "Die Gaggiuino Local Profiler-App wurde unter {name} gefunden. Integration für diese Adresse hinzufügen?"
+        "description": "Die App {name} wurde unter {address} gefunden. Integration für diese Adresse hinzufügen?"
       }
     },
     "error": {
@@ -203,6 +203,11 @@
         "name": "Letzter Shot"
       }
     },
+    "image": {
+      "last_shot_chart": {
+        "name": "Letzte Shot-Kurve"
+      }
+    },
     "light": {
       "led": {
         "name": "LED"
@@ -298,6 +303,26 @@
     },
     "preheat": {
       "name": "Vorheizen"
+    }
+  },
+  "exceptions": {
+    "invalid_maintenance_task": {
+      "message": "Unbekannte Wartungsaufgabe: {task}"
+    },
+    "ready_by_rejected": {
+      "message": "Die GLP-App hat die Bereit-um-Zeit abgelehnt: {reason}"
+    },
+    "ready_by_rejected_no_reason": {
+      "message": "Die GLP-App hat die Bereit-um-Zeit abgelehnt. Prüfe, ob in der App ein Schalter zum Vorheizen eingerichtet ist."
+    },
+    "settings_unreachable": {
+      "message": "Die Maschineneinstellungen ({category}) konnten nicht gelesen werden: {error}"
+    },
+    "settings_unavailable": {
+      "message": "Die Maschineneinstellungen ({category}) sind nicht verfügbar. Ist die Maschine eingeschaltet und erreichbar?"
+    },
+    "request_failed": {
+      "message": "Die Anfrage an die GLP-App ist fehlgeschlagen: {error}"
     }
   }
 }

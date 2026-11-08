@@ -1,21 +1,27 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from homeassistant.components.update import UpdateEntity, UpdateEntityFeature
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
 from .coordinator import GlpDataCoordinator
 from .entity import GlpEntity
+
+if TYPE_CHECKING:
+    from . import GlpConfigEntry
+
+# Installing firmware calls the app, so serialize the platform's updates.
+PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: GlpConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    coordinator: GlpDataCoordinator = hass.data[DOMAIN][entry.entry_id]["data"]
+    coordinator: GlpDataCoordinator = entry.runtime_data.data
     async_add_entities([GlpUpdateEntity(coordinator, entry), GlpMachineFirmwareUpdate(coordinator, entry)])
 
 
@@ -36,7 +42,7 @@ class GlpUpdateEntity(GlpEntity[GlpDataCoordinator], UpdateEntity):
     _attr_translation_key = "update"
     _attr_title = "Gaggiuino Local Profiler"
 
-    def __init__(self, coordinator: GlpDataCoordinator, entry: ConfigEntry) -> None:
+    def __init__(self, coordinator: GlpDataCoordinator, entry: GlpConfigEntry) -> None:
         super().__init__(coordinator, entry, "update")
 
     @property
@@ -94,7 +100,7 @@ class GlpMachineFirmwareUpdate(GlpEntity[GlpDataCoordinator], UpdateEntity):
     _attr_title = "Machine Firmware"
     _attr_supported_features = UpdateEntityFeature.INSTALL
 
-    def __init__(self, coordinator: GlpDataCoordinator, entry: ConfigEntry) -> None:
+    def __init__(self, coordinator: GlpDataCoordinator, entry: GlpConfigEntry) -> None:
         _url = (entry.options.get("url") or entry.data["url"]).rstrip("/")
         super().__init__(coordinator, entry, "firmware_update", url=_url)
 

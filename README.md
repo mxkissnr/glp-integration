@@ -12,7 +12,7 @@
   <a href="https://github.com/hacs/default">
     <img src="https://img.shields.io/badge/HACS-Default-41bdf5?style=flat-square" alt="HACS Default"/>
   </a>
-  <img src="https://img.shields.io/badge/Home%20Assistant-2024.7.0%2B-41bdf5?logo=home-assistant&style=flat-square" alt="HA Version"/>
+  <img src="https://img.shields.io/badge/Home%20Assistant-2026.8.0%2B-41bdf5?logo=home-assistant&style=flat-square" alt="HA Version"/>
   <img src="https://img.shields.io/github/downloads/mxkissnr/glp-integration/total?style=flat-square&label=Downloads" alt="Downloads"/>
   <img src="https://img.shields.io/badge/Polling-local-6b7280?style=flat-square" alt="Local Polling"/>
   <img src="https://img.shields.io/badge/Built%20with-Claude%20by%20Anthropic-D97706?style=flat-square" alt="Built with Claude"/>
@@ -58,6 +58,8 @@ On older Home Assistant versions, use the HACS button in [Installation](#-instal
 | 🎨 | **Theme Sync** | Machine status sensor exposes a `theme` attribute the bundled cards read to match each machine's configured accent color |
 | 💾 | **Backup & Maintenance Services** | `backup` service exports shots/annotations/coffee library/blocklist to `<config>/glp_backups/`; `maintenance_done` marks a maintenance task complete |
 | 🔔 | **Shot Event** | Fires `gaggiuino_profiler_shot_completed` with full shot data after every pull, and the same shot on the `event.gaggiuino_local_profiler_shot` event entity |
+| 🖼️ | **Last Shot Picture** | `image` entity with the last shot's pressure, flow, weight and temperature curves for dashboards and phone notifications (needs GLP app 3.7.0 or newer) — see [Image](DOCS.md#image) |
+| 🗣️ | **Assist Tools** | AI conversation agents can read the last shot, today's shots, due maintenance and machine status — see [Assist and AI agents](DOCS.md#assist-and-ai-agents) |
 | 🗂️ | **Grouped Devices** | The GLP device's entities are grouped into the child devices Shots, Maintenance and Preheat; additional machines are child devices too |
 | 🌍 | **Translated Names** | Entity and device names follow the Home Assistant language: English, German, Spanish, French, Italian and Dutch |
 | 🔎 | **Automatic Discovery** | On Home Assistant OS the integration is offered by itself once the GLP app announces its address |
@@ -214,15 +216,15 @@ To run a beta release instead, either enable the *Pre-release* entity on the int
 | Entity | Description | Unit | Range |
 |---|---|---|---|
 | Steam Set Point | Boiler steam target temperature | °C | 100–160 |
-| Offset Temperature | Boiler temperature calibration offset | °C | -10–10 |
-| Heating Power | Boiler heating power | — | 100–1500 |
-| Main Divider | Main boiler PID divider | — | 1–5 |
-| Brew Divider | Brew boiler PID divider | — | 1–5 |
+| Offset Temperature³ | Boiler temperature calibration offset | °C | -10–10 |
+| Heating Power³ | Boiler heating power | — | 100–1500 |
+| Main Divider³ | Main boiler PID divider | — | 1–5 |
+| Brew Divider³ | Brew boiler PID divider | — | 1–5 |
 | Startup Heat Delta | Extra heat added during startup | °C | 0–10 |
 | LCD Brightness | Touchscreen brightness | % | 0–100 |
 | LCD Sleep Timeout | Idle time before the screen sleeps | min | 0–120 |
 | LCD Go Home Timeout | Idle time before returning to the home screen | s | 0–60 |
-| LED Time-of-Flight Min/Max | Distance sensor thresholds for the LED's proximity trigger | — | 0–200 |
+| LED Time-of-Flight Min/Max³ | Distance sensor thresholds for the LED's proximity trigger | — | 0–200 |
 
 ### Switch²
 
@@ -238,6 +240,8 @@ To run a beta release instead, either enable the *Pre-release* entity on the int
 | Bluetooth Scales Enabled | Bluetooth scale |
 
 ² `entity_category: config` — grouped under the device's "Configuration" section, not shown alongside everyday controls by default.
+
+³ Disabled by default on new installs; enable it on the entity's settings page. Installs that already had the entity keep it enabled.
 
 ### Button
 

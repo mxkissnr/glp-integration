@@ -1,23 +1,27 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
 from .coordinator import GlpDataCoordinator
 from .entity import GlpAdditionalMachineEntity, GlpEntity
 from .live_coordinator import GlpLiveCoordinator
 from .machine_coordinator import GlpMachineCoordinator
+
+if TYPE_CHECKING:
+    from . import GlpConfigEntry
+
+# Read-only platform: entities only mirror the coordinators.
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True)
@@ -82,13 +86,13 @@ MACHINE_BINARY_SENSORS: tuple[GlpMachineBinarySensorDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: GlpConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    live_coordinator: GlpLiveCoordinator       = hass.data[DOMAIN][entry.entry_id]["live"]
-    data_coordinator: GlpDataCoordinator       = hass.data[DOMAIN][entry.entry_id]["data"]
-    machine_coordinator: GlpMachineCoordinator = hass.data[DOMAIN][entry.entry_id]["machine"]
-    parent_device_id: str | None               = hass.data[DOMAIN][entry.entry_id].get("parent_device_id")
+    live_coordinator: GlpLiveCoordinator       = entry.runtime_data.live
+    data_coordinator: GlpDataCoordinator       = entry.runtime_data.data
+    machine_coordinator: GlpMachineCoordinator = entry.runtime_data.machine
+    parent_device_id: str | None               = entry.runtime_data.parent_device_id
     async_add_entities([
         IsBrewingSensor(live_coordinator, entry),
         PreheatReadySensor(data_coordinator, entry, parent_device_id),
@@ -131,7 +135,7 @@ class IsBrewingSensor(GlpEntity[GlpLiveCoordinator], BinarySensorEntity):
     # bundled cards still read it live from the state machine).
     _unrecorded_attributes = frozenset({"datapoints", "seq"})
 
-    def __init__(self, coordinator: GlpLiveCoordinator, entry: ConfigEntry) -> None:
+    def __init__(self, coordinator: GlpLiveCoordinator, entry: GlpConfigEntry) -> None:
         super().__init__(coordinator, entry, "is_brewing")
 
     @property
@@ -173,7 +177,7 @@ class PreheatReadySensor(GlpEntity[GlpDataCoordinator], BinarySensorEntity):
     def __init__(
         self,
         coordinator: GlpDataCoordinator,
-        entry: ConfigEntry,
+        entry: GlpConfigEntry,
         parent_device_id: str | None = None,
     ) -> None:
         super().__init__(coordinator, entry, "preheat_ready", group="preheat", parent_device_id=parent_device_id)
@@ -195,7 +199,7 @@ class MachineStandbySensor(GlpEntity[GlpDataCoordinator], BinarySensorEntity):
 
     _attr_translation_key = "machine_standby"
 
-    def __init__(self, coordinator: GlpDataCoordinator, entry: ConfigEntry) -> None:
+    def __init__(self, coordinator: GlpDataCoordinator, entry: GlpConfigEntry) -> None:
         super().__init__(coordinator, entry, "machine_standby")
 
     @property
@@ -215,7 +219,7 @@ class SteamSwitchSensor(GlpEntity[GlpMachineCoordinator], BinarySensorEntity):
     _attr_translation_key = "steam_switch"
     _attr_device_class = BinarySensorDeviceClass.HEAT
 
-    def __init__(self, coordinator: GlpMachineCoordinator, entry: ConfigEntry) -> None:
+    def __init__(self, coordinator: GlpMachineCoordinator, entry: GlpConfigEntry) -> None:
         super().__init__(coordinator, entry, "steam_switch")
 
     @property
@@ -241,7 +245,7 @@ class GlpMachineBinarySensor(GlpEntity[GlpMachineCoordinator], BinarySensorEntit
     def __init__(
         self,
         coordinator: GlpMachineCoordinator,
-        entry: ConfigEntry,
+        entry: GlpConfigEntry,
         description: GlpMachineBinarySensorDescription,
     ) -> None:
         super().__init__(coordinator, entry, description.key)
@@ -281,7 +285,7 @@ class GlpAdditionalMachineReachableSensor(GlpAdditionalMachineEntity[GlpDataCoor
     def __init__(
         self,
         coordinator: GlpDataCoordinator,
-        entry: ConfigEntry,
+        entry: GlpConfigEntry,
         machine_id: int,
         machine_name: str,
         parent_device_id: str | None = None,

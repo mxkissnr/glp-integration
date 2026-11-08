@@ -7,6 +7,7 @@ for the same note on the write semantics.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from typing import TYPE_CHECKING
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -14,9 +15,14 @@ from homeassistant.const import EntityCategory, UnitOfTemperature, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
 from .entity import GlpEntity
 from .settings_coordinator import GlpSettingsCoordinator
+
+if TYPE_CHECKING:
+    from . import GlpConfigEntry
+
+# Every entity in this platform talks to the app, so serialize its updates.
+PARALLEL_UPDATES = 1
 
 
 @dataclass(frozen=True)
@@ -27,6 +33,9 @@ class GlpNumberDescription(NumberEntityDescription):
     data_path: tuple[str, ...] = field(default_factory=tuple)
 
 
+# #341: the rarely used calibration, PID and sensor-threshold values start
+# disabled on new installs. HA only applies entity_registry_enabled_default
+# when it creates a registry entry, so existing installs stay as they are.
 NUMBERS: tuple[GlpNumberDescription, ...] = (
     GlpNumberDescription(
         key="steam_set_point",
@@ -41,6 +50,7 @@ NUMBERS: tuple[GlpNumberDescription, ...] = (
     ),
     GlpNumberDescription(
         key="offset_temp",
+        entity_registry_enabled_default=False,
         translation_key="offset_temp",
         category="boiler",
         data_path=("offsetTemp",),
@@ -52,6 +62,7 @@ NUMBERS: tuple[GlpNumberDescription, ...] = (
     ),
     GlpNumberDescription(
         key="hpwr",
+        entity_registry_enabled_default=False,
         translation_key="hpwr",
         category="boiler",
         data_path=("hpwr",),
@@ -62,6 +73,7 @@ NUMBERS: tuple[GlpNumberDescription, ...] = (
     ),
     GlpNumberDescription(
         key="main_divider",
+        entity_registry_enabled_default=False,
         translation_key="main_divider",
         category="boiler",
         data_path=("mainDivider",),
@@ -72,6 +84,7 @@ NUMBERS: tuple[GlpNumberDescription, ...] = (
     ),
     GlpNumberDescription(
         key="brew_divider",
+        entity_registry_enabled_default=False,
         translation_key="brew_divider",
         category="boiler",
         data_path=("brewDivider",),
@@ -129,6 +142,7 @@ NUMBERS: tuple[GlpNumberDescription, ...] = (
     ),
     GlpNumberDescription(
         key="led_tof_min",
+        entity_registry_enabled_default=False,
         translation_key="led_tof_min",
         category="led",
         data_path=("tof", "min"),
@@ -139,6 +153,7 @@ NUMBERS: tuple[GlpNumberDescription, ...] = (
     ),
     GlpNumberDescription(
         key="led_tof_max",
+        entity_registry_enabled_default=False,
         translation_key="led_tof_max",
         category="led",
         data_path=("tof", "max"),
@@ -152,10 +167,10 @@ NUMBERS: tuple[GlpNumberDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: GlpConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    settings_coordinator: GlpSettingsCoordinator = hass.data[DOMAIN][entry.entry_id]["settings"]
+    settings_coordinator: GlpSettingsCoordinator = entry.runtime_data.settings
     async_add_entities([GlpMachineNumber(settings_coordinator, entry, d) for d in NUMBERS])
 
 

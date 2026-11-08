@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import os
+import re
+import unicodedata
 from urllib.parse import urlparse
 
 import aiohttp
@@ -17,6 +19,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 
 from .const import ADDON_SLUG, CONF_SCAN_INTERVAL, DEFAULT_URL, DOMAIN, SCAN_INTERVAL_SECONDS
+from .coordinator import CONF_INSTALL_ID, install_id_from_status
 
 _SUPERVISOR_URL = "http://supervisor"
 
@@ -179,23 +182,77 @@ async def _probe_status(
     return True
 
 
+async def _read_status(
+    session: aiohttp.ClientSession, url: str, timeout_s: int
+) -> dict | None:
+    """GET <url>/api/status and return its JSON object, None on any failure.
+
+    The endpoint needs no token and `url` can come from an untrusted
+    announcement, so this never sends auth headers and never follows a
+    redirect."""
+    try:
+        async with session.get(
+            f"{url}/api/status",
+            timeout=aiohttp.ClientTimeout(total=timeout_s),
+            allow_redirects=False,
+        ) as r:
+            if r.status != 200:
+                return None
+            body = await r.json(content_type=None)
+    except Exception:
+        return None
+    return body if isinstance(body, dict) else None
+
+
+# A hostname or IPv4 literal only: no userinfo, path, query, port or bracketed
+# IPv6, all of which would otherwise be spliced into the URL we probe.
+_HOST_RE = re.compile(r"[A-Za-z0-9](?:[A-Za-z0-9.-]{0,251}[A-Za-z0-9])?")
+
+
 def _parse_discovery_info(
     config: dict | None,
 ) -> tuple[str, int] | None:
     """Read `{"host": str, "port": int}` out of the app's discovery payload.
 
-    Anything else -- a missing or empty host, a port that is not a plain int
-    (JSON strings, floats, booleans) or out of the 1-65535 range -- returns
-    None, so the flow aborts with `invalid_discovery_info` instead of
-    building a URL out of a malformed announcement.
+    Anything else -- a missing or empty host, a host that is not a plain
+    hostname or IPv4 literal (`user@evil.example`, `evil.example/x?`,
+    `evil.example:1`, `[::1]`), a port that is not a plain int (JSON strings,
+    floats, booleans) or out of the 1-65535 range -- returns None, so the flow
+    aborts with `invalid_discovery_info` instead of building a URL out of a
+    malformed announcement.
     """
     host = (config or {}).get("host")
     port = (config or {}).get("port")
     if not isinstance(host, str) or not host.strip():
         return None
+    if not _HOST_RE.fullmatch(host.strip()):
+        return None
     if isinstance(port, bool) or not isinstance(port, int) or not 1 <= port <= 65535:
         return None
     return host.strip(), port
+
+
+_DEFAULT_APP_NAME = "GLP"
+_MAX_APP_NAME_LEN = 64
+# The confirm dialog is rendered as Markdown, so an announced name must not
+# bring HTML, a link, an image or a code span along.
+_APP_NAME_MARKUP = frozenset("<>[]`")
+
+
+def _app_name(value: object) -> str:
+    """The name to display for an announced app name, which is untrusted text.
+
+    Control and format characters and Markdown markup become spaces, runs of
+    whitespace collapse, and the result is cut to a bounded length. Anything
+    that leaves nothing falls back to `GLP`.
+    """
+    if not isinstance(value, str):
+        return _DEFAULT_APP_NAME
+    cleaned = "".join(
+        " " if ch in _APP_NAME_MARKUP or unicodedata.category(ch).startswith("C") else ch
+        for ch in value
+    )
+    return " ".join(cleaned.split())[:_MAX_APP_NAME_LEN].rstrip() or _DEFAULT_APP_NAME
 
 
 def _entry_url(entry: ConfigEntry) -> str:
@@ -259,6 +316,24 @@ class GlpConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    def _async_move_entry(self, entry: ConfigEntry, url: str) -> None:
+        """Point *entry* at *url*, moving its URL-based unique id with it.
+
+        The unique_id is the URL for both this flow and the manual one, so it
+        moves with the port -- otherwise a later manual setup of the new URL
+        would not see this entry and add a second.
+        """
+        updates: dict = {"data": {**entry.data, "url": url}}
+        if self.hass.config_entries.async_entry_for_domain_unique_id(DOMAIN, url) is None:
+            updates["unique_id"] = url
+        if "url" in entry.options:
+            updates["options"] = {**entry.options, "url": url}
+        self.hass.config_entries.async_update_entry(entry, **updates)
+        # A loaded entry reloads through its own update listener; one stuck in
+        # setup retry has no listener yet, so reload it here.
+        if entry.state in (ConfigEntryState.SETUP_RETRY, ConfigEntryState.SETUP_ERROR):
+            self.hass.config_entries.async_schedule_reload(entry.entry_id)
+
     async def async_step_hassio(
         self, discovery_info: HassioServiceInfo
     ) -> ConfigFlowResult:
@@ -269,6 +344,13 @@ class GlpConfigFlow(ConfigFlow, domain=DOMAIN):
         probed before it is offered, never trusted blindly. A malformed
         announcement aborts with `invalid_discovery_info`.
 
+        Matching order, so an already configured app is never offered twice:
+        the discovered install id against each entry's live id (abort), then
+        against the id stored on an entry whose URL is unreachable (move it
+        there and abort), then the announced host against the entry's host
+        (move it to the new port and abort). Without a usable install id only
+        the host comparison runs.
+
         Standalone Docker installs never see this step -- they keep the manual
         `async_step_user` flow unchanged.
         """
@@ -278,32 +360,40 @@ class GlpConfigFlow(ConfigFlow, domain=DOMAIN):
         host, port = parsed
         url = f"http://{host}:{port}"
 
-        if not await _probe_status(async_get_clientsession(self.hass), url, 5):
+        session = async_get_clientsession(self.hass)
+        status = await _read_status(session, url, 5)
+        if status is None:
             return self.async_abort(reason="cannot_connect")
 
-        # An entry for this app already exists: a new port (the app restarted
-        # with a different host-port mapping) updates it in place instead of
+        entries = self._async_current_entries(include_ignore=False)
+        install_id = install_id_from_status(status)
+        if install_id:
+            # The install id is public to anyone who can reach the app, so it
+            # is an identifier, not proof of identity: it may only move an
+            # entry whose own URL no longer answers, never one that is live.
+            # Finish the loop before moving anything -- a dead duplicate must
+            # not be moved when another entry answers with the same id.
+            moved_app_entry = None
+            for entry in entries:
+                entry_status = await _read_status(session, _entry_url(entry), 5)
+                if entry_status is None:
+                    if moved_app_entry is None and entry.data.get(CONF_INSTALL_ID) == install_id:
+                        moved_app_entry = entry
+                elif install_id_from_status(entry_status) == install_id:
+                    return self.async_abort(reason="already_configured")
+            if moved_app_entry is not None:
+                self._async_move_entry(moved_app_entry, url)
+                return self.async_abort(reason="already_configured")
+
+        # Fallback for a discovery without a usable id and for an entry whose
+        # host matches: a known host with a new port (the app restarted with a
+        # different host-port mapping) updates the entry in place instead of
         # adding a second integration for the same machine.
-        for entry in self._async_current_entries(include_ignore=False):
+        for entry in entries:
             if _url_host(_entry_url(entry)) != host.lower():
                 continue
             if _entry_url(entry) != url:
-                # The unique_id is the URL for both this flow and the manual
-                # one, so it moves with the port -- otherwise a later manual
-                # setup of the new URL would not see this entry and add a second.
-                updates: dict = {"data": {**entry.data, "url": url}}
-                if (
-                    self.hass.config_entries.async_entry_for_domain_unique_id(DOMAIN, url)
-                    is None
-                ):
-                    updates["unique_id"] = url
-                if "url" in entry.options:
-                    updates["options"] = {**entry.options, "url": url}
-                self.hass.config_entries.async_update_entry(entry, **updates)
-                # A loaded entry reloads through its own update listener; one
-                # stuck in setup retry has no listener yet, so reload it here.
-                if entry.state in (ConfigEntryState.SETUP_RETRY, ConfigEntryState.SETUP_ERROR):
-                    self.hass.config_entries.async_schedule_reload(entry.entry_id)
+                self._async_move_entry(entry, url)
             return self.async_abort(reason="already_configured")
 
         await self.async_set_unique_id(url)
@@ -311,8 +401,10 @@ class GlpConfigFlow(ConfigFlow, domain=DOMAIN):
 
         # Kept in the flow context (not an attribute) so a discovery flow that
         # Home Assistant restores after a restart can still finish the confirm.
+        name = _app_name(discovery_info.name)
         self.context["glp_discovered_url"] = url
-        self.context["title_placeholders"] = {"name": f"GLP ({host}:{port})"}
+        self.context["glp_discovered_name"] = name
+        self.context["title_placeholders"] = {"name": name}
         return await self.async_step_hassio_confirm()
 
     async def async_step_hassio_confirm(
@@ -320,12 +412,13 @@ class GlpConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Confirm the discovered address before creating the entry."""
         url = self.context["glp_discovered_url"]
+        name = _app_name(self.context.get("glp_discovered_name"))
         if user_input is not None:
-            return self.async_create_entry(
-                title=f"GLP ({url.removeprefix('http://')})",
-                data={"url": url},
-            )
-        return self.async_show_form(step_id="hassio_confirm")
+            return self.async_create_entry(title=name, data={"url": url})
+        return self.async_show_form(
+            step_id="hassio_confirm",
+            description_placeholders={"name": name, "address": url.removeprefix("http://")},
+        )
 
     @staticmethod
     @callback

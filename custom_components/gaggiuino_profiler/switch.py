@@ -6,7 +6,7 @@ intentionally not duplicated here, light.py already covers them.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -14,10 +14,15 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
 from .entity import GlpEntity
 from .gaggiuino_bool import coerce_gaggiuino_bool, encode_gaggiuino_bool
 from .settings_coordinator import GlpSettingsCoordinator
+
+if TYPE_CHECKING:
+    from . import GlpConfigEntry
+
+# Every entity in this platform talks to the app, so serialize its updates.
+PARALLEL_UPDATES = 1
 
 
 @dataclass(frozen=True)
@@ -88,10 +93,10 @@ SWITCHES: tuple[GlpSwitchDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: GlpConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    settings_coordinator: GlpSettingsCoordinator = hass.data[DOMAIN][entry.entry_id]["settings"]
+    settings_coordinator: GlpSettingsCoordinator = entry.runtime_data.settings
     async_add_entities([GlpMachineSwitch(settings_coordinator, entry, d) for d in SWITCHES])
 
 

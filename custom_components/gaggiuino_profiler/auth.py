@@ -24,6 +24,8 @@ from typing import NoReturn
 import aiohttp
 from homeassistant.exceptions import HomeAssistantError
 
+from .const import DOMAIN
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -63,7 +65,7 @@ class GlpAuth:
         """POST *path* with the cached token, retrying once on a 401.
 
         Every failure surfaces as a `HomeAssistantError` so the UI shows a
-        readable message instead of a raw aiohttp exception."""
+        translated message instead of a raw aiohttp exception."""
         try:
             await self._post_once(path, json, timeout)
         except aiohttp.ClientResponseError as err:
@@ -91,7 +93,11 @@ class GlpAuth:
     def _fail(self, path: str, err: Exception) -> NoReturn:
         message = self._describe(err)
         _LOGGER.error("GLP request failed: %s %s", path, message)
-        raise HomeAssistantError(f"GLP request failed: {message}") from err
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="request_failed",
+            translation_placeholders={"error": message},
+        ) from err
 
     @staticmethod
     def _describe(err: Exception) -> str:

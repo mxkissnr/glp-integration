@@ -2,6 +2,23 @@
 
 ## [Unreleased]
 
+## [1.36.0] – 2026-11-08
+
+**Before you update:** this version needs Home Assistant 2026.8 or newer.
+
+**New**
+- A new picture entity shows the last shot's curves for dashboards and phone notifications. It needs GLP app 3.7.0 or newer.
+- Voice and chat assistants in Home Assistant can now answer questions about your last shot, today's shots, due maintenance and the machine status. Turn on the GLP app under "Control Home Assistant" in the assistant's options. They can only read this data.
+
+**Changed**
+- Error messages now appear in your Home Assistant language.
+- On new installs, rarely used technical settings start switched off. You can enable them in the entity settings. Existing installs stay as they are.
+
+**Fixed**
+- A machine you delete in the app now disappears from Home Assistant too.
+- Home Assistant no longer offers an app you already set up as newly found. The discovery message now shows the app's real name, so the stable and the dev app are easy to tell apart.
+- Commands from the controls are sent one at a time, so they no longer get in each other's way.
+
 ## [1.35.0] – 2026-11-01
 ### Added
 - **Every finished shot now also fires the event entity `event.gaggiuino_local_profiler_shot` on the Shots device, with the shot data as attributes, so an automation can trigger on it like on any other state; the existing `gaggiuino_profiler_shot_completed` bus event stays unchanged.** Refs #340
