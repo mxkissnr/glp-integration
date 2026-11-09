@@ -5,6 +5,7 @@
     "dev"
   ],
   "schedule": ["before 6am on monday"],
+  "minimumReleaseAge": "7 days",
   "semanticCommits": "enabled",
   "vulnerabilityAlerts": {
     "enabled": true,
@@ -14,7 +15,8 @@
   },
   "lockFileMaintenance": {
     "enabled": true,
-    "schedule": ["before 6am on monday"]
+    "schedule": ["before 6am on monday"],
+    "automerge": false
   },
   "packageRules": [
     {
@@ -33,7 +35,7 @@
         "minor",
         "patch"
       ],
-      "minimumReleaseAge": "3 days",
+      "minimumReleaseAge": "7 days",
       "automerge": true
     },
     {
@@ -69,14 +71,14 @@
       "matchManagers": ["pip_requirements"],
       "description": "requirements_test.txt is test/dev tooling only — manifest.json declares zero runtime pip dependencies. Safe to automerge on green CI (Pytest/Hassfest/HACS).",
       "matchUpdateTypes": ["minor", "patch"],
-      "minimumReleaseAge": "3 days",
+      "minimumReleaseAge": "7 days",
       "automerge": true
     },
     {
       "matchManagers": ["github-actions"],
       "groupName": "github-actions",
       "matchUpdateTypes": ["minor", "patch"],
-      "minimumReleaseAge": "3 days",
+      "minimumReleaseAge": "7 days",
       "automerge": true,
       "description": "github/codeql-action's init/analyze/upload-sarif sub-actions must stay version-matched or the Analyze job fails (#141). Grouped together, CI-only, safe to automerge on green."
     },
