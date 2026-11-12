@@ -13,7 +13,10 @@ on first use, independent of any particular coordinator's update cycle.
 It is also the single place that writes through the API: `post()` retries
 once with a freshly fetched token when the cached one is rejected, so an app
 reinstall or a restore with a new token no longer leaves every control
-answering 401 until Home Assistant restarts.
+answering 401 until Home Assistant restarts. `reject_if_unauthorized()` gives
+the read paths of all four coordinators the same recovery: any request that
+comes back 401 drops the cached token, so the next poll fetches a fresh one
+(#390).
 """
 from __future__ import annotations
 
@@ -60,6 +63,19 @@ class GlpAuth:
     def invalidate(self) -> None:
         """Drop the cached header so the next request fetches a new token."""
         self._cached_headers = {}
+
+    def reject_if_unauthorized(self, err: BaseException) -> bool:
+        """Drop the cached header when *err* is the app rejecting our token.
+
+        Returns True when *err* is a 401 `aiohttp.ClientResponseError`, so a
+        coordinator can report the rejection instead of a plain outage."""
+        if isinstance(err, aiohttp.ClientResponseError) and err.status == 401:
+            self.invalidate()
+            _LOGGER.info(
+                "GLP rejected the API token (app reinstalled or restored) — fetching a new one"
+            )
+            return True
+        return False
 
     async def post(self, path: str, json: dict | None = None, timeout: float = 10) -> None:
         """POST *path* with the cached token, retrying once on a 401.
