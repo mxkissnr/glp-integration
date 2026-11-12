@@ -141,9 +141,9 @@ async def test_post_gives_up_after_second_401() -> None:
     assert len(session.posts) == 2
 
 
-async def test_reject_if_unauthorized_drops_the_token_only_on_401(hass, aioclient_mock) -> None:
-    aioclient_mock.get(f"{URL}/api/token", json={"apiToken": "tok-123"})
-    auth = GlpAuth(async_get_clientsession(hass), URL)
+async def test_reject_if_unauthorized_drops_the_token_only_on_401() -> None:
+    session = _FakeSession(tokens=["tok-123", "tok-456"])
+    auth = GlpAuth(session, URL)
     assert await auth.headers() == {"X-GLP-Token": "tok-123"}
 
     def http_error(status: int) -> aiohttp.ClientResponseError:
@@ -152,10 +152,11 @@ async def test_reject_if_unauthorized_drops_the_token_only_on_401(hass, aioclien
     assert auth.reject_if_unauthorized(http_error(500)) is False
     assert auth.reject_if_unauthorized(aiohttp.ClientConnectionError("boom")) is False
     assert await auth.headers() == {"X-GLP-Token": "tok-123"}
+    assert session.token_calls == 1
 
     assert auth.reject_if_unauthorized(http_error(401)) is True
-    aioclient_mock.get(f"{URL}/api/token", json={"apiToken": "tok-456"})
     assert await auth.headers() == {"X-GLP-Token": "tok-456"}
+    assert session.token_calls == 2
 
 
 async def test_post_wraps_aiohttp_errors(hass, aioclient_mock) -> None:
