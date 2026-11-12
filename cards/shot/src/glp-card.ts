@@ -212,6 +212,9 @@ class GlpCard extends HTMLElement {
   declare _orderSheetEta: boolean;
   declare _orderSheetDecline: boolean;
   declare _orderSheetSig: string;
+  // True while one barista action is in flight: a double tap on an order
+  // button must not post the same action twice.
+  declare _orderActionBusy: boolean;
   declare _switchEntity: string | null;
   declare _iconGradId: string;
   declare _readyByTimer: ReturnType<typeof setInterval> | null;
@@ -279,6 +282,7 @@ class GlpCard extends HTMLElement {
     this._orderSheetEta = false;
     this._orderSheetDecline = false;
     this._orderSheetSig = '';
+    this._orderActionBusy = false;
     this._switchEntity = this._readSwitchEntity();
     // Per-instance-unique SVG gradient id (#87) — a dashboard can render more
     // than one glp-card, and duplicate <linearGradient id> values across
@@ -849,26 +853,32 @@ class GlpCard extends HTMLElement {
   // refetched so the card and an open sheet show what the app really has.
   async _orderAction(id: string, action: string, body: Record<string, unknown>): Promise<void> {
     if (!this._hass?.fetchWithAuth || !id) return;
-    let ok = false;
+    if (this._orderActionBusy) return;
+    this._orderActionBusy = true;
     try {
-      ok = (await this._hass.fetchWithAuth(`/api/glp/orders/${encodeURIComponent(id)}/${action}`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body || {}),
-      })).ok;
-    } catch { /* the request never landed, so the action failed */ }
-    if (ok) {
-      // State first: on a phone the close only flips isOpen and slides out, so
-      // the refetch below would otherwise see the order still marked open and
-      // re-open the sheet it just closed.
-      this._closeOrderSheet();
-      toast(this, action === 'accept'
-        ? T('toast_ord_accepted', String(body.eta ?? ''))
-        : action === 'complete' ? T('toast_ord_done') : T('toast_ord_declined'));
-      haptic(this, 'success');
-    } else {
-      toast(this, T('toast_action_failed'));
-      haptic(this, 'failure');
+      let ok = false;
+      try {
+        ok = (await this._hass.fetchWithAuth(`/api/glp/orders/${encodeURIComponent(id)}/${action}`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body || {}),
+        })).ok;
+      } catch { /* the request never landed, so the action failed */ }
+      if (ok) {
+        // State first: on a phone the close only flips isOpen and slides out, so
+        // the refetch below would otherwise see the order still marked open and
+        // re-open the sheet it just closed.
+        this._closeOrderSheet();
+        toast(this, action === 'accept'
+          ? T('toast_ord_accepted', String(body.eta ?? ''))
+          : action === 'complete' ? T('toast_ord_done') : T('toast_ord_declined'));
+        haptic(this, 'success');
+      } else {
+        toast(this, T('toast_action_failed'));
+        haptic(this, 'failure');
+      }
+      await this._fetchOrders(true);
+    } finally {
+      this._orderActionBusy = false;
     }
-    await this._fetchOrders(true);
   }
 
   // Every row is a read-only summary (#264): the barista actions live in the
@@ -1209,6 +1219,8 @@ class GlpCard extends HTMLElement {
       const beans = Array.isArray(list) ? list : [];
       this._beansInfoById = new Map(beans.filter(b => b.id != null).map(b => [b.id, b]));
       this._beansInfo = new Map(beans.map(b => [String(b.name || '').toLowerCase(), b]));
+      // The shot that was already on screen rendered without these details.
+      this._render();
     } catch { /* transient — retry after the cache window */ }
   }
 
