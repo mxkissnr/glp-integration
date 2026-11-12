@@ -68,6 +68,20 @@
       "description": "lit is bundled into glp-card.js and glp-order-card.js by npm run build, so it ships to users as the card's runtime templating library even though it is declared in devDependencies. A bad release breaks the rendered card, so this rule deliberately has no automerge and updates are reviewed by hand."
     },
     {
+      "matchManagers": ["npm"],
+      "matchPackageNames": ["typescript"],
+      "matchUpdateTypes": ["major"],
+      "enabled": false,
+      "description": "Held back (#393): typescript-eslint only accepts typescript <6.1, so a TypeScript 7 bump cannot regenerate the cards lock file. Remove this rule once typescript-eslint supports TypeScript 7."
+    },
+    {
+      "matchManagers": ["npm"],
+      "matchPackageNames": ["@types/node"],
+      "matchUpdateTypes": ["major"],
+      "groupName": "types-node",
+      "description": "@types/node majors follow the Node version of the Cards CI job, so they get their own PR instead of riding along with other dev-dependency majors (#393)."
+    },
+    {
       "matchManagers": ["pip_requirements"],
       "description": "requirements_test.txt is test/dev tooling only — manifest.json declares zero runtime pip dependencies. Safe to automerge on green CI (Pytest/Hassfest/HACS).",
       "matchUpdateTypes": ["minor", "patch"],
