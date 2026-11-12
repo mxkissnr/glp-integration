@@ -147,10 +147,14 @@ class GlpDataCoordinator(DataUpdateCoordinator):
                 f"{self._url}{path}", headers=headers, timeout=aiohttp.ClientTimeout(total=timeout)
             ) as r:
                 if status_ok_only:
+                    if r.status == 401:
+                        self.auth.invalidate()
+                        return default
                     return await r.json() if r.status < 400 else default
                 r.raise_for_status()
                 return await r.json()
-        except Exception:
+        except Exception as err:
+            self.auth.reject_if_unauthorized(err)
             return default
 
     async def _async_update_data(self) -> dict:
@@ -195,6 +199,8 @@ class GlpDataCoordinator(DataUpdateCoordinator):
                 ),
             )
         except Exception as err:
+            if self.auth.reject_if_unauthorized(err):
+                raise UpdateFailed("GLP rejected the API token, fetching a new one") from err
             raise UpdateFailed(f"GLP unreachable: {err}") from err
 
         drink_lookup: dict[str, str] = {
