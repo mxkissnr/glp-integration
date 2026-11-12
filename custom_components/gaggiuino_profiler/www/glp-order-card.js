@@ -2624,6 +2624,10 @@ ${SHEET_STYLES}
     }
     disconnectedCallback() {
       this._stopPoll();
+      if (this._hassRenderTimer) {
+        clearTimeout(this._hassRenderTimer);
+        this._hassRenderTimer = null;
+      }
       if (this._sheet) this._sheet.close();
     }
     _startPoll() {

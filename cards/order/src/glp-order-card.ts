@@ -275,6 +275,9 @@ class GlpOrderCard extends HTMLElement {
   connectedCallback() { this._startPoll(); }
   disconnectedCallback() {
     this._stopPoll();
+    // A hass push just before removal arms this timer; left running it would
+    // render a card that is no longer on the page.
+    if (this._hassRenderTimer) { clearTimeout(this._hassRenderTimer); this._hassRenderTimer = null; }
     // A sheet left open by a removed card would keep its history entry
     // behind; close() trims that entry too.
     if (this._sheet) this._sheet.close();
