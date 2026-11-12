@@ -342,7 +342,7 @@
       "fields": {
         "task": {
           "name": "Aufgabe",
-          "description": "Aufgaben-ID: descaling, backflush, grouphead, gaskets, waterfilter oder grinder_<id> für eine Mühlenreinigung."
+          "description": "Aufgaben-ID: descaling, backflush, grouphead, gaskets, waterfilter oder grinder_ plus Mühlen-ID für eine Mühlenreinigung."
         },
         "machine": {
           "name": "Maschine",

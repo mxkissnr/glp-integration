@@ -342,7 +342,7 @@
       "fields": {
         "task": {
           "name": "Taak",
-          "description": "Taak-ID: descaling, backflush, grouphead, gaskets, waterfilter of grinder_<id> voor het reinigen van een molen."
+          "description": "Taak-ID: descaling, backflush, grouphead, gaskets, waterfilter of grinder_ gevolgd door de molen-ID voor het reinigen van een molen."
         },
         "machine": {
           "name": "Machine",

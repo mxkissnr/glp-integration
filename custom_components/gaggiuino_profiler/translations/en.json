@@ -342,7 +342,7 @@
       "fields": {
         "task": {
           "name": "Task",
-          "description": "Task ID: descaling, backflush, grouphead, gaskets, waterfilter, or grinder_<id> for a grinder cleaning."
+          "description": "Task ID: descaling, backflush, grouphead, gaskets, waterfilter, or grinder_ plus the grinder ID for a grinder cleaning."
         },
         "machine": {
           "name": "Machine",

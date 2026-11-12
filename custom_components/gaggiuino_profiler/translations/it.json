@@ -342,7 +342,7 @@
       "fields": {
         "task": {
           "name": "Attività",
-          "description": "ID dell’attività: descaling, backflush, grouphead, gaskets, waterfilter oppure grinder_<id> per la pulizia di un macinino."
+          "description": "ID dell’attività: descaling, backflush, grouphead, gaskets, waterfilter oppure grinder_ seguito dall’ID del macinino per la pulizia di un macinino."
         },
         "machine": {
           "name": "Macchina",
