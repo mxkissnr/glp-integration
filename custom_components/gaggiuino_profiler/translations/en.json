@@ -324,5 +324,45 @@
     "request_failed": {
       "message": "The request to the GLP app failed: {error}"
     }
+  },
+  "services": {
+    "backup": {
+      "name": "Create backup",
+      "description": "Saves a full GLP backup (shots, notes, coffee library and trash) to the glp_backups folder of your Home Assistant configuration, then fires the gaggiuino_profiler_backup_created event with the file path.",
+      "fields": {
+        "machine": {
+          "name": "Machine",
+          "description": "Optional machine ID. The app currently always backs up the default machine."
+        }
+      }
+    },
+    "maintenance_done": {
+      "name": "Mark maintenance done",
+      "description": "Marks a maintenance task as done today and restarts its interval.",
+      "fields": {
+        "task": {
+          "name": "Task",
+          "description": "Task ID: descaling, backflush, grouphead, gaskets, waterfilter, or grinder_<id> for a grinder cleaning."
+        },
+        "machine": {
+          "name": "Machine",
+          "description": "Optional machine ID. Leave empty for the default machine."
+        }
+      }
+    },
+    "set_ready_by": {
+      "name": "Set ready-by time",
+      "description": "Preheats the machine so that it is ready at the given time. Leave the time empty to cancel a scheduled preheat.",
+      "fields": {
+        "target_time": {
+          "name": "Ready by",
+          "description": "Time the machine should be ready. Leave empty to cancel."
+        },
+        "machine": {
+          "name": "Machine",
+          "description": "Optional machine ID. The app currently always uses the default machine."
+        }
+      }
+    }
   }
 }

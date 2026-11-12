@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+**Fixed**
+- The backup, maintenance and ready-by actions now show their names and descriptions in your Home Assistant language.
+
 ## [1.36.0] – 2026-11-08
 
 **Before you update:** this version needs Home Assistant 2026.8 or newer.

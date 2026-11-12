@@ -324,5 +324,45 @@
     "request_failed": {
       "message": "Die Anfrage an die GLP-App ist fehlgeschlagen: {error}"
     }
+  },
+  "services": {
+    "backup": {
+      "name": "Backup erstellen",
+      "description": "Speichert ein vollständiges GLP-Backup (Shots, Notizen, Kaffeebibliothek und Papierkorb) im Ordner glp_backups deiner Home-Assistant-Konfiguration und löst danach das Ereignis gaggiuino_profiler_backup_created mit dem Dateipfad aus.",
+      "fields": {
+        "machine": {
+          "name": "Maschine",
+          "description": "Optionale Maschinen-ID. Die App sichert derzeit immer die Standardmaschine."
+        }
+      }
+    },
+    "maintenance_done": {
+      "name": "Wartung als erledigt markieren",
+      "description": "Markiert eine Wartungsaufgabe als heute erledigt und startet ihr Intervall neu.",
+      "fields": {
+        "task": {
+          "name": "Aufgabe",
+          "description": "Aufgaben-ID: descaling, backflush, grouphead, gaskets, waterfilter oder grinder_<id> für eine Mühlenreinigung."
+        },
+        "machine": {
+          "name": "Maschine",
+          "description": "Optionale Maschinen-ID. Leer lassen für die Standardmaschine."
+        }
+      }
+    },
+    "set_ready_by": {
+      "name": "Bereit-um-Zeit setzen",
+      "description": "Heizt die Maschine so vor, dass sie zur angegebenen Zeit bereit ist. Ohne Zeit wird ein geplantes Vorheizen abgebrochen.",
+      "fields": {
+        "target_time": {
+          "name": "Bereit um",
+          "description": "Zeit, zu der die Maschine bereit sein soll. Leer lassen zum Abbrechen."
+        },
+        "machine": {
+          "name": "Maschine",
+          "description": "Optionale Maschinen-ID. Die App verwendet derzeit immer die Standardmaschine."
+        }
+      }
+    }
   }
 }

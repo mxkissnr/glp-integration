@@ -324,5 +324,45 @@
     "request_failed": {
       "message": "Het verzoek aan de GLP-app is mislukt: {error}"
     }
+  },
+  "services": {
+    "backup": {
+      "name": "Back-up maken",
+      "description": "Slaat een volledige GLP-back-up (shots, notities, koffiebibliotheek en prullenbak) op in de map glp_backups van je Home Assistant-configuratie en vuurt daarna het event gaggiuino_profiler_backup_created af met het bestandspad.",
+      "fields": {
+        "machine": {
+          "name": "Machine",
+          "description": "Optionele machine-ID. De app maakt nu altijd een back-up van de standaardmachine."
+        }
+      }
+    },
+    "maintenance_done": {
+      "name": "Onderhoud als gedaan markeren",
+      "description": "Markeert een onderhoudstaak als vandaag gedaan en start het interval opnieuw.",
+      "fields": {
+        "task": {
+          "name": "Taak",
+          "description": "Taak-ID: descaling, backflush, grouphead, gaskets, waterfilter of grinder_<id> voor het reinigen van een molen."
+        },
+        "machine": {
+          "name": "Machine",
+          "description": "Optionele machine-ID. Leeg laten voor de standaardmachine."
+        }
+      }
+    },
+    "set_ready_by": {
+      "name": "Klaar-om-tijd instellen",
+      "description": "Warmt de machine voor zodat hij op de opgegeven tijd klaar is. Zonder tijd wordt een geplande voorverwarming geannuleerd.",
+      "fields": {
+        "target_time": {
+          "name": "Klaar om",
+          "description": "Tijd waarop de machine klaar moet zijn. Leeg laten om te annuleren."
+        },
+        "machine": {
+          "name": "Machine",
+          "description": "Optionele machine-ID. De app gebruikt nu altijd de standaardmachine."
+        }
+      }
+    }
   }
 }
