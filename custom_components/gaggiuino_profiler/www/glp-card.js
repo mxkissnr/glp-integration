@@ -3492,6 +3492,7 @@ ${SHEET_STYLES}
       this._orderSheetEta = false;
       this._orderSheetDecline = false;
       this._orderSheetSig = "";
+      this._orderActionBusy = false;
       this._switchEntity = this._readSwitchEntity();
       this._iconGradId = `glp-icon-${Math.random().toString(36).slice(2, 10)}`;
       this._readyByTimer = null;
@@ -3996,24 +3997,30 @@ ${SHEET_STYLES}
     // refetched so the card and an open sheet show what the app really has.
     async _orderAction(id, action, body) {
       if (!this._hass?.fetchWithAuth || !id) return;
-      let ok = false;
+      if (this._orderActionBusy) return;
+      this._orderActionBusy = true;
       try {
-        ok = (await this._hass.fetchWithAuth(`/api/glp/orders/${encodeURIComponent(id)}/${action}`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(body || {})
-        })).ok;
-      } catch {
+        let ok = false;
+        try {
+          ok = (await this._hass.fetchWithAuth(`/api/glp/orders/${encodeURIComponent(id)}/${action}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body || {})
+          })).ok;
+        } catch {
+        }
+        if (ok) {
+          this._closeOrderSheet();
+          toast(this, action === "accept" ? T2("toast_ord_accepted", String(body.eta ?? "")) : action === "complete" ? T2("toast_ord_done") : T2("toast_ord_declined"));
+          haptic(this, "success");
+        } else {
+          toast(this, T2("toast_action_failed"));
+          haptic(this, "failure");
+        }
+        await this._fetchOrders(true);
+      } finally {
+        this._orderActionBusy = false;
       }
-      if (ok) {
-        this._closeOrderSheet();
-        toast(this, action === "accept" ? T2("toast_ord_accepted", String(body.eta ?? "")) : action === "complete" ? T2("toast_ord_done") : T2("toast_ord_declined"));
-        haptic(this, "success");
-      } else {
-        toast(this, T2("toast_action_failed"));
-        haptic(this, "failure");
-      }
-      await this._fetchOrders(true);
     }
     // Every row is a read-only summary (#264): the barista actions live in the
     // shared sheet, so a long queue no longer grows the card with a button row
@@ -4321,6 +4328,7 @@ ${SHEET_STYLES}
         const beans = Array.isArray(list) ? list : [];
         this._beansInfoById = new Map(beans.filter((b3) => b3.id != null).map((b3) => [b3.id, b3]));
         this._beansInfo = new Map(beans.map((b3) => [String(b3.name || "").toLowerCase(), b3]));
+        this._render();
       } catch {
       }
     }

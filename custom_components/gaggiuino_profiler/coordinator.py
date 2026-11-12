@@ -154,6 +154,7 @@ class GlpDataCoordinator(DataUpdateCoordinator):
                 r.raise_for_status()
                 return await r.json()
         except Exception as err:
+            _LOGGER.debug("Optional fetch of %s failed: %s", path, err)
             self.auth.reject_if_unauthorized(err)
             return default
 
