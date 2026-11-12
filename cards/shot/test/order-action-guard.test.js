@@ -1,7 +1,9 @@
 // #391: a quick double tap on an order button posted the action twice, and
 // bean details only appeared with the next state push. This suite drives the
 // real _orderAction()/_loadBeansInfo() in a happy-dom window (same setup as
-// test/sheet-orders.test.js) and counts requests, toasts and renders.
+// test/sheet-orders.test.js) and counts requests, toasts and renders. Uses the
+// shared loader from test/helpers/load-card.cjs, unchanged, as cards/CLAUDE.md
+// asks every DOM suite in this folder to do.
 'use strict';
 
 const test = require('node:test');
