@@ -1,20 +1,6 @@
 backup:
-  name: Create backup
-  description: >-
-    Exports a full GLP backup (shots, annotations, coffee library, blocklist,
-    trash) via the add-on's /api/backup endpoint and writes it to
-    <config>/glp_backups/. Fires gaggiuino_profiler_backup_created with the
-    resulting file path once done, so automations (e.g. before an update, or
-    on a schedule) can react.
   fields:
     machine:
-      name: Machine
-      description: >-
-        Optional machine registry id to scope the backup to (#48/#317's
-        multi-machine mode) — sent as a ?machineId=<id> query parameter.
-        The app's /api/backup endpoint doesn't read this parameter as of app
-        v2.0.0, so the backup always runs against the default machine today.
-        Omit for the default machine.
       required: false
       example: 2
       selector:
@@ -23,27 +9,13 @@ backup:
           mode: box
 
 maintenance_done:
-  name: Mark maintenance task done
-  description: >-
-    Marks a Gaggiuino Local Profiler maintenance task as completed, resetting its
-    timer (sets the last-done date to today). Used by the GLP Lovelace card.
   fields:
     task:
-      name: Task
-      description: >-
-        Task id: descaling, backflush, grouphead, gaskets, waterfilter, or
-        grinder_<id> for a grinder cleaning entry.
       required: true
       example: descaling
       selector:
         text:
     machine:
-      name: Machine
-      description: >-
-        Optional machine registry id to scope the task to (#48/#317's
-        multi-machine mode) — sent as a ?machineId=<id> query parameter,
-        which the app's /api/maintenance/<task>/done endpoint reads: the
-        task is marked done on that machine. Omit for the default machine.
       required: false
       example: 2
       selector:
@@ -52,30 +24,13 @@ maintenance_done:
           mode: box
 
 set_ready_by:
-  name: Set preheat ready-by time
-  description: >-
-    Schedules the machine to be preheated and ready by a target time, via the
-    app's /api/preheat/ready-by endpoint. The app's own watcher turns the
-    configured preheat switch on at the computed time so the machine reaches
-    temperature by target_time. Omit target_time to cancel a scheduled
-    ready-by. Fails with an error if the app's preheat switch entity or HA
-    token isn't configured when a target_time is given.
   fields:
     target_time:
-      name: Ready by
-      description: The time the machine should be ready by. Omit to cancel scheduling.
       required: false
       example: "2026-07-28 07:30:00"
       selector:
         datetime:
     machine:
-      name: Machine
-      description: >-
-        Optional machine registry id to scope the request to (#48/#317's
-        multi-machine mode) — sent as a ?machineId=<id> query parameter.
-        The app's /api/preheat/ready-by endpoint doesn't read this parameter
-        as of app v2.0.0, so the request always applies to the default
-        machine today. Omit for the default machine.
       required: false
       example: 2
       selector:

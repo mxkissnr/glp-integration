@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 **Fixed**
+- The backup, maintenance and ready-by actions now show their names and descriptions in your Home Assistant language.
 - After the app is reinstalled or restored and hands out a new token, the entities now come back on their own instead of staying unavailable until a reload.
 - A quick double tap on an order button in the shot card no longer sends the action twice, and bean details now appear as soon as they have loaded.
 
