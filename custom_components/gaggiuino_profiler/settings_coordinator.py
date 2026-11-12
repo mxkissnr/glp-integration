@@ -74,12 +74,20 @@ class GlpSettingsCoordinator(DataUpdateCoordinator):
                 headers=headers,
                 timeout=aiohttp.ClientTimeout(total=5),
             ) as r:
+                if r.status == 401:
+                    # The app handed out a new token (reinstall/restore): drop
+                    # the cached one so the next poll fetches a fresh one.
+                    self.auth.invalidate()
+                    return category, None
                 if r.status >= 400:
                     return category, None
                 data = await r.json()
                 return category, data if isinstance(data, dict) else None
         except Exception as err:
-            _LOGGER.debug("GLP machine settings category %s unreachable: %s", category, err)
+            if self.auth.reject_if_unauthorized(err):
+                _LOGGER.debug("GLP rejected the API token for settings category %s", category)
+            else:
+                _LOGGER.debug("GLP machine settings category %s unreachable: %s", category, err)
             return category, None
 
     async def async_fetch_category(self, category: str) -> dict:
@@ -113,6 +121,8 @@ class GlpSettingsCoordinator(DataUpdateCoordinator):
         try:
             headers = await self.auth.headers()
         except Exception as err:
+            if self.auth.reject_if_unauthorized(err):
+                raise UpdateFailed("GLP rejected the API token, fetching a new one") from err
             raise UpdateFailed(f"GLP machine settings unreachable: {err}") from err
         results = await asyncio.gather(
             *(self._fetch_category(headers, category) for category in SETTINGS_CATEGORIES)

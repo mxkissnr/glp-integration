@@ -10,6 +10,9 @@ from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from custom_components.gaggiuino_profiler.auth import GlpAuth
 from custom_components.gaggiuino_profiler.coordinator import GlpDataCoordinator
+from custom_components.gaggiuino_profiler.live_coordinator import GlpLiveCoordinator
+from custom_components.gaggiuino_profiler.machine_coordinator import GlpMachineCoordinator
+from custom_components.gaggiuino_profiler.settings_coordinator import GlpSettingsCoordinator
 from tests.common import mock_all_coordinator_endpoints
 
 URL = "http://glp.local:8099"
@@ -138,6 +141,24 @@ async def test_post_gives_up_after_second_401() -> None:
     assert len(session.posts) == 2
 
 
+async def test_reject_if_unauthorized_drops_the_token_only_on_401() -> None:
+    session = _FakeSession(tokens=["tok-123", "tok-456"])
+    auth = GlpAuth(session, URL)
+    assert await auth.headers() == {"X-GLP-Token": "tok-123"}
+
+    def http_error(status: int) -> aiohttp.ClientResponseError:
+        return aiohttp.ClientResponseError(request_info=None, history=None, status=status)
+
+    assert auth.reject_if_unauthorized(http_error(500)) is False
+    assert auth.reject_if_unauthorized(aiohttp.ClientConnectionError("boom")) is False
+    assert await auth.headers() == {"X-GLP-Token": "tok-123"}
+    assert session.token_calls == 1
+
+    assert auth.reject_if_unauthorized(http_error(401)) is True
+    assert await auth.headers() == {"X-GLP-Token": "tok-456"}
+    assert session.token_calls == 2
+
+
 async def test_post_wraps_aiohttp_errors(hass, aioclient_mock) -> None:
     aioclient_mock.get(f"{URL}/api/token", json={"apiToken": "tok-123"})
     aioclient_mock.post(
@@ -152,10 +173,12 @@ async def test_post_wraps_aiohttp_errors(hass, aioclient_mock) -> None:
     assert "connection lost" in exc_info.value.translation_placeholders["error"]
 
 
-async def test_data_coordinator_401_on_status_invalidates_cached_token(
+async def test_data_coordinator_401_on_shots_invalidates_cached_token(
     hass, aioclient_mock
 ) -> None:
-    mock_all_coordinator_endpoints(aioclient_mock, URL, statuses={"status": 401})
+    # The app serves /api/status without a token, so the 401 for a stale token
+    # comes on the other requests -- /shots.json here (#390).
+    mock_all_coordinator_endpoints(aioclient_mock, URL, statuses={"shots": 401})
     token_session = _FakeSession(tokens=["old-token", "new-token"])
     auth = GlpAuth(token_session, URL)
     coordinator = GlpDataCoordinator(
@@ -163,11 +186,105 @@ async def test_data_coordinator_401_on_status_invalidates_cached_token(
     )
     assert await coordinator.auth.headers() == {"X-GLP-Token": "old-token"}
 
-    with pytest.raises(UpdateFailed):
+    with pytest.raises(UpdateFailed) as exc_info:
         await coordinator._async_update_data()
     await hass.async_block_till_done()
 
+    assert "rejected the API token" in str(exc_info.value)
     # The stale header is gone, so the next poll fetches the new token.
+    assert await coordinator.auth.headers() == {"X-GLP-Token": "new-token"}
+    assert token_session.token_calls == 2
+
+
+async def test_data_coordinator_401_on_optional_fetch_invalidates_cached_token(
+    hass, aioclient_mock
+) -> None:
+    """An optional endpoint answering 401 must drop the token too, without
+    failing the whole update (its failure stays a fallback to the default)."""
+    mock_all_coordinator_endpoints(aioclient_mock, URL, statuses={"version": 401})
+    token_session = _FakeSession(tokens=["old-token", "new-token"])
+    auth = GlpAuth(token_session, URL)
+    coordinator = GlpDataCoordinator(
+        hass, async_get_clientsession(hass), URL, auth=auth
+    )
+    assert await coordinator.auth.headers() == {"X-GLP-Token": "old-token"}
+
+    data = await coordinator._async_update_data()
+    await hass.async_block_till_done()
+
+    assert data["machine_status"] == "online"
+    assert await coordinator.auth.headers() == {"X-GLP-Token": "new-token"}
+    assert token_session.token_calls == 2
+
+
+async def test_live_coordinator_401_invalidates_cached_token(hass, aioclient_mock) -> None:
+    mock_all_coordinator_endpoints(aioclient_mock, URL, statuses={"live_data": 401})
+    token_session = _FakeSession(tokens=["old-token", "new-token"])
+    auth = GlpAuth(token_session, URL)
+    coordinator = GlpLiveCoordinator(
+        hass, async_get_clientsession(hass), URL, auth
+    )
+    assert await coordinator._auth.headers() == {"X-GLP-Token": "old-token"}
+
+    with pytest.raises(UpdateFailed) as exc_info:
+        await coordinator._async_update_data()
+    await hass.async_block_till_done()
+
+    assert "rejected the API token" in str(exc_info.value)
+    assert await coordinator._auth.headers() == {"X-GLP-Token": "new-token"}
+    assert token_session.token_calls == 2
+
+
+async def test_live_coordinator_event_stream_401_invalidates_cached_token(
+    hass, aioclient_mock
+) -> None:
+    mock_all_coordinator_endpoints(aioclient_mock, URL, statuses={"events": 401})
+    token_session = _FakeSession(tokens=["old-token", "new-token"])
+    auth = GlpAuth(token_session, URL)
+    coordinator = GlpLiveCoordinator(
+        hass, async_get_clientsession(hass), URL, auth
+    )
+    assert await coordinator._auth.headers() == {"X-GLP-Token": "old-token"}
+
+    with pytest.raises(aiohttp.ClientResponseError):
+        await coordinator._sse_connect_once()
+    await hass.async_block_till_done()
+
+    # The next reconnect fetches a fresh token.
+    assert await coordinator._auth.headers() == {"X-GLP-Token": "new-token"}
+    assert token_session.token_calls == 2
+
+
+async def test_machine_coordinator_401_invalidates_cached_token(hass, aioclient_mock) -> None:
+    mock_all_coordinator_endpoints(aioclient_mock, URL, statuses={"machine_status": 401})
+    token_session = _FakeSession(tokens=["old-token", "new-token"])
+    auth = GlpAuth(token_session, URL)
+    coordinator = GlpMachineCoordinator(
+        hass, async_get_clientsession(hass), URL, auth
+    )
+    assert await coordinator.auth.headers() == {"X-GLP-Token": "old-token"}
+
+    with pytest.raises(UpdateFailed) as exc_info:
+        await coordinator._async_update_data()
+    await hass.async_block_till_done()
+
+    assert "rejected the API token" in str(exc_info.value)
+    assert await coordinator.auth.headers() == {"X-GLP-Token": "new-token"}
+    assert token_session.token_calls == 2
+
+
+async def test_settings_coordinator_401_invalidates_cached_token(hass, aioclient_mock) -> None:
+    mock_all_coordinator_endpoints(aioclient_mock, URL, statuses={"settings": 401})
+    token_session = _FakeSession(tokens=["old-token", "new-token"])
+    auth = GlpAuth(token_session, URL)
+    coordinator = GlpSettingsCoordinator(
+        hass, async_get_clientsession(hass), URL, auth
+    )
+    assert await coordinator.auth.headers() == {"X-GLP-Token": "old-token"}
+
+    assert await coordinator._async_update_data() == {}
+    await hass.async_block_till_done()
+
     assert await coordinator.auth.headers() == {"X-GLP-Token": "new-token"}
     assert token_session.token_calls == 2
 

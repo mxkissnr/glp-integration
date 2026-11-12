@@ -68,6 +68,8 @@ class GlpLiveCoordinator(DataUpdateCoordinator):
                 r.raise_for_status()
                 return await r.json()
         except Exception as err:
+            if self._auth.reject_if_unauthorized(err):
+                raise UpdateFailed("GLP rejected the API token, fetching a new one") from err
             raise UpdateFailed(f"GLP live unreachable: {err}") from err
 
     def _sse_healthy(self) -> bool:
@@ -103,6 +105,13 @@ class GlpLiveCoordinator(DataUpdateCoordinator):
             headers=headers,
             timeout=aiohttp.ClientTimeout(total=None, sock_connect=10, sock_read=60),
         ) as r:
+            if r.status == 401:
+                # The app handed out a new token (reinstall/restore): drop the
+                # cached one so the next reconnect fetches a fresh one.
+                _LOGGER.info(
+                    "GLP rejected the API token on the event stream — fetching a new one on reconnect"
+                )
+                self._auth.invalidate()
             r.raise_for_status()
             event_name: str | None = None
             async for raw_line in r.content:

@@ -4,6 +4,7 @@
 
 **Fixed**
 - The backup, maintenance and ready-by actions now show their names and descriptions in your Home Assistant language.
+- After the app is reinstalled or restored and hands out a new token, the entities now come back on their own instead of staying unavailable until a reload.
 
 ## [1.36.0] – 2026-11-08
 
