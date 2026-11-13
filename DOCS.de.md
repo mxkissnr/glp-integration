@@ -45,7 +45,7 @@ Auf älteren Home Assistant-Versionen bietet HACS die Beta-Versionen weiterhin �
 
 1. **Einstellungen → Geräte & Dienste → Integration hinzufügen**
 2. Nach *Gaggiuino Local Profiler* suchen
-3. Bei Supervisor-Installationen versucht die Einrichtung zuerst, das Add-on automatisch zu erkennen — auch über das interne Container-Netzwerk, ein gemapter Host-Port ist dafür also nicht mehr erforderlich. Gelingt die automatische Erkennung, wird die Integration ohne weitere Eingabe hinzugefügt.
+3. Bei Supervisor-Installationen versucht die Einrichtung zuerst, die App automatisch zu erkennen — auch über das interne Container-Netzwerk, ein gemapter Host-Port ist dafür also nicht mehr erforderlich. Gelingt die automatische Erkennung, wird die Integration ohne weitere Eingabe hinzugefügt.
 4. Findet die automatische Erkennung nichts, die URL des GLP-Apps manuell eingeben: `http://localhost:8099`
    > **`localhost` verwenden, nicht `homeassistant.local`** — mDNS-Auflösung schlägt innerhalb von HA OS intermittierend fehl und macht alle Sensoren unavailable. `localhost:8099` funktioniert immer zuverlässig.
 
@@ -227,7 +227,7 @@ Erkannt aus der Sprache des angemeldeten Home-Assistant-Benutzers, mit der Brows
 
 ## Entities
 
-Alle Sensoren/Entities aktualisieren sich mit dem Poll-Intervall des jeweiligen Coordinators: der Haupt-Coordinator (`coordinator.py`) alle 60 Sekunden (konfigurierbar, s.o.), und der Machine-Coordinator (`machine_coordinator.py`) alle 5 Sekunden für Live-Maschinenwerte. Der Live-Coordinator (`live_coordinator.py`, treibt den `Brewing`-Sensor) wird seit v1.30.0 per SSE-Stream des Add-ons in Echtzeit gepusht (nahezu verzögerungsfrei) und fällt nur auf einen 2-Sekunden-Poll zurück, solange dieser Stream nicht verfügbar ist.
+Alle Sensoren/Entities aktualisieren sich mit dem Poll-Intervall des jeweiligen Coordinators: der Haupt-Coordinator (`coordinator.py`) alle 60 Sekunden (konfigurierbar, s.o.), und der Machine-Coordinator (`machine_coordinator.py`) alle 5 Sekunden für Live-Maschinenwerte. Der Live-Coordinator (`live_coordinator.py`, treibt den `Brewing`-Sensor) wird seit v1.30.0 per SSE-Stream der App in Echtzeit gepusht (nahezu verzögerungsfrei) und fällt nur auf einen 2-Sekunden-Poll zurück, solange dieser Stream nicht verfügbar ist.
 
 ### Namen und Sprachen
 
@@ -239,7 +239,7 @@ Der Sensor *Machine Status* lässt sich als Haupt-Entität des GLP-Geräts marki
 
 ### Verhältnis zu Gaggiuinos eigenen MQTT-Entities
 
-Neuere Gaggiuino-Firmware (ab Build 7889b7d) kann eigene MQTT/Home-Assistant-Autodiscovery-Entities direkt veröffentlichen — Boiler-Temperatur/-Druck/-Flow/-Gewicht, Brüh-/Dampf-/Heißwasser-Status, ein Betriebsmodus-Select, aktives Profil, ein Tara-Button sowie Live-Sensoren während eines laufenden Shots. Diese Integration spricht nie direkt mit der Maschine — sie fragt ausschließlich die REST-API des Add-ons ab —, daher hat das Aktivieren von Firmware-MQTT keinerlei Auswirkung auf diese Integration.
+Neuere Gaggiuino-Firmware (ab Build 7889b7d) kann eigene MQTT/Home-Assistant-Autodiscovery-Entities direkt veröffentlichen — Boiler-Temperatur/-Druck/-Flow/-Gewicht, Brüh-/Dampf-/Heißwasser-Status, ein Betriebsmodus-Select, aktives Profil, ein Tara-Button sowie Live-Sensoren während eines laufenden Shots. Diese Integration spricht nie direkt mit der Maschine — sie fragt ausschließlich die REST-API der App ab —, daher hat das Aktivieren von Firmware-MQTT keinerlei Auswirkung auf diese Integration.
 
 Wer beides aktiviert, sieht scheinbar doppelte Entities (`Machine Live Pressure`/`Machine Live Weight`/`Machine Water Level`/`Machine Temperature`/`Machine Active Profile`/`Operation Mode`/`Tare Scale` überschneiden sich mit den nativen Firmware-Pendants) — das ist erwartet, kein Bug, und beide Sätze können nach Belieben ignoriert/deaktiviert werden. Diese Integration liefert zusätzlich Dinge, die natives Firmware-MQTT nicht bietet: persistente Shot-Historie samt Scoring, Preheat-Scheduling, ein breiteres (5-Aufgaben-) Wartungs-Tracking mit konfigurierbaren Schwellenwerten sowie (seit v1.26.0) die Steuerung von Kessel-/Display-/Waagen-/LED-Einstellungen (Number/Switch/Light) und eine Release-Channel-Auswahl.
 
@@ -287,7 +287,7 @@ Wird eine Maschine in der App gelöscht, verschwinden ihr Gerät und ihre Entiti
 
 Das `machines`-Attribut des `Machine Status`-Sensors der Standardmaschine sowie der `Status`-Sensor jeder Zusatzmaschine (seit v1.29.0) liefern zusätzlich ein `theme`-Attribut — das für die jeweilige Maschine in den App-Einstellungen → Maschinen konfigurierte Farbthema, das die mitgelieferten Lovelace-/Order-Karten lesen, um ihren Kartenkopf passend zur Maschine einzufärben.
 
-¹ Wird `unavailable`, sobald die Gaggiuino-Maschine selbst ausgeschaltet oder nicht erreichbar ist — nicht erst, wenn das GLP-Add-on selbst nicht erreichbar ist. Damit lässt sich in Automatisierungen erkennen, ob die Maschine tatsächlich eingeschaltet ist. `Machine Status` bleibt verfügbar, zeigt aber `error`, wenn die Maschine nicht erreichbar ist oder der letzte Sync fehlgeschlagen ist.
+¹ Wird `unavailable`, sobald die Gaggiuino-Maschine selbst ausgeschaltet oder nicht erreichbar ist — nicht erst, wenn die GLP-App selbst nicht erreichbar ist. Damit lässt sich in Automatisierungen erkennen, ob die Maschine tatsächlich eingeschaltet ist. `Machine Status` bleibt verfügbar, zeigt aber `error`, wenn die Maschine nicht erreichbar ist oder der letzte Sync fehlgeschlagen ist.
 
 ### Binary Sensor
 
@@ -312,8 +312,8 @@ Das `machines`-Attribut des `Machine Status`-Sensors der Standardmaschine sowie 
 
 | Entity | Beschreibung |
 |---|---|
-| Profile | Profilauswahl. Optionsliste kommt vom Haupt-Coordinator (60 s, Profile ändern sich selten), der aktuell gewählte Wert wird vom Machine-Coordinator (5 s) gelesen, damit ein direkt an der Maschine gewechseltes Profil zügig in HA ankommt. Eine Auswahl in HA ruft `/api/machine/profile/set` am Add-on auf. |
-| Operation Mode | `BREW_AUTO` / `FLUSH` / `DESCALE` / `STEAM` / `FLUSH_AUTO` / `HOT_WATER` / `HOME`. `BREW_MANUAL` wird bewusst nicht angeboten — das Add-on lehnt es über `/api/machine/opmode` im Leerlauf ab. Aktueller Wert kommt vom Machine-Coordinator (5 s, via `GET /api/machine/live`). |
+| Profile | Profilauswahl. Optionsliste kommt vom Haupt-Coordinator (60 s, Profile ändern sich selten), der aktuell gewählte Wert wird vom Machine-Coordinator (5 s) gelesen, damit ein direkt an der Maschine gewechseltes Profil zügig in HA ankommt. Eine Auswahl in HA ruft `/api/machine/profile/set` an der App auf. |
+| Operation Mode | `BREW_AUTO` / `FLUSH` / `DESCALE` / `STEAM` / `FLUSH_AUTO` / `HOT_WATER` / `HOME`. `BREW_MANUAL` wird bewusst nicht angeboten — die App lehnt es über `/api/machine/opmode` im Leerlauf ab. Aktueller Wert kommt vom Machine-Coordinator (5 s, via `GET /api/machine/live`). |
 | Release Channel³ | Firmware-Update-Kanal `stable` / `test` / `debug`. |
 
 ### Light
@@ -362,7 +362,7 @@ Das `machines`-Attribut des `Machine Status`-Sensors der Standardmaschine sowie 
 | Save Settings | Persistiert alles, was aktuell im RAM angewendet ist, auf den Flash-Speicher. Über die Number-/Switch-/Light-Entities oben geänderte Einstellungen werden bereits über den jeweiligen REST-Aufruf automatisch persistiert — dieser Button ist speziell für Änderungen am Touchscreen/Web-UI der Maschine selbst gedacht, die GLP dauerhaft speichern soll. |
 | Save Active Profile | Persistiert das aktuell aktive Profil (samt ID) auf den Flash-Speicher |
 
-Komponenten-Testbuttons (Pumpe/Ventil/Ventil B/LED) sind bewusst nicht enthalten — sie steuern kurzzeitig echte Hardware an und sind gegen den Proxy des Add-ons noch nicht live-verifiziert (`gaggiuino-local-profiler`#600).
+Komponenten-Testbuttons (Pumpe/Ventil/Ventil B/LED) sind bewusst nicht enthalten — sie steuern kurzzeitig echte Hardware an und sind gegen den Proxy der App noch nicht live-verifiziert (`gaggiuino-local-profiler`#600).
 
 Alle Light-/Number-/Switch-/Button-/Select-Entities (Operation Mode, Release Channel) stammen vom `GlpSettingsCoordinator` (30 s) bzw. vom Machine-Coordinator (5 s, nur Operation Mode) und sind vorerst nur für die Standardmaschine verfügbar — gleicher Multi-Machine-Hinweis wie bei den Sensoren oben.
 
@@ -370,8 +370,8 @@ Alle Light-/Number-/Switch-/Button-/Select-Entities (Operation Mode, Release Cha
 
 | Entity | Beschreibung |
 |---|---|
-| Update (Gaggiuino Local Profiler) | Reine Versionsanzeige für das Add-on selbst. HAs eigene Supervisor-gestützte `update.<slug>_glp_update`-Entity ist diejenige, die Add-on-Updates tatsächlich installiert — diese hier existiert für Installationen ohne Supervisor (reines Docker), wo es diese native Entity nicht gibt. |
-| Firmware (Machine Firmware) | Zeigt, ob eine neuere Firmware-Version für die Espressomaschine selbst verfügbar ist — Vergleich der installierten Version gegen das neueste passende Release im eigenen GitHub-Projekt der Firmware. Unterstützt Installation: Auslösen startet den eigenen OTA-Update-Ablauf der Maschine. Es gibt keine Live-Fortschrittsanzeige während des OTA — `installed_version` zieht nach, sobald die Maschine ihre neue Version beim nächsten Poll meldet. Nur für Gaggiuino-Maschinen; bei GaggiMate liefert der Firmware-Endpunkt des Add-ons 501, daher hat die Entity keine Versionen und Home Assistant zeigt sie als „Unbekannt“ an. Kann das Add-on das neueste Release aktuell nicht ermitteln (Maschine nicht erreichbar, GitHub-Rate-Limit), zeigt die Entity die installierte Version als aktuell an statt „Unbekannt“, und der zuletzt bekannte Firmware-Stand bleibt über kurze Maschinen-Ausfälle erhalten; sobald die Prüfung wieder greift, springt sie von selbst auf „Update verfügbar“. |
+| Update (Gaggiuino Local Profiler) | Reine Versionsanzeige für die App selbst. HAs eigene Supervisor-gestützte `update.<slug>_glp_update`-Entity ist diejenige, die App-Updates tatsächlich installiert — diese hier existiert für Installationen ohne Supervisor (reines Docker), wo es diese native Entity nicht gibt. |
+| Firmware (Machine Firmware) | Zeigt, ob eine neuere Firmware-Version für die Espressomaschine selbst verfügbar ist — Vergleich der installierten Version gegen das neueste passende Release im eigenen GitHub-Projekt der Firmware. Unterstützt Installation: Auslösen startet den eigenen OTA-Update-Ablauf der Maschine. Es gibt keine Live-Fortschrittsanzeige während des OTA — `installed_version` zieht nach, sobald die Maschine ihre neue Version beim nächsten Poll meldet. Nur für Gaggiuino-Maschinen; bei GaggiMate liefert der Firmware-Endpunkt der App 501, daher hat die Entity keine Versionen und Home Assistant zeigt sie als „Unbekannt“ an. Kann die App das neueste Release aktuell nicht ermitteln (Maschine nicht erreichbar, GitHub-Rate-Limit), zeigt die Entity die installierte Version als aktuell an statt „Unbekannt“, und der zuletzt bekannte Firmware-Stand bleibt über kurze Maschinen-Ausfälle erhalten; sobald die Prüfung wieder greift, springt sie von selbst auf „Update verfügbar“. |
 
 Der **Besuchen**-Link auf der GLP-Geräteseite öffnet das Webinterface der Espressomaschine selbst (`http://<Maschinen-Hostname>`), und das Gerät zeigt die installierte Firmware-Version der Maschine als Software-Version — beides wird gesetzt, sobald die Maschine mindestens einmal erreichbar war.
 
@@ -389,7 +389,7 @@ Für ein Dashboard eignet sich eine Picture-Entity-Karte mit dieser Entity.
 
 ### Umstieg von ALERTua/hass-gaggiuino
 
-Diese Integration deckt inzwischen die Steuerfläche ab, die die Community-Integration bietet: Profilauswahl, Operation Mode, Kessel-/Display-/Waagen-Einstellungen (Number/Switch), die Status-LED (Light), Tare/Save-Settings/Save-Profile (Button), sowie Live-Sensoren/Binary-Sensoren für Durchfluss, Wassertemperatur, Relaiszustände und Sensorfehler (seit v1.25.0). Bei einem Umstieg kann `hass-gaggiuino` entfernt werden, sobald Automatisierungen auf die entsprechenden Entities dieser Integration umgestellt sind — keine Datenmigration nötig, alles hier wird frisch von Maschine/Add-on gelesen.
+Diese Integration deckt inzwischen die Steuerfläche ab, die die Community-Integration bietet: Profilauswahl, Operation Mode, Kessel-/Display-/Waagen-Einstellungen (Number/Switch), die Status-LED (Light), Tare/Save-Settings/Save-Profile (Button), sowie Live-Sensoren/Binary-Sensoren für Durchfluss, Wassertemperatur, Relaiszustände und Sensorfehler (seit v1.25.0). Bei einem Umstieg kann `hass-gaggiuino` entfernt werden, sobald Automatisierungen auf die entsprechenden Entities dieser Integration umgestellt sind — keine Datenmigration nötig, alles hier wird frisch von Maschine/App gelesen.
 
 ## Dienste
 
