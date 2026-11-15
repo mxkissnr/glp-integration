@@ -268,8 +268,8 @@ Wer beides aktiviert, sieht scheinbar doppelte Entities (`Machine Live Pressure`
 | Preheat Remaining | Verbleibende Zeit bis Aufwärmbereitschaft (`unknown`, während die Maschine im Standby ist) | s |
 | Preheat Ready By | Geplanter Zielzeitpunkt für Aufwärmbereitschaft (`set_ready_by`-Dienst) | — |
 | Preheat Planned Switch On | Geplanter Einschaltzeitpunkt, um das Ready-By-Ziel zu erreichen | — |
-| Maintenance Descaling / Backflush / Group Head / Gaskets / Water Filter | Status (`status`-Attribut) der jeweiligen Wartungsaufgabe, inkl. Attributen `days_since`, `shots_since`, `last_date`, `pct` | — |
-| Maintenance Grinders | Wartungsstatus je konfigurierte Mühle (`grinder_maintenance_details`-Attribut) | — |
+| Maintenance Descaling / Backflush / Group Head / Gaskets / Water Filter | Status (`status`-Attribut) der jeweiligen Wartungsaufgabe (`ok`, `soon`, `due` oder `never`; `paused`, solange die Aufgabe in der App pausiert ist, `disabled`, wenn sie dort abgeschaltet ist), inkl. Attributen `days_since`, `shots_since`, `last_date`, `pct` | — |
+| Maintenance Grinders | Wartungsstatus je konfigurierte Mühle (`grinder_maintenance_details`-Attribut); der Zustand ist der dringendste Status über alle Mühlen, pausierte und abgeschaltete Mühlen zählen nicht mit, und er zeigt `paused`, wenn alle übrigen Mühlen pausiert sind | — |
 | Machine Live Pressure | Live-Druck direkt von der Maschine (Machine-Coordinator) | bar |
 | Machine Water Level | Live-Wasserstand | % |
 | Machine Live Weight | Live-Gewicht auf der Waage | g |
