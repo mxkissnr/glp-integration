@@ -1410,7 +1410,7 @@ class GlpCard extends HTMLElement {
     const pills: Record<'ok' | 'soon' | 'due' | 'never', string> = {
       ok: T('pill_ok'), soon: T('pill_soon'), due: T('pill_due'), never: T('pill_never'),
     };
-    const pillText = pills[cls];
+    const pillText = detail.status === 'paused' ? T('pill_paused') : pills[cls];
     const pillIcon = cls === 'ok' ? 'check' : cls === 'due' ? 'warning' : null;
     const sub = [
       detail.daysSince != null
@@ -1449,10 +1449,13 @@ class GlpCard extends HTMLElement {
     // pill_ok/pill_due used to carry a ✓/⚠ glyph in the string itself; the
     // glyph now lives here as an icon next to the (glyph-free) translated
     // text, so translators aren't carrying markup in six languages (#120).
-    const pills: Record<string, string> = { ok: T('pill_ok'), soon: T('pill_soon'), due: T('pill_due'), never: T('pill_never') };
+    const pills: Record<string, string> = { ok: T('pill_ok'), soon: T('pill_soon'), due: T('pill_due'), never: T('pill_never'), paused: T('pill_paused') };
     const pillIcon: Record<string, string> = { ok: 'check', due: 'warning' };
     const row = (icon: string, name: string, status: string | undefined, pct: string | undefined, daysSince: number | null | undefined, shotsSince: number | null | undefined, task: string | undefined, lastDate: string | null | undefined) => {
-      const cls  = pills[status as string] ? status as string : 'never';
+      // `key` picks the pill text (unknown states fall back to "—"), `cls` the
+      // CSS class; paused reuses the grey "never" style instead of adding CSS.
+      const key  = pills[status as string] ? status as string : 'never';
+      const cls  = key === 'paused' ? 'never' : key;
       const pctW = Math.max(0, Math.min(100, Math.round((parseFloat(pct as string) || 0) * 100)));
       const sub  = [
         daysSince != null ? (daysSince === 0 ? T('maint_today') : T('days_ago', daysSince as unknown as string)) : null,
@@ -1463,7 +1466,7 @@ class GlpCard extends HTMLElement {
       const open = () => {
         if (!task) return;
         this._openMaintSheet({
-          task, name, status: cls,
+          task, name, status: key,
           daysSince: daysSince ?? null, shotsSince: shotsSince ?? null,
           lastDate: lastDate ?? null,
         });
@@ -1486,13 +1489,13 @@ class GlpCard extends HTMLElement {
     };
     const rows = GlpCard.MAINT_TASKS.map(([suffix, nameKey, icon, task]) => {
       const s = this._s(suffix);
-      if (!s || s.state === 'unavailable' || s.state === 'unknown') return null;
+      if (!s || s.state === 'unavailable' || s.state === 'unknown' || s.state === 'disabled') return null;
       const a = s.attributes || {};
       return row(icon, T(nameKey), s.state, a.pct as string, a.days_since as number | null | undefined, a.shots_since as number | null | undefined, task, a.last_date as string | null | undefined);
     }).filter(Boolean);
     const gAttrs = this._s('maintenance_grinders')?.attributes || {};
     const gRows  = Object.entries(gAttrs)
-      .filter(([, v]) => v && typeof v === 'object' && 'status' in v)
+      .filter(([, v]) => v && typeof v === 'object' && 'status' in v && (v as GrinderEntry).status !== 'disabled')
       .map(([name, v]) => row('gear', name, (v as GrinderEntry).status, (v as GrinderEntry).pct, (v as GrinderEntry).days_since, (v as GrinderEntry).shots_since, (v as GrinderEntry).task, (v as GrinderEntry).last_date));
     if (!rows.length && !gRows.length)
       return html`<div class="unavailable">${T('maint_none')}</div>`;

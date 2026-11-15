@@ -372,6 +372,67 @@ test('a static grinder row still opens no sheet', () => {
   assert.equal(card._sheet?.isOpen ?? false, false, 'a row without a task opens nothing');
 });
 
+// #384 slice 1 added `paused` (task paused in the app) and `disabled` (task
+// turned off there) to the maintenance sensors and grinder attributes. The app
+// hides turned-off tasks and labels paused ones "Paused"; the card keeps
+// unknown states on the grey "never" fallback so a newer app cannot break it.
+
+test('a paused task shows a Paused pill in the row and in the sheet', () => {
+  const h = hass();
+  h.states[`${P}maintenance_backflush`].state = 'paused';
+  const card = makeCard(h, { tab: 'maint' });
+
+  const pill = maintRow(card).querySelector('.maint-pill');
+  assert.equal(pill.textContent.trim(), 'Paused', 'the pill carries the translated paused label');
+  assert.ok(pill.classList.contains('never'), 'paused reuses the grey never style, no new CSS');
+
+  click(maintRow(card));
+
+  const sheetPill = card.shadowRoot.querySelector('.glp-sheet-body .maint-pill');
+  assert.equal(sheetPill.textContent.trim(), 'Paused', 'the sheet says Paused, not Never done');
+  assert.ok(sheetPill.classList.contains('never'));
+});
+
+test('a task turned off in the app renders no row', () => {
+  const h = hass();
+  h.states[`${P}maintenance_backflush`].state = 'disabled';
+  const card = makeCard(h, { tab: 'maint' });
+
+  assert.equal(maintRow(card), null, 'a disabled task is hidden like the app hides it');
+  assert.equal(card.shadowRoot.querySelectorAll('.maint-row').length, 0);
+  assert.match(card.shadowRoot.querySelector('.unavailable').textContent, /No maintenance data/);
+});
+
+test('a disabled grinder is hidden while a paused one keeps its Paused pill', () => {
+  const h = hass();
+  h.states[`${P}maintenance_grinders`] = {
+    state: 'ok',
+    attributes: {
+      Niche: { status: 'paused', pct: 0.5, days_since: 2, shots_since: 3 },
+      King: { status: 'disabled', pct: 0.9, days_since: 40, shots_since: 300 },
+    },
+  };
+  const card = makeCard(h, { tab: 'maint' });
+
+  const grinderRows = [...card.shadowRoot.querySelectorAll('.maint-row')]
+    .filter(r => !r.hasAttribute('data-maint-task'));
+  assert.equal(grinderRows.length, 1, 'only the paused grinder keeps a row');
+  assert.match(grinderRows[0].querySelector('.maint-name').textContent, /Niche/);
+  assert.equal(grinderRows[0].querySelector('.maint-pill').textContent.trim(), 'Paused');
+});
+
+test('an unknown task state still renders the dash pill in the never style', () => {
+  const h = hass();
+  h.states[`${P}maintenance_backflush`].state = 'something_new';
+  const card = makeCard(h, { tab: 'maint' });
+
+  const row = maintRow(card);
+  assert.ok(row, 'an unknown state never hides the row');
+  const pill = row.querySelector('.maint-pill');
+  assert.equal(pill.textContent.trim(), '—', 'an unknown state keeps the dash fallback');
+  assert.ok(pill.classList.contains('never'));
+});
+
 // ── lifecycle ──────────────────────────────────────────────────────────────
 
 test('the machine-off view closes an open sheet', () => {
