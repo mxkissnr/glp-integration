@@ -120,7 +120,7 @@ A theme set in the app (Settings → Machines) is read live from the `machines` 
 - Live machine tiles while the machine is on — boiler temperature with its target (highlighted while heating), live pressure and live scale weight; during a shot the same values as mini-stats
 - Profile picker for `select.*_profile` — opens in a sheet from the bottom of the screen, stays open across state updates and is hidden when the entity is missing
 - Orders tab when the app has open barista orders, with a count badge; a tap on an order opens its details in a sheet with accept, done and decline
-- Maintenance tab when the maintenance sensors exist — the five maintenance tasks plus a row per grinder, each with a status pill, days/shots since the last service and a progress bar; tap a task and confirm in a sheet to mark it done through `gaggiuino_profiler.maintenance_done`; the row can also be reached and confirmed with the keyboard
+- Maintenance tab when the maintenance sensors exist — the five maintenance tasks plus a row per grinder, each with a status pill, days/shots since the last service and a progress bar; a task paused in the app shows a Paused pill, and a task turned off there is hidden; tap a task and confirm in a sheet to mark it done through `gaggiuino_profiler.maintenance_done`; the row can also be reached and confirmed with the keyboard
 - Steam banner while the steam switch is on, descaling banner while the machine runs its descale program
 - Water level in the footer with a warning banner below 20 %
 - Last shot: profile, drink type, coffee with the bean's variety and roast age from the coffee library, grinder and grind setting, star rating, score verdict, brew ratio, duration, yield, average pressure and brew temperature
