@@ -268,8 +268,8 @@ If you enable both, some entities will look duplicated (this integration's `Mach
 | Preheat Remaining | Time remaining until preheat is ready (`unknown` while the machine is in standby) | s |
 | Preheat Ready By | Scheduled target time for preheat readiness (`set_ready_by` service) | — |
 | Preheat Planned Switch On | Scheduled switch-on time to hit the ready-by target | — |
-| Maintenance Descaling / Backflush / Group Head / Gaskets / Water Filter | Status (`status` attribute) of each maintenance task, plus `days_since`, `shots_since`, `last_date`, `pct` attributes | — |
-| Maintenance Grinders | Maintenance status per configured grinder (`grinder_maintenance_details` attribute) | — |
+| Maintenance Descaling / Backflush / Group Head / Gaskets / Water Filter | Status (`status` attribute) of each maintenance task (`ok`, `soon`, `due` or `never`; `paused` while the task is paused in the app, `disabled` when it is turned off there), plus `days_since`, `shots_since`, `last_date`, `pct` attributes | — |
+| Maintenance Grinders | Maintenance status per configured grinder (`grinder_maintenance_details` attribute); the state is the most urgent status across the grinders, paused and turned-off grinders are left out, and it reads `paused` when every remaining grinder is paused | — |
 | Machine Live Pressure | Live pressure straight from the machine (machine coordinator) | bar |
 | Machine Water Level | Live water level | % |
 | Machine Live Weight | Live weight on the scale | g |
