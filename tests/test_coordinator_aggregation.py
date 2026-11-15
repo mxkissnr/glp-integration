@@ -133,6 +133,77 @@ async def test_grinder_maintenance_status_is_the_worst_across_grinders(hass, str
     assert set(data["grinder_maintenance_details"]) == {"Niche", "DF64", "K6"}
 
 
+async def _grinder_status(hass, strict_aioclient_mock, maintenance: dict) -> dict:
+    mock_all_coordinator_endpoints(strict_aioclient_mock, URL, shots=[_shot()], maintenance=maintenance)
+    return await _refresh(hass)
+
+
+async def test_paused_grinder_is_left_out_of_the_worst_status(hass, strict_aioclient_mock) -> None:
+    data = await _grinder_status(hass, strict_aioclient_mock, {
+        "grinder_1": {"status": "ok", "grinderName": "Niche"},
+        "grinder_2": {"status": "paused", "grinderName": "DF64", "pausedAt": 1763000000000},
+    })
+    assert data["grinder_maintenance_status"] == "ok"
+    assert data["grinder_maintenance_details"]["DF64"]["status"] == "paused"
+
+
+async def test_disabled_grinder_is_left_out_even_when_due(hass, strict_aioclient_mock) -> None:
+    data = await _grinder_status(hass, strict_aioclient_mock, {
+        "grinder_1": {"status": "soon", "grinderName": "Niche"},
+        "grinder_2": {"status": "due", "disabled": True, "grinderName": "DF64"},
+    })
+    assert data["grinder_maintenance_status"] == "soon"
+    assert data["grinder_maintenance_details"]["DF64"]["status"] == "disabled"
+
+
+async def test_only_paused_grinders_report_paused(hass, strict_aioclient_mock) -> None:
+    data = await _grinder_status(hass, strict_aioclient_mock, {
+        "grinder_1": {"status": "paused", "grinderName": "Niche"},
+        "grinder_2": {"status": "paused", "grinderName": "DF64"},
+        "grinder_3": {"status": "due", "disabled": True, "grinderName": "K6"},
+    })
+    assert data["grinder_maintenance_status"] == "paused"
+
+
+async def test_only_disabled_grinders_report_none(hass, strict_aioclient_mock) -> None:
+    data = await _grinder_status(hass, strict_aioclient_mock, {
+        "grinder_1": {"status": "due", "disabled": True, "grinderName": "Niche"},
+        "grinder_2": {"status": "ok", "disabled": True, "grinderName": "DF64"},
+    })
+    assert data["grinder_maintenance_status"] is None
+
+
+async def test_unknown_grinder_status_is_ignored_and_passed_through(hass, strict_aioclient_mock) -> None:
+    data = await _grinder_status(hass, strict_aioclient_mock, {
+        "grinder_1": {"status": "ok", "grinderName": "Niche"},
+        "grinder_2": {"status": "something_new", "grinderName": "DF64"},
+    })
+    assert data["grinder_maintenance_status"] == "ok"
+    assert data["grinder_maintenance_details"]["DF64"]["status"] == "something_new"
+
+
+async def test_fixed_maintenance_sensors_carry_paused_and_disabled(hass, strict_aioclient_mock) -> None:
+    data = await _grinder_status(hass, strict_aioclient_mock, {
+        "descaling": {"status": "paused", "pausedAt": 1763000000000, "daysSince": 4},
+        "backflush": {"status": "due", "disabled": True},
+        "grouphead": {"status": "due", "disabled": False},
+    })
+    assert data["maint_descaling"]["status"] == "paused"
+    assert data["maint_descaling"]["daysSince"] == 4
+    assert data["maint_backflush"]["status"] == "disabled"
+    assert data["maint_grouphead"]["status"] == "due"
+
+
+async def test_older_payload_without_paused_or_disabled_is_unchanged(hass, strict_aioclient_mock) -> None:
+    data = await _grinder_status(hass, strict_aioclient_mock, {
+        "descaling": {"status": "soon", "daysSince": 20},
+        "grinder_1": {"status": "ok", "grinderName": "Niche"},
+    })
+    assert data["maint_descaling"]["status"] == "soon"
+    assert data["maint_descaling"]["daysSince"] == 20
+    assert data["grinder_maintenance_status"] == "ok"
+
+
 async def test_recent_shots_curves_are_downsampled_to_40_points(hass, strict_aioclient_mock) -> None:
     long_pressure = list(range(100))
     mock_all_coordinator_endpoints(strict_aioclient_mock, URL, shots=[_shot(pressure=long_pressure)])
