@@ -333,7 +333,7 @@ class GlpDataCoordinator(DataUpdateCoordinator):
         }
         # Paused, turned-off and unknown statuses are not ranked: they must not
         # win the aggregate. A missing status still counts as ok (#384).
-        statuses = [v.get("status") or "ok" for v in grinder_details.values()]
+        statuses = [v.get("status", "ok") for v in grinder_details.values()]
         ranked = [_STATUS_RANK[s] for s in statuses if s in _STATUS_RANK]
         if ranked:
             worst = max(ranked)
