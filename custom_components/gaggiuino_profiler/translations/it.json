@@ -324,5 +324,45 @@
     "request_failed": {
       "message": "La richiesta all'app GLP non è riuscita: {error}"
     }
+  },
+  "services": {
+    "backup": {
+      "name": "Crea backup",
+      "description": "Salva un backup completo di GLP (shot, note, libreria dei caffè e cestino) nella cartella glp_backups della configurazione di Home Assistant, poi genera l’evento gaggiuino_profiler_backup_created con il percorso del file.",
+      "fields": {
+        "machine": {
+          "name": "Macchina",
+          "description": "ID macchina facoltativo. Per ora l’app esegue sempre il backup della macchina predefinita."
+        }
+      }
+    },
+    "maintenance_done": {
+      "name": "Segna manutenzione come fatta",
+      "description": "Segna un’attività di manutenzione come fatta oggi e riavvia il suo intervallo.",
+      "fields": {
+        "task": {
+          "name": "Attività",
+          "description": "ID dell’attività: descaling, backflush, grouphead, gaskets, waterfilter oppure grinder_ seguito dall’ID del macinino per la pulizia di un macinino."
+        },
+        "machine": {
+          "name": "Macchina",
+          "description": "ID macchina facoltativo. Lascia vuoto per la macchina predefinita."
+        }
+      }
+    },
+    "set_ready_by": {
+      "name": "Imposta orario di pronto",
+      "description": "Preriscalda la macchina in modo che sia pronta all’orario indicato. Senza orario annulla un preriscaldamento programmato.",
+      "fields": {
+        "target_time": {
+          "name": "Pronta alle",
+          "description": "Orario in cui la macchina deve essere pronta. Lascia vuoto per annullare."
+        },
+        "machine": {
+          "name": "Macchina",
+          "description": "ID macchina facoltativo. Per ora l’app usa sempre la macchina predefinita."
+        }
+      }
+    }
   }
 }

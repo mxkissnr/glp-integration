@@ -28,7 +28,7 @@ import type {
 
 // Bumped only in a release — a feature or fix PR leaves this alone (see
 // cards/CLAUDE.md and the PR template). Logged on startup below.
-const GLP_ORDER_CARD_VERSION = '1.23.1';
+const GLP_ORDER_CARD_VERSION = '1.23.2';
 
 // Menu items younger than this show the NEW badge (config: new_badge_days)
 const NEW_BADGE_DAYS_DEFAULT = 7;
@@ -275,6 +275,9 @@ class GlpOrderCard extends HTMLElement {
   connectedCallback() { this._startPoll(); }
   disconnectedCallback() {
     this._stopPoll();
+    // A hass push just before removal arms this timer; left running it would
+    // render a card that is no longer on the page.
+    if (this._hassRenderTimer) { clearTimeout(this._hassRenderTimer); this._hassRenderTimer = null; }
     // A sheet left open by a removed card would keep its history entry
     // behind; close() trims that entry too.
     if (this._sheet) this._sheet.close();

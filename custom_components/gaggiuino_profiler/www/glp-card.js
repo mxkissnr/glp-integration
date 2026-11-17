@@ -2380,6 +2380,7 @@ ${SHEET_STYLES}
       pill_soon: "Bald fällig",
       pill_due: "Fällig",
       pill_never: "Nie erledigt",
+      pill_paused: "Pausiert",
       maint_today: "heute",
       maint_last_done: "Zuletzt erledigt",
       maint_done_today: "Heute erledigt",
@@ -2488,6 +2489,7 @@ ${SHEET_STYLES}
       pill_soon: "Due soon",
       pill_due: "Due",
       pill_never: "Never done",
+      pill_paused: "Paused",
       maint_today: "today",
       maint_last_done: "Last done",
       maint_done_today: "Done today",
@@ -2596,6 +2598,7 @@ ${SHEET_STYLES}
       pill_soon: "In scadenza",
       pill_due: "Scaduto",
       pill_never: "Mai fatto",
+      pill_paused: "In pausa",
       maint_today: "oggi",
       maint_last_done: "Ultima volta",
       maint_done_today: "Fatto oggi",
@@ -2704,6 +2707,7 @@ ${SHEET_STYLES}
       pill_soon: "Bientôt requis",
       pill_due: "Requis",
       pill_never: "Jamais fait",
+      pill_paused: "En pause",
       maint_today: "aujourd'hui",
       maint_last_done: "Dernière fois",
       maint_done_today: "Fait aujourd'hui",
@@ -2812,6 +2816,7 @@ ${SHEET_STYLES}
       pill_soon: "Próximo",
       pill_due: "Pendiente",
       pill_never: "Nunca hecho",
+      pill_paused: "En pausa",
       maint_today: "hoy",
       maint_last_done: "Última vez",
       maint_done_today: "Hecho hoy",
@@ -2920,6 +2925,7 @@ ${SHEET_STYLES}
       pill_soon: "Binnenkort nodig",
       pill_due: "Nodig",
       pill_never: "Nooit gedaan",
+      pill_paused: "Gepauzeerd",
       maint_today: "vandaag",
       maint_last_done: "Laatst gedaan",
       maint_done_today: "Vandaag gedaan",
@@ -3432,7 +3438,7 @@ ${SHEET_STYLES}
   __name(metricLineHtml, "metricLineHtml");
 
   // shot/src/glp-card.ts
-  var GLP_CARD_VERSION = "2.23.1";
+  var GLP_CARD_VERSION = "2.23.2";
   var READY_BY_PENDING_FALLBACK_MS = 6e4;
   var HEADER_LONG_PRESS_MS = 500;
   var HEADER_PRESS_MOVE_PX = 10;
@@ -3492,6 +3498,7 @@ ${SHEET_STYLES}
       this._orderSheetEta = false;
       this._orderSheetDecline = false;
       this._orderSheetSig = "";
+      this._orderActionBusy = false;
       this._switchEntity = this._readSwitchEntity();
       this._iconGradId = `glp-icon-${Math.random().toString(36).slice(2, 10)}`;
       this._readyByTimer = null;
@@ -3996,24 +4003,30 @@ ${SHEET_STYLES}
     // refetched so the card and an open sheet show what the app really has.
     async _orderAction(id, action, body) {
       if (!this._hass?.fetchWithAuth || !id) return;
-      let ok = false;
+      if (this._orderActionBusy) return;
+      this._orderActionBusy = true;
       try {
-        ok = (await this._hass.fetchWithAuth(`/api/glp/orders/${encodeURIComponent(id)}/${action}`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(body || {})
-        })).ok;
-      } catch {
+        let ok = false;
+        try {
+          ok = (await this._hass.fetchWithAuth(`/api/glp/orders/${encodeURIComponent(id)}/${action}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body || {})
+          })).ok;
+        } catch {
+        }
+        if (ok) {
+          this._closeOrderSheet();
+          toast(this, action === "accept" ? T2("toast_ord_accepted", String(body.eta ?? "")) : action === "complete" ? T2("toast_ord_done") : T2("toast_ord_declined"));
+          haptic(this, "success");
+        } else {
+          toast(this, T2("toast_action_failed"));
+          haptic(this, "failure");
+        }
+        await this._fetchOrders(true);
+      } finally {
+        this._orderActionBusy = false;
       }
-      if (ok) {
-        this._closeOrderSheet();
-        toast(this, action === "accept" ? T2("toast_ord_accepted", String(body.eta ?? "")) : action === "complete" ? T2("toast_ord_done") : T2("toast_ord_declined"));
-        haptic(this, "success");
-      } else {
-        toast(this, T2("toast_action_failed"));
-        haptic(this, "failure");
-      }
-      await this._fetchOrders(true);
     }
     // Every row is a read-only summary (#264): the barista actions live in the
     // shared sheet, so a long queue no longer grows the card with a button row
@@ -4321,6 +4334,7 @@ ${SHEET_STYLES}
         const beans = Array.isArray(list) ? list : [];
         this._beansInfoById = new Map(beans.filter((b3) => b3.id != null).map((b3) => [b3.id, b3]));
         this._beansInfo = new Map(beans.map((b3) => [String(b3.name || "").toLowerCase(), b3]));
+        this._render();
       } catch {
       }
     }
@@ -4418,6 +4432,19 @@ ${SHEET_STYLES}
     _s(suffix) {
       return this._hass.states[this._resolvePrefix() + suffix];
     }
+    // Maintenance sensors are named after their task since v1.22.1
+    // (`maint_backflush`); older installs kept the display-name form
+    // (`maintenance_backflush`, `maintenance_group_head`, ...). A read tries the
+    // older id first and falls back to the `maint_*` counterpart taken from the
+    // MAINT_TASKS columns, so both layouts work and an install carrying both
+    // keeps the older entity's behaviour.
+    _maint(suffix) {
+      const older = this._s(suffix);
+      if (older) return older;
+      const task = _GlpCard.MAINT_TASKS.find(([old]) => old === suffix);
+      if (task) return this._s(task[1]);
+      return suffix === _GlpCard.MAINT_GRINDERS[0] ? this._s(_GlpCard.MAINT_GRINDERS[1]) : void 0;
+    }
     _val(suffix, fallback = "—") {
       const s4 = this._s(suffix);
       return s4 && s4.state !== "unknown" && s4.state !== "unavailable" ? s4.state : fallback;
@@ -4446,11 +4473,14 @@ ${SHEET_STYLES}
       ["maintenance_gaskets", "maint_gaskets", "circle", "gaskets"],
       ["maintenance_water_filter", "maint_waterfilter", "droplet", "waterfilter"]
     ];
+    // The grinders sensor is not a task row (its attributes hold one entry per
+    // grinder), but it has the same two id layouts as the tasks above.
+    static MAINT_GRINDERS = ["maintenance_grinders", "maint_grinders"];
     _maintAvailable() {
-      return _GlpCard.MAINT_TASKS.some(([s4]) => this._s(s4)) || !!this._s("maintenance_grinders");
+      return _GlpCard.MAINT_TASKS.some(([s4]) => this._maint(s4)) || !!this._maint(_GlpCard.MAINT_GRINDERS[0]);
     }
     _maintAnyDue() {
-      return _GlpCard.MAINT_TASKS.some(([s4]) => this._s(s4)?.state === "due") || this._s("maintenance_grinders")?.state === "due";
+      return _GlpCard.MAINT_TASKS.some(([s4]) => this._maint(s4)?.state === "due") || this._maint(_GlpCard.MAINT_GRINDERS[0])?.state === "due";
     }
     // One date format for the maintenance sheet: the sensor's `last_date`
     // attribute is ISO in current app versions, but older data used a local
@@ -4488,7 +4518,7 @@ ${SHEET_STYLES}
         due: T2("pill_due"),
         never: T2("pill_never")
       };
-      const pillText = pills[cls];
+      const pillText = detail.status === "paused" ? T2("pill_paused") : pills[cls];
       const pillIcon = cls === "ok" ? "check" : cls === "due" ? "warning" : null;
       const sub = [
         detail.daysSince != null ? detail.daysSince === 0 ? T2("maint_today") : T2("days_ago", String(detail.daysSince)) : null,
@@ -4525,10 +4555,11 @@ ${SHEET_STYLES}
       this._sheet?.close();
     }
     _buildMaintHtml() {
-      const pills = { ok: T2("pill_ok"), soon: T2("pill_soon"), due: T2("pill_due"), never: T2("pill_never") };
+      const pills = { ok: T2("pill_ok"), soon: T2("pill_soon"), due: T2("pill_due"), never: T2("pill_never"), paused: T2("pill_paused") };
       const pillIcon = { ok: "check", due: "warning" };
       const row = /* @__PURE__ */ __name((icon, name, status, pct, daysSince, shotsSince, task, lastDate) => {
-        const cls = pills[status] ? status : "never";
+        const key = pills[status] ? status : "never";
+        const cls = key === "paused" ? "never" : key;
         const pctW = Math.max(0, Math.min(100, Math.round((parseFloat(pct) || 0) * 100)));
         const sub = [
           daysSince != null ? daysSince === 0 ? T2("maint_today") : T2("days_ago", daysSince) : null,
@@ -4539,7 +4570,7 @@ ${SHEET_STYLES}
           this._openMaintSheet({
             task,
             name,
-            status: cls,
+            status: key,
             daysSince: daysSince ?? null,
             shotsSince: shotsSince ?? null,
             lastDate: lastDate ?? null
@@ -4547,8 +4578,8 @@ ${SHEET_STYLES}
         }, "open");
         return b2`<div class="maint-row" data-maint-task=${o7(task || void 0)} role=${o7(task ? "button" : void 0)} tabindex=${o7(task ? "0" : void 0)} @click=${open} @keydown=${(e6) => {
           if (!task) return;
-          const key = e6.key;
-          if (key !== "Enter" && key !== " ") return;
+          const key2 = e6.key;
+          if (key2 !== "Enter" && key2 !== " ") return;
           e6.preventDefault();
           open();
         }}>
@@ -4563,13 +4594,13 @@ ${SHEET_STYLES}
       </div>`;
       }, "row");
       const rows = _GlpCard.MAINT_TASKS.map(([suffix, nameKey, icon, task]) => {
-        const s4 = this._s(suffix);
-        if (!s4 || s4.state === "unavailable" || s4.state === "unknown") return null;
+        const s4 = this._maint(suffix);
+        if (!s4 || s4.state === "unavailable" || s4.state === "unknown" || s4.state === "disabled") return null;
         const a3 = s4.attributes || {};
         return row(icon, T2(nameKey), s4.state, a3.pct, a3.days_since, a3.shots_since, task, a3.last_date);
       }).filter(Boolean);
-      const gAttrs = this._s("maintenance_grinders")?.attributes || {};
-      const gRows = Object.entries(gAttrs).filter(([, v2]) => v2 && typeof v2 === "object" && "status" in v2).map(([name, v2]) => row("gear", name, v2.status, v2.pct, v2.days_since, v2.shots_since, v2.task, v2.last_date));
+      const gAttrs = this._maint(_GlpCard.MAINT_GRINDERS[0])?.attributes || {};
+      const gRows = Object.entries(gAttrs).filter(([, v2]) => v2 && typeof v2 === "object" && "status" in v2 && v2.status !== "disabled").map(([name, v2]) => row("gear", name, v2.status, v2.pct, v2.days_since, v2.shots_since, v2.task, v2.last_date));
       if (!rows.length && !gRows.length)
         return b2`<div class="unavailable">${T2("maint_none")}</div>`;
       return b2`<div class="maint-list">

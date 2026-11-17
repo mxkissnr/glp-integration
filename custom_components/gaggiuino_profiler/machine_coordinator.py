@@ -70,6 +70,8 @@ class GlpMachineCoordinator(DataUpdateCoordinator):
                 if not data.get("available"):
                     return {}
         except Exception as err:
+            if self.auth.reject_if_unauthorized(err):
+                raise UpdateFailed("GLP rejected the API token, fetching a new one") from err
             raise UpdateFailed(f"GLP machine status unreachable: {err}") from err
 
         # #109: also merge sysState.operationMode/coreVersion/timeAlive from
@@ -95,6 +97,7 @@ class GlpMachineCoordinator(DataUpdateCoordinator):
                     data["coreVersion"] = sys_state.get("coreVersion")
                     data["timeAlive"] = sys_state.get("timeAlive")
         except Exception as err:
-            _LOGGER.debug("GLP machine live status unreachable: %s", err)
+            if not self.auth.reject_if_unauthorized(err):
+                _LOGGER.debug("GLP machine live status unreachable: %s", err)
 
         return data

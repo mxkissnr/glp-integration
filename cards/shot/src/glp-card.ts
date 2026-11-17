@@ -24,7 +24,7 @@ import type {
 } from './types.ts';
 // Bumped only in a release — a feature or fix PR leaves this alone (see
 // cards/CLAUDE.md and the PR template). Logged on startup below.
-const GLP_CARD_VERSION = '2.23.1';
+const GLP_CARD_VERSION = '2.23.2';
 
 // Fallback for a ready-by Set/Cancel whose sensor confirmation never lands
 // (#214). The optimistic value is cleared the moment _readReadyBy() sees the
@@ -212,6 +212,9 @@ class GlpCard extends HTMLElement {
   declare _orderSheetEta: boolean;
   declare _orderSheetDecline: boolean;
   declare _orderSheetSig: string;
+  // True while one barista action is in flight: a double tap on an order
+  // button must not post the same action twice.
+  declare _orderActionBusy: boolean;
   declare _switchEntity: string | null;
   declare _iconGradId: string;
   declare _readyByTimer: ReturnType<typeof setInterval> | null;
@@ -279,6 +282,7 @@ class GlpCard extends HTMLElement {
     this._orderSheetEta = false;
     this._orderSheetDecline = false;
     this._orderSheetSig = '';
+    this._orderActionBusy = false;
     this._switchEntity = this._readSwitchEntity();
     // Per-instance-unique SVG gradient id (#87) — a dashboard can render more
     // than one glp-card, and duplicate <linearGradient id> values across
@@ -849,26 +853,32 @@ class GlpCard extends HTMLElement {
   // refetched so the card and an open sheet show what the app really has.
   async _orderAction(id: string, action: string, body: Record<string, unknown>): Promise<void> {
     if (!this._hass?.fetchWithAuth || !id) return;
-    let ok = false;
+    if (this._orderActionBusy) return;
+    this._orderActionBusy = true;
     try {
-      ok = (await this._hass.fetchWithAuth(`/api/glp/orders/${encodeURIComponent(id)}/${action}`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body || {}),
-      })).ok;
-    } catch { /* the request never landed, so the action failed */ }
-    if (ok) {
-      // State first: on a phone the close only flips isOpen and slides out, so
-      // the refetch below would otherwise see the order still marked open and
-      // re-open the sheet it just closed.
-      this._closeOrderSheet();
-      toast(this, action === 'accept'
-        ? T('toast_ord_accepted', String(body.eta ?? ''))
-        : action === 'complete' ? T('toast_ord_done') : T('toast_ord_declined'));
-      haptic(this, 'success');
-    } else {
-      toast(this, T('toast_action_failed'));
-      haptic(this, 'failure');
+      let ok = false;
+      try {
+        ok = (await this._hass.fetchWithAuth(`/api/glp/orders/${encodeURIComponent(id)}/${action}`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body || {}),
+        })).ok;
+      } catch { /* the request never landed, so the action failed */ }
+      if (ok) {
+        // State first: on a phone the close only flips isOpen and slides out, so
+        // the refetch below would otherwise see the order still marked open and
+        // re-open the sheet it just closed.
+        this._closeOrderSheet();
+        toast(this, action === 'accept'
+          ? T('toast_ord_accepted', String(body.eta ?? ''))
+          : action === 'complete' ? T('toast_ord_done') : T('toast_ord_declined'));
+        haptic(this, 'success');
+      } else {
+        toast(this, T('toast_action_failed'));
+        haptic(this, 'failure');
+      }
+      await this._fetchOrders(true);
+    } finally {
+      this._orderActionBusy = false;
     }
-    await this._fetchOrders(true);
   }
 
   // Every row is a read-only summary (#264): the barista actions live in the
@@ -1209,6 +1219,8 @@ class GlpCard extends HTMLElement {
       const beans = Array.isArray(list) ? list : [];
       this._beansInfoById = new Map(beans.filter(b => b.id != null).map(b => [b.id, b]));
       this._beansInfo = new Map(beans.map(b => [String(b.name || '').toLowerCase(), b]));
+      // The shot that was already on screen rendered without these details.
+      this._render();
     } catch { /* transient — retry after the cache window */ }
   }
 
@@ -1322,6 +1334,20 @@ class GlpCard extends HTMLElement {
 
   _s(suffix: string): HassStateObject | undefined { return this._hass!.states[this._resolvePrefix() + suffix]; }
 
+  // Maintenance sensors are named after their task since v1.22.1
+  // (`maint_backflush`); older installs kept the display-name form
+  // (`maintenance_backflush`, `maintenance_group_head`, ...). A read tries the
+  // older id first and falls back to the `maint_*` counterpart taken from the
+  // MAINT_TASKS columns, so both layouts work and an install carrying both
+  // keeps the older entity's behaviour.
+  _maint(suffix: string): HassStateObject | undefined {
+    const older = this._s(suffix);
+    if (older) return older;
+    const task = GlpCard.MAINT_TASKS.find(([old]) => old === suffix);
+    if (task) return this._s(task[1]);
+    return suffix === GlpCard.MAINT_GRINDERS[0] ? this._s(GlpCard.MAINT_GRINDERS[1]) : undefined;
+  }
+
   _val(suffix: string, fallback: string | null = '—'): string | null {
     const s = this._s(suffix);
     return s && s.state !== 'unknown' && s.state !== 'unavailable' ? s.state as string : fallback;
@@ -1354,12 +1380,16 @@ class GlpCard extends HTMLElement {
     ['maintenance_water_filter', 'maint_waterfilter', 'droplet', 'waterfilter'],
   ];
 
+  // The grinders sensor is not a task row (its attributes hold one entry per
+  // grinder), but it has the same two id layouts as the tasks above.
+  static MAINT_GRINDERS: [string, string] = ['maintenance_grinders', 'maint_grinders'];
+
   _maintAvailable(): boolean {
-    return GlpCard.MAINT_TASKS.some(([s]) => this._s(s)) || !!this._s('maintenance_grinders');
+    return GlpCard.MAINT_TASKS.some(([s]) => this._maint(s)) || !!this._maint(GlpCard.MAINT_GRINDERS[0]);
   }
   _maintAnyDue(): boolean {
-    return GlpCard.MAINT_TASKS.some(([s]) => this._s(s)?.state === 'due')
-      || this._s('maintenance_grinders')?.state === 'due';
+    return GlpCard.MAINT_TASKS.some(([s]) => this._maint(s)?.state === 'due')
+      || this._maint(GlpCard.MAINT_GRINDERS[0])?.state === 'due';
   }
 
   // One date format for the maintenance sheet: the sensor's `last_date`
@@ -1398,7 +1428,7 @@ class GlpCard extends HTMLElement {
     const pills: Record<'ok' | 'soon' | 'due' | 'never', string> = {
       ok: T('pill_ok'), soon: T('pill_soon'), due: T('pill_due'), never: T('pill_never'),
     };
-    const pillText = pills[cls];
+    const pillText = detail.status === 'paused' ? T('pill_paused') : pills[cls];
     const pillIcon = cls === 'ok' ? 'check' : cls === 'due' ? 'warning' : null;
     const sub = [
       detail.daysSince != null
@@ -1437,10 +1467,13 @@ class GlpCard extends HTMLElement {
     // pill_ok/pill_due used to carry a ✓/⚠ glyph in the string itself; the
     // glyph now lives here as an icon next to the (glyph-free) translated
     // text, so translators aren't carrying markup in six languages (#120).
-    const pills: Record<string, string> = { ok: T('pill_ok'), soon: T('pill_soon'), due: T('pill_due'), never: T('pill_never') };
+    const pills: Record<string, string> = { ok: T('pill_ok'), soon: T('pill_soon'), due: T('pill_due'), never: T('pill_never'), paused: T('pill_paused') };
     const pillIcon: Record<string, string> = { ok: 'check', due: 'warning' };
     const row = (icon: string, name: string, status: string | undefined, pct: string | undefined, daysSince: number | null | undefined, shotsSince: number | null | undefined, task: string | undefined, lastDate: string | null | undefined) => {
-      const cls  = pills[status as string] ? status as string : 'never';
+      // `key` picks the pill text (unknown states fall back to "—"), `cls` the
+      // CSS class; paused reuses the grey "never" style instead of adding CSS.
+      const key  = pills[status as string] ? status as string : 'never';
+      const cls  = key === 'paused' ? 'never' : key;
       const pctW = Math.max(0, Math.min(100, Math.round((parseFloat(pct as string) || 0) * 100)));
       const sub  = [
         daysSince != null ? (daysSince === 0 ? T('maint_today') : T('days_ago', daysSince as unknown as string)) : null,
@@ -1451,7 +1484,7 @@ class GlpCard extends HTMLElement {
       const open = () => {
         if (!task) return;
         this._openMaintSheet({
-          task, name, status: cls,
+          task, name, status: key,
           daysSince: daysSince ?? null, shotsSince: shotsSince ?? null,
           lastDate: lastDate ?? null,
         });
@@ -1473,14 +1506,14 @@ class GlpCard extends HTMLElement {
       </div>`;
     };
     const rows = GlpCard.MAINT_TASKS.map(([suffix, nameKey, icon, task]) => {
-      const s = this._s(suffix);
-      if (!s || s.state === 'unavailable' || s.state === 'unknown') return null;
+      const s = this._maint(suffix);
+      if (!s || s.state === 'unavailable' || s.state === 'unknown' || s.state === 'disabled') return null;
       const a = s.attributes || {};
       return row(icon, T(nameKey), s.state, a.pct as string, a.days_since as number | null | undefined, a.shots_since as number | null | undefined, task, a.last_date as string | null | undefined);
     }).filter(Boolean);
-    const gAttrs = this._s('maintenance_grinders')?.attributes || {};
+    const gAttrs = this._maint(GlpCard.MAINT_GRINDERS[0])?.attributes || {};
     const gRows  = Object.entries(gAttrs)
-      .filter(([, v]) => v && typeof v === 'object' && 'status' in v)
+      .filter(([, v]) => v && typeof v === 'object' && 'status' in v && (v as GrinderEntry).status !== 'disabled')
       .map(([name, v]) => row('gear', name, (v as GrinderEntry).status, (v as GrinderEntry).pct, (v as GrinderEntry).days_since, (v as GrinderEntry).shots_since, (v as GrinderEntry).task, (v as GrinderEntry).last_date));
     if (!rows.length && !gRows.length)
       return html`<div class="unavailable">${T('maint_none')}</div>`;

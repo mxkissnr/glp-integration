@@ -324,5 +324,45 @@
     "request_failed": {
       "message": "La requête vers l'application GLP a échoué : {error}"
     }
+  },
+  "services": {
+    "backup": {
+      "name": "Créer une sauvegarde",
+      "description": "Enregistre une sauvegarde GLP complète (shots, notes, bibliothèque de cafés et corbeille) dans le dossier glp_backups de votre configuration Home Assistant, puis déclenche l’événement gaggiuino_profiler_backup_created avec le chemin du fichier.",
+      "fields": {
+        "machine": {
+          "name": "Machine",
+          "description": "ID de machine facultatif. L’app sauvegarde actuellement toujours la machine par défaut."
+        }
+      }
+    },
+    "maintenance_done": {
+      "name": "Marquer l’entretien comme fait",
+      "description": "Marque une tâche d’entretien comme faite aujourd’hui et relance son intervalle.",
+      "fields": {
+        "task": {
+          "name": "Tâche",
+          "description": "ID de la tâche : descaling, backflush, grouphead, gaskets, waterfilter, ou grinder_ suivi de l’ID du moulin pour le nettoyage d’un moulin."
+        },
+        "machine": {
+          "name": "Machine",
+          "description": "ID de machine facultatif. Laisser vide pour la machine par défaut."
+        }
+      }
+    },
+    "set_ready_by": {
+      "name": "Définir l’heure de disponibilité",
+      "description": "Préchauffe la machine pour qu’elle soit prête à l’heure indiquée. Sans heure, un préchauffage prévu est annulé.",
+      "fields": {
+        "target_time": {
+          "name": "Prête à",
+          "description": "Heure à laquelle la machine doit être prête. Laisser vide pour annuler."
+        },
+        "machine": {
+          "name": "Machine",
+          "description": "ID de machine facultatif. L’app utilise actuellement toujours la machine par défaut."
+        }
+      }
+    }
   }
 }

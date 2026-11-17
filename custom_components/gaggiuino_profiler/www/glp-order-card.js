@@ -2439,7 +2439,7 @@ ${SHEET_STYLES}
   }
 
   // order/src/glp-order-card.ts
-  var GLP_ORDER_CARD_VERSION = "1.23.1";
+  var GLP_ORDER_CARD_VERSION = "1.23.2";
   var NEW_BADGE_DAYS_DEFAULT = 7;
   function _configLang(code) {
     const lang = String(code || "").slice(0, 2).toLowerCase();
@@ -2624,6 +2624,10 @@ ${SHEET_STYLES}
     }
     disconnectedCallback() {
       this._stopPoll();
+      if (this._hassRenderTimer) {
+        clearTimeout(this._hassRenderTimer);
+        this._hassRenderTimer = null;
+      }
       if (this._sheet) this._sheet.close();
     }
     _startPoll() {

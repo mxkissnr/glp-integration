@@ -51,6 +51,16 @@ def _parse_ts(value: object) -> datetime | None:
         return None
 
 
+def _effective_maint(raw: dict) -> dict:
+    """Maintenance entry with a turned-off task reported as status *disabled*."""
+    # The app keeps computing due/ok for a task the user turned off and only
+    # flags it with `disabled: true`, so without this a turned-off task would
+    # still drive its sensor (and the grinder aggregate) to due (#384).
+    if raw.get("disabled") is True:
+        return {**raw, "status": "disabled"}
+    return raw
+
+
 CONF_INSTALL_ID = "install_id"
 
 _INSTALL_ID_RE = re.compile(r"[0-9a-fA-F]{8}(?:-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}")
@@ -147,10 +157,15 @@ class GlpDataCoordinator(DataUpdateCoordinator):
                 f"{self._url}{path}", headers=headers, timeout=aiohttp.ClientTimeout(total=timeout)
             ) as r:
                 if status_ok_only:
+                    if r.status == 401:
+                        self.auth.invalidate()
+                        return default
                     return await r.json() if r.status < 400 else default
                 r.raise_for_status()
                 return await r.json()
-        except Exception:
+        except Exception as err:
+            _LOGGER.debug("Optional fetch of %s failed: %s", path, err)
+            self.auth.reject_if_unauthorized(err)
             return default
 
     async def _async_update_data(self) -> dict:
@@ -195,6 +210,8 @@ class GlpDataCoordinator(DataUpdateCoordinator):
                 ),
             )
         except Exception as err:
+            if self.auth.reject_if_unauthorized(err):
+                raise UpdateFailed("GLP rejected the API token, fetching a new one") from err
             raise UpdateFailed(f"GLP unreachable: {err}") from err
 
         drink_lookup: dict[str, str] = {
@@ -307,21 +324,26 @@ class GlpDataCoordinator(DataUpdateCoordinator):
         self._last_shot_id = current_shot_id
 
         for task in ("descaling", "backflush", "grouphead", "gaskets", "waterfilter"):
-            data[f"maint_{task}"] = maintenance.get(task) or {}
+            data[f"maint_{task}"] = _effective_maint(maintenance.get(task) or {})
 
         # Aggregate grinder_* maintenance entries into a single worst-status sensor
         _STATUS_RANK = {"due": 3, "never": 2, "soon": 1, "ok": 0}
         grinder_details: dict[str, dict] = {
-            k: v for k, v in maintenance.items() if k.startswith("grinder_")
+            k: _effective_maint(v) for k, v in maintenance.items() if k.startswith("grinder_")
         }
-        worst = max(
-            (_STATUS_RANK.get(v.get("status", "ok"), 0) for v in grinder_details.values()),
-            default=-1,
-        )
-        data["grinder_maintenance_status"] = (
-            next(s for s, r in _STATUS_RANK.items() if r == worst)
-            if worst >= 0 else None
-        )
+        # Paused, turned-off and unknown statuses are not ranked: they must not
+        # win the aggregate. A missing status still counts as ok (#384).
+        statuses = [v.get("status") or "ok" for v in grinder_details.values()]
+        ranked = [_STATUS_RANK[s] for s in statuses if s in _STATUS_RANK]
+        if ranked:
+            worst = max(ranked)
+            data["grinder_maintenance_status"] = next(
+                s for s, r in _STATUS_RANK.items() if r == worst
+            )
+        elif "paused" in statuses:
+            data["grinder_maintenance_status"] = "paused"
+        else:
+            data["grinder_maintenance_status"] = None
         data["grinder_maintenance_details"] = {
             v.get("grinderName", k): {
                 "task":          k,  # grinder_<id> — used by the card to mark cleaning done
