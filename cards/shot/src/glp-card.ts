@@ -1334,6 +1334,20 @@ class GlpCard extends HTMLElement {
 
   _s(suffix: string): HassStateObject | undefined { return this._hass!.states[this._resolvePrefix() + suffix]; }
 
+  // Maintenance sensors are named after their task since v1.22.1
+  // (`maint_backflush`); older installs kept the display-name form
+  // (`maintenance_backflush`, `maintenance_group_head`, ...). A read tries the
+  // older id first and falls back to the `maint_*` counterpart taken from the
+  // MAINT_TASKS columns, so both layouts work and an install carrying both
+  // keeps the older entity's behaviour.
+  _maint(suffix: string): HassStateObject | undefined {
+    const older = this._s(suffix);
+    if (older) return older;
+    const task = GlpCard.MAINT_TASKS.find(([old]) => old === suffix);
+    if (task) return this._s(task[1]);
+    return suffix === GlpCard.MAINT_GRINDERS[0] ? this._s(GlpCard.MAINT_GRINDERS[1]) : undefined;
+  }
+
   _val(suffix: string, fallback: string | null = '—'): string | null {
     const s = this._s(suffix);
     return s && s.state !== 'unknown' && s.state !== 'unavailable' ? s.state as string : fallback;
@@ -1366,12 +1380,16 @@ class GlpCard extends HTMLElement {
     ['maintenance_water_filter', 'maint_waterfilter', 'droplet', 'waterfilter'],
   ];
 
+  // The grinders sensor is not a task row (its attributes hold one entry per
+  // grinder), but it has the same two id layouts as the tasks above.
+  static MAINT_GRINDERS: [string, string] = ['maintenance_grinders', 'maint_grinders'];
+
   _maintAvailable(): boolean {
-    return GlpCard.MAINT_TASKS.some(([s]) => this._s(s)) || !!this._s('maintenance_grinders');
+    return GlpCard.MAINT_TASKS.some(([s]) => this._maint(s)) || !!this._maint(GlpCard.MAINT_GRINDERS[0]);
   }
   _maintAnyDue(): boolean {
-    return GlpCard.MAINT_TASKS.some(([s]) => this._s(s)?.state === 'due')
-      || this._s('maintenance_grinders')?.state === 'due';
+    return GlpCard.MAINT_TASKS.some(([s]) => this._maint(s)?.state === 'due')
+      || this._maint(GlpCard.MAINT_GRINDERS[0])?.state === 'due';
   }
 
   // One date format for the maintenance sheet: the sensor's `last_date`
@@ -1488,12 +1506,12 @@ class GlpCard extends HTMLElement {
       </div>`;
     };
     const rows = GlpCard.MAINT_TASKS.map(([suffix, nameKey, icon, task]) => {
-      const s = this._s(suffix);
+      const s = this._maint(suffix);
       if (!s || s.state === 'unavailable' || s.state === 'unknown' || s.state === 'disabled') return null;
       const a = s.attributes || {};
       return row(icon, T(nameKey), s.state, a.pct as string, a.days_since as number | null | undefined, a.shots_since as number | null | undefined, task, a.last_date as string | null | undefined);
     }).filter(Boolean);
-    const gAttrs = this._s('maintenance_grinders')?.attributes || {};
+    const gAttrs = this._maint(GlpCard.MAINT_GRINDERS[0])?.attributes || {};
     const gRows  = Object.entries(gAttrs)
       .filter(([, v]) => v && typeof v === 'object' && 'status' in v && (v as GrinderEntry).status !== 'disabled')
       .map(([name, v]) => row('gear', name, (v as GrinderEntry).status, (v as GrinderEntry).pct, (v as GrinderEntry).days_since, (v as GrinderEntry).shots_since, (v as GrinderEntry).task, (v as GrinderEntry).last_date));

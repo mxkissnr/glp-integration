@@ -8,6 +8,7 @@
 - A quick double tap on an order button in the shot card no longer sends the action twice, and bean details now appear as soon as they have loaded.
 - Maintenance tasks you paused or turned off in the app no longer show up as due in Home Assistant: their sensors now read paused or disabled, and the grinder sensor leaves them out.
 - The shot card now shows paused maintenance tasks as paused and hides tasks you turned off in the app.
+- The shot card now shows its maintenance tab on every install. On installs set up since version 1.22.1 it was missing.
 
 ## [1.36.0] – 2026-11-08
 
