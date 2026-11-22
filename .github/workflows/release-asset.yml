@@ -1,8 +1,16 @@
 name: Release Asset
 
+# Releases are immutable (#409): once published, no asset can be added. The release
+# tooling therefore creates each stable release as a draft, dispatches this workflow
+# with the tag, waits for it, and publishes the draft only after the zip is attached.
+# Beta pre-releases attach their own zip in dev-prerelease.yml.
 on:
-  release:
-    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Tag of the draft release to attach the HACS zip to (vX.Y.Z)
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -14,18 +22,26 @@ jobs:
     if: github.server_url == 'https://github.com'
     runs-on: ubuntu-latest
     permissions:
-      contents: write  # gh release upload
+      contents: write  # gh release upload (drafts are only visible with write access)
     steps:
+      - name: Check tag and draft state
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.tag }}
+        run: |
+          [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "::error::Not a stable release tag: $TAG"; exit 1; }
+          draft="$(gh release view "$TAG" -R "$GITHUB_REPOSITORY" --json isDraft --jq .isDraft)"
+          [[ "$draft" == "true" ]] || { echo "::error::Release $TAG is not a draft; a published release accepts no new assets"; exit 1; }
+
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
-          ref: ${{ github.event.release.tag_name }}
+          ref: ${{ inputs.tag }}
+          persist-credentials: false
 
-      # Beta pre-releases are tagged by dev-prerelease.yml itself.
       - name: Verify release tag signature
-        if: ${{ !github.event.release.prerelease }}
         env:
-          TAG: ${{ github.event.release.tag_name }}
+          TAG: ${{ inputs.tag }}
           ALLOWED_SIGNERS: ${{ vars.RELEASE_ALLOWED_SIGNERS }}
         run: |
           git fetch --no-tags --force origin "refs/tags/$TAG:refs/tags/$TAG"
@@ -37,8 +53,8 @@ jobs:
           cd custom_components/gaggiuino_profiler
           zip -r "$GITHUB_WORKSPACE/gaggiuino_profiler.zip" . -x '*__pycache__*'
 
-      - name: Upload to release
+      - name: Upload to draft release
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG: ${{ github.event.release.tag_name }}
-        run: gh release upload "$TAG" gaggiuino_profiler.zip --clobber
+          TAG: ${{ inputs.tag }}
+        run: gh release upload "$TAG" -R "$GITHUB_REPOSITORY" gaggiuino_profiler.zip --clobber

@@ -19,9 +19,11 @@ integration (Home Assistant custom component). The only Node project is `cards/`
   (`none`/`assisted`/`substantial`/`generated` + tool/model); every AI-assisted commit carries
   a `Co-Authored-By:` trailer. CI enforces it. See CONTRIBUTING.md.
 - **Releases** end at the GitHub release; no HA deploy (Max installs HACS updates himself).
-  `git tag v<version> && git push origin main && git push origin v<version> && gh release create v<version> ...`
-  Afterwards verify `gaggiuino_profiler.zip` is attached to the release (`release-asset.yml`
-  uploads it within seconds; HACS installs from it).
+  Max runs `glp-release-finish glp-integration <version>`: it merges the release PR, signs and
+  pushes the tag, creates the release as a **draft**, dispatches `release-asset.yml` (verifies
+  the tag signature, attaches `gaggiuino_profiler.zip`), waits for it and publishes the draft
+  only once the zip is attached. Releases are immutable (#409): a published release takes no
+  new assets, so never publish first and attach later.
 - **Branches**: work goes to `dev` (PRs target `dev`); `main` only receives release merges.
   Every push to `dev` publishes a pre-release (`v<next patch>b<run>`) via `dev-prerelease.yml`
   that HACS offers under "Show beta versions". Release PRs dev→main and the main→dev

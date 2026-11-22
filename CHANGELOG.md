@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+**Security**
+- Releases are now immutable: once published, a release and the zip that HACS installs from it can no longer be changed or replaced.
+
 ## [1.36.1] – 2026-11-17
 
 **Fixed**
