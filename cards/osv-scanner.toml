@@ -1,0 +1,17 @@
+# Accepted findings for the daily security scan (osv-scanner reads this file
+# because it sits next to cards/package-lock.json).
+#
+# Both entries come only through c8 -> test-exclude 8.0.0, the latest release,
+# which still pins glob ^13 and minimatch ^10. They are dev-only: the coverage
+# run matches our own fixed patterns and nothing ships to users. Drop an entry
+# once test-exclude moves to glob 14 / minimatch 11, or when it expires.
+
+[[IgnoredVulns]]
+id = "GHSA-g3hv-75wg-m249"
+ignoreUntil = 2027-02-22T00:00:00Z
+reason = "minimatch 10 via c8/test-exclude (dev-only coverage tooling, no upstream fix yet)"
+
+[[IgnoredVulns]]
+id = "GHSA-3g3m-2fjr-6pw4"
+ignoreUntil = 2027-02-22T00:00:00Z
+reason = "glob 13 via c8/test-exclude (dev-only coverage tooling, no upstream fix yet)"
